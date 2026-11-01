@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e63a47279c096649aae2935032377f9, type: 3}
+  m_Name: RH1_00
+  m_EditorClassIdentifier: Morsoul.Data::Morsoul.Data.ClueData
+  id: RH1_00
+  displayName: Rusted Pipe Segment
+  type: 2
+  caseId: 0
+  acquisition: 0
+  requiredTool: 0
+  description: A sheared section of cast-iron steam conduit. Heavily oxidized and structurally compromised; cannot be used as a lever to pry open the reinforced stone door.
+  dissonanceKeyword: 
+  isBacktrackingOnly: 0
+  hasWorldPosition: 0
+  worldPosition: {x: 0, y: 0}

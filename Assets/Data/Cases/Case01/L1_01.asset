@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e63a47279c096649aae2935032377f9, type: 3}
+  m_Name: L1_01
+  m_EditorClassIdentifier: Morsoul.Data::Morsoul.Data.ClueData
+  id: L1_01
+  displayName: 'Runic Log #1: Solvent Volatility'
+  type: 3
+  caseId: 1
+  acquisition: 5
+  requiredTool: 3
+  description: Pre-cataclysm formula on synthetic mana solvent flash points and sublimation rates. Required for Ending 3.
+  dissonanceKeyword: 
+  isBacktrackingOnly: 1
+  hasWorldPosition: 1
+  worldPosition: {x: 0, y: 8}

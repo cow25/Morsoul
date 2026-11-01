@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0dbc7904ce55b14e97ed74f8deb78ee, type: 3}
+  m_Name: IN2_00
+  m_EditorClassIdentifier: Morsoul.Data::Morsoul.Data.InquiryNodeData
+  id: IN2_00
+  slotA: {fileID: 11400000, guid: 02ca76cf8686bfe43882f4cf7b237937, type: 2}
+  slotB: {fileID: 11400000, guid: e16640d894349cb40bf34656574551ef, type: 2}
+  prompt:
+    question: The key's magnetic frequency matches the door's manual bypass port, and your optical systems report online. What follows?
+    options:
+    - The key can only work once power is restored to the facility.
+    - The key is a decoy, and the real exit lies elsewhere in the ruins.
+    - Your working sensors can calibrate the salvaged key into the unpowered manual port.
+    correctIndex: 2
+    hintText: 'Diagnostic note: manual bypass ports draw no power. They need only a matching key and a precise hand. Both are present.'
+  producesPremise: {fileID: 11400000, guid: 3a1a1f07403c6744595678a6f4d7c85b, type: 2}
+  rejectedClues: []
+  rejectionMessage: 
