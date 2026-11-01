@@ -1,0 +1,40 @@
+#HUD-Root {
+    -unity-font-definition: url("project://database/Assets/Fonts/Middleearth.ttf");
+}
+
+.hud-text-large {
+    font-size: 18px;
+    color: white;
+    text-shadow: 1px 1px 2px black;
+    -unity-font-style: bold;
+}
+
+.hud-text {
+    font-size: 16px;
+    color: white;
+    text-shadow: 1px 1px 2px black;
+}
+
+.hud-text-small {
+    font-size: 12px;
+    text-shadow: 1px 1px 1px black;
+    color: rgb(200, 200, 200);
+}
+
+.keycap {
+    background-color: rgba(40, 40, 40, 0.8);
+    border-color: rgba(255, 255, 255, 0.5);
+    border-width: 1px;
+    border-radius: 4px;
+    color: white;
+    padding: 2px 8px;
+    font-size: 14px;
+    -unity-text-align: middle-center;
+    margin-left: 5px;
+    margin-right: 5px;
+}
+
+.icon-box {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
