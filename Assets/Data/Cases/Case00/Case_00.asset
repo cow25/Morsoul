@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d37c4bd3e1cabf41acedffef9bb9e4b, type: 3}
+  m_Name: Case_00
+  m_EditorClassIdentifier: Morsoul.Data::Morsoul.Data.CaseData
+  caseId: 0
+  title: Awakening in the Ashes
+  region: Subterranean Research Facility Ruins & Wilderness Threshold
+  inquiryNodes:
+  - {fileID: 11400000, guid: d1be78aba1adfde4f807b5f4ca53d557, type: 2}
+  - {fileID: 11400000, guid: d05bc401ca54f704fbb5b8a25233ab40, type: 2}
+  hypothesis: {fileID: 11400000, guid: f433ae3969018be4ab80f2e73ad309c4, type: 2}
+  interrogation: {fileID: 0}
+  clues:
+  - {fileID: 11400000, guid: b48596c93b690ae40980cf2b612d7d21, type: 2}
+  - {fileID: 11400000, guid: 052604a5970f0234a8ee427ae48dfeb5, type: 2}
+  - {fileID: 11400000, guid: 02ca76cf8686bfe43882f4cf7b237937, type: 2}
+  - {fileID: 11400000, guid: e16640d894349cb40bf34656574551ef, type: 2}
+  - {fileID: 11400000, guid: ac06cca2e1b3c66438d240ea994bd57a, type: 2}
+  latentLog: {fileID: 0}
+  toolUnlocked: 0
+  uneaseFlagKey: 
+  hasInvestigationScene: 1
+  hasInterrogation: 0
+  preloadedClues: []

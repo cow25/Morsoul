@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e63a47279c096649aae2935032377f9, type: 3}
+  m_Name: C2_00
+  m_EditorClassIdentifier: Morsoul.Data::Morsoul.Data.ClueData
+  id: C2_00
+  displayName: Overloaded Capacitor Relay
+  type: 0
+  caseId: 0
+  acquisition: 0
+  requiredTool: 0
+  description: Shattered glass vacuum tube surrounded by crystallized mana slag. Demonstrates that power to the primary hydraulic security blast door was severed during a forced emergency system overload.
+  dissonanceKeyword: 
+  isBacktrackingOnly: 0
+  hasWorldPosition: 0
+  worldPosition: {x: 0, y: 0}

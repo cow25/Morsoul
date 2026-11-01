@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e63a47279c096649aae2935032377f9, type: 3}
+  m_Name: C1_01
+  m_EditorClassIdentifier: Morsoul.Data::Morsoul.Data.ClueData
+  id: C1_01
+  displayName: Pristine Vault Lock
+  type: 0
+  caseId: 1
+  acquisition: 0
+  requiredTool: 1
+  description: Heavy Dwarven multi-pin cylinder lock; tumblers and pins pristine with zero tool marks, shearing, or acid burns. Must have been opened with an authentic key.
+  dissonanceKeyword: 
+  isBacktrackingOnly: 0
+  hasWorldPosition: 1
+  worldPosition: {x: 0, y: 4}
