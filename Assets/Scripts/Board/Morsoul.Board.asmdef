@@ -2,7 +2,8 @@
     "name": "Morsoul.Board",
     "rootNamespace": "Morsoul.Board",
     "references": [
-        "Morsoul.Data"
+        "Morsoul.Data",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

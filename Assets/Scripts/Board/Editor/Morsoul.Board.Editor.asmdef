@@ -1,0 +1,19 @@
+{
+    "name": "Morsoul.Board.Editor",
+    "rootNamespace": "Morsoul.Board.Editor",
+    "references": [
+        "Morsoul.Board",
+        "Morsoul.Data"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

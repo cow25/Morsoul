@@ -1,0 +1,252 @@
+.board-root {
+    -unity-font-definition: url("project://database/Assets/Fonts/Middleearth.ttf");
+}
+
+.hud-text-large {
+    font-size: 18px;
+    color: white;
+    text-shadow: 1px 1px 2px black;
+    -unity-font-style: bold;
+}
+
+.hud-text {
+    font-size: 16px;
+    color: white;
+    text-shadow: 1px 1px 2px black;
+}
+
+.hud-text-small {
+    font-size: 12px;
+    text-shadow: 1px 1px 1px black;
+    color: rgb(200, 200, 200);
+}
+
+.keycap {
+    background-color: rgba(40, 40, 40, 0.8);
+    border-color: rgba(255, 255, 255, 0.5);
+    border-width: 1px;
+    border-radius: 4px;
+    color: white;
+    padding: 2px 8px;
+    font-size: 14px;
+    -unity-text-align: middle-center;
+    margin-left: 5px;
+    margin-right: 5px;
+}
+
+.board-backdrop {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.72);
+}
+
+.board-panel {
+    background-color: rgba(14, 11, 18, 0.94);
+    border-color: rgba(255, 255, 255, 0.35);
+    border-width: 1px;
+    border-radius: 8px;
+    padding: 14px 18px;
+}
+
+.clue-card {
+    width: 180px;
+    height: 110px;
+    flex-shrink: 0;
+    flex-direction: column;
+    background-color: rgba(30, 26, 38, 0.85);
+    border-color: rgba(255, 255, 255, 0.35);
+    border-width: 1px;
+    border-radius: 6px;
+    padding: 8px;
+    margin-left: 4px;
+    margin-right: 4px;
+}
+
+.clue-card:hover {
+    background-color: rgba(52, 45, 66, 0.92);
+    border-color: rgba(255, 255, 255, 0.6);
+}
+
+.clue-card--selected {
+    border-color: rgb(130, 80, 160);
+    border-width: 2px;
+    background-color: rgba(68, 44, 88, 0.6);
+}
+
+.clue-card-name {
+    font-size: 13px;
+    color: white;
+    text-shadow: 1px 1px 1px black;
+    white-space: normal;
+    flex-grow: 1;
+}
+
+.clue-card-type {
+    font-size: 11px;
+    color: rgb(185, 165, 205);
+    -unity-text-align: middle-right;
+    flex-shrink: 0;
+}
+
+.slot-button {
+    width: 260px;
+    height: 42px;
+    background-color: rgba(30, 26, 38, 0.85);
+    border-color: rgba(255, 255, 255, 0.3);
+    border-width: 1px;
+    border-radius: 6px;
+    color: rgb(170, 170, 170);
+    font-size: 14px;
+    -unity-text-align: middle-center;
+}
+
+.slot-button:hover {
+    background-color: rgba(52, 45, 66, 0.92);
+    border-color: rgba(255, 255, 255, 0.55);
+}
+
+.slot-button--filled {
+    color: white;
+    border-color: rgb(130, 80, 160);
+}
+
+.link-button {
+    height: 42px;
+    padding-left: 16px;
+    padding-right: 16px;
+    background-color: rgba(48, 38, 62, 0.9);
+    border-color: rgb(130, 80, 160);
+    border-width: 1px;
+    border-radius: 6px;
+    color: white;
+    font-size: 14px;
+}
+
+.link-button:hover {
+    background-color: rgba(72, 55, 94, 0.95);
+    border-color: rgb(165, 120, 195);
+}
+
+.premise-card {
+    min-width: 170px;
+    flex-shrink: 0;
+    background-color: rgba(44, 34, 58, 0.85);
+    border-color: rgb(130, 80, 160);
+    border-width: 1px;
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin-right: 8px;
+}
+
+.premise-card-title {
+    font-size: 14px;
+    color: white;
+    text-shadow: 1px 1px 1px black;
+    white-space: normal;
+}
+
+.submit-button {
+    height: 44px;
+    padding-left: 20px;
+    padding-right: 20px;
+    background-color: rgba(48, 38, 62, 0.9);
+    border-color: rgb(130, 80, 160);
+    border-width: 1px;
+    border-radius: 6px;
+    color: white;
+    font-size: 15px;
+    -unity-font-style: bold;
+}
+
+.submit-button:hover {
+    background-color: rgba(72, 55, 94, 0.95);
+    border-color: rgb(165, 120, 195);
+}
+
+.submit-button--disabled {
+    color: rgba(255, 255, 255, 0.4);
+    background-color: rgba(30, 26, 38, 0.5);
+    border-color: rgba(255, 255, 255, 0.15);
+    -unity-font-style: normal;
+}
+
+.feedback-banner {
+    border-width: 1px;
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin-top: 10px;
+}
+
+.banner--error {
+    background-color: rgba(96, 34, 40, 0.75);
+    border-color: rgba(190, 95, 100, 0.8);
+}
+
+.banner--info {
+    background-color: rgba(35, 60, 48, 0.75);
+    border-color: rgba(110, 160, 125, 0.8);
+}
+
+.banner--hint {
+    color: rgb(198, 166, 226);
+}
+
+.prompt-modal {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.55);
+    align-items: center;
+    justify-content: center;
+}
+
+.prompt-card {
+    width: 60%;
+    max-width: 720px;
+    background-color: rgba(18, 14, 24, 0.97);
+    border-color: rgba(255, 255, 255, 0.4);
+    border-width: 1px;
+    border-radius: 8px;
+    padding: 18px 22px;
+}
+
+.option-button {
+    white-space: normal;
+    background-color: rgba(30, 26, 38, 0.9);
+    border-color: rgba(255, 255, 255, 0.3);
+    border-width: 1px;
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-top: 8px;
+    color: white;
+    font-size: 14px;
+    -unity-text-align: middle-left;
+}
+
+.option-button:hover {
+    background-color: rgba(60, 50, 78, 0.95);
+    border-color: rgb(130, 80, 160);
+}
+
+.cancel-button {
+    height: 34px;
+    padding-left: 18px;
+    padding-right: 18px;
+    align-self: flex-end;
+    background-color: rgba(40, 40, 40, 0.85);
+    border-color: rgba(255, 255, 255, 0.35);
+    border-width: 1px;
+    border-radius: 6px;
+    color: white;
+    font-size: 13px;
+}
+
+.cancel-button:hover {
+    background-color: rgba(60, 60, 60, 0.9);
+    border-color: rgba(255, 255, 255, 0.6);
+}
