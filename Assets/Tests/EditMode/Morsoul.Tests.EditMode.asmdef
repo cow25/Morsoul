@@ -4,6 +4,7 @@
     "references": [
         "Morsoul.Data",
         "Morsoul.Data.Editor",
+        "Morsoul.Board",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],
