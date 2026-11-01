@@ -5,6 +5,8 @@
         "Morsoul.Data",
         "Morsoul.Data.Editor",
         "Morsoul.Board",
+        "Morsoul.Gameplay",
+        "Morsoul.Interrogation",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],
