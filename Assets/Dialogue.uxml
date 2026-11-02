@@ -1,0 +1,18 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/Dialogue.uss"/>
+    <ui:VisualElement name="Dialogue-Root" class="dialogue-root" style="position: absolute; width: 100%; height: 100%; display: none;">
+        <ui:VisualElement name="DialogueBox" class="dialogue-box" style="position: absolute; left: 12%; right: 12%; bottom: 5%; min-height: 20%; flex-direction: row;">
+            <ui:VisualElement name="SpeakerPortrait" class="dialogue-portrait" style="flex-shrink: 0; display: none;"/>
+            <ui:VisualElement name="DialogueContent" style="flex-grow: 1;">
+                <ui:Label name="SpeakerLabel" text="Speaker" class="dialogue-speaker" style="flex-shrink: 0;"/>
+                <ui:Label name="DialogueText" text="" class="dialogue-text" style="white-space: normal; margin-top: 6px;"/>
+                <ui:VisualElement name="OptionsContainer" style="display: none; flex-shrink: 0; margin-top: 10px;">
+                    <ui:Button name="OptionButton0" text="" class="dialogue-option-button" style="display: none;"/>
+                    <ui:Button name="OptionButton1" text="" class="dialogue-option-button" style="display: none;"/>
+                    <ui:Button name="OptionButton2" text="" class="dialogue-option-button" style="display: none;"/>
+                </ui:VisualElement>
+                <ui:Label name="ContinueHint" text="(E) continue" class="dialogue-continue-hint" style="margin-top: auto; flex-shrink: 0;"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

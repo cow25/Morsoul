@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0dbc7904ce55b14e97ed74f8deb78ee, type: 3}
+  m_Name: IN2_03
+  m_EditorClassIdentifier: Morsoul.Data::Morsoul.Data.InquiryNodeData
+  id: IN2_03
+  slotA: {fileID: 11400000, guid: ea15b44cd77416a47b8f1f5ee72666b1, type: 2}
+  slotB: {fileID: 11400000, guid: 8fe96e21dca72614abfb619ab90c3d83, type: 2}
+  prompt:
+    question: The altar dagger bears the Veiled Circle's eclipsed eye, and the abandoned cloak still carries fanatical zeal and deceit under the Emotion Echo. What follows?
+    options:
+    - The dagger and cloak are curios looted by a lone black-market merchant with no ties to the drainage.
+    - "The drainage is a Veiled Circle operation \u2014 the zeal and deceit soaked into Vane's cloak tie him to their Sanctum Core ritual."
+    - A lone sap smuggler planted cult trappings at the altar to pin his siphoning on the Veiled Circle.
+    correctIndex: 1
+    hintText: "Insignia and residue tell one story: the eclipsed eye marks the blade, and the Echo reads zeal and deceit on the cloak. This was no merchant's commerce \u2014 it was a cult operation."
+  producesPremise: {fileID: 11400000, guid: f71fd379337cb8444b49fdd2f77cfc38, type: 2}
+  rejectedClues: []
+  rejectionMessage: 

@@ -1,0 +1,24 @@
+{
+    "name": "Morsoul.Flow",
+    "rootNamespace": "Morsoul.Flow",
+    "references": [
+        "Morsoul.Data",
+        "Morsoul.Board",
+        "Morsoul.Gameplay",
+        "Morsoul.Interrogation",
+        "Morsoul.Dialogue",
+        "Morsoul.Cutscene",
+        "Morsoul.Resolution",
+        "Morsoul.Hub",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

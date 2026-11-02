@@ -250,3 +250,57 @@
     background-color: rgba(60, 60, 60, 0.9);
     border-color: rgba(255, 255, 255, 0.6);
 }
+
+/* --- Hint popup (Eliza / internal diagnostic) ------------------------------- */
+
+.hint-popup {
+    position: absolute;
+    top: 10%;
+    right: 8%;
+    width: 380px;
+    flex-direction: row;
+    background-color: rgba(20, 15, 30, 0.96);
+    border-color: rgb(130, 80, 160);
+    border-width: 2px;
+    border-radius: 8px;
+    padding: 12px 14px;
+}
+
+.hint-portrait {
+    width: 64px;
+    height: 80px;
+    flex-shrink: 0;
+    background-color: rgba(10, 8, 14, 0.9);
+    border-color: rgb(130, 80, 160);
+    border-width: 1px;
+    border-radius: 4px;
+}
+
+.hint-speaker {
+    font-size: 13px;
+    color: rgb(198, 166, 226);
+    -unity-font-style: bold;
+}
+
+.hint-text {
+    font-size: 13px;
+    color: rgb(230, 220, 240);
+    -unity-font-style: italic;
+}
+
+.hint-close {
+    height: 26px;
+    padding-left: 16px;
+    padding-right: 16px;
+    background-color: rgba(48, 38, 62, 0.9);
+    border-color: rgb(130, 80, 160);
+    border-width: 1px;
+    border-radius: 5px;
+    color: white;
+    font-size: 12px;
+}
+
+.hint-close:hover {
+    background-color: rgba(72, 55, 94, 0.95);
+    border-color: rgb(165, 120, 195);
+}

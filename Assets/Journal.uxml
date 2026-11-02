@@ -1,0 +1,30 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/Journal.uss"/>
+    <ui:VisualElement name="Journal-Root" class="journal-root" style="position: absolute; width: 100%; height: 100%; display: none;">
+        <ui:VisualElement name="Backdrop" class="journal-backdrop"/>
+        <ui:VisualElement name="JournalPanel" class="journal-panel" style="position: absolute; top: 6%; left: 8%; width: 84%; height: 88%;">
+            <ui:VisualElement name="HeaderRow" style="flex-direction: row; align-items: center; margin-bottom: 10px; flex-shrink: 0;">
+                <ui:Label name="TitleLabel" text="Clue Journal" class="hud-text-large"/>
+                <ui:VisualElement name="HeaderSpacer" style="flex-grow: 1;"/>
+                <ui:Button name="TabPhysical" text="Physical (1)" class="journal-tab"/>
+                <ui:Button name="TabTestimony" text="Testimony (2)" class="journal-tab"/>
+                <ui:Button name="TabLogs" text="Runic Logs (3)" class="journal-tab"/>
+                <ui:Button name="TabDossier" text="Dossier (4)" class="journal-tab"/>
+            </ui:VisualElement>
+            <ui:VisualElement name="ContentRow" style="flex-direction: row; flex-grow: 1; margin-bottom: 8px;">
+                <ui:ScrollView name="TabBody" style="flex-grow: 1;"/>
+                <ui:VisualElement name="EntryDetail" class="entry-detail">
+                    <ui:Label name="JournalTitle" text="Clue Journal" class="detail-title"/>
+                    <ui:Label name="JournalType" text="" class="detail-type"/>
+                    <ui:ScrollView name="DetailScroll" style="flex-grow: 1; margin-top: 8px;">
+                        <ui:Label name="JournalDesc" text="Select an entry." class="detail-desc"/>
+                    </ui:ScrollView>
+                    <ui:Button name="MarkForBoardButton" text="Mark for Board" class="mark-button" style="display: none;"/>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="FooterRow" style="flex-direction: row; justify-content: flex-end; flex-shrink: 0;">
+                <ui:Label name="FooterHint" text="(G) close | (1-4) tabs" class="hud-text-small"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

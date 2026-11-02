@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0200e0523a2f3544b81bf5887919c433, type: 3}
+  m_Name: RunicLog_03
+  m_EditorClassIdentifier: Morsoul.Data::Morsoul.Data.RunicLogData
+  id: 3
+  caseId: 3
+  location: "Deep Grove Clearing \u2014 central ritual altar ground (0, 4)"
+  requiredTool: 3
+  contents: "Displacement Device Telemetry \u2014 pre-cataclysm technical readout recording the catastrophic mana displacement event and Elise Cochran's final transmission."
+  availableAfterCase: 4

@@ -31,6 +31,15 @@
                 <ui:Button name="OptionButton1" text="" class="option-button"/>
                 <ui:Button name="OptionButton2" text="" class="option-button"/>
                 <ui:Button name="CancelPromptButton" text="Back" class="cancel-button" style="margin-top: 12px;"/>
+                <ui:Label name="PromptFooter" text="(A/B/C) answer (ESC) back" class="hud-text-small" style="margin-top: 10px; -unity-text-align: middle-center;"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="HintPopup" class="hint-popup" style="display: none;">
+            <ui:VisualElement name="HintPortrait" class="hint-portrait"/>
+            <ui:VisualElement name="HintBody" style="flex-grow: 1; flex-direction: column; margin-left: 10px;">
+                <ui:Label name="HintSpeaker" text="Eliza" class="hint-speaker"/>
+                <ui:Label name="HintText" text="" class="hint-text" style="white-space: normal; margin-top: 4px;"/>
+                <ui:Button name="HintClose" text="OK" class="hint-close" style="align-self: flex-end; margin-top: 8px;"/>
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>

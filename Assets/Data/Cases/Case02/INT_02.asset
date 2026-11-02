@@ -1,0 +1,67 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 20110e2d39e081f4fac5bf238f842405, type: 3}
+  m_Name: INT_02
+  m_EditorClassIdentifier: Morsoul.Data::Morsoul.Data.InterrogationData
+  id: INT_02
+  suspectName: Accord the Bell-Ringer
+  composureSegments: 3
+  falsehoodShieldActive: 1
+  phases:
+  - suspectClaim: Why interrogate me when the culprit sits in chains? The spirit-folk's wild spirit magic cursed our High Priestess to desecrate our holy sanctuary!
+    keywords:
+    - wild spirit magic
+    validMoves:
+    - verb: 0
+      evidence: {fileID: 0}
+      breaksComposureSegment: 0
+      strikeCost: 0
+      isCoreContradiction: 0
+      responseDialogue: Their kind can't control pure light! The second that heathen looked up, the air felt suffocating and the Lady lost her voice!
+      emotionAura: 0
+    - verb: 1
+      evidence: {fileID: 11400000, guid: cba3b5e8fca3ec9469406dca130f49b5, type: 2}
+      breaksComposureSegment: 1
+      strikeCost: 0
+      isCoreContradiction: 1
+      responseDialogue: The muting wasn't cast through prayer or wild spirit arts. The clapper itself was prepared with synthetic dark soot that pulsed when struck.
+      emotionAura: 0
+    invalidMoves: []
+  - suspectClaim: "Then the creature must have snuck up while I wasn't looking! I saw them, I swear \u2014 they chanted from the tower base and bewitched the machinery!"
+    keywords: []
+    validMoves:
+    - verb: 2
+      evidence: {fileID: 11400000, guid: c5d2410d6e80a1f48ab03dbdab423988, type: 2}
+      breaksComposureSegment: 1
+      strikeCost: 0
+      isCoreContradiction: 0
+      responseDialogue: 'The acoustics substantiate a redirect: a spell from the base cannot coat a clapper suspended eighty feet in the rafters. The damping agent was applied manually by whoever climbed the belfry before vespers.'
+      emotionAura: 0
+    invalidMoves:
+    - verb: 2
+      evidence: {fileID: 11400000, guid: 6497922a6710d1f4f9227c778a27b6d9, type: 2}
+      breaksComposureSegment: 0
+      strikeCost: 1
+      isCoreContradiction: 0
+      responseDialogue: The High Priestess's holy fork? That proves her sanctity, not my guilt! Are your cognitive processors rusted?!
+      emotionAura: 0
+  - suspectClaim: I am a faithful servant of Saint Althea! I have dedicated twenty years to ringing these bells! What possible motive could I have to harm Mother Lyra?!
+    keywords: []
+    validMoves:
+    - verb: 1
+      evidence: {fileID: 11400000, guid: 9ff42a2b82e508549af87c936ebd1855, type: 2}
+      breaksComposureSegment: 1
+      strikeCost: 0
+      isCoreContradiction: 0
+      responseDialogue: You didn't want to harm her, Accord. You were cornered. The hooded stranger held your family's exile over your head.
+      emotionAura: 0
+    invalidMoves: []

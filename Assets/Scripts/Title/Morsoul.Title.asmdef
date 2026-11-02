@@ -1,0 +1,19 @@
+{
+    "name": "Morsoul.Title",
+    "rootNamespace": "Morsoul.Title",
+    "references": [
+        "Morsoul.Data",
+        "Unity.InputSystem",
+        "UnityEngine.UI",
+        "Unity.TextMeshPro"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

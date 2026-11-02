@@ -1,0 +1,134 @@
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.InputSystem;
+
+namespace Morsoul.Hub
+{
+    /// <summary>
+    /// Top-down 2D player controller for hub scenes. WASD movement via the
+    /// Input System (Keyboard.current), LeftShift sprint, E to interact with
+    /// the nearest <see cref="Interactable2D"/> found by an OverlapCircleAll
+    /// cast. While the shared dialogue panel is playing, movement and
+    /// interaction are suspended (E then advances dialogue instead).
+    /// Camera smoothing is intentionally NOT handled here — use Cinemachine
+    /// or CameraFollow2D.
+    /// </summary>
+    [RequireComponent(typeof(Rigidbody2D))]
+    public class HubPlayerController : MonoBehaviour
+    {
+        public float moveSpeed = 3.5f;
+        public float sprintMultiplier = 1.5f;
+        /// <summary>Shared hub services handed to interactables.</summary>
+        public HubContext context;
+        /// <summary>Radius of the interactable search circle.</summary>
+        public float interactRadius = 1.5f;
+        /// <summary>Layers searched by the interactable cast; defaults to everything.</summary>
+        public LayerMask interactLayers = ~0;
+
+        Rigidbody2D _rb;
+        readonly List<Interactable2D> _candidates = new List<Interactable2D>();
+        readonly List<Vector2> _candidatePositions = new List<Vector2>();
+        Interactable2D _prompted;
+
+        /// <summary>Current normalized move input (zero while dialogue plays).</summary>
+        public Vector2 MoveInput { get; private set; }
+        /// <summary>Nearest interactable currently in range, if any.</summary>
+        public Interactable2D CurrentTarget { get; private set; }
+
+        void Awake()
+        {
+            _rb = GetComponent<Rigidbody2D>();
+            _rb.gravityScale = 0f;
+            _rb.freezeRotation = true;
+        }
+
+        void Update()
+        {
+            var keyboard = Keyboard.current;
+            if (keyboard == null) return;
+
+            // Also treat the frame a dialogue ended as busy: the same E press
+            // that closed the panel must not re-trigger the interactable.
+            bool dialoguePlaying = context != null && context.DialoguePlaying
+                || context != null && context.dialogue != null
+                   && context.dialogue.LastEndFrame == Time.frameCount;
+            MoveInput = dialoguePlaying ? Vector2.zero : ReadMoveInput(keyboard);
+
+            UpdatePromptTarget();
+
+            if (!dialoguePlaying && keyboard.eKey.wasPressedThisFrame && CurrentTarget != null)
+                CurrentTarget.Interact(context);
+        }
+
+        void FixedUpdate()
+        {
+            var keyboard = Keyboard.current;
+            bool sprint = !MoveInput.Equals(Vector2.zero)
+                          && keyboard != null
+                          && keyboard.leftShiftKey.isPressed;
+            float speed = moveSpeed * (sprint ? sprintMultiplier : 1f);
+            _rb.linearVelocity = MoveInput.normalized * speed;
+        }
+
+        static Vector2 ReadMoveInput(Keyboard keyboard)
+        {
+            var input = Vector2.zero;
+            if (keyboard.aKey.isPressed) input.x -= 1f;
+            if (keyboard.dKey.isPressed) input.x += 1f;
+            if (keyboard.sKey.isPressed) input.y -= 1f;
+            if (keyboard.wKey.isPressed) input.y += 1f;
+            return input;
+        }
+
+        void UpdatePromptTarget()
+        {
+            _candidates.Clear();
+            _candidatePositions.Clear();
+
+            // No targeting while a dialogue is open; the prompt hides too.
+            if (context != null && context.DialoguePlaying)
+            {
+                if (_prompted != null)
+                {
+                    _prompted.SetPromptVisible(false);
+                    _prompted = null;
+                }
+                CurrentTarget = null;
+                return;
+            }
+
+            var hits = Physics2D.OverlapCircleAll(transform.position, interactRadius, interactLayers);
+            foreach (var hit in hits)
+            {
+                if (hit == null) continue;
+                var interactable = hit.GetComponentInParent<Interactable2D>();
+                if (interactable == null || _candidates.Contains(interactable)) continue;
+                _candidates.Add(interactable);
+                _candidatePositions.Add(interactable.transform.position);
+            }
+
+            int index = HubTargeting.Nearest(transform.position, _candidatePositions);
+            var nearest = index >= 0 ? _candidates[index] : null;
+
+            if (nearest != _prompted)
+            {
+                if (_prompted != null) _prompted.SetPromptVisible(false);
+                _prompted = nearest;
+                if (_prompted != null) _prompted.SetPromptVisible(true);
+            }
+            CurrentTarget = nearest;
+        }
+
+        void OnDisable()
+        {
+            if (_prompted != null)
+            {
+                _prompted.SetPromptVisible(false);
+                _prompted = null;
+            }
+            CurrentTarget = null;
+            MoveInput = Vector2.zero;
+            if (_rb != null) _rb.linearVelocity = Vector2.zero;
+        }
+    }
+}

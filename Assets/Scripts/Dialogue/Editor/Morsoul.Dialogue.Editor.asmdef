@@ -1,0 +1,19 @@
+{
+    "name": "Morsoul.Dialogue.Editor",
+    "rootNamespace": "Morsoul.Dialogue.Editor",
+    "references": [
+        "Morsoul.Dialogue",
+        "Morsoul.Data"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

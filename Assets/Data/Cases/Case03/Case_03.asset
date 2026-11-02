@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d37c4bd3e1cabf41acedffef9bb9e4b, type: 3}
+  m_Name: Case_03
+  m_EditorClassIdentifier: Morsoul.Data::Morsoul.Data.CaseData
+  caseId: 3
+  title: The Sinking Wilds of Whisperwood
+  region: Whisperwood Boundary Trail & Deep Grove Clearing
+  inquiryNodes:
+  - {fileID: 11400000, guid: d41733c96dca840459d16afe0e97da72, type: 2}
+  - {fileID: 11400000, guid: ef30548b6e364394b9a54744ffdfe520, type: 2}
+  hypothesis: {fileID: 11400000, guid: d101cca164366f0498d4dab1542fc29e, type: 2}
+  interrogation: {fileID: 11400000, guid: ea0b8146caba35b498b5bf2dcb967442, type: 2}
+  clues:
+  - {fileID: 11400000, guid: 2c97f266bd69ef24591b69f8b8a984c2, type: 2}
+  - {fileID: 11400000, guid: ea15b44cd77416a47b8f1f5ee72666b1, type: 2}
+  - {fileID: 11400000, guid: 8fe96e21dca72614abfb619ab90c3d83, type: 2}
+  - {fileID: 11400000, guid: 082755c29adc52b4e93d22db02cb3bb9, type: 2}
+  - {fileID: 11400000, guid: f6cf69c5df6784446952989bd6f7d76e, type: 2}
+  - {fileID: 11400000, guid: 71d856f53652f414285e69d4b96d414f, type: 2}
+  - {fileID: 11400000, guid: 2f5a42463ed7adf42bd752e6dd4221f3, type: 2}
+  latentLog: {fileID: 11400000, guid: 5705da5ac704c474d884e15a7df7482c, type: 2}
+  toolUnlocked: 2
+  uneaseFlagKey: Case3_UneaseActive
+  hasInvestigationScene: 1
+  hasInterrogation: 1
+  preloadedClues: []

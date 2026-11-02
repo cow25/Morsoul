@@ -1,0 +1,14 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/Cutscene.uss"/>
+    <ui:VisualElement name="Cutscene-Root" class="cutscene-root" style="position: absolute; width: 100%; height: 100%; display: none;">
+        <ui:VisualElement name="StillImage" class="cutscene-surface" style="display: none;"/>
+        <ui:VisualElement name="VideoSurface" class="cutscene-surface" style="display: none;"/>
+        <ui:VisualElement name="LetterboxTop" class="letterbox-bar" style="top: 0;"/>
+        <ui:VisualElement name="LetterboxBottom" class="letterbox-bar" style="bottom: 0;"/>
+        <ui:VisualElement name="CaptionBox" class="cutscene-caption-box" style="display: none;">
+            <ui:Label name="CaptionSpeaker" text="" class="cutscene-caption-speaker"/>
+            <ui:Label name="CaptionText" text="" class="cutscene-caption-text"/>
+        </ui:VisualElement>
+        <ui:Label name="SkipHint" text="(E) continue / hold ESC to skip" class="cutscene-skip-hint"/>
+    </ui:VisualElement>
+</ui:UXML>

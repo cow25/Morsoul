@@ -1,0 +1,20 @@
+{
+    "name": "Morsoul.Journal.Editor",
+    "rootNamespace": "Morsoul.Journal.Editor",
+    "references": [
+        "Morsoul.Journal",
+        "Morsoul.Data",
+        "Morsoul.Hub"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

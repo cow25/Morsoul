@@ -1,0 +1,214 @@
+.journal-root {
+    -unity-font-definition: url("project://database/Assets/Fonts/Middleearth.ttf");
+}
+
+.hud-text-large {
+    font-size: 18px;
+    color: white;
+    text-shadow: 1px 1px 2px black;
+    -unity-font-style: bold;
+}
+
+.hud-text {
+    font-size: 16px;
+    color: white;
+    text-shadow: 1px 1px 2px black;
+}
+
+.hud-text-small {
+    font-size: 12px;
+    text-shadow: 1px 1px 1px black;
+    color: rgb(200, 200, 200);
+}
+
+.journal-backdrop {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.72);
+}
+
+.journal-panel {
+    background-color: rgba(14, 11, 18, 0.94);
+    border-color: rgba(255, 255, 255, 0.35);
+    border-width: 1px;
+    border-radius: 8px;
+    padding: 14px 18px;
+}
+
+/* --- Header tabs ---------------------------------------------------------- */
+
+.journal-tab {
+    height: 34px;
+    padding-left: 14px;
+    padding-right: 14px;
+    margin-left: 6px;
+    background-color: rgba(30, 26, 38, 0.85);
+    border-color: rgba(255, 255, 255, 0.3);
+    border-width: 1px;
+    border-radius: 6px;
+    color: rgb(170, 170, 170);
+    font-size: 13px;
+}
+
+.journal-tab:hover {
+    background-color: rgba(52, 45, 66, 0.92);
+    border-color: rgba(255, 255, 255, 0.55);
+    color: white;
+}
+
+.journal-tab--active {
+    color: white;
+    border-color: rgb(130, 80, 160);
+    background-color: rgba(68, 44, 88, 0.6);
+    -unity-font-style: bold;
+}
+
+/* --- Entry cards ---------------------------------------------------------- */
+
+.journal-card {
+    flex-direction: column;
+    background-color: rgba(30, 26, 38, 0.85);
+    border-color: rgba(255, 255, 255, 0.35);
+    border-width: 1px;
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin-bottom: 6px;
+    margin-right: 4px;
+}
+
+.journal-card:hover {
+    background-color: rgba(52, 45, 66, 0.92);
+    border-color: rgba(255, 255, 255, 0.6);
+}
+
+.journal-card-name {
+    font-size: 13px;
+    color: white;
+    text-shadow: 1px 1px 1px black;
+    white-space: normal;
+}
+
+.journal-card-meta {
+    font-size: 11px;
+    color: rgb(185, 165, 205);
+    margin-top: 2px;
+    white-space: normal;
+}
+
+.journal-card-preview {
+    font-size: 12px;
+    color: rgb(200, 200, 200);
+    margin-top: 5px;
+    white-space: normal;
+}
+
+/* --- Runic logs ----------------------------------------------------------- */
+
+.log--locked {
+    background-color: rgba(24, 22, 30, 0.85);
+    border-color: rgba(150, 140, 170, 0.4);
+}
+
+.log--locked .journal-card-preview {
+    color: rgb(150, 140, 170);
+    -unity-font-style: italic;
+}
+
+/* --- Lingering Dissonance banner ------------------------------------------ */
+
+.dissonance-banner {
+    background-color: rgba(58, 34, 80, 0.8);
+    border-color: rgb(150, 90, 200);
+    border-width: 1px;
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    margin-right: 4px;
+}
+
+.dissonance-title {
+    font-size: 14px;
+    color: rgb(210, 170, 250);
+    -unity-font-style: bold;
+    text-shadow: 1px 1px 1px black;
+}
+
+.dissonance-line {
+    font-size: 12px;
+    color: rgb(198, 166, 226);
+    margin-top: 4px;
+    white-space: normal;
+}
+
+.dissonance-location {
+    font-size: 11px;
+    color: rgb(170, 150, 200);
+    margin-top: 4px;
+    white-space: normal;
+}
+
+/* --- Detail pane ------------------------------------------------------------ */
+
+.entry-detail {
+    width: 40%;
+    min-width: 260px;
+    max-width: 380px;
+    margin-left: 12px;
+    flex-shrink: 0;
+    background-color: rgba(30, 26, 38, 0.85);
+    border-color: rgba(255, 255, 255, 0.35);
+    border-width: 1px;
+    border-radius: 6px;
+    padding: 10px 12px;
+}
+
+.detail-title {
+    font-size: 15px;
+    color: white;
+    -unity-font-style: bold;
+    text-shadow: 1px 1px 1px black;
+    white-space: normal;
+}
+
+.detail-type {
+    font-size: 11px;
+    color: rgb(185, 165, 205);
+    margin-top: 2px;
+    white-space: normal;
+}
+
+.detail-desc {
+    font-size: 13px;
+    color: rgb(215, 215, 215);
+    white-space: normal;
+}
+
+.mark-button {
+    height: 32px;
+    padding-left: 16px;
+    padding-right: 16px;
+    margin-top: 10px;
+    align-self: flex-start;
+    flex-shrink: 0;
+    background-color: rgba(48, 38, 62, 0.9);
+    border-color: rgb(130, 80, 160);
+    border-width: 1px;
+    border-radius: 6px;
+    color: white;
+    font-size: 13px;
+}
+
+.mark-button:hover {
+    background-color: rgba(72, 55, 94, 0.95);
+    border-color: rgb(165, 120, 195);
+}
+
+.empty-label {
+    font-size: 13px;
+    color: rgb(160, 160, 160);
+    margin: 8px;
+    white-space: normal;
+}

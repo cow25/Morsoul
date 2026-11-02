@@ -1,0 +1,48 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/Interrogation.uss"/>
+    <ui:VisualElement name="Interrogation-Root" class="interrogation-root" style="position: absolute; width: 100%; height: 100%; display: none;">
+        <ui:VisualElement name="Backdrop" class="interrogation-backdrop"/>
+        <ui:VisualElement name="InterrogationPanel" class="interrogation-panel" style="position: absolute; top: 6%; left: 12%; width: 76%; height: 88%;">
+            <ui:VisualElement name="HeaderRow" style="flex-direction: row; align-items: center; margin-bottom: 10px; flex-shrink: 0;">
+                <ui:Label name="SuspectNameLabel" text="Suspect" class="hud-text-large" style="flex-grow: 1;"/>
+                <ui:VisualElement name="ComposureRow" class="composure-row" style="flex-direction: row; align-items: center; margin-right: 18px;">
+                    <ui:VisualElement name="Segment0" class="composure-segment"/>
+                    <ui:VisualElement name="Segment1" class="composure-segment"/>
+                    <ui:VisualElement name="Segment2" class="composure-segment"/>
+                </ui:VisualElement>
+                <ui:VisualElement name="StrikeRow" class="strike-row" style="flex-direction: row; align-items: center;">
+                    <ui:VisualElement name="Seal0" class="strike-seal"/>
+                    <ui:VisualElement name="Seal1" class="strike-seal"/>
+                    <ui:VisualElement name="Seal2" class="strike-seal"/>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:Label name="GuidedHint" text="Eliza: press the underlined keyword first." class="guided-hint" style="display: none; flex-shrink: 0; white-space: normal; margin-bottom: 8px;"/>
+            <ui:VisualElement name="ClaimArea" class="claim-area" style="flex-direction: row; margin-bottom: 12px; flex-shrink: 0;">
+                <ui:VisualElement name="PortraitImage" class="portrait"/>
+                <ui:VisualElement name="ClaimColumn" style="flex-grow: 1; flex-direction: column; margin-left: 14px;">
+                    <ui:Label name="ClaimText" text="" class="claim-text" style="white-space: normal;"/>
+                    <ui:VisualElement name="KeywordRow" class="keyword-row" style="flex-direction: row; flex-wrap: wrap; margin-top: 8px;"/>
+                    <ui:Label name="ResponseText" text="" class="response-text" style="white-space: normal; margin-top: 10px;"/>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="StanceRow" class="stance-row" style="flex-direction: row; flex-shrink: 0;">
+                <ui:Button name="PressButton" text="[1] PRESS" class="stance-button"/>
+                <ui:Button name="ContradictButton" text="[2] CONTRADICT" class="stance-button"/>
+                <ui:Button name="PresentEvidenceButton" text="[3] PRESENT EVIDENCE" class="stance-button"/>
+            </ui:VisualElement>
+            <ui:ScrollView name="EvidenceTray" class="evidence-tray" style="display: none; flex-shrink: 0; margin-top: 10px; max-height: 240px;">
+                <ui:VisualElement name="EvidenceGrid" style="flex-direction: row; flex-wrap: wrap;"/>
+            </ui:ScrollView>
+            <ui:Label name="Banner" text="" class="banner" style="display: none; flex-shrink: 0; white-space: normal; margin-top: 10px;"/>
+            <ui:Label name="FooterLabel" text="[1/2/3] Stance | [E] advance | [ESC] forfeit" class="hud-text-small" style="margin-top: auto; flex-shrink: 0;"/>
+        </ui:VisualElement>
+        <ui:VisualElement name="EndOverlay" class="end-overlay" style="display: none;">
+            <ui:Label name="EndLabel" text="" class="end-label"/>
+            <ui:VisualElement name="MistrialModal" class="mistrial-modal" style="display: none;">
+                <ui:Label name="MistrialLabel" text="MISTRIAL DECLARED" class="mistrial-label"/>
+                <ui:Label name="MistrialSub" text="Three Judicial Seals broken. The case rests." class="mistrial-sub"/>
+                <ui:Button name="RetryButton" text="[R] Retry from Checkpoint" class="retry-button"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

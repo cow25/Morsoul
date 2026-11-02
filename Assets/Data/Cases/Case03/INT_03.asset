@@ -1,0 +1,67 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 20110e2d39e081f4fac5bf238f842405, type: 3}
+  m_Name: INT_03
+  m_EditorClassIdentifier: Morsoul.Data::Morsoul.Data.InterrogationData
+  id: INT_03
+  suspectName: Vane the Veiled Circle Operative
+  composureSegments: 3
+  falsehoodShieldActive: 1
+  phases:
+  - suspectClaim: Stand down, guild relic! I am an accredited field scholar conducting a sanctioned ecological survey on natural forest blight!
+    keywords:
+    - sanctioned ecological survey
+    validMoves:
+    - verb: 0
+      evidence: {fileID: 0}
+      breaksComposureSegment: 0
+      strikeCost: 0
+      isCoreContradiction: 0
+      responseDialogue: The regional council granted me unrestricted access to sample fungal spread! My tools are delicate biological instruments, not weapons!
+      emotionAura: 1
+    - verb: 1
+      evidence: {fileID: 11400000, guid: 2c97f266bd69ef24591b69f8b8a984c2, type: 2}
+      breaksComposureSegment: 1
+      strikeCost: 0
+      isCoreContradiction: 1
+      responseDialogue: Botanical scholars do not drive industrial pressurized pneumatic taps into ancient taproots. That apparatus is draining hundreds of liters of raw mana per hour.
+      emotionAura: 0
+    invalidMoves: []
+  - suspectClaim: Fine, I tapped the tree for alchemical commerce! But a lone merchant selling sap on the black market hardly concerns your guild's grand conspiracy theories!
+    keywords: []
+    validMoves:
+    - verb: 2
+      evidence: {fileID: 11400000, guid: ea15b44cd77416a47b8f1f5ee72666b1, type: 2}
+      breaksComposureSegment: 1
+      strikeCost: 0
+      isCoreContradiction: 0
+      responseDialogue: This redirects your 'lone merchant' story. Black-market traders do not carry daggers bearing the eclipsed eye of the Veiled Circle, treated with the exact same chemical solvent used in Asterveil's vault. Who do you actually work for?
+      emotionAura: 0
+    invalidMoves:
+    - verb: 2
+      evidence: {fileID: 11400000, guid: 71d856f53652f414285e69d4b96d414f, type: 2}
+      breaksComposureSegment: 0
+      strikeCost: 1
+      isCoreContradiction: 0
+      responseDialogue: Rotten timber? Are you going to indict me for beetle droppings next, machine? Your cognitive core is failing you.
+      emotionAura: 0
+  - suspectClaim: You cannot stop what is coming! You have no proof this tree connects to anything beyond these miserable woods!
+    keywords: []
+    validMoves:
+    - verb: 1
+      evidence: {fileID: 11400000, guid: 8fe96e21dca72614abfb619ab90c3d83, type: 2}
+      breaksComposureSegment: 1
+      strikeCost: 0
+      isCoreContradiction: 0
+      responseDialogue: "Your own cloak betrays you, Vane \u2014 the Emotion Echo reads the fanatical zeal and deceit soaked into it. You serve the Veiled Circle's Sanctum Core ritual, and this tree feeds it."
+      emotionAura: 0
+    invalidMoves: []

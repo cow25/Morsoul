@@ -1,0 +1,20 @@
+{
+    "name": "Morsoul.Hub.Editor",
+    "rootNamespace": "Morsoul.Hub.Editor",
+    "references": [
+        "Morsoul.Hub",
+        "Morsoul.Data",
+        "Morsoul.Dialogue"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
