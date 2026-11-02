@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Morsoul.Core;
 using UnityEngine;
 
 namespace Morsoul.Hub
@@ -19,10 +20,21 @@ namespace Morsoul.Hub
         public bool Has(string flag) =>
             !string.IsNullOrEmpty(flag) && _flags.Contains(flag);
 
+        void OnEnable()
+        {
+            // Rehydrate from the persistent session after a scene load.
+            var session = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session : null;
+            if (session == null) return;
+            foreach (var kv in session.Flags)
+                if (kv.Value) _flags.Add(kv.Key);
+        }
+
         /// <summary>Marks the flag as set; no-op for null/empty names.</summary>
         public void Add(string flag)
         {
-            if (!string.IsNullOrEmpty(flag)) _flags.Add(flag);
+            if (string.IsNullOrEmpty(flag)) return;
+            _flags.Add(flag);
+            CoreRuntime.Instance?.Session.SetFlag(flag);
         }
     }
 }

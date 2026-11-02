@@ -101,7 +101,7 @@ compile Morsoul.Cutscene "-r:$OUT/Morsoul.Core.dll" "-r:$OUT/Morsoul.Data.dll" -
 compile Morsoul.Title "-r:$OUT/Morsoul.Core.dll" "-r:$OUT/Morsoul.Data.dll" -- $(src Title)
 compile Morsoul.Resolution "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Gameplay.dll" -- $(src Resolution)
 compile Morsoul.Flow \
-    "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Board.dll" "-r:$OUT/Morsoul.Gameplay.dll" \
+    "-r:$OUT/Morsoul.Core.dll" "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Board.dll" "-r:$OUT/Morsoul.Gameplay.dll" \
     "-r:$OUT/Morsoul.Interrogation.dll" "-r:$OUT/Morsoul.Dialogue.dll" "-r:$OUT/Morsoul.Cutscene.dll" \
     "-r:$OUT/Morsoul.Resolution.dll" "-r:$OUT/Morsoul.Hub.dll" \
     -- $(src Flow)

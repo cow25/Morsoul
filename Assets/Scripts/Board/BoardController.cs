@@ -92,6 +92,9 @@ namespace Morsoul.Board
         /// <summary>Premises verified so far (null until a board is built). Exposed for GameFlow evidence wiring.</summary>
         public IReadOnlyList<PremiseData> Premises => _board?.Premises;
 
+        /// <summary>Validated board node ids (null until a board is built). Exposed for save/checkpoint wiring.</summary>
+        public IEnumerable<string> ValidatedNodeIds => _board?.ValidatedNodeIds;
+
         void OnEnable()
         {
             _panelRenderer = GetComponent<PanelRenderer>();

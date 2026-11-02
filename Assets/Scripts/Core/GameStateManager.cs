@@ -82,6 +82,8 @@ namespace Morsoul.Core
             _core.Bus.Subscribe<ContinueGameEvent>(OnContinue);
             _core.Bus.Subscribe<CheckpointRequestedEvent>(OnCheckpointRequested);
             _core.Bus.Subscribe<SceneLoadRequestedEvent>(OnSceneLoadRequested);
+            _core.Bus.Subscribe<CaseCompletedEvent>(OnCaseCompleted);
+            _core.Bus.Subscribe<MistrialRetryEvent>(OnMistrialRetry);
         }
 
         void Unsubscribe()
@@ -90,6 +92,8 @@ namespace Morsoul.Core
             _core.Bus.Unsubscribe<ContinueGameEvent>(OnContinue);
             _core.Bus.Unsubscribe<CheckpointRequestedEvent>(OnCheckpointRequested);
             _core.Bus.Unsubscribe<SceneLoadRequestedEvent>(OnSceneLoadRequested);
+            _core.Bus.Unsubscribe<CaseCompletedEvent>(OnCaseCompleted);
+            _core.Bus.Unsubscribe<MistrialRetryEvent>(OnMistrialRetry);
         }
 
         // --- Public entry points (also wired to bus events) -------------------
@@ -97,6 +101,8 @@ namespace Morsoul.Core
         /// <summary>Fresh run: resets the save, restores Focus, goes to the opening.</summary>
         public void NewGame(string playerName)
         {
+            _core.Session.Reset();
+            _core.Session.PlayerName = playerName;
             CurrentSave = new SaveState { playerName = playerName };
             _core.Focus.Restore(FocusTuning.FocusMax, false);
             WriteCheckpoint("NewGame", null);
@@ -113,6 +119,7 @@ namespace Morsoul.Core
                 return false;
             }
             CurrentSave = state;
+            _core.Session.RestoreFrom(state, _core.ResolveClue);
             _core.Focus.Restore(state.focusPercent, state.strainedScanUsed);
             string scene = !string.IsNullOrEmpty(state.checkpointSceneName)
                 ? state.checkpointSceneName
@@ -150,6 +157,7 @@ namespace Morsoul.Core
         /// <summary>Writes the checkpoint, stamping focus + scene.</summary>
         public void WriteCheckpoint(string reason, string nextSceneName)
         {
+            _core.Session.ApplyTo(CurrentSave);
             CurrentSave.focusPercent = _core.Focus.Percent;
             CurrentSave.strainedScanUsed = _core.Focus.StrainedScanUsed;
             CurrentSave.checkpointSceneName = !string.IsNullOrEmpty(nextSceneName)
@@ -192,6 +200,34 @@ namespace Morsoul.Core
         void OnSceneLoadRequested(SceneLoadRequestedEvent e)
         {
             if (!string.IsNullOrEmpty(e.SceneName)) LoadSceneInternal(e.SceneName);
+        }
+
+        void OnCaseCompleted(CaseCompletedEvent e)
+        {
+            if (e.Ending != 0)
+            {
+                // Game-ending route: resolution dismiss -> ending -> title.
+                Advance(GameFlowState.Ending);
+                GoToRoute(RouteKeys.Title, GameFlowState.Title);
+                return;
+            }
+            // Normal advance: next case's hub (hub.<caseId+1>), warned-clean
+            // when the route isn't registered yet.
+            GoToRoute(RouteKeys.Hub(e.CaseId + 1), GameFlowState.Hub);
+        }
+
+        void OnMistrialRetry(MistrialRetryEvent _)
+        {
+            // "Retry from Checkpoint": reload the Zone B entry checkpoint —
+            // composure and strikes reset with the scene.
+            string scene = CurrentSave.checkpointSceneName;
+            if (string.IsNullOrEmpty(scene)) scene = SceneManager.GetActiveScene().name;
+            if (string.IsNullOrEmpty(scene))
+            {
+                Debug.LogWarning("GameStateManager: mistrial retry but no scene to reload.", this);
+                return;
+            }
+            LoadSceneInternal(scene);
         }
 
         // --- Internals --------------------------------------------------------

@@ -30,4 +30,10 @@ namespace Morsoul.Core
         public int CaseId;
         public int Ending; // 1 = board fail, 2/3 = EndingSelector
     }
+
+    /// <summary>
+    /// Published on interrogation mistrial — "Retry from Checkpoint" reloads
+    /// the Zone B entry checkpoint (composure and strikes reset).
+    /// </summary>
+    public struct MistrialRetryEvent { }
 }

@@ -29,6 +29,30 @@ namespace Morsoul.Core
         public FocusModel Focus { get; } = new FocusModel();
 
         /// <summary>
+        /// Live cross-scene session truth (clues, flags, board edges, logs,
+        /// grades, tools). Scene-scoped stores sync against this; the GSM
+        /// flattens it into the checkpoint on every write.
+        /// </summary>
+        public SessionState Session { get; } = new SessionState();
+
+        Morsoul.Data.ClueRegistry _clueRegistry;
+        bool _clueRegistryLoaded;
+
+        /// <summary>
+        /// Resolves a saved clue id back to its ClueData asset via the
+        /// generated Resources/ClueRegistry index; null when unregistered.
+        /// </summary>
+        public Morsoul.Data.ClueData ResolveClue(string clueId)
+        {
+            if (!_clueRegistryLoaded)
+            {
+                _clueRegistry = Resources.Load<Morsoul.Data.ClueRegistry>("ClueRegistry");
+                _clueRegistryLoaded = true;
+            }
+            return _clueRegistry != null ? _clueRegistry.Find(clueId) : null;
+        }
+
+        /// <summary>
         /// Returns the existing instance, or creates a DontDestroyOnLoad
         /// CoreRuntime GameObject. Safe to call from any scene's Awake.
         /// </summary>

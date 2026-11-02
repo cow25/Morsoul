@@ -51,6 +51,7 @@ namespace Morsoul.Flow
         readonly List<ClueData> _collectedClues = new List<ClueData>();
         bool _endingRequested;
         bool _mistrialHandled;
+        int _lastEnding;
 
         public CaseSession Session => _session;
         /// <summary>Grade of the current session (Ungraded before BeginCase) — used by save.</summary>
@@ -81,6 +82,8 @@ namespace Morsoul.Flow
                 interrogation.InterrogationEnded += HandleInterrogationEnded;
                 interrogation.MistrialRequested += HandleMistrialRequested;
             }
+            if (resolution != null)
+                resolution.Dismissed += HandleResolutionDismissed;
             if (dialogue != null)
                 dialogue.ClueRegistered += HandleClueRegistered;
         }
@@ -101,6 +104,8 @@ namespace Morsoul.Flow
                 interrogation.InterrogationEnded -= HandleInterrogationEnded;
                 interrogation.MistrialRequested -= HandleMistrialRequested;
             }
+            if (resolution != null)
+                resolution.Dismissed -= HandleResolutionDismissed;
             if (dialogue != null)
                 dialogue.ClueRegistered -= HandleClueRegistered;
         }
@@ -115,8 +120,16 @@ namespace Morsoul.Flow
             }
             activeCase = caseData;
             _session = new CaseSession(caseData);
+            var core = Core.CoreRuntime.Instance != null ? Core.CoreRuntime.Instance.Session : null;
+            if (core != null)
+            {
+                core.CurrentCase = caseData.caseId;
+                if (caseData.toolUnlocked != Tool.None) core.UnlockTool(caseData.toolUnlocked);
+                latentLogCollected = core.LatentLogCollected;
+            }
             _endingRequested = false;
             _mistrialHandled = false;
+            _lastEnding = 0;
             _collectedClues.Clear();
             Bind();
             if (board != null)
@@ -158,7 +171,11 @@ namespace Morsoul.Flow
 
         // --- Board handlers (public for tests; subscribed in Bind) -------------
 
-        public void HandleBoardFocusCosted(float cost) => FocusSpent?.Invoke(cost, "Board");
+        public void HandleBoardFocusCosted(float cost)
+        {
+            Core.CoreRuntime.Instance?.Focus.Spend(cost);
+            FocusSpent?.Invoke(cost, "Board");
+        }
 
         public void HandleBoardStrikeCosted(int strikes)
         {
@@ -218,6 +235,23 @@ namespace Morsoul.Flow
             _mistrialHandled = true;
             _session.RecordMistrialRetry();
             MistrialRetryRequested?.Invoke();
+            Core.CoreRuntime.Instance?.Bus.Publish(new Core.MistrialRetryEvent());
+        }
+
+        // --- Resolution / routing ----------------------------------------------
+
+        /// <summary>
+        /// Resolution screen dismissed: publishes CaseCompletedEvent so the
+        /// GSM can route to the next hub (or Title on a game ending).
+        /// </summary>
+        public void HandleResolutionDismissed()
+        {
+            var caseData = _session != null ? _session.Case : activeCase;
+            Core.CoreRuntime.Instance?.Bus.Publish(new Core.CaseCompletedEvent
+            {
+                CaseId = caseData != null ? caseData.caseId : 0,
+                Ending = _lastEnding
+            });
         }
 
         // --- Dialogue handler ----------------------------------------------------
@@ -227,6 +261,7 @@ namespace Morsoul.Flow
             if (clue == null) return;
             if (!_collectedClues.Contains(clue)) _collectedClues.Add(clue);
             hubJournal?.Register(clue);
+            Core.CoreRuntime.Instance?.Session.RegisterClue(clue);
             ClueRegistered?.Invoke(clue);
         }
 
@@ -238,8 +273,16 @@ namespace Morsoul.Flow
             if (caseData == null) return;
             // Unease fires when the case hides a latent log the player never found.
             bool unease = caseData.latentLog != null && !latentLogCollected;
+            Grade grade = _session != null ? _session.ComputeGrade() : Grade.Ungraded;
+            var session = Core.CoreRuntime.Instance != null ? Core.CoreRuntime.Instance.Session : null;
+            if (session != null)
+            {
+                session.SetGrade(caseData.caseId, grade);
+                session.LatentLogCollected = latentLogCollected;
+                if (board != null) session.MergeBoardEdges(board.ValidatedNodeIds);
+            }
             resolution?.Show(caseData.title,
-                _session != null ? _session.ComputeGrade() : Grade.Ungraded,
+                grade,
                 unease,
                 caseData.latentLog != null ? caseData.latentLog.location : null,
                 null);
@@ -266,6 +309,7 @@ namespace Morsoul.Flow
         void RequestEnding(int ending)
         {
             _endingRequested = true;
+            _lastEnding = ending;
             EndingRouteRequested?.Invoke(ending);
         }
     }

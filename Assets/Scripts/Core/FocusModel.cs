@@ -67,6 +67,12 @@ namespace Morsoul.Core
             Percent = Math.Max(0f, Percent - FocusTuning.InvalidPairingCost);
         }
 
+        /// <summary>Arbitrary Focus spend (e.g. a reported board cost); clamps at 0.</summary>
+        public void Spend(float amount)
+        {
+            if (amount > 0f) Percent = Math.Max(0f, Percent - amount);
+        }
+
         /// <summary>Restores state from a SaveState.</summary>
         public void Restore(float percent, bool strainedScanUsed)
         {
