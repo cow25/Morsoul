@@ -5,6 +5,7 @@
         "Morsoul.Data",
         "Morsoul.Data.Editor",
         "Morsoul.Board",
+        "Morsoul.Core",
         "Morsoul.Cutscene",
         "Morsoul.Dialogue",
         "Morsoul.Flow",
