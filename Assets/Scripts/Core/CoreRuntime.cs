@@ -22,6 +22,13 @@ namespace Morsoul.Core
         public SaveService Save => SaveService.Persistent;
 
         /// <summary>
+        /// Persistent Focus bar — lives here so it survives scene loads
+        /// without auto-refill (GDD §6.6). Scan controllers call TickScan,
+        /// rest spots call TickRest, the board calls the cost methods.
+        /// </summary>
+        public FocusModel Focus { get; } = new FocusModel();
+
+        /// <summary>
         /// Returns the existing instance, or creates a DontDestroyOnLoad
         /// CoreRuntime GameObject. Safe to call from any scene's Awake.
         /// </summary>
