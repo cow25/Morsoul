@@ -18,6 +18,9 @@ namespace Morsoul.Core
         /// <summary>The shared event bus.</summary>
         public IEventBus Bus { get; } = new EventBus();
 
+        /// <summary>Checkpoint read/write against persistentDataPath.</summary>
+        public SaveService Save => SaveService.Persistent;
+
         /// <summary>
         /// Returns the existing instance, or creates a DontDestroyOnLoad
         /// CoreRuntime GameObject. Safe to call from any scene's Awake.
