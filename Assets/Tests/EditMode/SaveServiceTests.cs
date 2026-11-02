@@ -33,7 +33,7 @@ namespace Morsoul.Tests
                 checkpointSceneName = "Hub_LowerMarket",
                 collectedClueIds = { "C1_01", "T1_01" },
                 boardEdges = { "IN1_01" },
-                runicLogsCollected = { true, false, false, false },
+                runicLogsCollected = new System.Collections.Generic.List<bool> { true, false, false, false },
                 caseGrades = { Grade.Clean, Grade.Standard },
                 uneaseFlags = { new UneaseFlag("Case1_UneaseActive", true) },
                 toolsUnlocked = { Tool.GolemEye, Tool.EmotionEcho },

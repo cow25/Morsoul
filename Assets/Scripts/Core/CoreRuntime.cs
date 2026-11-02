@@ -74,6 +74,11 @@ namespace Morsoul.Core
             }
             _instance = this;
             DontDestroyOnLoad(gameObject);
+            // Auto-attach the scene-flow driver so CoreRuntime.Ensure()
+            // always yields the full stack (bus + save + focus + session +
+            // GSM) for any publisher that boots Core lazily.
+            if (GetComponent<GameStateManager>() == null)
+                gameObject.AddComponent<GameStateManager>();
         }
 
         void OnDestroy()

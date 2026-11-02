@@ -121,9 +121,15 @@ namespace Morsoul.Core
             CurrentSave = state;
             _core.Session.RestoreFrom(state, _core.ResolveClue);
             _core.Focus.Restore(state.focusPercent, state.strainedScanUsed);
-            string scene = !string.IsNullOrEmpty(state.checkpointSceneName)
-                ? state.checkpointSceneName
-                : routes.Resolve(RouteKeys.Hub(state.currentCase));
+            string scene = state.checkpointSceneName;
+            if (string.IsNullOrEmpty(scene) || !Application.CanStreamedLevelBeLoaded(scene))
+            {
+                // Checkpointed scene missing (e.g. a seam gate to a scene that
+                // hasn't landed yet) — resume at the case's hub instead.
+                if (!string.IsNullOrEmpty(scene))
+                    Debug.LogWarning($"GameStateManager: checkpointed scene '{scene}' not loadable; falling back to case hub.", this);
+                scene = routes.Resolve(RouteKeys.Hub(state.currentCase));
+            }
             if (string.IsNullOrEmpty(scene))
             {
                 Debug.LogWarning("GameStateManager: save has no resumable scene.", this);
@@ -196,7 +202,18 @@ namespace Morsoul.Core
         void OnNewGame(NewGameEvent e) => NewGame(e.PlayerName);
         void OnContinue(ContinueGameEvent _) => ContinueGame();
         void OnCheckpointRequested(CheckpointRequestedEvent e)
-            => WriteCheckpoint(e.Reason, e.NextSceneName);
+        {
+            string next = e.NextSceneName;
+            if (!string.IsNullOrEmpty(next) && !Application.CanStreamedLevelBeLoaded(next))
+            {
+                // Destination can't load (missing scene / not in Build
+                // Profiles) — stamp the checkpoint at the current scene so a
+                // later Continue never strands on an unloadable scene.
+                Debug.LogWarning($"GameStateManager: checkpoint target '{next}' not loadable; stamping current scene instead.", this);
+                next = null;
+            }
+            WriteCheckpoint(e.Reason, next);
+        }
         void OnSceneLoadRequested(SceneLoadRequestedEvent e)
         {
             if (!string.IsNullOrEmpty(e.SceneName)) LoadSceneInternal(e.SceneName);
@@ -234,6 +251,14 @@ namespace Morsoul.Core
 
         void LoadSceneInternal(string sceneName)
         {
+            if (!Application.CanStreamedLevelBeLoaded(sceneName))
+            {
+                // Scene doesn't exist or isn't in Build Profiles — keep the
+                // checkpoint pointed at the CURRENT scene so Continue doesn't
+                // strand the player on an unloadable scene.
+                Debug.LogWarning($"GameStateManager: scene '{sceneName}' is not loadable (missing or not in Build Profiles).", this);
+                return;
+            }
             _pendingScene = sceneName;
             WriteCheckpoint("SceneTransition", sceneName);
             SceneManager.LoadScene(sceneName);

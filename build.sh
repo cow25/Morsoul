@@ -113,6 +113,7 @@ compile Morsoul.Dialogue.Editor "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Dial
 compile Morsoul.Interrogation.Editor "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Interrogation.dll" -- $(src Interrogation/Editor)
 compile Morsoul.Hub.Editor \
     "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Dialogue.dll" "-r:$OUT/Morsoul.Hub.dll" \
+    "-r:$OUT/Morsoul.Journal.dll" \
     -- $(src Hub/Editor)
 compile Morsoul.Journal.Editor \
     "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Hub.dll" "-r:$OUT/Morsoul.Journal.dll" \

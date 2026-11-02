@@ -4,7 +4,8 @@
     "references": [
         "Morsoul.Hub",
         "Morsoul.Data",
-        "Morsoul.Dialogue"
+        "Morsoul.Dialogue",
+        "Morsoul.Journal"
     ],
     "includePlatforms": [
         "Editor"

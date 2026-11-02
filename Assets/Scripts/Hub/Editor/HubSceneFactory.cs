@@ -1,4 +1,5 @@
 using System.IO;
+using Morsoul.Data;
 using Morsoul.Dialogue;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -23,7 +24,9 @@ namespace Morsoul.Hub.Editor
 
         const string PanelSettingsPath = "Assets/UI Toolkit/MainPanelSettings.asset";
         const string DialogueUxmlPath = "Assets/Dialogue.uxml";
+        const string JournalUxmlPath = "Assets/Journal.uxml";
         const string Case01DialogueFolder = "Assets/Data/Dialogue/Case01";
+        const string Case01RunicLogPath = "Assets/Data/Cases/Case01/RunicLog_01.asset";
 
         [MenuItem("Morsoul/Hub/Create Hub Scene (Lower Market)")]
         static void CreateLowerMarket()
@@ -164,6 +167,24 @@ namespace Morsoul.Hub.Editor
             if (uxml != null) renderer.visualTreeAsset = uxml;
             else Debug.LogWarning($"HubSceneFactory: UXML not found at '{DialogueUxmlPath}'.");
             context.dialogue = dialogueGo.AddComponent<DialogueController>();
+
+            // Journal overlay: G toggles the clue journal (pauses the sim).
+            var journalGo = new GameObject("JournalPanel");
+            var journalRenderer = journalGo.AddComponent<PanelRenderer>();
+            if (panelSettings != null) journalRenderer.panelSettings = panelSettings;
+            var journalUxml = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(JournalUxmlPath);
+            if (journalUxml != null) journalRenderer.visualTreeAsset = journalUxml;
+            else Debug.LogWarning($"HubSceneFactory: UXML not found at '{JournalUxmlPath}'.");
+            var journal = journalGo.AddComponent<Journal.JournalController>();
+            journal.journal = context.journal;
+            journal.SetFlags(context.flags.Set);
+            var runicLog = AssetDatabase.LoadAssetAtPath<RunicLogData>(Case01RunicLogPath);
+            if (runicLog != null)
+            {
+                journal.allLogs = new[] { runicLog };
+                journal.dissonanceLocationText = runicLog.location;
+            }
+            journal.dissonanceFlag = "Case1_UneaseActive";
             return context;
         }
 
