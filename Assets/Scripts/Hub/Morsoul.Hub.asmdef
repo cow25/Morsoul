@@ -2,6 +2,7 @@
     "name": "Morsoul.Hub",
     "rootNamespace": "Morsoul.Hub",
     "references": [
+        "Morsoul.Core",
         "Morsoul.Data",
         "Morsoul.Dialogue",
         "Unity.InputSystem"

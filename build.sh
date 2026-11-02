@@ -95,10 +95,10 @@ compile Morsoul.Gameplay "-r:$OUT/Morsoul.Data.dll" -- $(src Gameplay)
 compile Morsoul.Dialogue "-r:$OUT/Morsoul.Data.dll" -- $(src Dialogue)
 compile Morsoul.Board "-r:$OUT/Morsoul.Data.dll" -- $(src Board)
 compile Morsoul.Interrogation "-r:$OUT/Morsoul.Data.dll" -- $(src Interrogation)
-compile Morsoul.Hub "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Dialogue.dll" -- $(src Hub)
+compile Morsoul.Hub "-r:$OUT/Morsoul.Core.dll" "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Dialogue.dll" -- $(src Hub)
 compile Morsoul.Journal "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Hub.dll" -- $(src Journal)
-compile Morsoul.Cutscene "-r:$OUT/Morsoul.Data.dll" -- $(src Cutscene)
-compile Morsoul.Title "-r:$OUT/Morsoul.Data.dll" -- $(src Title)
+compile Morsoul.Cutscene "-r:$OUT/Morsoul.Core.dll" "-r:$OUT/Morsoul.Data.dll" -- $(src Cutscene)
+compile Morsoul.Title "-r:$OUT/Morsoul.Core.dll" "-r:$OUT/Morsoul.Data.dll" -- $(src Title)
 compile Morsoul.Resolution "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Gameplay.dll" -- $(src Resolution)
 compile Morsoul.Flow \
     "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Board.dll" "-r:$OUT/Morsoul.Gameplay.dll" \

@@ -1,4 +1,5 @@
 using System;
+using Morsoul.Core;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -36,6 +37,11 @@ namespace Morsoul.Hub
             if (GateRule.CanPass(requiredFlag, flags))
             {
                 CheckpointRequested?.Invoke("Seam");
+                CoreRuntime.Instance?.Bus.Publish(new CheckpointRequestedEvent
+                {
+                    Reason = "Seam",
+                    NextSceneName = targetScene
+                });
                 if (string.IsNullOrEmpty(targetScene))
                 {
                     Debug.LogWarning($"GateInteractable '{name}': open but targetScene is empty.", this);

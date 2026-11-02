@@ -63,6 +63,7 @@ namespace Morsoul.Core
             }
             _instance = this;
             _core = GetComponent<CoreRuntime>() ?? CoreRuntime.Ensure();
+            SeedDefaultRoutes();
             SceneManager.sceneLoaded += HandleSceneLoaded;
         }
 
@@ -163,6 +164,23 @@ namespace Morsoul.Core
         {
             if (!Fsm.TryTransition(next))
                 Debug.LogWarning($"GameStateManager: illegal transition {Fsm.Current} -> {next} (allowed anyway).", this);
+        }
+
+        /// <summary>
+        /// Adds built-in routes for scenes that exist today; only fills keys
+        /// that are absent, so a Bootstrap scene's inspector table always wins.
+        /// Remap as the 3D investigation scenes land.
+        /// </summary>
+        void SeedDefaultRoutes()
+        {
+            void Seed(string key, string sceneName)
+            {
+                if (!routes.Contains(key)) routes.Set(key, sceneName);
+            }
+            Seed(RouteKeys.Title, "Title");
+            Seed(RouteKeys.Hub(0), "Hub_LowerMarket");   // tutorial case shares the market hub
+            Seed(RouteKeys.Hub(1), "Hub_LowerMarket");
+            Seed(RouteKeys.Hub(3), "Hub_Wilderness");    // Whisperwood hub
         }
 
         // --- Bus handlers -----------------------------------------------------

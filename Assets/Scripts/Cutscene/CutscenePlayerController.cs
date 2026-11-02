@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using Morsoul.Core;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
@@ -186,7 +187,12 @@ namespace Morsoul.Cutscene
         void RequestScene(string sceneName)
         {
             LoadSceneRequested?.Invoke(sceneName);
-            SceneManager.LoadScene(sceneName);
+            // With Core live the GSM checkpoints + loads; without it
+            // (standalone panel tests) the cutscene loads the scene itself.
+            if (CoreRuntime.Instance != null)
+                CoreRuntime.Instance.Bus.Publish(new SceneLoadRequestedEvent { SceneName = sceneName });
+            else
+                SceneManager.LoadScene(sceneName);
         }
 
         void EndPlayback()

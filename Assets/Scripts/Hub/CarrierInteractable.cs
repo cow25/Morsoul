@@ -1,4 +1,5 @@
 using System;
+using Morsoul.Core;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -25,6 +26,11 @@ namespace Morsoul.Hub
         {
             base.Interact(ctx);
             CheckpointRequested?.Invoke("Carrier");
+            CoreRuntime.Instance?.Bus.Publish(new CheckpointRequestedEvent
+            {
+                Reason = "Carrier",
+                NextSceneName = targetScene
+            });
             if (string.IsNullOrEmpty(targetScene))
             {
                 Debug.LogWarning($"CarrierInteractable '{name}': targetScene is empty.", this);

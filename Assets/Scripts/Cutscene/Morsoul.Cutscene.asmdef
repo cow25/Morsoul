@@ -2,6 +2,7 @@
     "name": "Morsoul.Cutscene",
     "rootNamespace": "Morsoul.Cutscene",
     "references": [
+        "Morsoul.Core",
         "Morsoul.Data",
         "Unity.InputSystem"
     ],

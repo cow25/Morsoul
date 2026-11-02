@@ -1,4 +1,5 @@
 using System;
+using Morsoul.Core;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -39,7 +40,9 @@ namespace Morsoul.Title
 
         void Start()
         {
-            SetSaveExists(saveExists);
+            // Inspector flag stays as a debug override; a real checkpoint on
+            // disk also enables Continue.
+            SetSaveExists(saveExists || SaveService.Persistent.HasSave);
         }
 
         public void SetSaveExists(bool exists)
@@ -53,12 +56,14 @@ namespace Morsoul.Title
             string playerName = nameField != null ? nameField.text.Trim() : "";
             Debug.Log($"TitleMenuController: New Game requested (name='{playerName}').", this);
             NewGameRequested?.Invoke(playerName);
+            CoreRuntime.Ensure().Bus.Publish(new NewGameEvent { PlayerName = playerName });
         }
 
         void OnContinueClicked()
         {
             Debug.Log("TitleMenuController: Continue requested.", this);
             ContinueRequested?.Invoke();
+            CoreRuntime.Ensure().Bus.Publish(new ContinueGameEvent());
         }
 
         void OnQuitClicked()

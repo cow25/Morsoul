@@ -2,6 +2,7 @@
     "name": "Morsoul.Title",
     "rootNamespace": "Morsoul.Title",
     "references": [
+        "Morsoul.Core",
         "Morsoul.Data",
         "Unity.InputSystem",
         "UnityEngine.UI",
