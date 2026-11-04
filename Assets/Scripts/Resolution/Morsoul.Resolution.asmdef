@@ -1,0 +1,18 @@
+{
+    "name": "Morsoul.Resolution",
+    "rootNamespace": "Morsoul.Resolution",
+    "references": [
+        "Morsoul.Data",
+        "Morsoul.Gameplay",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

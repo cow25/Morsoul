@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Morsoul.Data;
 using Morsoul.Data.Editor;
 using NUnit.Framework;
@@ -188,6 +189,76 @@ namespace Morsoul.Tests
                 var prompt = case1.inquiryNodes[0].prompt;
                 Assert.That(prompt.options[prompt.correctIndex],
                     Is.EqualTo("The vault was opened with one of the two registered keys \u2014 no forced breach occurred."));
+            }
+            finally
+            {
+                AssetDatabase.DeleteAsset(root);
+            }
+        }
+
+        [Test]
+        public void Case02_GeneratedAssets_AreValid()
+        {
+            const string root = "Assets/__MorsoulTestTemp";
+            AssetDatabase.DeleteAsset(root);
+            try
+            {
+                CaseDataGenerator.GenerateCase2Assets(root);
+
+                var case2 = AssetDatabase.LoadAssetAtPath<CaseData>($"{root}/Case02/Case_02.asset");
+                Assert.NotNull(case2, "Case_02.asset was not generated.");
+
+                AssertValid(case2.Validate());
+
+                Assert.That(case2.clues.Length, Is.EqualTo(7));
+                Assert.That(case2.clues.Any(c => c != null && c.type == ClueType.Latent), Is.True);
+                Assert.That(case2.latentLog, Is.Not.Null);
+
+                Assert.That(case2.inquiryNodes[0].prompt.correctIndex, Is.EqualTo(2));
+                Assert.That(case2.inquiryNodes[1].prompt.correctIndex, Is.EqualTo(1));
+                Assert.That(case2.inquiryNodes[0].rejectionMessage, Is.Not.Empty);
+
+                var phases = case2.interrogation.phases;
+                Assert.That(phases.Length, Is.EqualTo(3));
+                foreach (var phase in phases)
+                    Assert.That(phase.validMoves.Count(m => m != null && m.breaksComposureSegment),
+                        Is.EqualTo(1));
+            }
+            finally
+            {
+                AssetDatabase.DeleteAsset(root);
+            }
+        }
+
+        [Test]
+        public void Case03_GeneratedAssets_AreValid()
+        {
+            const string root = "Assets/__MorsoulTestTemp";
+            AssetDatabase.DeleteAsset(root);
+            try
+            {
+                CaseDataGenerator.GenerateCase3Assets(root);
+
+                var case3 = AssetDatabase.LoadAssetAtPath<CaseData>($"{root}/Case03/Case_03.asset");
+                Assert.NotNull(case3, "Case_03.asset was not generated.");
+
+                AssertValid(case3.Validate());
+
+                Assert.That(case3.clues.Length, Is.EqualTo(7));
+                Assert.That(case3.clues.Any(c => c != null && c.type == ClueType.Latent), Is.True);
+                Assert.That(case3.latentLog, Is.Not.Null);
+                Assert.That(case3.latentLog.id, Is.EqualTo(3));
+                Assert.That(case3.toolUnlocked, Is.EqualTo(Morsoul.Data.Tool.EmotionEcho));
+
+                Assert.That(case3.inquiryNodes[0].prompt.correctIndex, Is.EqualTo(2));
+                Assert.That(case3.inquiryNodes[1].prompt.correctIndex, Is.EqualTo(1));
+                Assert.That(case3.inquiryNodes[0].rejectionMessage, Is.Not.Empty);
+
+                var phases = case3.interrogation.phases;
+                Assert.That(phases.Length, Is.EqualTo(3));
+                foreach (var phase in phases)
+                    Assert.That(phase.validMoves.Count(m => m != null && m.breaksComposureSegment),
+                        Is.EqualTo(1));
             }
             finally
             {

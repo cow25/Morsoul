@@ -1,0 +1,61 @@
+.dialogue-root {
+    -unity-font-definition: url("project://database/Assets/Fonts/Middleearth.ttf");
+}
+
+.dialogue-box {
+    background-color: rgba(14, 11, 18, 0.94);
+    border-color: rgba(255, 255, 255, 0.35);
+    border-width: 1px;
+    border-radius: 8px;
+    padding: 14px 18px;
+}
+
+.dialogue-portrait {
+    width: 96px;
+    height: 96px;
+    margin-right: 14px;
+    border-color: rgb(229, 169, 60);
+    border-width: 1px;
+    border-radius: 6px;
+    background-color: rgba(30, 26, 38, 0.9);
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.dialogue-speaker {
+    font-size: 18px;
+    color: rgb(229, 169, 60);
+    text-shadow: 1px 1px 2px black;
+    -unity-font-style: bold;
+}
+
+.dialogue-text {
+    font-size: 16px;
+    color: white;
+    text-shadow: 1px 1px 2px black;
+}
+
+.dialogue-option-button {
+    white-space: normal;
+    background-color: rgba(30, 26, 38, 0.9);
+    border-color: rgb(229, 169, 60);
+    border-width: 1px;
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin-top: 6px;
+    color: white;
+    font-size: 14px;
+    -unity-text-align: middle-left;
+}
+
+.dialogue-option-button:hover {
+    background-color: rgba(58, 46, 32, 0.95);
+    border-color: rgb(255, 205, 110);
+    color: rgb(255, 220, 150);
+}
+
+.dialogue-continue-hint {
+    font-size: 12px;
+    color: rgb(200, 200, 200);
+    text-shadow: 1px 1px 1px black;
+    -unity-text-align: middle-right;
+}

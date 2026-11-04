@@ -1,0 +1,135 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad6b4272890c70c4eb3d3dfe4810ac24, type: 3}
+  m_Name: D_Ovan_01
+  m_EditorClassIdentifier: Morsoul.Dialogue::Morsoul.Dialogue.DialogueData
+  id: D_Ovan_01
+  nodes:
+  - id: ovan_greeting
+    speakerName: Eliza
+    speakerPortrait: {fileID: 0}
+    text: Step aside, Ovan. The Investigator's Guild is taking jurisdiction over the vault incident.
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: ovan_challenge
+  - id: ovan_challenge
+    speakerName: Guildmaster Ovan
+    speakerPortrait: {fileID: 0}
+    text: "(Wiping sweat from his brow with an embroidered handkerchief) \"Astra? The Council sent an apprentice surveyor? And what in Saint Althea\u2019s name is that... that walking boulder behind you?\""
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: golem_scan
+  - id: golem_scan
+    speakerName: Golem
+    speakerPortrait: {fileID: 0}
+    text: '[OPTICAL SCAN: Subject heart rate elevated. Cortisol perspiration detected. Unit status: Non-hostile.] "I am an analytical construct licensed under Guild charter. State the parameters of the vault breach, Guildmaster."'
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: ovan_briefing
+  - id: ovan_briefing
+    speakerName: Guildmaster Ovan
+    speakerPortrait: {fileID: 0}
+    text: "It\u2019s financial ruin, that's what it is! Master Ignatius\u2019 subterranean storage vault\u2014the one holding the seasonal reserve of Greater Restoration Draughts\u2014was breached three hours before dawn. Ten thousand gold ducats worth of inventory, dissolved into thin air! Ignatius claims dark cultists used forbidden volatile magic!"
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: ovan_options
+  - id: ovan_options
+    speakerName: Guildmaster Ovan
+    speakerPortrait: {fileID: 0}
+    text: What else does the Investigator's Guild require of me?
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options:
+    - label: Inquire about the vault's security
+      nextNodeId: ovan_security
+      requiresFlag: 
+    - label: Ask about Master Ignatius
+      nextNodeId: ovan_ignatius
+      requiresFlag: 
+    - label: Demand crime scene access
+      nextNodeId: ovan_warrant
+      requiresFlag: 
+    nextNodeId: 
+  - id: ovan_security
+    speakerName: Guildmaster Ovan
+    speakerPortrait: {fileID: 0}
+    text: "It\u2019s a masterwork Dwarven cylinder! Four tumblers, reinforced cold-iron plating, fitted into bedrock. You couldn't crack it with a siege ram. There are only two keys in existence: Master Ignatius carries one on his personal brass chain, and the second is sealed in my office archives under wax. The archives were never touched!"
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: golem_conclusion
+  - id: golem_conclusion
+    speakerName: Golem
+    speakerPortrait: {fileID: 0}
+    text: 'Conclusion: The perimeter requires an authentic physical key for non-destructive ingress.'
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: eliza_registry
+  - id: eliza_registry
+    speakerName: Eliza
+    speakerPortrait: {fileID: 0}
+    text: "(Smirks) \"Locked from the outside without a scratch on the door... Sounds cozy. We\u2019ll take the key registry record for our file.\""
+    registersClue: {fileID: 11400000, guid: d0bad7376d47ec54d996f4a33840af2c, type: 2}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: ovan_options
+  - id: ovan_ignatius
+    speakerName: Guildmaster Ovan
+    speakerPortrait: {fileID: 0}
+    text: "He\u2019s in his parlor inside, practically having apoplexy! Demanding emergency compensation from the City Commercial Treasury before the noon bell! If the Council doesn't reimburse him, he threatens to pull all pharmaceutical trade from Asterveil."
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: eliza_hurry
+  - id: eliza_hurry
+    speakerName: Eliza
+    speakerPortrait: {fileID: 0}
+    text: "He\u2019s quick to demand municipal gold for a crime that barely cooled down. {PlayerName}, we need to inspect that crime scene before his alchemists 'clean up' the evidence."
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: ovan_options
+  - id: ovan_warrant
+    speakerName: Guildmaster Ovan
+    speakerPortrait: {fileID: 0}
+    text: '(Sighs, stamping a parchment seal) "Take it. The lower cellar grate is unlocked. But be warned: the vault still reeks of that purple sorcery. Don''t touch anything you can''t pay for!"'
+    registersClue: {fileID: 0}
+    setsFlag: C1_WarrantGranted
+    requiresFlag: 
+    options: []
+    nextNodeId: warrant_close
+  - id: warrant_close
+    speakerName: Eliza
+    speakerPortrait: {fileID: 0}
+    text: "Warrant in hand. Come on, {PlayerName} \u2014 let's see what that vault is really hiding."
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: 
+  startNodeId: ovan_greeting
+  portraits: []

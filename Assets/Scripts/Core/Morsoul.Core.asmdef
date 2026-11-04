@@ -1,0 +1,17 @@
+{
+    "name": "Morsoul.Core",
+    "rootNamespace": "Morsoul.Core",
+    "references": [
+        "Morsoul.Data",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

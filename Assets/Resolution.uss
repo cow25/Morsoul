@@ -1,0 +1,102 @@
+.resolution-root {
+    -unity-font-definition: url("project://database/Assets/Fonts/Middleearth.ttf");
+}
+
+.resolution-backdrop {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.78);
+}
+
+.resolution-panel {
+    position: absolute;
+    left: 20%;
+    right: 20%;
+    top: 30%;
+    align-items: center;
+    background-color: rgba(14, 11, 18, 0.96);
+    border-color: rgba(255, 255, 255, 0.35);
+    border-width: 1px;
+    border-radius: 8px;
+    padding: 24px 30px;
+}
+
+.resolution-header {
+    font-size: 26px;
+    -unity-font-style: bold;
+    color: white;
+    text-shadow: 1px 1px 3px black;
+    -unity-text-align: middle-center;
+}
+
+.resolution-grade {
+    font-size: 20px;
+    -unity-font-style: bold;
+    text-shadow: 1px 1px 2px black;
+    -unity-text-align: middle-center;
+    margin-top: 10px;
+}
+
+.grade--clean {
+    color: rgb(212, 175, 55);
+}
+
+.grade--standard {
+    color: white;
+}
+
+.grade--flawed {
+    color: rgb(150, 150, 150);
+}
+
+.grade--ungraded {
+    color: rgb(190, 190, 190);
+}
+
+.unease-banner {
+    width: 100%;
+    margin-top: 18px;
+    background-color: rgba(68, 44, 88, 0.8);
+    border-color: rgb(130, 80, 160);
+    border-width: 1px;
+    border-radius: 6px;
+    padding: 12px 16px;
+    opacity: 1;
+    transition-property: opacity;
+    transition-duration: 0.9s;
+}
+
+.unease-banner--pulse {
+    opacity: 0.55;
+}
+
+.unease-text {
+    font-size: 14px;
+    color: rgb(220, 200, 240);
+    white-space: normal;
+    -unity-text-align: middle-center;
+}
+
+.unease-location {
+    font-size: 13px;
+    color: rgb(185, 165, 205);
+    -unity-text-align: middle-center;
+    margin-top: 6px;
+}
+
+.unease-hint {
+    font-size: 12px;
+    color: rgb(150, 135, 170);
+    -unity-text-align: middle-center;
+    margin-top: 4px;
+}
+
+.resolution-dismiss-hint {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.55);
+    -unity-text-align: middle-center;
+    margin-top: 18px;
+}

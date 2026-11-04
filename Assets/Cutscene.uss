@@ -1,0 +1,57 @@
+.cutscene-root {
+    -unity-font-definition: url("project://database/Assets/Fonts/Middleearth.ttf");
+    background-color: black;
+}
+
+.cutscene-surface {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    -unity-background-scale-mode: scale-and-crop;
+}
+
+.letterbox-bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 9%;
+    background-color: black;
+}
+
+.cutscene-caption-box {
+    position: absolute;
+    left: 15%;
+    right: 15%;
+    bottom: 12%;
+    background-color: rgba(14, 11, 18, 0.85);
+    border-color: rgba(255, 255, 255, 0.3);
+    border-width: 1px;
+    border-radius: 6px;
+    padding: 10px 16px;
+}
+
+.cutscene-caption-speaker {
+    font-size: 14px;
+    -unity-font-style: bold;
+    color: rgb(185, 165, 205);
+    text-shadow: 1px 1px 1px black;
+}
+
+.cutscene-caption-text {
+    font-size: 16px;
+    color: white;
+    text-shadow: 1px 1px 1px black;
+    white-space: normal;
+    margin-top: 4px;
+}
+
+.cutscene-skip-hint {
+    position: absolute;
+    right: 16px;
+    bottom: 12px;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.55);
+    text-shadow: 1px 1px 1px black;
+}

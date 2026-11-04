@@ -1,0 +1,19 @@
+{
+    "name": "Morsoul.Hub",
+    "rootNamespace": "Morsoul.Hub",
+    "references": [
+        "Morsoul.Core",
+        "Morsoul.Data",
+        "Morsoul.Dialogue",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

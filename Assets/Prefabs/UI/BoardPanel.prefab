@@ -107,3 +107,6 @@ MonoBehaviour:
   preloadAllCaseClues: 1
   manageCursor: 1
   openOnStart: 0
+  hintPortrait: {fileID: 0}
+  hintSpeaker: Eliza
+  diagnosticSpeaker: Internal Diagnostic

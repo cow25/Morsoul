@@ -1,0 +1,16 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/Resolution.uss"/>
+    <ui:VisualElement name="Resolution-Root" class="resolution-root" style="position: absolute; width: 100%; height: 100%; display: none;">
+        <ui:VisualElement name="Backdrop" class="resolution-backdrop"/>
+        <ui:VisualElement name="ResolutionPanel" class="resolution-panel">
+            <ui:Label name="HeaderLabel" text="CASE RESOLVED" class="resolution-header"/>
+            <ui:Label name="GradeLabel" text="" class="resolution-grade" style="display: none;"/>
+            <ui:VisualElement name="UneaseBanner" class="unease-banner" style="display: none;">
+                <ui:Label name="UneaseText" text="" class="unease-text"/>
+                <ui:Label name="UneaseLocation" text="" class="unease-location" style="display: none;"/>
+                <ui:Label name="UneaseHint" text="" class="unease-hint" style="display: none;"/>
+            </ui:VisualElement>
+            <ui:Label name="DismissHint" text="(E) continue" class="resolution-dismiss-hint"/>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

@@ -2,7 +2,8 @@
     "name": "Morsoul.Interrogation",
     "rootNamespace": "Morsoul.Interrogation",
     "references": [
-        "Morsoul.Data"
+        "Morsoul.Data",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -1,0 +1,13 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/Title.uss"/>
+    <ui:VisualElement name="Title-Root" class="title-root" style="position: absolute; width: 100%; height: 100%; display: none;">
+        <ui:VisualElement name="TitleColumn" class="title-column">
+            <ui:Label name="TitleLabel" text="MORSOUL" class="title-label"/>
+            <ui:Label name="SubtitleLabel" text="World's Case" class="subtitle-label"/>
+            <ui:TextField name="NameField" class="title-name-field"/>
+            <ui:Button name="NewGameButton" text="New Game" class="title-button"/>
+            <ui:Button name="ContinueButton" text="Continue" class="title-button title-button--disabled"/>
+            <ui:Button name="QuitButton" text="Quit" class="title-button"/>
+        </ui:VisualElement>
+    </ui:UXML>
+</ui:UXML>

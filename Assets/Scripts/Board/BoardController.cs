@@ -20,6 +20,12 @@ namespace Morsoul.Board
         public bool preloadAllCaseClues = true;
         public bool manageCursor = true;
         public bool openOnStart = false;
+        /// <summary>Portrait shown in the hint popup (Eliza by default).</summary>
+        public Sprite hintPortrait;
+        /// <summary>Speaker name for hint popups outside the prologue case.</summary>
+        public string hintSpeaker = "Eliza";
+        /// <summary>Speaker name used for hint popups during case 0 (internal diagnostic voice).</summary>
+        public string diagnosticSpeaker = "Internal Diagnostic";
 
         /// <summary>Raised whenever the engine reports a Focus cost (invalid pairing, wrong answer).</summary>
         public event Action<float> FocusCosted;
@@ -29,6 +35,8 @@ namespace Morsoul.Board
         public event Action<InterrogationData> InterrogationUnlocked;
         /// <summary>Raised when the master hypothesis routes to an ending.</summary>
         public event Action HypothesisRoutesToEnding;
+        /// <summary>Raised after every causal prompt answer (correct or wrong).</summary>
+        public event Action<AnswerResult> AnswerResolved;
 
         const string BannerErrorClass = "banner--error";
         const string BannerInfoClass = "banner--info";
@@ -47,16 +55,21 @@ namespace Morsoul.Board
         VisualElement _premiseRow;
         VisualElement _feedbackBanner;
         VisualElement _promptModal;
+        VisualElement _hintPopup;
+        VisualElement _hintPortrait;
         ScrollView _clueRack;
         Label _caseTitleLabel;
         Label _feedbackLabel;
         Label _hintLabel;
         Label _promptQuestion;
+        Label _hintSpeaker;
+        Label _hintText;
         Button _slotA;
         Button _slotB;
         Button _linkButton;
         Button _submitButton;
         Button _cancelPromptButton;
+        Button _hintClose;
         readonly Button[] _optionButtons = new Button[3];
 
         // Interaction state.
@@ -72,9 +85,15 @@ namespace Morsoul.Board
         string _bannerText;
         string _bannerHint;
         string _bannerClass;
+        string _hintPopupText;
         int _uiVersion;
 
         public bool IsOpen => _isOpen;
+        /// <summary>Premises verified so far (null until a board is built). Exposed for GameFlow evidence wiring.</summary>
+        public IReadOnlyList<PremiseData> Premises => _board?.Premises;
+
+        /// <summary>Validated board node ids (null until a board is built). Exposed for save/checkpoint wiring.</summary>
+        public IEnumerable<string> ValidatedNodeIds => _board?.ValidatedNodeIds;
 
         void OnEnable()
         {
@@ -112,7 +131,24 @@ namespace Morsoul.Board
                 if (_promptOpen) CancelPrompt();
                 else Close();
             }
-            else if (keyboard.spaceKey.wasPressedThisFrame && !_promptOpen)
+            else if (_hintPopupShowing
+                     && (keyboard.eKey.wasPressedThisFrame
+                         || keyboard.enterKey.wasPressedThisFrame
+                         || keyboard.numpadEnterKey.wasPressedThisFrame))
+            {
+                HideHintPopup();
+            }
+            else if (_promptOpen)
+            {
+                // (A/B/C) or (1/2/3) answer the open causal prompt.
+                if (keyboard.aKey.wasPressedThisFrame || keyboard.digit1Key.wasPressedThisFrame)
+                    OnOptionClicked(0);
+                else if (keyboard.bKey.wasPressedThisFrame || keyboard.digit2Key.wasPressedThisFrame)
+                    OnOptionClicked(1);
+                else if (keyboard.cKey.wasPressedThisFrame || keyboard.digit3Key.wasPressedThisFrame)
+                    OnOptionClicked(2);
+            }
+            else if (keyboard.spaceKey.wasPressedThisFrame)
             {
                 SubmitHypothesis();
             }
@@ -125,6 +161,7 @@ namespace Morsoul.Board
             ClearSlots();
             _promptOpen = false;
             HideBanner();
+            HideHintPopup();
             BuildBoard();
             if (_isOpen) RefreshAll();
         }
@@ -149,6 +186,7 @@ namespace Morsoul.Board
             _promptOpen = false;
             ClearSlots();
             HideBanner();
+            HideHintPopup();
             RefreshAll();
             if (_root != null) _root.style.display = DisplayStyle.Flex;
             if (manageCursor)
@@ -223,6 +261,7 @@ namespace Morsoul.Board
             RefreshSlotButtons();
             RebuildPremises();
             ApplyBanner();
+            ApplyHintPopup();
             ApplyPromptState();
         }
 
@@ -409,6 +448,7 @@ namespace Morsoul.Board
         void OnOptionClicked(int optionIndex)
         {
             if (_board == null || !_promptOpen || _board.PendingNode == null) return;
+            HideHintPopup();
 
             var result = _board.AnswerPrompt(optionIndex);
             if (result.Outcome == AnswerOutcome.Correct)
@@ -418,11 +458,15 @@ namespace Morsoul.Board
             }
             else
             {
+                // Costs stay in the banner; the hint goes to the non-blocking
+                // Eliza/diagnostic popup (GDD §4.5.2).
                 ShowBanner(BannerErrorClass,
-                    "Connection rejected." + CostTag(result.FocusCost, result.StrikeCost),
-                    result.Hint);
+                    "Connection rejected." + CostTag(result.FocusCost, result.StrikeCost));
+                if (!string.IsNullOrEmpty(result.Hint))
+                    ShowHintPopup(result.Hint);
             }
             InvokeCosts(result.FocusCost, result.StrikeCost);
+            AnswerResolved?.Invoke(result);
 
             _promptOpen = false;
             ApplyPromptState();
@@ -531,6 +575,41 @@ namespace Morsoul.Board
                 : DisplayStyle.Flex;
         }
 
+        // --- Hint popup (Eliza / internal diagnostic) ---------------------------
+
+        bool _hintPopupShowing => !string.IsNullOrEmpty(_hintPopupText);
+
+        void ShowHintPopup(string hint)
+        {
+            _hintPopupText = hint;
+            ApplyHintPopup();
+        }
+
+        void HideHintPopup()
+        {
+            _hintPopupText = null;
+            ApplyHintPopup();
+        }
+
+        void ApplyHintPopup()
+        {
+            if (_hintPopup == null) return;
+            if (_hintPopupShowing)
+            {
+                if (_hintPortrait != null)
+                    _hintPortrait.style.backgroundImage = hintPortrait != null
+                        ? new StyleBackground(hintPortrait)
+                        : new StyleBackground(StyleKeyword.Null);
+                if (_hintSpeaker != null)
+                    _hintSpeaker.text = caseData != null && caseData.caseId == 0
+                        ? diagnosticSpeaker
+                        : hintSpeaker;
+                if (_hintText != null)
+                    _hintText.text = _hintPopupText;
+            }
+            _hintPopup.style.display = _hintPopupShowing ? DisplayStyle.Flex : DisplayStyle.None;
+        }
+
         // --- Helpers ----------------------------------------------------------
 
         static string CostTag(float focusCost, int strikeCost)
@@ -559,10 +638,14 @@ namespace Morsoul.Board
             _premiseRow = root.Q<VisualElement>("PremiseRow");
             _feedbackBanner = root.Q<VisualElement>("FeedbackBanner");
             _promptModal = root.Q<VisualElement>("PromptModal");
+            _hintPopup = root.Q<VisualElement>("HintPopup");
+            _hintPortrait = root.Q<VisualElement>("HintPortrait");
             _caseTitleLabel = root.Q<Label>("CaseTitleLabel");
             _feedbackLabel = root.Q<Label>("FeedbackLabel");
             _hintLabel = root.Q<Label>("HintLabel");
             _promptQuestion = root.Q<Label>("PromptQuestion");
+            _hintSpeaker = root.Q<Label>("HintSpeaker");
+            _hintText = root.Q<Label>("HintText");
 
             _slotA = root.Q<Button>("SlotA");
             if (_slotA != null) _slotA.RegisterCallback<ClickEvent>(_ => ClearSlotA());
@@ -576,6 +659,9 @@ namespace Morsoul.Board
             _cancelPromptButton = root.Q<Button>("CancelPromptButton");
             if (_cancelPromptButton != null)
                 _cancelPromptButton.RegisterCallback<ClickEvent>(_ => CancelPrompt());
+            _hintClose = root.Q<Button>("HintClose");
+            if (_hintClose != null)
+                _hintClose.RegisterCallback<ClickEvent>(_ => HideHintPopup());
             for (int i = 0; i < _optionButtons.Length; i++)
             {
                 _optionButtons[i] = root.Q<Button>($"OptionButton{i}");
