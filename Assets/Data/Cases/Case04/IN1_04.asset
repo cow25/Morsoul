@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0dbc7904ce55b14e97ed74f8deb78ee, type: 3}
+  m_Name: IN1_04
+  m_EditorClassIdentifier: Morsoul.Data::Morsoul.Data.InquiryNodeData
+  id: IN1_04
+  slotA: {fileID: 11400000, guid: 674fe7020afc02f45af5ecfe57782c8b, type: 2}
+  slotB: {fileID: 11400000, guid: e0a98d16b24247e4f88ce3469a7759fc, type: 2}
+  prompt:
+    question: The valves were pinned shut, and Thrun confirms Brokk never skips depressurization. What caused the burst?
+    options:
+    - Brokk forgot the normal depressurization sequence.
+    - Someone deliberately locked the valves to force a backpressure explosion.
+    - An ordinary pressure spike fractured a worn drill bit.
+    correctIndex: 1
+    hintText: An experienced engineer can make mistakes, but hardened wedge pins do not install themselves.
+  producesPremise: {fileID: 11400000, guid: 10457cf423205614b80574228bdaffdc, type: 2}
+  rejectedClues:
+  - {fileID: 11400000, guid: 33300352d0376ea418009a4251537502, type: 2}
+  rejectionMessage: 'Physical Contradiction: Mechanical fatigue on drill steel does not account for targeted valve pin locks or chemical cable melting.'

@@ -1,0 +1,67 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 20110e2d39e081f4fac5bf238f842405, type: 3}
+  m_Name: INT_04
+  m_EditorClassIdentifier: Morsoul.Data::Morsoul.Data.InterrogationData
+  id: INT_04
+  suspectName: Harlan, Veiled Circle Infiltrator
+  composureSegments: 3
+  falsehoodShieldActive: 1
+  phases:
+  - suspectClaim: You are barking up the wrong scaffold, metal head. The Dwarves pushed their steam equipment beyond safety margins. This disaster was entirely reckless operator error!
+    keywords:
+    - reckless operator error
+    validMoves:
+    - verb: 0
+      evidence: {fileID: 0}
+      breaksComposureSegment: 0
+      strikeCost: 0
+      isCoreContradiction: 0
+      responseDialogue: Brokk was rushing quota! He forgot the bypass sequence and the lines blew. Simple industrial accident!
+      emotionAura: 1
+    - verb: 1
+      evidence: {fileID: 11400000, guid: 674fe7020afc02f45af5ecfe57782c8b, type: 2}
+      breaksComposureSegment: 1
+      strikeCost: 0
+      isCoreContradiction: 1
+      responseDialogue: Dwarven engineers do not accidentally hammer hardened iron wedge pins into pressure relief gears. The valves were locked to ensure a backflow explosion.
+      emotionAura: 0
+    invalidMoves: []
+  - suspectClaim: So someone jammed a valve. That proves nothing against me! I was contracted solely for upper-tier masonry and never touched the subterranean conduits!
+    keywords: []
+    validMoves:
+    - verb: 2
+      evidence: {fileID: 11400000, guid: e1d83b61a93e2f5488f306d87a577953, type: 2}
+      breaksComposureSegment: 1
+      strikeCost: 0
+      isCoreContradiction: 0
+      responseDialogue: The bypass cables were melted with the same synthetic mana solvent found in Ignatius' vault and Vane's camp. This is a wider operation. Who supplied you?
+      emotionAura: 2
+    invalidMoves:
+    - verb: 2
+      evidence: {fileID: 11400000, guid: 33300352d0376ea418009a4251537502, type: 2}
+      breaksComposureSegment: 0
+      strikeCost: 1
+      isCoreContradiction: 0
+      responseDialogue: A broken drill? Tools snap down here daily. Your logic circuits need a calibration overhaul.
+      emotionAura: 0
+  - suspectClaim: Why would anyone intentionally collapse a dead-end rock face?! What possible gain is there in blowing out useless granite?!
+    keywords: []
+    validMoves:
+    - verb: 1
+      evidence: {fileID: 11400000, guid: c920740002f2f384cb72de51ed32491f, type: 2}
+      breaksComposureSegment: 1
+      strikeCost: 0
+      isCoreContradiction: 0
+      responseDialogue: It wasn't a dead end. The rock concealed the blast doors of an ancient research facility. You caused the blowout to breach it for the Veiled Circle.
+      emotionAura: 0
+    invalidMoves: []

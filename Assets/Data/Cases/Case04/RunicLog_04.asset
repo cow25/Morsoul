@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0200e0523a2f3544b81bf5887919c433, type: 3}
+  m_Name: RunicLog_04
+  m_EditorClassIdentifier: Morsoul.Data::Morsoul.Data.RunicLogData
+  id: 4
+  caseId: 4
+  location: Iron Hollow sub-lab terminal (0, 16)
+  requiredTool: 3
+  contents: 'Planetary Stabilizer Console Blueprints: operational formulas, fail-safe frequencies and manual core override commands.'
+  availableAfterCase: 4

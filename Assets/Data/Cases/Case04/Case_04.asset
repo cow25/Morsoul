@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d37c4bd3e1cabf41acedffef9bb9e4b, type: 3}
+  m_Name: Case_04
+  m_EditorClassIdentifier: Morsoul.Data::Morsoul.Data.CaseData
+  caseId: 4
+  title: The Sub-Surface Sabotage of Iron Hollow
+  region: Iron Hollow Mining Settlement & Subterranean Excavation Facility
+  inquiryNodes:
+  - {fileID: 11400000, guid: 99eb6a411db10e24eaea03d26768856a, type: 2}
+  - {fileID: 11400000, guid: 09f0409f3b1cce241a5654cc54b597b0, type: 2}
+  hypothesis: {fileID: 11400000, guid: 3f5b191eb1d16e74b80bf9f719f858b2, type: 2}
+  interrogation: {fileID: 11400000, guid: 909d3ff8bea74c144b41cfe77bab400d, type: 2}
+  clues:
+  - {fileID: 11400000, guid: 674fe7020afc02f45af5ecfe57782c8b, type: 2}
+  - {fileID: 11400000, guid: e1d83b61a93e2f5488f306d87a577953, type: 2}
+  - {fileID: 11400000, guid: c920740002f2f384cb72de51ed32491f, type: 2}
+  - {fileID: 11400000, guid: e0a98d16b24247e4f88ce3469a7759fc, type: 2}
+  - {fileID: 11400000, guid: dab66446a89e3164eb2d35dfa9ed8ebf, type: 2}
+  - {fileID: 11400000, guid: 33300352d0376ea418009a4251537502, type: 2}
+  - {fileID: 11400000, guid: b46b840c3483019458978611a749fc43, type: 2}
+  latentLog: {fileID: 11400000, guid: 5cfe0e130be7c914587323c39fcee19b, type: 2}
+  toolUnlocked: 3
+  uneaseFlagKey: Case4_UneaseActive
+  hasInvestigationScene: 1
+  hasInterrogation: 1
+  preloadedClues: []
