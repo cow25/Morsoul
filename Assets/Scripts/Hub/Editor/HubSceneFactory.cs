@@ -26,6 +26,7 @@ namespace Morsoul.Hub.Editor
         const string DialogueUxmlPath = "Assets/Dialogue.uxml";
         const string JournalUxmlPath = "Assets/Journal.uxml";
         const string Case01DialogueFolder = "Assets/Data/Dialogue/Case01";
+        const string VisualProfilesFolder = "Assets/Art/Profiles";
         const string Case01RunicLogPath = "Assets/Data/Cases/Case01/RunicLog_01.asset";
 
         [MenuItem("Morsoul/Hub/Create Hub Scene (Lower Market)")]
@@ -39,6 +40,7 @@ namespace Morsoul.Hub.Editor
             CreateSpawnPoint();
             var context = CreateHubContext();
             WirePlayer(player, cameraFollow, context);
+            CreateArtLoader("Hub_LowerMarket_Art");
 
             // Notice board: one-shot clue inspection point.
             CreateInteractable("NoticeBoard",
@@ -101,6 +103,7 @@ namespace Morsoul.Hub.Editor
             CreateSpawnPoint();
             var context = CreateHubContext();
             WirePlayer(player, cameraFollow, context);
+            CreateArtLoader("Hub_Wilderness_Art");
 
             // Trail exit: always-open gate back to the Lower Market.
             CreateInteractable("TrailExit",
@@ -118,6 +121,12 @@ namespace Morsoul.Hub.Editor
         static Scene NewEmptyScene() =>
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
+        static void CreateArtLoader(string artSceneName)
+        {
+            var loader = new GameObject("ArtSceneLoader");
+            loader.AddComponent<HubArtSceneLoader>().artSceneName = artSceneName;
+        }
+
         static GameObject CreatePlayer()
         {
             var player = NewQuadObject("Player",
@@ -127,6 +136,7 @@ namespace Morsoul.Hub.Editor
             rb.gravityScale = 0f;
             rb.freezeRotation = true;
             player.AddComponent<HubPlayerController>();
+            ApplyVisualProfile(player);
             return player;
         }
 
@@ -209,7 +219,33 @@ namespace Morsoul.Hub.Editor
             prompt.transform.localScale = new Vector3(0.3f, 0.3f, 1f);
             prompt.SetActive(false);
             interactable.promptIndicator = prompt;
+            ApplyVisualProfile(go);
             return go;
+        }
+
+        internal static void ApplyVisualProfile(GameObject go)
+        {
+            var visual = go.GetComponent<EntityVisual>();
+            if (visual == null) visual = go.AddComponent<EntityVisual>();
+            // Preserve a profile someone already assigned (e.g. an artist's
+            // custom sprite profile) — only fall back to the name-derived
+            // default when nothing is bound.
+            if (visual.profile == null)
+                visual.profile = EnsureVisualProfile(go.name);
+            visual.Apply(visual.profile);
+        }
+
+        internal static VisualProfile EnsureVisualProfile(string entityName)
+        {
+            EnsureFolder(VisualProfilesFolder);
+            string path = $"{VisualProfilesFolder}/{entityName}.asset";
+            var profile = AssetDatabase.LoadAssetAtPath<VisualProfile>(path);
+            if (profile == null)
+            {
+                profile = ScriptableObject.CreateInstance<VisualProfile>();
+                AssetDatabase.CreateAsset(profile, path);
+            }
+            return profile;
         }
 
         /// <summary>

@@ -1,0 +1,30 @@
+{
+    "name": "Morsoul.Flow.Editor",
+    "rootNamespace": "Morsoul.Flow.Editor",
+    "references": [
+        "Morsoul.Flow",
+        "Morsoul.Core",
+        "Morsoul.Data",
+        "Morsoul.Board",
+        "Morsoul.Gameplay",
+        "Morsoul.Interrogation",
+        "Morsoul.Dialogue",
+        "Morsoul.Cutscene",
+        "Morsoul.Resolution",
+        "Morsoul.Hub",
+        "Morsoul.Journal",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -531,6 +531,7 @@ GameObject:
   - component: {fileID: 386342513}
   - component: {fileID: 386342512}
   - component: {fileID: 386342511}
+  - component: {fileID: 386342515}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -656,6 +657,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 386342509}
   m_Mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &386342515
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 386342509}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 78cb930b8d624950a82508dfb8dc5bb2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.EntityVisual
+  profile: {fileID: 11400000, guid: f80a18c836b59004ba5bdde017e8a0d3, type: 2}
 --- !u!1 &429308463
 GameObject:
   m_ObjectHideFlags: 0
@@ -669,6 +683,7 @@ GameObject:
   - component: {fileID: 429308466}
   - component: {fileID: 429308465}
   - component: {fileID: 429308464}
+  - component: {fileID: 429308469}
   m_Layer: 0
   m_Name: Carrier
   m_TagString: Untagged
@@ -810,6 +825,19 @@ Transform:
   - {fileID: 1961421253}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &429308469
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 429308463}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 78cb930b8d624950a82508dfb8dc5bb2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.EntityVisual
+  profile: {fileID: 11400000, guid: 603b297d1546d7c41a1491854b3aad4c, type: 2}
 --- !u!1 &455401027
 GameObject:
   m_ObjectHideFlags: 0
@@ -1131,6 +1159,7 @@ GameObject:
   - component: {fileID: 779597228}
   - component: {fileID: 779597227}
   - component: {fileID: 779597226}
+  - component: {fileID: 779597231}
   m_Layer: 0
   m_Name: VaultGate
   m_TagString: Untagged
@@ -1274,6 +1303,19 @@ Transform:
   - {fileID: 573789001}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &779597231
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 779597225}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 78cb930b8d624950a82508dfb8dc5bb2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.EntityVisual
+  profile: {fileID: 11400000, guid: 1e79ada99fd593d4dbdd9a7bfd71dd55, type: 2}
 --- !u!1 &905075061
 GameObject:
   m_ObjectHideFlags: 0
@@ -1333,6 +1375,7 @@ GameObject:
   - component: {fileID: 939897636}
   - component: {fileID: 939897635}
   - component: {fileID: 939897634}
+  - component: {fileID: 939897639}
   m_Layer: 0
   m_Name: Ignatius
   m_TagString: Untagged
@@ -1474,6 +1517,19 @@ Transform:
   - {fileID: 194046749}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &939897639
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 939897633}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 78cb930b8d624950a82508dfb8dc5bb2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.EntityVisual
+  profile: {fileID: 11400000, guid: 7efe68b1d156aa44d94fa74a4c74796d, type: 2}
 --- !u!1 &1006536012
 GameObject:
   m_ObjectHideFlags: 0
@@ -1577,6 +1633,7 @@ GameObject:
   - component: {fileID: 1088601608}
   - component: {fileID: 1088601607}
   - component: {fileID: 1088601606}
+  - component: {fileID: 1088601611}
   m_Layer: 0
   m_Name: MarketCrowd
   m_TagString: Untagged
@@ -1718,6 +1775,19 @@ Transform:
   - {fileID: 342766660}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1088601611
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1088601605}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 78cb930b8d624950a82508dfb8dc5bb2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.EntityVisual
+  profile: {fileID: 11400000, guid: 43eadc6b9f27a1b4eac2b7322ff3d552, type: 2}
 --- !u!1 &1198965069
 GameObject:
   m_ObjectHideFlags: 0
@@ -1731,6 +1801,7 @@ GameObject:
   - component: {fileID: 1198965072}
   - component: {fileID: 1198965071}
   - component: {fileID: 1198965070}
+  - component: {fileID: 1198965075}
   m_Layer: 0
   m_Name: NoticeBoard
   m_TagString: Untagged
@@ -1872,6 +1943,19 @@ Transform:
   - {fileID: 149813261}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1198965075
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1198965069}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 78cb930b8d624950a82508dfb8dc5bb2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.EntityVisual
+  profile: {fileID: 11400000, guid: b364f6ec5ac1e5c4c864058107743511, type: 2}
 --- !u!1 &1387845248
 GameObject:
   m_ObjectHideFlags: 0
@@ -1958,6 +2042,7 @@ GameObject:
   - component: {fileID: 1582788350}
   - component: {fileID: 1582788349}
   - component: {fileID: 1582788348}
+  - component: {fileID: 1582788353}
   m_Layer: 0
   m_Name: Ovan
   m_TagString: Untagged
@@ -2099,6 +2184,19 @@ Transform:
   - {fileID: 1006536015}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1582788353
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1582788347}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 78cb930b8d624950a82508dfb8dc5bb2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.EntityVisual
+  profile: {fileID: 11400000, guid: e1bb911d7f31f524eb0160d06ef09c7a, type: 2}
 --- !u!1 &1961421250
 GameObject:
   m_ObjectHideFlags: 0
@@ -2189,6 +2287,51 @@ Transform:
   m_Children: []
   m_Father: {fileID: 429308468}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1999933745
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1999933747}
+  - component: {fileID: 1999933746}
+  m_Layer: 0
+  m_Name: ArtSceneLoader
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1999933746
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1999933745}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c64ba870f97c450b924938eae92c7ed5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.HubArtSceneLoader
+  artSceneName: Hub_LowerMarket_Art
+--- !u!4 &1999933747
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1999933745}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -2206,3 +2349,4 @@ SceneRoots:
   - {fileID: 939897638}
   - {fileID: 1088601610}
   - {fileID: 429308468}
+  - {fileID: 1999933747}

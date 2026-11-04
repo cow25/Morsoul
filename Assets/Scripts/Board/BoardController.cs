@@ -95,6 +95,20 @@ namespace Morsoul.Board
         /// <summary>Validated board node ids (null until a board is built). Exposed for save/checkpoint wiring.</summary>
         public IEnumerable<string> ValidatedNodeIds => _board?.ValidatedNodeIds;
 
+        /// <summary>
+        /// Restores validated nodes from a saved id list (e.g. SessionState.BoardEdges
+        /// after a Continue). Ids belonging to other cases are ignored, and the
+        /// produced premises rejoin <see cref="Premises"/> so the Master
+        /// Hypothesis stays submittable. No-op until a board is built.
+        /// </summary>
+        public void RestoreValidatedNodes(IEnumerable<string> nodeIds)
+        {
+            if (_board == null || caseData == null || nodeIds == null) return;
+            var validIds = new HashSet<string>(
+                caseData.inquiryNodes.Where(n => n != null).Select(n => n.id));
+            _board.Restore(nodeIds.Where(validIds.Contains));
+        }
+
         void OnEnable()
         {
             _panelRenderer = GetComponent<PanelRenderer>();

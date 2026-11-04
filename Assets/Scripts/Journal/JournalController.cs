@@ -60,7 +60,9 @@ namespace Morsoul.Journal
             { "TabPhysical", "TabTestimony", "TabLogs", "TabDossier" };
 
         PanelRenderer _panelRenderer;
-        readonly HashSet<string> _flags = new HashSet<string>();
+        // Live flag set (usually HubFlags' set) - bound by reference so flags
+        // set or restored after wiring stay visible without re-calling SetFlags.
+        ISet<string> _flags = new HashSet<string>();
 
         // Cached elements (re-queried on every UI reload).
         VisualElement _root;
@@ -132,11 +134,11 @@ namespace Morsoul.Journal
             if (_isOpen) RebuildBody();
         }
 
-        /// <summary>Provides the hub flag set used for dossier gating and the dissonance banner.</summary>
+        /// <summary>Binds the live hub flag set used for dossier gating and the
+        /// dissonance banner. Reads stay live - flags added later are honoured.</summary>
         public void SetFlags(ISet<string> flags)
         {
-            _flags.Clear();
-            if (flags != null) _flags.UnionWith(flags);
+            _flags = flags ?? new HashSet<string>();
             if (_isOpen) RebuildBody();
         }
 

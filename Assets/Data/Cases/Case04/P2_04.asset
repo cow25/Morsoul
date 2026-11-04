@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 46ba36eb41b1c4e418353c4c2644cdca, type: 3}
+  m_Name: P2_04
+  m_EditorClassIdentifier: Morsoul.Data::Morsoul.Data.PremiseData
+  id: P2_04
+  title: Veiled Circle Infiltration
+  proposition: The saboteur used cult-signature synthetic solvent to melt fail-safe conduits and blast open the concealed pre-cataclysm research facility.

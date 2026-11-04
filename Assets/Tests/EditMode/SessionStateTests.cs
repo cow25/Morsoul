@@ -110,6 +110,45 @@ namespace Morsoul.Tests
         }
 
         [Test]
+        public void RegisterLatentClue_MarksPerCaseFlag_AndRunicSlot()
+        {
+            var clue = ScriptableObject.CreateInstance<ClueData>();
+            clue.id = "L4_04";
+            clue.caseId = 4;
+            try
+            {
+                Assert.IsTrue(_session.RegisterLatentClue(clue));
+                Assert.IsTrue(_session.IsLatentLogCollected(4));
+                Assert.IsFalse(_session.IsLatentLogCollected(3), "per-case, not global");
+                Assert.IsTrue(_session.RunicLogs[3], "L4 -> slot 3");
+                Assert.AreEqual(1, _session.RunicLogCount);
+                Assert.IsTrue(_session.LatentLogCollected, "legacy latch kept in step");
+                Assert.IsFalse(_session.RegisterLatentClue(clue), "log already marked");
+            }
+            finally { Object.DestroyImmediate(clue); }
+        }
+
+        [Test]
+        public void TryParseRunicLogSlot_ConventionOnly()
+        {
+            Assert.IsTrue(SessionState.TryParseRunicLogSlot("L1_01", out int s1));
+            Assert.AreEqual(0, s1);
+            Assert.IsTrue(SessionState.TryParseRunicLogSlot("L4_04", out int s4));
+            Assert.AreEqual(3, s4);
+            Assert.IsFalse(SessionState.TryParseRunicLogSlot("L9_09", out _));
+            Assert.IsFalse(SessionState.TryParseRunicLogSlot("C1_01", out _));
+            Assert.IsFalse(SessionState.TryParseRunicLogSlot(null, out _));
+        }
+
+        [Test]
+        public void WasMistrialRetried_PerCaseFlag()
+        {
+            _session.SetFlag(SessionState.MistrialFlagFor(2));
+            Assert.IsTrue(_session.WasMistrialRetried(2));
+            Assert.IsFalse(_session.WasMistrialRetried(3));
+        }
+
+        [Test]
         public void Reset_ClearsEverything()
         {
             _session.PlayerName = "x";

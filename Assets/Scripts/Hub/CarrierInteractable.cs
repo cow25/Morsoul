@@ -36,7 +36,15 @@ namespace Morsoul.Hub
                 Debug.LogWarning($"CarrierInteractable '{name}': targetScene is empty.", this);
                 return;
             }
-            SceneManager.LoadScene(targetScene);
+            // Single load authority: the GSM guards missing scenes and stamps
+            // the checkpoint; direct load only without Core.
+            if (CoreRuntime.Instance != null)
+                CoreRuntime.Instance.Bus.Publish(new SceneLoadRequestedEvent
+                {
+                    SceneName = targetScene
+                });
+            else
+                SceneManager.LoadScene(targetScene);
         }
     }
 }

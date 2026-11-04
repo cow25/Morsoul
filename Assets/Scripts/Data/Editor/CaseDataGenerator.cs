@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Morsoul.Data.Editor
 {
-    public static class CaseDataGenerator
+    public static partial class CaseDataGenerator
     {
         [MenuItem("Morsoul/Data/Generate Case 0 + 1 Assets")]
         static void GenerateFromMenu()

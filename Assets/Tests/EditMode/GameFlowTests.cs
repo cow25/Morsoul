@@ -260,7 +260,7 @@ namespace Morsoul.Tests
         // --- Mistrial ----------------------------------------------------------------
 
         [Test]
-        public void Mistrial_RecordsRetry_AndFiresRetryEventOnce()
+        public void Mistrial_RecordsPenalty_ReloadWaitsForRetryConfirm()
         {
             var f = TestCases.Build(1, withInterrogation: true);
             _flow.BeginCase(f.caseData);
@@ -272,9 +272,41 @@ namespace Morsoul.Tests
             _flow.HandleMistrialRequested();
             _flow.HandleInterrogationEnded(InterrogationStatus.Mistrial);
 
-            Assert.AreEqual(1, calls);
             Assert.IsTrue(_flow.Session.MistrialRetried);
             Assert.AreEqual(0, _flow.Session.StrikesLost);
+            Assert.AreEqual(0, calls,
+                "the checkpoint reload waits for the player's retry confirmation");
+        }
+
+        [Test]
+        public void RetryConfirm_FiresEvent_AndReopensPanelWithoutCore()
+        {
+            var f = TestCases.Build(1, withInterrogation: true);
+            _flow.BeginCase(f.caseData);
+            _flow.HandleInterrogationUnlocked(f.interrogation);
+            _interrogation.Close();
+            int calls = 0;
+            _flow.MistrialRetryRequested += () => calls++;
+
+            _flow.HandleMistrialRequested();
+            _flow.HandleRetryRequested(); // no CoreRuntime -> in-scene retry
+
+            Assert.AreEqual(1, calls);
+            Assert.IsTrue(_interrogation.IsOpen);
+        }
+
+        [Test]
+        public void RetryConfirm_WithoutMistrial_DoesNothing()
+        {
+            var f = TestCases.Build(1, withInterrogation: true);
+            _flow.BeginCase(f.caseData);
+            int calls = 0;
+            _flow.MistrialRetryRequested += () => calls++;
+
+            _flow.HandleRetryRequested();
+
+            Assert.AreEqual(0, calls);
+            Assert.IsFalse(_interrogation.IsOpen);
         }
 
         [Test]
@@ -289,6 +321,51 @@ namespace Morsoul.Tests
             _flow.RetryInterrogation();
 
             Assert.IsTrue(_interrogation.IsOpen);
+        }
+
+        [Test]
+        public void InterrogationStrikes_DeltaFeedsGrade()
+        {
+            var f = TestCases.Build(1, withInterrogation: true);
+            _flow.BeginCase(f.caseData);
+
+            _flow.HandleInterrogationStrikes(2);
+            Assert.AreEqual(2, _flow.Session.StrikesLost);
+            Assert.AreEqual(Grade.Standard, _flow.CurrentGrade);
+
+            _flow.HandleInterrogationStrikes(2); // repeated total: no double count
+            Assert.AreEqual(2, _flow.Session.StrikesLost);
+        }
+
+        [Test]
+        public void RestoreValidatedNodes_FiltersForeignCaseNodes()
+        {
+            var f = TestCases.Build(1, withInterrogation: true);
+            _board.SetCase(f.caseData);
+
+            _board.RestoreValidatedNodes(new[] { f.n1.id, "IN9_99" });
+
+            CollectionAssert.AreEquivalent(new[] { f.n1.id }, _board.ValidatedNodeIds);
+            CollectionAssert.Contains(_board.Premises, f.p1);
+        }
+
+        [Test]
+        public void LatentClue_Registration_LatchesActiveCaseFlag()
+        {
+            var f = TestCases.Build(1, withInterrogation: true);
+            _flow.BeginCase(f.caseData);
+            Assert.IsFalse(_flow.latentLogCollected);
+
+            var latent = ScriptableObject.CreateInstance<ClueData>();
+            latent.id = "L1_01";
+            latent.displayName = "Runic Log #1";
+            latent.type = ClueType.Latent;
+            latent.caseId = 1;
+            f.assets.Add(latent);
+
+            _flow.HandleClueRegistered(latent);
+
+            Assert.IsTrue(_flow.latentLogCollected);
         }
 
         // --- Clue / focus pass-through ------------------------------------------------

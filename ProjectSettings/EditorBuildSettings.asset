@@ -6,7 +6,25 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/Scenes/Title.unity
+    guid: a969f887bb7953a448957889ac92c916
+  - enabled: 1
+    path: Assets/Scenes/Hub_LowerMarket.unity
+    guid: 099ff89b38c381e45984ad6d3e878409
+  - enabled: 1
+    path: Assets/Scenes/Hub_Wilderness.unity
+    guid: 1e97ce3006cb4a44b82397d1e3e9675e
+  - enabled: 1
     path: Assets/Scenes/PrologueRuins.unity
     guid: 99c9720ab356a0642a771bea13969a05
+  - enabled: 1
+    path: Assets/Scenes/Hub_LowerMarket_Art.unity
+    guid: 150b0cbf70e760044b5719096acdbf69
+  - enabled: 1
+    path: Assets/Scenes/Hub_Wilderness_Art.unity
+    guid: ec6ceebff9956ef4e9dd5a31f8fdd743
+  - enabled: 1
+    path: Assets/Scenes/CaseLoop.unity
+    guid: 359085d3e54627648a7acc1c7a5554db
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}

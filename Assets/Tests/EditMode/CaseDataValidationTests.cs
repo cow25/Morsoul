@@ -231,6 +231,52 @@ namespace Morsoul.Tests
         }
 
         [Test]
+        public void Finale_GeneratedAssets_MatchCaseContractsAndPreserveGuids()
+        {
+            string root = "Assets/__MorsoulFinaleTest_" + System.Guid.NewGuid().ToString("N");
+            try
+            {
+                CaseDataGenerator.GenerateFinaleAssets(root);
+                var case4 = AssetDatabase.LoadAssetAtPath<CaseData>($"{root}/Case04/Case_04.asset");
+                var case5 = AssetDatabase.LoadAssetAtPath<CaseData>($"{root}/Case05/Case_05.asset");
+                Assert.NotNull(case4);
+                Assert.NotNull(case5);
+                AssertValid(case4.Validate());
+                AssertValid(case5.Validate());
+                Assert.That(case4.clues.Length, Is.EqualTo(7));
+                Assert.That(case4.toolUnlocked, Is.EqualTo(Morsoul.Data.Tool.AetherSight));
+                Assert.That(case4.latentLog.id, Is.EqualTo(4));
+                Assert.That(case4.latentLog.availableAfterCase, Is.EqualTo(4));
+                Assert.That(case4.clues.Single(c => c.type == ClueType.Latent).isBacktrackingOnly, Is.False);
+                Assert.That(case4.inquiryNodes[0].slotA.id, Is.EqualTo("C1_04"));
+                Assert.That(case4.inquiryNodes[0].slotB.id, Is.EqualTo("T1_04"));
+                Assert.That(case4.inquiryNodes[1].slotA.id, Is.EqualTo("C2_04"));
+                Assert.That(case4.inquiryNodes[1].slotB.id, Is.EqualTo("C3_04"));
+                Assert.That(case4.interrogation.phases[0].validMoves.Single(m => m.verb == Verb.Press).emotionAura,
+                    Is.EqualTo(Aura.Amber));
+                Assert.That(case4.interrogation.phases[1].validMoves.Single().emotionAura, Is.EqualTo(Aura.Violet));
+                Assert.That(case5.hasInvestigationScene, Is.False);
+                Assert.That(case5.hasInterrogation, Is.False);
+                Assert.That(case5.interrogation, Is.Null);
+                Assert.That(case5.hypothesis.unlocksInterrogation, Is.Null);
+                Assert.That(case5.latentLog, Is.Null);
+                Assert.That(case5.clues.Length, Is.EqualTo(5));
+                CollectionAssert.AreEquivalent(case5.clues, case5.preloadedClues);
+                Assert.That(case5.clues.All(c => c.requiredTool == Morsoul.Data.Tool.None), Is.True);
+                Assert.That(case5.clues.Any(c => c.type == ClueType.Latent), Is.False);
+                string path = $"{root}/Case05/Case_05.asset";
+                string guid = AssetDatabase.AssetPathToGUID(path);
+                CaseDataGenerator.GenerateFinaleAssets(root);
+                Assert.That(AssetDatabase.AssetPathToGUID(path), Is.EqualTo(guid));
+                AssertValid(AssetDatabase.LoadAssetAtPath<CaseData>(path).Validate());
+            }
+            finally
+            {
+                AssetDatabase.DeleteAsset(root);
+            }
+        }
+
+        [Test]
         public void Case03_GeneratedAssets_AreValid()
         {
             const string root = "Assets/__MorsoulTestTemp";

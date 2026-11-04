@@ -22,25 +22,31 @@ namespace Morsoul.Flow
     {
         [Header("Case")]
         public CaseData activeCase;
-        [Tooltip("Runic logs collected so far (save-side stub; EndingSelector threshold is 4).")]
+        [Tooltip("Fallback runic-log count used only when no CoreRuntime session exists.")]
         public int runicLogsCollected;
         [Tooltip("True once the active case's latent log clue has been collected.")]
         public bool latentLogCollected;
+
+        [Header("Endings")]
+        [Tooltip("Cutscene per ending (index = ending number, 1-3); played before case completion routes.")]
+        public CutsceneData[] endingCutscenes = new CutsceneData[4];
 
         [Header("Panel controllers")]
         public BoardController board;
         public InterrogationController interrogation;
         public ResolutionController resolution;
-        [Tooltip("Reserved for intro/outro playback; not driven by the case loop yet.")]
+        [Tooltip("Plays the ending cutscene selected by the case loop.")]
         public CutscenePlayerController cutscenePlayer;
         [Tooltip("Optional. Clues registered by dialogue feed the journal + evidence.")]
         public DialogueController dialogue;
         [Tooltip("Optional. Hub-scene clue store; absent outside hub scenes.")]
         public HubJournal hubJournal;
+        [Tooltip("Optional. Dialogue flags flow into this set + the Core session.")]
+        public HubFlags flags;
 
         /// <summary>Raised when the run should route to an ending (1 = board fail, 2/3 = EndingSelector).</summary>
         public event Action<int> EndingRouteRequested;
-        /// <summary>Raised once per mistrial; a checkpoint reload consumes it later.</summary>
+        /// <summary>Raised when the player confirms "Retry from Checkpoint"; the GSM reload consumes it.</summary>
         public event Action MistrialRetryRequested;
         /// <summary>Re-emitted Focus costs for the (future) FocusModel. Second arg is the source.</summary>
         public event Action<float, string> FocusSpent;
@@ -50,8 +56,10 @@ namespace Morsoul.Flow
         CaseSession _session;
         readonly List<ClueData> _collectedClues = new List<ClueData>();
         bool _endingRequested;
+        bool _endingCompleted;
         bool _mistrialHandled;
         int _lastEnding;
+        int _reportedStrikes;
 
         public CaseSession Session => _session;
         /// <summary>Grade of the current session (Ungraded before BeginCase) — used by save.</summary>
@@ -81,11 +89,18 @@ namespace Morsoul.Flow
             {
                 interrogation.InterrogationEnded += HandleInterrogationEnded;
                 interrogation.MistrialRequested += HandleMistrialRequested;
+                interrogation.RetryRequested += HandleRetryRequested;
+                interrogation.StrikesChanged += HandleInterrogationStrikes;
             }
             if (resolution != null)
                 resolution.Dismissed += HandleResolutionDismissed;
             if (dialogue != null)
+            {
                 dialogue.ClueRegistered += HandleClueRegistered;
+                dialogue.FlagSet += HandleDialogueFlagSet;
+            }
+            if (cutscenePlayer != null)
+                cutscenePlayer.CutsceneEnded += HandleCutsceneEnded;
         }
 
         /// <summary>Detaches every subscription made by <see cref="Bind"/>.</summary>
@@ -103,11 +118,18 @@ namespace Morsoul.Flow
             {
                 interrogation.InterrogationEnded -= HandleInterrogationEnded;
                 interrogation.MistrialRequested -= HandleMistrialRequested;
+                interrogation.RetryRequested -= HandleRetryRequested;
+                interrogation.StrikesChanged -= HandleInterrogationStrikes;
             }
             if (resolution != null)
                 resolution.Dismissed -= HandleResolutionDismissed;
             if (dialogue != null)
+            {
                 dialogue.ClueRegistered -= HandleClueRegistered;
+                dialogue.FlagSet -= HandleDialogueFlagSet;
+            }
+            if (cutscenePlayer != null)
+                cutscenePlayer.CutsceneEnded -= HandleCutsceneEnded;
         }
 
         /// <summary>Starts a case: fresh session, case + clue rack pushed into the board.</summary>
@@ -125,38 +147,57 @@ namespace Morsoul.Flow
             {
                 core.CurrentCase = caseData.caseId;
                 if (caseData.toolUnlocked != Tool.None) core.UnlockTool(caseData.toolUnlocked);
-                latentLogCollected = core.LatentLogCollected;
+                latentLogCollected = core.IsLatentLogCollected(caseData.caseId);
+                // A mistrial recorded before a checkpoint reload keeps the
+                // Flawed penalty on the fresh case session.
+                if (core.WasMistrialRetried(caseData.caseId))
+                    _session.RecordMistrialRetry();
             }
             _endingRequested = false;
+            _endingCompleted = false;
             _mistrialHandled = false;
             _lastEnding = 0;
+            _reportedStrikes = 0;
             _collectedClues.Clear();
             Bind();
             if (board != null)
             {
                 board.SetCase(caseData);
-                board.SetClues(ResolveBoardClues(caseData));
+                board.SetClues(ResolveBoardClues(caseData, core));
+                // Rehydrate in-progress deductions after a Continue.
+                if (core != null) board.RestoreValidatedNodes(core.BoardEdges);
             }
         }
 
         /// <summary>
         /// M1 clue-rack rule: the case's authored preloadedClues when present
-        /// (board-only cases such as Case 5), otherwise every non-latent,
-        /// non-backtracking case clue. Journal-driven collection replaces this
-        /// once hub scenes feed clues into the session.
+        /// (board-only cases such as Case 5). Otherwise, when a Core session
+        /// exists, only the clues actually collected into it; without a session
+        /// (standalone scenes/tests) every non-latent, non-backtracking case
+        /// clue as before.
         /// </summary>
         public static List<ClueData> ResolveBoardClues(CaseData caseData)
+            => ResolveBoardClues(caseData, null);
+
+        static List<ClueData> ResolveBoardClues(CaseData caseData, Core.SessionState session)
         {
             var result = new List<ClueData>();
             if (caseData == null) return result;
             var preloaded = caseData.preloadedClues;
-            IEnumerable<ClueData> source = preloaded != null && preloaded.Length > 0
-                ? preloaded
-                : caseData.clues;
-            if (source == null) return result;
-            foreach (var clue in source)
-                if (clue != null && clue.type != ClueType.Latent && !clue.isBacktrackingOnly)
-                    result.Add(clue);
+            if (preloaded != null && preloaded.Length > 0)
+            {
+                foreach (var clue in preloaded)
+                    if (clue != null) result.Add(clue);
+                return result;
+            }
+            if (caseData.clues == null) return result;
+            foreach (var clue in caseData.clues)
+            {
+                if (clue == null || clue.type == ClueType.Latent || clue.isBacktrackingOnly)
+                    continue;
+                if (session != null && !session.HasClue(clue.id)) continue;
+                result.Add(clue);
+            }
             return result;
         }
 
@@ -189,6 +230,10 @@ namespace Morsoul.Flow
         {
             if (result.Outcome == AnswerOutcome.Wrong)
                 _session?.RecordWrongCausalAnswer();
+            // Every answer can change the validated set - keep the session in
+            // step so a mid-case checkpoint restores real board progress.
+            if (board != null)
+                Core.CoreRuntime.Instance?.Session.MergeBoardEdges(board.ValidatedNodeIds);
         }
 
         public void HandleInterrogationUnlocked(InterrogationData data)
@@ -207,7 +252,12 @@ namespace Morsoul.Flow
         public void HandleRoutesToEnding()
         {
             if (_endingRequested) return;
-            RequestEnding(EndingSelector.Select(boardFailed: false, runicLogsCollected));
+            // Persistent session truth wins; the inspector field is only a
+            // fallback for scenes running without a CoreRuntime.
+            int logs = Core.CoreRuntime.Instance != null
+                ? Core.CoreRuntime.Instance.Session.RunicLogCount
+                : runicLogsCollected;
+            RequestEnding(EndingSelector.Select(boardFailed: false, logs));
         }
 
         // --- Interrogation handlers --------------------------------------------
@@ -228,14 +278,49 @@ namespace Morsoul.Flow
         /// <summary>
         /// Mistrial path shared by MistrialRequested and InterrogationEnded(Mistrial);
         /// the controller fires both, so the handler is deduplicated via _mistrialHandled.
+        /// Only records the penalty — the actual checkpoint reload waits for the
+        /// player's Retry confirmation (<see cref="HandleRetryRequested"/>).
         /// </summary>
         public void HandleMistrialRequested()
         {
             if (_session == null || _mistrialHandled) return;
             _mistrialHandled = true;
             _session.RecordMistrialRetry();
+            // Persist the penalty so a checkpoint reload still grades Flawed.
+            Core.CoreRuntime.Instance?.Session.SetFlag(
+                Core.SessionState.MistrialFlagFor(_session.Case.caseId));
+        }
+
+        /// <summary>
+        /// "Retry from Checkpoint" confirmed. With a live CoreRuntime the GSM
+        /// consumes MistrialRetryEvent and reloads the case checkpoint; without
+        /// one we fall back to an in-scene engine reset.
+        /// </summary>
+        public void HandleRetryRequested()
+        {
+            if (!_mistrialHandled) return;
             MistrialRetryRequested?.Invoke();
-            Core.CoreRuntime.Instance?.Bus.Publish(new Core.MistrialRetryEvent());
+            if (Core.CoreRuntime.Instance != null)
+                Core.CoreRuntime.Instance.Bus.Publish(new Core.MistrialRetryEvent());
+            else
+                RetryInterrogation();
+        }
+
+        /// <summary>Feeds interrogation-reported strike totals into the grade model.</summary>
+        public void HandleInterrogationStrikes(int total)
+        {
+            if (_session == null) return;
+            int delta = total - _reportedStrikes;
+            _reportedStrikes = total;
+            if (delta > 0) _session.RecordStrikes(delta);
+        }
+
+        /// <summary>Dialogue-set flags flow into the hub flag set + Core session.</summary>
+        public void HandleDialogueFlagSet(string flag)
+        {
+            if (string.IsNullOrEmpty(flag)) return;
+            if (flags != null) flags.Add(flag);
+            else Core.CoreRuntime.Instance?.Session.SetFlag(flag);
         }
 
         // --- Resolution / routing ----------------------------------------------
@@ -246,6 +331,11 @@ namespace Morsoul.Flow
         /// </summary>
         public void HandleResolutionDismissed()
         {
+            if (_endingRequested)
+            {
+                CompleteEnding();
+                return;
+            }
             var caseData = _session != null ? _session.Case : activeCase;
             Core.CoreRuntime.Instance?.Bus.Publish(new Core.CaseCompletedEvent
             {
@@ -261,8 +351,27 @@ namespace Morsoul.Flow
             if (clue == null) return;
             if (!_collectedClues.Contains(clue)) _collectedClues.Add(clue);
             hubJournal?.Register(clue);
-            Core.CoreRuntime.Instance?.Session.RegisterClue(clue);
+            var session = Core.CoreRuntime.Instance != null
+                ? Core.CoreRuntime.Instance.Session : null;
+            session?.RegisterClue(clue);
+            if (clue.type == ClueType.Latent)
+            {
+                // Latches the per-case unease flag and (via the L<n>_<case>
+                // id convention) the matching runic-log slot in the session.
+                session?.RegisterLatentClue(clue);
+                if (activeCase != null && clue.caseId == activeCase.caseId)
+                    latentLogCollected = true;
+            }
             ClueRegistered?.Invoke(clue);
+        }
+
+        /// <summary>
+        /// Ending cutscene finished: completes the case so the GSM routes to
+        /// Title. Ignores cutscene ends unrelated to a requested ending.
+        /// </summary>
+        public void HandleCutsceneEnded()
+        {
+            if (_endingRequested) CompleteEnding();
         }
 
         // --- Internals ------------------------------------------------------------
@@ -271,14 +380,20 @@ namespace Morsoul.Flow
         {
             var caseData = _session != null ? _session.Case : activeCase;
             if (caseData == null) return;
+            var session = Core.CoreRuntime.Instance != null ? Core.CoreRuntime.Instance.Session : null;
+            // Strained scans during the investigation pull the grade to Standard.
+            if (Core.CoreRuntime.Instance != null
+                && Core.CoreRuntime.Instance.Focus.StrainedScanUsed)
+                _session?.RecordStrainedScan();
             // Unease fires when the case hides a latent log the player never found.
             bool unease = caseData.latentLog != null && !latentLogCollected;
             Grade grade = _session != null ? _session.ComputeGrade() : Grade.Ungraded;
-            var session = Core.CoreRuntime.Instance != null ? Core.CoreRuntime.Instance.Session : null;
             if (session != null)
             {
                 session.SetGrade(caseData.caseId, grade);
-                session.LatentLogCollected = latentLogCollected;
+                session.SetFlag(Core.SessionState.LatentLogFlagFor(caseData.caseId),
+                    latentLogCollected);
+                session.LatentLogCollected = session.LatentLogCollected || latentLogCollected;
                 if (board != null) session.MergeBoardEdges(board.ValidatedNodeIds);
             }
             resolution?.Show(caseData.title,
@@ -310,7 +425,29 @@ namespace Morsoul.Flow
         {
             _endingRequested = true;
             _lastEnding = ending;
+            board?.Close();
+            interrogation?.Close();
             EndingRouteRequested?.Invoke(ending);
+            var cutscene = endingCutscenes != null
+                           && ending >= 0 && ending < endingCutscenes.Length
+                ? endingCutscenes[ending] : null;
+            if (cutscenePlayer != null && cutscene != null)
+                cutscenePlayer.Play(cutscene); // HandleCutsceneEnded completes the case
+            else
+                CompleteEnding();
+        }
+
+        /// <summary>Publishes case completion exactly once (ending cutscene or dismissal).</summary>
+        void CompleteEnding()
+        {
+            if (_endingCompleted) return;
+            _endingCompleted = true;
+            var caseData = _session != null ? _session.Case : activeCase;
+            Core.CoreRuntime.Instance?.Bus.Publish(new Core.CaseCompletedEvent
+            {
+                CaseId = caseData != null ? caseData.caseId : 0,
+                Ending = _lastEnding
+            });
         }
     }
 }

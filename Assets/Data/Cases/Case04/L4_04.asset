@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e63a47279c096649aae2935032377f9, type: 3}
+  m_Name: L4_04
+  m_EditorClassIdentifier: Morsoul.Data::Morsoul.Data.ClueData
+  id: L4_04
+  displayName: 'Runic Log #4: Planetary Stabilizer Console Blueprints'
+  type: 3
+  caseId: 4
+  acquisition: 6
+  requiredTool: 3
+  description: After Brokk is freed, use Aether Sight and Golem Eye at the unsealed sub-lab terminal. The schematics contain operational formulas, fail-safe frequencies and manual core override commands for the ancient stabilizer.
+  dissonanceKeyword: 
+  isBacktrackingOnly: 0
+  hasWorldPosition: 1
+  worldPosition: {x: 0, y: 16}

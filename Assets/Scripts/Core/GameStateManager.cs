@@ -52,7 +52,6 @@ namespace Morsoul.Core
         }
 
         CoreRuntime _core;
-        string _pendingScene;
 
         void Awake()
         {
@@ -64,12 +63,10 @@ namespace Morsoul.Core
             _instance = this;
             _core = GetComponent<CoreRuntime>() ?? CoreRuntime.Ensure();
             SeedDefaultRoutes();
-            SceneManager.sceneLoaded += HandleSceneLoaded;
         }
 
         void OnDestroy()
         {
-            SceneManager.sceneLoaded -= HandleSceneLoaded;
             if (_instance == this) _instance = null;
         }
 
@@ -139,7 +136,10 @@ namespace Morsoul.Core
             return true;
         }
 
-        /// <summary>Loads the scene registered for a route key; false when unregistered.</summary>
+        /// <summary>
+        /// Loads the scene registered for a route key. False when the key is
+        /// unregistered OR its scene cannot load, so caller fallbacks engage.
+        /// </summary>
         public bool GoToRoute(string key, GameFlowState stateOnSuccess)
         {
             string scene = routes.Resolve(key);
@@ -148,9 +148,13 @@ namespace Morsoul.Core
                 Debug.LogWarning($"GameStateManager: no route for '{key}'.", this);
                 return false;
             }
+            if (!Application.CanStreamedLevelBeLoaded(scene))
+            {
+                Debug.LogWarning($"GameStateManager: route '{key}' -> '{scene}' not loadable (missing or not in Build Profiles).", this);
+                return false;
+            }
             Advance(stateOnSuccess);
-            LoadSceneInternal(scene);
-            return true;
+            return LoadSceneInternal(scene);
         }
 
         /// <summary>Route with fallback when the primary key isn't registered.</summary>
@@ -249,7 +253,12 @@ namespace Morsoul.Core
 
         // --- Internals --------------------------------------------------------
 
-        void LoadSceneInternal(string sceneName)
+        /// <summary>
+        /// Loads the scene through the guarded path, stamping the checkpoint
+        /// with the destination only once loadability is confirmed; false when
+        /// it can't load so caller fallbacks engage.
+        /// </summary>
+        bool LoadSceneInternal(string sceneName)
         {
             if (!Application.CanStreamedLevelBeLoaded(sceneName))
             {
@@ -257,16 +266,11 @@ namespace Morsoul.Core
                 // checkpoint pointed at the CURRENT scene so Continue doesn't
                 // strand the player on an unloadable scene.
                 Debug.LogWarning($"GameStateManager: scene '{sceneName}' is not loadable (missing or not in Build Profiles).", this);
-                return;
+                return false;
             }
-            _pendingScene = sceneName;
             WriteCheckpoint("SceneTransition", sceneName);
             SceneManager.LoadScene(sceneName);
-        }
-
-        void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
-        {
-            _pendingScene = null;
+            return true;
         }
     }
 }

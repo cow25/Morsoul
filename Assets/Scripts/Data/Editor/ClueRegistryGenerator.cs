@@ -14,7 +14,7 @@ namespace Morsoul.Data.Editor
         const string RegistryPath = "Assets/Resources/ClueRegistry.asset";
 
         [MenuItem("Morsoul/Data/Rebuild Clue Registry")]
-        static void Rebuild()
+        public static void Rebuild()
         {
             var registry = AssetDatabase.LoadAssetAtPath<ClueRegistry>(RegistryPath);
             if (registry == null)
