@@ -1,5 +1,7 @@
 # Morsoul project rules
 
+Read [README.md](README.md) for contributor setup, the system/folder map, runtime composition, asset destinations, verification commands and remaining integration work. This file owns agent constraints and ownership rules. Keep both documents aligned when changing public contracts or workflows.
+
 ## Ownership and merge boundaries
 
 - The user performs all commits. Agents must not commit, push, change Git configuration, or migrate LFS history.
@@ -33,7 +35,7 @@ Do not add a second service locator or local copy of Focus. Assembly-CSharp can 
 - While actively scanning call `core.Focus.TickScan(Time.deltaTime)` once per frame; display `core.Focus.Percent` out of 100. Do not block scans at zero: strained scanning remains functional. Call `TickRest` only while resting. Remove the local 120-point counter only in the 3D owner's integration change.
 - Author stable clue IDs matching the `ClueData` assets, for example `C1_01`. The existing 3D `ClueNode` has its own enums and does not currently register into Core. Resolve its ID with `core.ResolveClue(id)` and reject unresolved IDs visibly instead of marking collection complete.
 - When a `GameFlow` is bound in the scene, use its `HandleClueRegistered(clue)` so interrogation evidence, the hub journal and persistent Session receive the same collection. For a scene without GameFlow, `core.Session.RegisterClue(clue)` persists it but does not refresh already-bound UI. Scene composition must choose one collection adapter, not call both independently.
-- For recovered Runic Logs 1 through 4 call `core.Session.MarkRunicLog(log.id - 1)` only after tool/access checks succeed, in addition to registering the latent clue. Registering a clue alone does not mark a Runic Log slot. The current latent-log latch is session-wide, not yet per case: do not rely on it alone to decide whether a particular log was recovered.
+- For a recovered latent clue, a bound `GameFlow.HandleClueRegistered(clue)` registers its per-case latent flag and derives the Runic Log slot from the current `L<n>_<case>` ID convention. Without GameFlow, call `Session.RegisterClue(clue)` and `Session.RegisterLatentClue(clue)` after tool/access checks. `MarkRunicLogById(log.id)` accepts 1-based log IDs; `MarkRunicLog(slot)` accepts 0-based slots. Plain `RegisterClue` does not mark logs. Use `IsLatentLogCollected(caseId)` for per-case checks, not the legacy session-wide latch. Refresh journal log views explicitly; persistent registration alone does not bind UI.
 - Story flags use `core.Session.SetFlag(key)` and `HasFlag(key)`. Do not introduce another persistent diary or flags singleton.
 - For a checkpoint without travel publish `new CheckpointRequestedEvent { Reason = "Investigation" }` on `core.Bus`. To travel publish `new SceneLoadRequestedEvent { SceneName = actualSceneName }`; GSM validates availability, checkpoints and loads. Do not also call SceneManager.LoadScene or publish a second travel checkpoint for the same request.
 - `GameStateManager.Ensure().routes.Set(key, sceneName)` configures routing. Use `investigation.<caseId>` and `hub.<caseId>` keys. Agree actual scene names before registration; a route is not proof a scene exists in the active build profile. Case 5 is board/cutscene-only and must not gain an investigation route.
