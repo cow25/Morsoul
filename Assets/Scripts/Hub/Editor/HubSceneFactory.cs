@@ -89,6 +89,15 @@ namespace Morsoul.Hub.Editor
             carrierInteractable.promptText = "[E] Travel";
             carrierInteractable.targetScene = "Hub_Wilderness";
 
+            // Case door: ungated entry into the shared case loop; the loop
+            // resolves Session.CurrentCase through the case database.
+            CreateInteractable("CaseDoor",
+                new Color(0.7f, 0.35f, 0.5f), new Vector3(-6f, 2.5f, 0f),
+                out CarrierInteractable caseDoor);
+            caseDoor.promptText = "[E] Begin Case";
+            caseDoor.checkpointReason = "CaseDoor";
+            caseDoor.targetScene = "CaseLoop";
+
             SaveScene(scene, LowerMarketScenePath);
         }
 
@@ -112,6 +121,14 @@ namespace Morsoul.Hub.Editor
             exitGate.promptText = "[E] Leave";
             exitGate.requiredFlag = ""; // ungated
             exitGate.targetScene = "Hub_LowerMarket";
+
+            // Case door: ungated entry into the shared case loop.
+            CreateInteractable("CaseDoor",
+                new Color(0.7f, 0.35f, 0.5f), new Vector3(6f, -1f, 0f),
+                out CarrierInteractable caseDoor);
+            caseDoor.promptText = "[E] Begin Case";
+            caseDoor.checkpointReason = "CaseDoor";
+            caseDoor.targetScene = "CaseLoop";
 
             SaveScene(scene, WildernessScenePath);
         }
@@ -205,7 +222,7 @@ namespace Morsoul.Hub.Editor
             if (cameraFollow != null) cameraFollow.target = player.transform;
         }
 
-        static GameObject CreateInteractable<T>(string name, Color tint,
+        internal static GameObject CreateInteractable<T>(string name, Color tint,
             Vector3 position, out T interactable) where T : Interactable2D
         {
             var go = NewQuadObject(name, tint, position);

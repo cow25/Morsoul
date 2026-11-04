@@ -95,6 +95,7 @@ Routes are configured through `GameStateManager.Ensure().routes.Set(key, actualS
 | Route key | Current default |
 | --- | --- |
 | `title` | `Title` |
+| `caseloop` | `CaseLoop` |
 | `hub.0`, `hub.1` | `Hub_LowerMarket` |
 | `hub.3` | `Hub_Wilderness` |
 | `opening` | Not seeded |
@@ -124,13 +125,18 @@ The legacy `ScanController` still has its own 120-point focus and different zero
 - **Title:** normal New Game / Continue entry point.
 - **Hub_LowerMarket / Hub_Wilderness:** generated 2D gameplay scenes with optional additive art overlays.
 - **PrologueRuins:** 3D-owned scene. Do not regenerate or restructure it from the 2D lane.
-- **CaseLoop:** panel composition scene, not an automatically configured campaign. Its generated `GameFlow.activeCase` is intentionally unassigned.
+- **CaseLoop:** shared case-loop scene. With no `activeCase` assigned, its `GameFlow` resolves `Session.CurrentCase` through `Assets/Resources/CaseDatabase.asset` at Play time; assign `activeCase` only to pin one case for standalone testing. Hub scenes have a "CaseDoor" interactable (`[E] Begin Case`) that travels here through the guarded GSM path.
+
+### Campaign progression
+
+- Entering the case loop begins `Session.CurrentCase`. Completing a case without an ending advances `CurrentCase` and routes `hub.<id+1>` -> `hub.<id>` -> `title` in order until one loads. An ending (`Ending != 0`) routes to Title after its cutscene.
+- `Case_05` (board-only, authored `preloadedClues`) can be played end-to-end today; investigation cases still need their evidence collected into Session first (or a 3D scene delivering it).
 
 ### CaseLoop setup
 
-1. Open `Assets/Scenes/CaseLoop.unity`. Assign `GameFlow.activeCase` to a case asset. `Assets/Data/Cases/Case05/Case_05.asset` is the board-only finale; it does not require a fabricated investigation scene.
-2. Check the board, interrogation, resolution, cutscene, dialogue, journal and flag-store references. The factory creates the panel wiring, but it does not author all content or bootstrap a campaign.
-3. For production/session-backed testing, ensure Core exists **before** `BeginCase`. Starting CaseLoop alone does not automatically create Core. Without Core, GameFlow retains standalone evidence/log-count fallbacks; that mode is not a persistence test.
+1. Open `Assets/Scenes/CaseLoop.unity`. To pin a case for standalone testing assign `GameFlow.activeCase` (e.g. `Assets/Data/Cases/Case05/Case_05.asset`); leave it unassigned for session-driven play.
+2. Check the board, interrogation, resolution, cutscene, dialogue, journal and flag-store references. The factory creates the panel wiring, but it does not author all content.
+3. For production/session-backed testing, ensure Core exists **before** `BeginCase` — entering via the hub CaseDoor or Title guarantees this. Starting CaseLoop alone does not automatically create Core. Without Core, GameFlow retains standalone evidence/log-count fallbacks; that mode is not a persistence test.
 4. Investigation cases use Session-collected clues at case initialization when Core is live. Board-only authored `preloadedClues` take precedence. Late collection needs an explicit rack refresh through `BoardController.SetClues`; do not assume every Session change rebuilds every view.
 5. Bind journal/dialogue flags at runtime with `SetFlags(hubFlags.Set)`. The flag set is not serialized; calling SetFlags only inside an editor generator does not persist that binding. Populate journal `allLogs` and synchronize its displayed collected logs with Session as part of scene composition.
 6. Assign `GameFlow.endingCutscenes[1]`, `[2]`, `[3]` (index 0 unused). For GameFlow-owned endings, leave each `CutsceneData.nextSceneName` empty so `CutsceneEnded` can drive case completion. A cutscene with its own destination owns travel instead.
@@ -145,7 +151,7 @@ Controls exposed by the controllers include **E** for hub interaction/dialogue o
 - Cases 0-5 have data assets. Data existence does not imply a corresponding playable investigation scene or registered campaign route.
 - Follow the approved GDD/case documents for content decisions. The team's authoritative Obsidian documents are maintained outside this checkout; obtain them from the project owner rather than inventing story facts or assuming another contributor has the same local vault path.
 - Keep clue, premise and inquiry-node IDs stable. Save restoration relies on them.
-- Run **Morsoul > Data > Validate All Cases** after content edits and **Rebuild Clue Registry** after adding/removing clue assets. Review the generated asset diff and its `.meta` files.
+- Run **Morsoul > Data > Validate All Cases** after content edits, **Rebuild Clue Registry** after adding/removing clue assets, and **Rebuild Case Database** after adding/removing case assets. **Morsoul > Setup > Rebuild Campaign Wiring** runs the case-database rebuild plus the hub CaseDoor installer in one step. Review the generated asset diff and its `.meta` files.
 - Generator menus exist for Cases 0+1, 2, 3, 4+5, Case 1 hub dialogue, opening and Case 0 outro. They are authoring tools, not routine startup steps. Regeneration may replace manual content.
 
 ### Art and audio destinations
@@ -206,8 +212,8 @@ The last recorded automated run during the integration work was **189 passed, 0 
 
 Before calling the campaign complete, verify and finish:
 
-- Delivered 3D scenes, actual routes and build-profile entries, including case-to-case progression.
-- A production scene/bootstrap composition selecting cases, ensuring Core lifetime and binding all runtime views. CaseLoop is a starting composition, not a complete campaign bootstrap.
+- Delivered 3D investigation scenes, their `investigation.<caseId>` routes and build-profile entries, plus hub routes for cases 2, 4 and 5.
+- Ending `CutsceneData` assignments per case on `GameFlow.endingCutscenes`; without them, endings complete immediately with no cinematic.
 - 3D prototype Focus/clue migration through the shared APIs.
 - Board lifecycle/late-evidence refresh, journal flag/log refresh and the journal's `MarkedForBoard` action consumer.
 - Per-case grading and checkpoint semantics across all real scene transitions, including strained-scan state boundaries and mistrial replay.

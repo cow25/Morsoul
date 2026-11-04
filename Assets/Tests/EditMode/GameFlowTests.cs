@@ -398,5 +398,79 @@ namespace Morsoul.Tests
             Assert.AreEqual(12.5f, cost);
             Assert.AreEqual("Board", source);
         }
+
+        // --- Campaign bootstrap ------------------------------------------------
+
+        [Test]
+        public void CaseDatabase_Find_ResolvesByCaseId()
+        {
+            var f = TestCases.Build(3, withInterrogation: true);
+            var db = ScriptableObject.CreateInstance<CaseDatabase>();
+            f.assets.Add(db);
+            db.cases.Add(null);
+            db.cases.Add(f.caseData);
+
+            Assert.AreSame(f.caseData, db.Find(3));
+            Assert.IsNull(db.Find(4));
+        }
+
+        [Test]
+        public void SessionCase_ResolvesThroughCaseDatabase()
+        {
+            var core = Core.CoreRuntime.Ensure();
+            _objects.Add(core.gameObject);
+            core.Session.CurrentCase = 5;
+            var f = TestCases.Build(5, withInterrogation: false, boardOnly: true);
+            var db = ScriptableObject.CreateInstance<CaseDatabase>();
+            f.assets.Add(db);
+            db.cases.Add(f.caseData);
+            _flow.caseDatabase = db;
+
+            Assert.IsTrue(_flow.TryBeginSessionCase());
+
+            Assert.AreSame(f.caseData, _flow.Session.Case);
+            Assert.AreEqual(5, core.Session.CurrentCase);
+        }
+
+        [Test]
+        public void SessionCase_UnknownId_ReturnsFalse()
+        {
+            var core = Core.CoreRuntime.Ensure();
+            _objects.Add(core.gameObject);
+            core.Session.CurrentCase = 99;
+            var f = TestCases.Build(1, withInterrogation: true);
+            var db = ScriptableObject.CreateInstance<CaseDatabase>(); // empty
+            f.assets.Add(db);
+            _flow.caseDatabase = db;
+
+            Assert.IsFalse(_flow.TryBeginSessionCase());
+            Assert.IsNull(_flow.Session);
+        }
+
+        [Test]
+        public void CaseLoopRoute_IsSeeded()
+        {
+            var core = Core.CoreRuntime.Ensure();
+            _objects.Add(core.gameObject);
+            var gsm = Core.GameStateManager.Ensure();
+
+            gsm.SeedDefaultRoutes();
+
+            Assert.AreEqual("CaseLoop", gsm.routes.Resolve(Core.RouteKeys.CaseLoop));
+        }
+
+        [Test]
+        public void CaseCompleted_AdvancesSessionCurrentCase()
+        {
+            var core = Core.CoreRuntime.Ensure();
+            _objects.Add(core.gameObject);
+            var gsm = Core.GameStateManager.Ensure();
+            gsm.routes.routes.Clear(); // unregistered routes -> warnings only, no scene loads
+            core.Session.CurrentCase = 1;
+
+            gsm.OnCaseCompleted(new Core.CaseCompletedEvent { CaseId = 1, Ending = 0 });
+
+            Assert.AreEqual(2, core.Session.CurrentCase);
+        }
     }
 }

@@ -52,6 +52,24 @@ namespace Morsoul.Core
             return _clueRegistry != null ? _clueRegistry.Find(clueId) : null;
         }
 
+        Morsoul.Data.CaseDatabase _caseDatabase;
+        bool _caseDatabaseLoaded;
+
+        /// <summary>
+        /// Resolves a case id to its CaseData asset via the generated
+        /// Resources/CaseDatabase index; null when unregistered. The case
+        /// loop uses this to play Session.CurrentCase.
+        /// </summary>
+        public Morsoul.Data.CaseData ResolveCase(int caseId)
+        {
+            if (!_caseDatabaseLoaded)
+            {
+                _caseDatabase = Resources.Load<Morsoul.Data.CaseDatabase>("CaseDatabase");
+                _caseDatabaseLoaded = true;
+            }
+            return _caseDatabase != null ? _caseDatabase.Find(caseId) : null;
+        }
+
         /// <summary>
         /// Returns the existing instance, or creates a DontDestroyOnLoad
         /// CoreRuntime GameObject. Safe to call from any scene's Awake.
@@ -61,7 +79,7 @@ namespace Morsoul.Core
             if (_instance != null) return _instance;
             var go = new GameObject("CoreRuntime");
             _instance = go.AddComponent<CoreRuntime>();
-            DontDestroyOnLoad(go);
+            if (Application.isPlaying) DontDestroyOnLoad(go);
             return _instance;
         }
 

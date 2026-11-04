@@ -1,6 +1,7 @@
 using System.IO;
 using Morsoul.Board;
 using Morsoul.Cutscene;
+using Morsoul.Data;
 using Morsoul.Dialogue;
 using Morsoul.Hub;
 using Morsoul.Interrogation;
@@ -93,8 +94,11 @@ namespace Morsoul.Flow.Editor
             flow.dialogue = dialogue;
             flow.hubJournal = hubJournal;
             flow.flags = hubFlags;
-            // flow.activeCase stays unassigned on purpose — pick the case to
-            // run in the inspector before pressing Play.
+            flow.caseDatabase = AssetDatabase.LoadAssetAtPath<CaseDatabase>(
+                "Assets/Resources/CaseDatabase.asset");
+            // flow.activeCase stays unassigned on purpose — at Play time the
+            // flow resolves Session.CurrentCase through the case database.
+            // Assign activeCase only to pin one case for standalone testing.
 
             if (EditorSceneManager.SaveScene(scene, ScenePath))
                 Debug.Log($"FlowSceneFactory: case-loop scene saved to '{ScenePath}'. " +

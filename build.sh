@@ -123,6 +123,13 @@ compile Morsoul.Title.Editor "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Title.d
 compile Morsoul.Resolution.Editor \
     "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Gameplay.dll" "-r:$OUT/Morsoul.Resolution.dll" \
     -- $(src Resolution/Editor)
+compile Morsoul.Flow.Editor \
+    "-r:$OUT/Morsoul.Core.dll" "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Data.Editor.dll" \
+    "-r:$OUT/Morsoul.Board.dll" "-r:$OUT/Morsoul.Gameplay.dll" \
+    "-r:$OUT/Morsoul.Interrogation.dll" "-r:$OUT/Morsoul.Dialogue.dll" "-r:$OUT/Morsoul.Cutscene.dll" \
+    "-r:$OUT/Morsoul.Resolution.dll" "-r:$OUT/Morsoul.Hub.dll" "-r:$OUT/Morsoul.Hub.Editor.dll" \
+    "-r:$OUT/Morsoul.Journal.dll" "-r:$OUT/Morsoul.Flow.dll" \
+    -- $(src Flow/Editor)
 
 # EditMode tests.
 compile Morsoul.Tests.EditMode \

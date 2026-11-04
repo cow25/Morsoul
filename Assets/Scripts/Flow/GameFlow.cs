@@ -22,6 +22,10 @@ namespace Morsoul.Flow
     {
         [Header("Case")]
         public CaseData activeCase;
+        [Tooltip("Optional override used to resolve Session.CurrentCase when no " +
+                 "activeCase is assigned; falls back to the generated " +
+                 "Resources/CaseDatabase via CoreRuntime.ResolveCase.")]
+        public CaseDatabase caseDatabase;
         [Tooltip("Fallback runic-log count used only when no CoreRuntime session exists.")]
         public int runicLogsCollected;
         [Tooltip("True once the active case's latent log clue has been collected.")]
@@ -69,6 +73,34 @@ namespace Morsoul.Flow
         {
             Bind();
             if (activeCase != null) BeginCase(activeCase);
+            else if (Application.isPlaying) TryBeginSessionCase();
+        }
+
+        /// <summary>
+        /// Resolves the case to play from the Core session (CurrentCase) through
+        /// the case database — the campaign entry used by the shared CaseLoop
+        /// scene when no activeCase is assigned. False (with a warning) when
+        /// nothing resolves.
+        /// </summary>
+        public bool TryBeginSessionCase()
+        {
+            var core = Core.CoreRuntime.Instance;
+            if (core == null)
+            {
+                Debug.LogWarning("GameFlow: no activeCase assigned and no CoreRuntime — nothing to begin.", this);
+                return false;
+            }
+            var data = caseDatabase != null
+                ? caseDatabase.Find(core.Session.CurrentCase)
+                : core.ResolveCase(core.Session.CurrentCase);
+            if (data == null)
+            {
+                Debug.LogWarning($"GameFlow: no CaseData for session case {core.Session.CurrentCase} " +
+                                 "(rebuild the case database).", this);
+                return false;
+            }
+            BeginCase(data);
+            return true;
         }
 
         void OnDisable() => Unbind();

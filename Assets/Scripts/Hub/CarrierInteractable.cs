@@ -13,6 +13,8 @@ namespace Morsoul.Hub
     {
         /// <summary>Scene loaded on interact.</summary>
         public string targetScene;
+        /// <summary>Reason stamped on the travel checkpoint ("Carrier", "CaseDoor", ...).</summary>
+        public string checkpointReason = "Carrier";
 
         /// <summary>Fired just before scene load; argument is the checkpoint reason.</summary>
         public event Action<string> CheckpointRequested;
@@ -25,10 +27,10 @@ namespace Morsoul.Hub
         public override void Interact(HubContext ctx)
         {
             base.Interact(ctx);
-            CheckpointRequested?.Invoke("Carrier");
+            CheckpointRequested?.Invoke(checkpointReason);
             CoreRuntime.Instance?.Bus.Publish(new CheckpointRequestedEvent
             {
-                Reason = "Carrier",
+                Reason = checkpointReason,
                 NextSceneName = targetScene
             });
             if (string.IsNullOrEmpty(targetScene))

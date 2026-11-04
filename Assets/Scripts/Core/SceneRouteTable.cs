@@ -8,6 +8,8 @@ namespace Morsoul.Core
     {
         public const string Title = "title";
         public const string Opening = "opening";
+        /// <summary>Shared case-loop scene; resolves the session's current case.</summary>
+        public const string CaseLoop = "caseloop";
         /// <summary>Hub scene for a case: hub.0, hub.1, ...</summary>
         public static string Hub(int caseId) => $"hub.{caseId}";
         /// <summary>Investigation scene for a case: investigation.1, ...</summary>
