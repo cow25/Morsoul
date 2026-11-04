@@ -35,6 +35,7 @@ sysinfo.txt
 *.aab
 *.unitypackage
 *.app
+*Results.xml
 
 # Crashlytics
 crashlytics-build.properties
