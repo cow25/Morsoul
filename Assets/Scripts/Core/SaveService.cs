@@ -26,7 +26,12 @@ namespace Morsoul.Core
 
         public bool HasSave => File.Exists(_filePath);
 
-        /// <summary>Writes the checkpoint atomically (temp file + move).</summary>
+        /// <summary>
+        /// Writes the checkpoint via a temp file, then swaps it in. When a
+        /// previous save exists the swap is an atomic <see cref="File.Replace"/>
+        /// keeping a .bak backup, so a crash mid-save cannot lose the old
+        /// checkpoint. Falls back to delete+move if Replace is unsupported.
+        /// </summary>
         public void Save(SaveState state)
         {
             string json = SaveSerializer.Serialize(state);
@@ -34,8 +39,26 @@ namespace Morsoul.Core
             if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
             string tmp = _filePath + ".tmp";
             File.WriteAllText(tmp, json);
-            if (File.Exists(_filePath)) File.Delete(_filePath);
-            File.Move(tmp, _filePath);
+
+            if (File.Exists(_filePath))
+            {
+                string bak = _filePath + ".bak";
+                try
+                {
+                    File.Replace(tmp, _filePath, bak);
+                    if (File.Exists(bak)) File.Delete(bak);
+                }
+                catch (PlatformNotSupportedException)
+                {
+                    // Filesystem lacks atomic replace - last-resort swap.
+                    File.Copy(_filePath, bak, true);
+                    File.Move(tmp, _filePath);
+                }
+            }
+            else
+            {
+                File.Move(tmp, _filePath);
+            }
         }
 
         /// <summary>

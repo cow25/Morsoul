@@ -225,10 +225,14 @@ namespace Morsoul.Hub.Editor
 
         internal static void ApplyVisualProfile(GameObject go)
         {
-            var profile = EnsureVisualProfile(go.name);
             var visual = go.GetComponent<EntityVisual>();
             if (visual == null) visual = go.AddComponent<EntityVisual>();
-            visual.Apply(profile);
+            // Preserve a profile someone already assigned (e.g. an artist's
+            // custom sprite profile) — only fall back to the name-derived
+            // default when nothing is bound.
+            if (visual.profile == null)
+                visual.profile = EnsureVisualProfile(go.name);
+            visual.Apply(visual.profile);
         }
 
         internal static VisualProfile EnsureVisualProfile(string entityName)

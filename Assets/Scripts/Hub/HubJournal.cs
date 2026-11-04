@@ -25,11 +25,15 @@ namespace Morsoul.Hub
         void OnEnable()
         {
             // Rehydrate from the persistent session after a scene load; clue
-            // assets cached this run repopulate the journal view.
+            // assets cached this run repopulate the journal view. Snapshot the
+            // dictionary and hydrate silently - Register would mutate the same
+            // session dictionary mid-enumeration and re-notify listeners of
+            // clues that were already announced.
             var session = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session : null;
             if (session == null) return;
-            foreach (var kv in session.ClueAssets)
-                Register(kv.Value);
+            foreach (var kv in new List<KeyValuePair<string, ClueData>>(session.ClueAssets))
+                if (kv.Value != null && !_collected.Contains(kv.Value))
+                    _collected.Add(kv.Value);
         }
 
         /// <summary>Registers the clue if not already present. Returns true when added.</summary>

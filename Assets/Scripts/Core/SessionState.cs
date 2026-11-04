@@ -67,12 +67,24 @@ namespace Morsoul.Core
 
         public IReadOnlyDictionary<string, bool> Flags => _flags;
 
-        /// <summary>GameFlow's per-case latent-log latch, carried as a reserved flag.</summary>
+        /// <summary>GameFlow's legacy session-wide latent-log latch.</summary>
         public bool LatentLogCollected
         {
             get => HasFlag(LatentLogFlag);
             set => SetFlag(LatentLogFlag, value);
         }
+
+        /// <summary>Flag key tracking that the case's latent log was collected.</summary>
+        public static string LatentLogFlagFor(int caseId) => "Session.LatentLog." + caseId;
+
+        /// <summary>Flag key tracking that a mistrial retry penalty applies to the case.</summary>
+        public static string MistrialFlagFor(int caseId) => "Session.MistrialRetried." + caseId;
+
+        /// <summary>True when the case's latent log was collected this campaign.</summary>
+        public bool IsLatentLogCollected(int caseId) => HasFlag(LatentLogFlagFor(caseId));
+
+        /// <summary>True when the case carried a mistrial retry penalty.</summary>
+        public bool WasMistrialRetried(int caseId) => HasFlag(MistrialFlagFor(caseId));
 
         // --- Board / logs / grades / tools ------------------------------------
 
@@ -91,6 +103,53 @@ namespace Morsoul.Core
         public void MarkRunicLog(int slot)
         {
             if (slot >= 0 && slot < _runicLogs.Length) _runicLogs[slot] = true;
+        }
+
+        /// <summary>
+        /// Marks runic-log slot by 1-based log id (RunicLogData.id).
+        /// </summary>
+        public void MarkRunicLogById(int logId) => MarkRunicLog(logId - 1);
+
+        /// <summary>
+        /// Registers a collected latent (runic-log) clue: latches the per-case
+        /// latent flag and, when the clue id follows the "L&lt;n&gt;_..." naming
+        /// convention, marks the matching runic-log slot. Returns true when a
+        /// log slot was marked.
+        /// </summary>
+        public bool RegisterLatentClue(ClueData clue)
+        {
+            if (clue == null) return false;
+            SetFlag(LatentLogFlagFor(clue.caseId));
+            LatentLogCollected = true; // keep legacy latch in step
+            return TryParseRunicLogSlot(clue.id, out int slot) && Marked(slot);
+            bool Marked(int s)
+            {
+                if (_runicLogs[s]) return false;
+                MarkRunicLog(s);
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// Parses the runic-log slot (0-3) out of an "L&lt;n&gt;_&lt;case&gt;"
+        /// clue id (e.g. L4_04 -> slot 3). False when the id doesn't match.
+        /// </summary>
+        public static bool TryParseRunicLogSlot(string clueId, out int slot)
+        {
+            slot = -1;
+            if (string.IsNullOrEmpty(clueId) || clueId[0] != 'L' || clueId.Length < 2
+                || !char.IsDigit(clueId[1]))
+                return false;
+            int digits = 0;
+            int num = 0;
+            while (1 + digits < clueId.Length && char.IsDigit(clueId[1 + digits]))
+            {
+                num = num * 10 + (clueId[1 + digits] - '0');
+                digits++;
+            }
+            if (digits == 0 || num < 1 || num > 4) return false;
+            slot = num - 1;
+            return true;
         }
 
         public IReadOnlyList<bool> RunicLogs => _runicLogs;
