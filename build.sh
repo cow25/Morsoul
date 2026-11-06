@@ -89,8 +89,9 @@ src() { find "$ROOT/Assets/Scripts/$1" -maxdepth 1 -name '*.cs' -print; }
 tst() { find "$ROOT/Assets/Tests/$1" -maxdepth 1 -name '*.cs' -print; }
 
 # Runtime assemblies, in dependency order.
-compile Morsoul.Data -- $(src Data)
-compile Morsoul.Core "-r:$OUT/Morsoul.Data.dll" -- $(src Core)
+compile Morsoul.Engine -- $(src Engine)
+compile Morsoul.Data "-r:$OUT/Morsoul.Engine.dll" -- $(src Data)
+compile Morsoul.Core "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Engine.dll" -- $(src Core)
 compile Morsoul.Gameplay "-r:$OUT/Morsoul.Data.dll" -- $(src Gameplay)
 compile Morsoul.Dialogue "-r:$OUT/Morsoul.Data.dll" -- $(src Dialogue)
 compile Morsoul.Board "-r:$OUT/Morsoul.Data.dll" -- $(src Board)
@@ -134,6 +135,7 @@ compile Morsoul.Flow.Editor \
 # EditMode tests.
 compile Morsoul.Tests.EditMode \
     "-r:$OUT/Morsoul.Core.dll" \
+    "-r:$OUT/Morsoul.Engine.dll" \
     "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Data.Editor.dll" \
     "-r:$OUT/Morsoul.Board.dll" "-r:$OUT/Morsoul.Cutscene.dll" \
     "-r:$OUT/Morsoul.Dialogue.dll" "-r:$OUT/Morsoul.Gameplay.dll" \

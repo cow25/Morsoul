@@ -149,6 +149,59 @@ namespace Morsoul.Tests
         }
 
         [Test]
+        public void StrainedScan_PerCaseFlag()
+        {
+            _session.MarkStrainedScan(2);
+            Assert.IsTrue(_session.IsStrainedScanUsed(2));
+            Assert.IsFalse(_session.IsStrainedScanUsed(3));
+        }
+
+        [Test]
+        public void BoardState_SaveRestoreRoundTrip()
+        {
+            var board = _session.GetOrCreateBoardState(2);
+            board.VisibleClueIds.AddRange(new[] { "a", "b" });
+            board.CollectedClueIds.Add("a");
+            board.Links.Add(new Morsoul.Engine.DirectedEdge("a", "b"));
+            board.NodePositions["a"] = new Morsoul.Engine.NodePosition { x = 5f, y = -3f };
+            board.SelectedConclusionId = "h_partial";
+            board.CaseErrorCount = 7;
+            board.FiredHintTiers.Add(2);
+            board.LinkingLockedOut = true;
+            board.SubmittedConclusionId = "h_complete";
+            board.BoardSolved = true;
+            board.CompletionRewardApplied = true;
+
+            var save = new SaveState();
+            _session.ApplyTo(save);
+            var restored = new SessionState();
+            restored.RestoreFrom(save);
+
+            var rb = restored.GetOrCreateBoardState(2);
+            CollectionAssert.AreEqual(new[] { "a", "b" }, rb.VisibleClueIds);
+            CollectionAssert.AreEqual(new[] { "a" }, rb.CollectedClueIds);
+            Assert.AreEqual(1, rb.Links.Count);
+            Assert.AreEqual(new Morsoul.Engine.DirectedEdge("a", "b"), rb.Links[0]);
+            Assert.AreEqual(-3f, rb.NodePositions["a"].y);
+            Assert.AreEqual("h_partial", rb.SelectedConclusionId);
+            Assert.AreEqual(7, rb.CaseErrorCount);
+            CollectionAssert.AreEqual(new[] { 2 }, rb.FiredHintTiers);
+            Assert.IsTrue(rb.LinkingLockedOut);
+            Assert.AreEqual("h_complete", rb.SubmittedConclusionId);
+            Assert.IsTrue(rb.BoardSolved);
+            Assert.IsTrue(rb.CompletionRewardApplied);
+        }
+
+        [Test]
+        public void RestoreFrom_LegacyStrainedScan_MapsToCurrentCase()
+        {
+            var save = new SaveState { currentCase = 3, strainedScanUsed = true };
+            _session.RestoreFrom(save);
+            Assert.IsTrue(_session.IsStrainedScanUsed(3));
+            Assert.IsFalse(_session.IsStrainedScanUsed(2));
+        }
+
+        [Test]
         public void Reset_ClearsEverything()
         {
             _session.PlayerName = "x";
@@ -166,6 +219,7 @@ namespace Morsoul.Tests
             Assert.AreEqual(0, _session.RunicLogCount);
             Assert.AreEqual(0, _session.Grades.Count);
             Assert.AreEqual(0, _session.Tools.Count);
+            Assert.AreEqual(0, _session.BoardStates.Count);
         }
     }
 }

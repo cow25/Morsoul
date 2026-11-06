@@ -1,7 +1,9 @@
 {
     "name": "Morsoul.Data",
     "rootNamespace": "Morsoul.Data",
-    "references": [],
+    "references": [
+        "Morsoul.Engine"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

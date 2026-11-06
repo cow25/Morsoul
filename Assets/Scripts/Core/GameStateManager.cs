@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -120,7 +121,12 @@ namespace Morsoul.Core
             }
             CurrentSave = state;
             _core.Session.RestoreFrom(state, _core.ResolveClue);
-            _core.Focus.Restore(state.focusPercent, state.strainedScanUsed);
+            _core.Focus.Restore(state.focusEnergy, state.strainedScanUsed,
+                maximum: state.focusMax > 0f ? state.focusMax : (float?)null,
+                restRemainderSeconds: state.restElapsedRemainderSeconds,
+                closedAtUtc: ParseUtc(state.closedAtUtc),
+                lastOfflineRecoveryAppliedAtUtc: ParseUtc(state.lastOfflineRecoveryAppliedAtUtc));
+            _core.Focus.ApplyOfflineRecovery(DateTime.UtcNow);
             string scene = state.checkpointSceneName;
             if (string.IsNullOrEmpty(scene) || !Application.CanStreamedLevelBeLoaded(scene))
             {
@@ -171,7 +177,13 @@ namespace Morsoul.Core
         public void WriteCheckpoint(string reason, string nextSceneName)
         {
             _core.Session.ApplyTo(CurrentSave);
-            CurrentSave.focusPercent = _core.Focus.Percent;
+            CurrentSave.focusEnergy = _core.Focus.Percent;
+            CurrentSave.focusMax = _core.Focus.Maximum;
+            CurrentSave.restElapsedRemainderSeconds = _core.Focus.RestRemainderSeconds;
+            _core.Focus.MarkClosed(DateTime.UtcNow);
+            CurrentSave.closedAtUtc = FormatUtc(_core.Focus.ClosedAtUtc);
+            CurrentSave.lastOfflineRecoveryAppliedAtUtc =
+                FormatUtc(_core.Focus.LastOfflineRecoveryAppliedAtUtc);
             CurrentSave.strainedScanUsed = _core.Focus.StrainedScanUsed;
             CurrentSave.checkpointSceneName = !string.IsNullOrEmpty(nextSceneName)
                 ? nextSceneName
@@ -186,6 +198,16 @@ namespace Morsoul.Core
             if (!Fsm.TryTransition(next))
                 Debug.LogWarning($"GameStateManager: illegal transition {Fsm.Current} -> {next} (allowed anyway).", this);
         }
+
+        static string FormatUtc(DateTime? utc) =>
+            utc.HasValue ? utc.Value.ToString("o") : "";
+
+        static DateTime? ParseUtc(string iso) =>
+            !string.IsNullOrEmpty(iso) &&
+            DateTime.TryParse(iso, null,
+                System.Globalization.DateTimeStyles.RoundtripKind, out var dt)
+                ? dt
+                : (DateTime?)null;
 
         /// <summary>
         /// Adds built-in routes for scenes that exist today; only fills keys

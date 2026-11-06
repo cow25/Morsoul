@@ -23,11 +23,12 @@ All script folders in this table are under `Assets/Scripts/`.
 | System / folder | Responsibility | Main entry points |
 | --- | --- | --- |
 | `Core` | Persistent services, event bus, Focus, Session, checkpoints and scene routing | `CoreRuntime`, `SessionState`, `GameStateManager`, `CoreEvents` |
-| `Data` | ScriptableObject schemas, case content contracts and clue lookup | `CaseData`, `ClueData`, `InquiryNodeData`, `ClueRegistry` |
+| `Data` | ScriptableObject schemas, case content contracts and clue lookup | `CaseData`, `ClueData`, `EvidenceGraphData`, `ClueRegistry` |
 | `Gameplay` | Case grading and ending-selection rules | `CaseSession`, `EndingSelector` |
 | `Flow` | Binds board, interrogation, resolution and ending playback | `GameFlow`; `Editor/FlowSceneFactory` |
 | `Hub` | 2D movement, targeting, NPCs, inspection, travel, scene stores and visual profiles | `HubContext`, `HubPlayerController`, `HubJournal`, `HubFlags`, `EntityVisual` |
-| `Board` | Clue pairing, causal prompts, premises and master hypothesis | `DeductionBoard` (rules), `BoardController` (UI) |
+| `Engine` | Pure weighted-board solver: directed-link evidence DAG, no Unity deps | `EvidenceGraph`, `DeductionEngine`, `DeductionCertificate` |
+| `Board` | Clue pairing, causal prompts, premises and master hypothesis (superseded model, pending migration to `Engine`) | `DeductionBoard` (rules), `BoardController` (UI) |
 | `Interrogation` | Evidence moves, phases, composure, strikes and mistrial UI | `InterrogationEngine`, `InterrogationController` |
 | `Dialogue` | Dialogue data, branching, clue/flag effects and presentation | `DialogueData`, `DialogueRunner`, `DialogueController` |
 | `Journal` | Physical/testimony cards, logs, dossier and dissonance display | `JournalController`, `JournalFilter` |

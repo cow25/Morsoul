@@ -3,6 +3,7 @@
     "rootNamespace": "Morsoul.Tests",
     "references": [
         "Morsoul.Data",
+        "Morsoul.Engine",
         "Morsoul.Data.Editor",
         "Morsoul.Board",
         "Morsoul.Core",

@@ -20,6 +20,7 @@ namespace Morsoul.Data
         public bool hasInvestigationScene;
         public bool hasInterrogation;
         public ClueData[] preloadedClues;
+        public EvidenceGraphData evidenceGraph;
 
         public List<string> Validate()
         {
@@ -244,6 +245,15 @@ namespace Morsoul.Data
                     errors.Add("Case has no investigation scene but no preloadedClues.");
                 else if (preloaded.Any(c => c == null || !clueList.Contains(c)))
                     errors.Add("Every preloadedClues entry must be a clue of this case.");
+            }
+
+            // Rule 9: an attached weighted evidence graph must validate and
+            // agree on the case id. Absence is allowed while cases migrate.
+            if (evidenceGraph != null)
+            {
+                if (evidenceGraph.caseId != caseId)
+                    errors.Add($"Evidence graph caseId {evidenceGraph.caseId} does not match case {caseId}.");
+                errors.AddRange(evidenceGraph.Validate());
             }
 
             return errors;

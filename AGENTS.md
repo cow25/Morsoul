@@ -6,7 +6,7 @@ Read [README.md](README.md) for contributor setup, the system/folder map, runtim
 
 - The user performs all commits. Agents must not commit, push, change Git configuration, or migrate LFS history.
 - Unity version: 6000.6.7f1. Keep Force Text serialization enabled and commit every asset together with its existing `.meta`. Never recreate GUIDs to fix a conflict.
-- 2D/Core owner: `Assets/Scripts/{Core,Data,Board,Gameplay,Flow,Hub,Dialogue,Journal,Interrogation,Cutscene,Title,Resolution}`, their editor generators, UI assets and prefabs, `Title`, `Hub_LowerMarket`, and `Hub_Wilderness` scenes.
+- 2D/Core owner: `Assets/Scripts/{Core,Data,Board,Engine,Gameplay,Flow,Hub,Dialogue,Journal,Interrogation,Cutscene,Title,Resolution}`, their editor generators, UI assets and prefabs, `Title`, `Hub_LowerMarket`, and `Hub_Wilderness` scenes.
 - 3D owner: `Assets/Scenes/PrologueRuins.unity`, future investigation scenes, root-level `PlayerController`, `ScanController`, `HUDManager`, `DiaryManager`, and `Assets/Scripts/{Interaction,Player,Systems}`. Do not move or edit these without coordinating with that developer.
 - Shared changes requiring coordination: Packages, ProjectSettings, input actions, render pipeline settings, tags/layers, build profiles, Core public contracts and data schemas. Choose one editor per shared asset at a time.
 - Use independent prefabs or art-only additive scenes for parallel scene work. An additive art scene must contain no second player, camera, input listener or Core runtime. It requires an explicit load/unload owner; merely creating the file does not integrate it.
