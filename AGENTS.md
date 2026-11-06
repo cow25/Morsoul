@@ -60,5 +60,6 @@ Core and panel engines are not equivalent to a complete playable campaign. The A
 - `bash build.sh` from the repository root compiles Morsoul runtime, editor and EditMode test assemblies using the installed Unity compiler. It does not execute tests or validate serialized scenes.
 - Unity: Window > General > Test Runner > EditMode > Run All. Do not claim tests pass from a compile check alone.
 - Run Morsoul > Data > Rebuild Clue Registry after adding clue assets, then inspect the generated diff.
+- Run Morsoul > Data > Audit Evidence Graphs after editing EvidenceGraphData: it validates C1-C7 and enumerates every authored-link subset through the solver. The intended result is exactly one board unlocking the complete conclusion and no unlock path missing part of S*.
 - Smoke-test Title > New Game > Hub; checkpoint > stop Play > Continue; journal restoration; missing-scene fallback. Inspect the active Build Profile if a scene refuses to load.
 - Do not run a second Unity process against an already-open project to execute tests. Run `build.sh` after Unity batch processes exit, not concurrently: Unity clears Temp on shutdown and can remove the compiler's Temp/build output mid-run.

@@ -110,7 +110,7 @@ compile Morsoul.Flow \
     -- $(src Flow)
 
 # Editor assemblies.
-compile Morsoul.Data.Editor "-r:$OUT/Morsoul.Data.dll" -- $(src Data/Editor)
+compile Morsoul.Data.Editor "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Engine.dll" -- $(src Data/Editor)
 compile Morsoul.Board.Editor "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Board.dll" -- $(src Board/Editor)
 compile Morsoul.Dialogue.Editor "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Dialogue.dll" -- $(src Dialogue/Editor)
 compile Morsoul.Interrogation.Editor "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Interrogation.dll" -- $(src Interrogation/Editor)

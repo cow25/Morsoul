@@ -153,6 +153,7 @@ Controls exposed by the controllers include **E** for hub interaction/dialogue o
 - Follow the approved GDD/case documents for content decisions. The team's authoritative Obsidian documents are maintained outside this checkout; obtain them from the project owner rather than inventing story facts or assuming another contributor has the same local vault path.
 - Keep clue, premise and inquiry-node IDs stable. Save restoration relies on them.
 - Run **Morsoul > Data > Validate All Cases** after content edits, **Rebuild Clue Registry** after adding/removing clue assets, and **Rebuild Case Database** after adding/removing case assets. **Morsoul > Setup > Rebuild Campaign Wiring** runs the case-database rebuild plus the hub CaseDoor installer in one step. Review the generated asset diff and its `.meta` files.
+- Run **Morsoul > Data > Audit Evidence Graphs** after editing an `EvidenceGraphData` asset: it validates the C1-C7 constraints and enumerates every authored-link subset through the solver, reporting unlock counts per conclusion and flagging any board that unlocks the complete conclusion without the full solution set.
 - Generator menus exist for Cases 0+1, 2, 3, 4+5, Case 1 hub dialogue, opening and Case 0 outro. They are authoring tools, not routine startup steps. Regeneration may replace manual content.
 
 ### Art and audio destinations

@@ -2,7 +2,8 @@
     "name": "Morsoul.Data.Editor",
     "rootNamespace": "Morsoul.Data.Editor",
     "references": [
-        "Morsoul.Data"
+        "Morsoul.Data",
+        "Morsoul.Engine"
     ],
     "includePlatforms": [
         "Editor"
