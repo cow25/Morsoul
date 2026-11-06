@@ -100,6 +100,14 @@ namespace Morsoul.Engine
             return total;
         }
 
+        /// <summary>
+        /// The unlock gate from Step 4: h0 is always unlocked; other
+        /// conclusions need phi at their tier's threshold. Exposed for the
+        /// board UI's conclusion selector.
+        /// </summary>
+        public static bool IsConclusionUnlocked(EvidenceGraph graph, ConclusionDef conclusion, double phi)
+            => IsUnlocked(graph, conclusion, phi);
+
         static bool IsUnlocked(EvidenceGraph graph, ConclusionDef conclusion, double phi)
         {
             if (conclusion.id == graph.StartingConclusionId)

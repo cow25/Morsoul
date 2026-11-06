@@ -27,8 +27,8 @@ All script folders in this table are under `Assets/Scripts/`.
 | `Gameplay` | Case grading and ending-selection rules | `CaseSession`, `EndingSelector` |
 | `Flow` | Binds board, interrogation, resolution and ending playback | `GameFlow`; `Editor/FlowSceneFactory` |
 | `Hub` | 2D movement, targeting, NPCs, inspection, travel, scene stores and visual profiles | `HubContext`, `HubPlayerController`, `HubJournal`, `HubFlags`, `EntityVisual` |
-| `Engine` | Pure weighted-board solver: directed-link evidence DAG, no Unity deps | `EvidenceGraph`, `DeductionEngine`, `DeductionCertificate` |
-| `Board` | Clue pairing, causal prompts, premises and master hypothesis (superseded model, pending migration to `Engine`) | `DeductionBoard` (rules), `BoardController` (UI) |
+| `Engine` | Pure weighted-board rules: directed-link evidence DAG, solver, progression, endings, canonical hash/seal — no Unity deps | `EvidenceGraph`, `DeductionEngine`, `ProgressionRules`, `EndingResolver`, `CanonicalState` |
+| `Board` | Weighted board (`WeightedBoardSession` + `WeightedBoardController`/`WeightedBoard.uxml`) for cases with `evidenceGraph`; legacy pairing/premise model (`DeductionBoard`/`BoardController`) remains for cases without one | `WeightedBoardSession` (rules), `WeightedBoardController` (UI) |
 | `Interrogation` | Evidence moves, phases, composure, strikes and mistrial UI | `InterrogationEngine`, `InterrogationController` |
 | `Dialogue` | Dialogue data, branching, clue/flag effects and presentation | `DialogueData`, `DialogueRunner`, `DialogueController` |
 | `Journal` | Physical/testimony cards, logs, dossier and dissonance display | `JournalController`, `JournalFilter` |
@@ -143,7 +143,7 @@ The legacy `ScanController` still has its own 120-point focus and different zero
 6. Assign `GameFlow.endingCutscenes[1]`, `[2]`, `[3]` (index 0 unused). For GameFlow-owned endings, leave each `CutsceneData.nextSceneName` empty so `CutsceneEnded` can drive case completion. A cutscene with its own destination owns travel instead.
 7. Missing ending media currently completes the ending immediately. With a live Core, case completion routes to Title; without Core, no GSM travel occurs. Do not mistake either fallback for verified cinematic playback.
 
-Controls exposed by the controllers include **E** for hub interaction/dialogue or cutscene advance, **G** for journal, **H** for board, and holding **Esc** to skip a cutscene. Scene composition must prevent overlapping modal input. The journal pauses simulation while open.
+Controls exposed by the controllers include **E** for hub interaction/dialogue or cutscene advance, **G** for journal, **H** for board, and holding **Esc** to skip a cutscene. Scene composition must prevent overlapping modal input. The journal pauses simulation while open. On weighted cases the board opens via `WeightedBoardController` (installed in CaseLoop and both hub scenes; `BoardHotkey` lazily builds the session from `Session.CurrentCase`); the legacy `BoardController` gates itself off for weighted cases to avoid `H` conflicts.
 
 ## Content and asset authoring
 

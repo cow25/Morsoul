@@ -47,6 +47,7 @@ namespace Morsoul.Engine
         public List<string> VisibleClueIds = new List<string>();
         public List<string> CollectedClueIds = new List<string>();
         public List<DirectedEdge> Links = new List<DirectedEdge>();
+        [NonSerialized] // serialized via NodePosition DTOs in the save layer
         public Dictionary<string, NodePosition> NodePositions = new Dictionary<string, NodePosition>();
         public string SelectedConclusionId;
         public int CaseErrorCount;
@@ -61,6 +62,8 @@ namespace Morsoul.Engine
 
     public enum ProgressionEventKind
     {
+        /// <summary>Structurally invalid draw (self-link or uncollected endpoint) — never charged.</summary>
+        InvalidDraw,
         /// <summary>Linking locked out and Focus below the penalty — draw ignored.</summary>
         Blocked,
         /// <summary>The link is already on the board — duplicate delivery, no charge.</summary>

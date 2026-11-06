@@ -1,0 +1,41 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/Board.uss"/>
+    <Style src="project://database/Assets/WeightedBoard.uss"/>
+    <ui:VisualElement name="WeightedBoard-Root" class="board-root" style="position: absolute; width: 100%; height: 100%; display: none;">
+        <ui:VisualElement name="Backdrop" class="board-backdrop"/>
+        <ui:VisualElement name="BoardPanel" class="board-panel" style="position: absolute; top: 6%; left: 6%; width: 88%; height: 88%;">
+            <ui:VisualElement name="HeaderRow" style="flex-direction: row; align-items: center; margin-bottom: 8px; flex-shrink: 0;">
+                <ui:Label name="TitleLabel" text="Deduction Board" class="hud-text-large"/>
+                <ui:Label name="CaseTitleLabel" text="" class="hud-text" style="color: rgb(200, 200, 200); margin-left: 15px; flex-grow: 1;"/>
+                <ui:Label name="ErrorCountLabel" text="Errors: 0" class="hud-text-small"/>
+                <ui:Label name="FocusLabel" text="" class="hud-text-small" style="margin-left: 12px;"/>
+                <ui:Label name="CloseHint" text="(H) close" class="hud-text-small" style="margin-left: 12px;"/>
+            </ui:VisualElement>
+            <ui:VisualElement name="MainRow" style="flex-direction: row; flex-grow: 1; flex-shrink: 1;">
+                <ui:VisualElement name="NodeCanvas" class="wboard-canvas" style="flex-grow: 1;"/>
+                <ui:VisualElement name="SideColumn" class="wboard-side">
+                    <ui:Label name="LampLabel" text="Lamp: —" class="wboard-lamp"/>
+                    <ui:Label name="SupportLabel" text="Support: —" class="hud-text-small" style="margin-bottom: 8px;"/>
+                    <ui:Label name="LinksHeader" text="Links (right-click to sever)" class="hud-text-small"/>
+                    <ui:ScrollView name="LinkList" style="flex-grow: 1; max-height: 40%; margin-bottom: 8px;"/>
+                    <ui:Label name="ConclusionHeader" text="Conclusions" class="hud-text-small"/>
+                    <ui:ScrollView name="ConclusionList" style="flex-grow: 1; margin-bottom: 8px;"/>
+                    <ui:Button name="SubmitButton" text="[Space] Submit Conclusion" class="submit-button"/>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:Label name="CanvasHint" text="Click a clue, then click another to draw a directed link. Drag nodes to arrange." class="hud-text-small" style="flex-shrink: 0;"/>
+            <ui:VisualElement name="FeedbackBanner" class="feedback-banner" style="display: none; flex-shrink: 0;">
+                <ui:Label name="FeedbackLabel" class="hud-text" style="white-space: normal;"/>
+                <ui:Label name="HintLabel" class="hud-text-small banner--hint" style="white-space: normal; margin-top: 4px; display: none;"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="HintPopup" class="hint-popup" style="display: none;">
+            <ui:VisualElement name="HintPortrait" class="hint-portrait"/>
+            <ui:VisualElement name="HintBody" style="flex-grow: 1; flex-direction: column; margin-left: 10px;">
+                <ui:Label name="HintSpeaker" text="Eliza" class="hint-speaker"/>
+                <ui:Label name="HintText" text="" class="hint-text" style="white-space: normal; margin-top: 4px;"/>
+                <ui:Button name="HintClose" text="OK" class="hint-close" style="align-self: flex-end; margin-top: 8px;"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

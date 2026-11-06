@@ -5,7 +5,8 @@
         "Morsoul.Hub",
         "Morsoul.Data",
         "Morsoul.Dialogue",
-        "Morsoul.Journal"
+        "Morsoul.Journal",
+        "Morsoul.Board"
     ],
     "includePlatforms": [
         "Editor"

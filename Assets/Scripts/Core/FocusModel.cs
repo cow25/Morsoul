@@ -116,6 +116,17 @@ namespace Morsoul.Core
             Percent = Maximum;
         }
 
+        /// <summary>
+        /// Mirrors externally-computed energy + maximum into the model
+        /// (weighted-board progression mutates its own runtime state; the
+        /// persistent FocusModel stays authoritative for everything else).
+        /// </summary>
+        public void Sync(float energy, float maximum)
+        {
+            Maximum = Math.Max(1f, maximum);
+            Percent = Math.Clamp(energy, 0f, Maximum);
+        }
+
         /// <summary>Records the close timestamp used by offline recovery.</summary>
         public void MarkClosed(DateTime closedUtc)
         {

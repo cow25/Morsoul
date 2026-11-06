@@ -3,6 +3,7 @@
     "rootNamespace": "Morsoul.Flow",
     "references": [
         "Morsoul.Core",
+        "Morsoul.Engine",
         "Morsoul.Data",
         "Morsoul.Board",
         "Morsoul.Gameplay",

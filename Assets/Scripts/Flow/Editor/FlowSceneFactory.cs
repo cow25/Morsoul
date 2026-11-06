@@ -28,6 +28,7 @@ namespace Morsoul.Flow.Editor
         const string ScenePath = "Assets/Scenes/CaseLoop.unity";
         const string PanelSettingsPath = "Assets/UI Toolkit/MainPanelSettings.asset";
         const string BoardUxmlPath = "Assets/Board.uxml";
+        const string WeightedBoardUxmlPath = "Assets/WeightedBoard.uxml";
         const string InterrogationUxmlPath = "Assets/Interrogation.uxml";
         const string ResolutionUxmlPath = "Assets/Resolution.uxml";
         const string CutsceneUxmlPath = "Assets/Cutscene.uxml";
@@ -40,7 +41,8 @@ namespace Morsoul.Flow.Editor
             if (AssetDatabase.LoadAssetAtPath<SceneAsset>(ScenePath) != null
                 || File.Exists(ScenePath))
             {
-                bool overwrite = EditorUtility.DisplayDialog("Create Case Loop Scene",
+                bool overwrite = Application.isBatchMode || EditorUtility.DisplayDialog(
+                    "Create Case Loop Scene",
                     $"'{ScenePath}' already exists. Overwrite it?", "Overwrite", "Cancel");
                 if (!overwrite) return;
             }
@@ -64,6 +66,8 @@ namespace Morsoul.Flow.Editor
             var hubFlags = storesGo.AddComponent<HubFlags>();
 
             var board = CreatePanel<BoardController>("BoardPanel", panelSettings, BoardUxmlPath);
+            var weightedBoard = CreatePanel<WeightedBoardController>(
+                "WeightedBoardPanel", panelSettings, WeightedBoardUxmlPath);
             var interrogation = CreatePanel<InterrogationController>(
                 "InterrogationPanel", panelSettings, InterrogationUxmlPath);
             var resolution = CreatePanel<ResolutionController>(
@@ -88,6 +92,7 @@ namespace Morsoul.Flow.Editor
             var flowGo = new GameObject("GameFlow");
             var flow = flowGo.AddComponent<GameFlow>();
             flow.board = board;
+            flow.weightedBoard = weightedBoard;
             flow.interrogation = interrogation;
             flow.resolution = resolution;
             flow.cutscenePlayer = cutscene;

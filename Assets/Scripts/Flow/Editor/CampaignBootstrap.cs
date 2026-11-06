@@ -14,6 +14,7 @@ namespace Morsoul.Flow.Editor
         {
             Morsoul.Data.Editor.CaseDatabaseGenerator.Rebuild();
             Morsoul.Hub.Editor.HubCaseLoopSetup.Install();
+            Morsoul.Hub.Editor.HubBoardSetup.Install();
         }
     }
 }
