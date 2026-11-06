@@ -1,0 +1,123 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7590b3e69de7c7b4ea8aee02bf72dec3, type: 3}
+  m_Name: EVG_01_PROVISIONAL
+  m_EditorClassIdentifier: Morsoul.Data::Morsoul.Data.EvidenceGraphData
+  caseId: 1
+  provisional: 1
+  designNote: 'PROVISIONAL pending design approval. Serial S*: C1->T1 (pristine lock + registry = inside access), T1->C2 (access claim reframes residue as staged), C2->C3 (faked attack + ledger = embezzlement). Support on T1+C3; T2 (Ignatius'' cabal claim) and RH1 (planted lockpick) contradict. Any stray authored link breaks the unlock - the dissonance mechanic.'
+  clueIds:
+  - C1_01
+  - C2_01
+  - C3_01
+  - T1_01
+  - T2_01
+  - RH1_01
+  reliabilities:
+  - clueId: C1_01
+    value: 1
+  - clueId: C2_01
+    value: 1
+  - clueId: C3_01
+    value: 1
+  - clueId: T1_01
+    value: 0.8
+  - clueId: T2_01
+    value: 0.8
+  - clueId: RH1_01
+    value: 0.7
+  authoredClueEdges:
+  - sourceId: C1_01
+    targetId: T1_01
+    weight: 0.5
+  - sourceId: T1_01
+    targetId: C2_01
+    weight: 0.5
+  - sourceId: C2_01
+    targetId: C3_01
+    weight: 0.7
+  - sourceId: T2_01
+    targetId: RH1_01
+    weight: 0.3
+  - sourceId: T2_01
+    targetId: C1_01
+    weight: 0.3
+  - sourceId: T2_01
+    targetId: C2_01
+    weight: 0.4
+  - sourceId: RH1_01
+    targetId: C1_01
+    weight: 0.6
+  solutionEdges:
+  - sourceId: C1_01
+    targetId: T1_01
+  - sourceId: T1_01
+    targetId: C2_01
+  - sourceId: C2_01
+    targetId: C3_01
+  unlockDependencies:
+  - sourceId: C1_01
+    targetId: T1_01
+  - sourceId: T1_01
+    targetId: C2_01
+  - sourceId: C2_01
+    targetId: C3_01
+  conclusions:
+  - id: H0_01
+    text: A cabal breached the vault with volatile dark magic.
+    tier: 0
+    supportingEdges:
+    - clueId: T2_01
+      weight: 0.5
+    - clueId: RH1_01
+      weight: 0.3
+    contradictingEdges:
+    - clueId: C1_01
+      weight: 0.3
+  - id: H1_01
+    text: Someone staged a sabotage, but the culprit is unproven.
+    tier: 1
+    supportingEdges:
+    - clueId: C2_01
+      weight: 0.4
+    - clueId: T2_01
+      weight: 0.3
+    - clueId: RH1_01
+      weight: 0.2
+    contradictingEdges: []
+  - id: H2_01
+    text: 'Staged Internal Fraud: Ignatius faked the breach to hide embezzlement.'
+    tier: 2
+    supportingEdges:
+    - clueId: T1_01
+      weight: 0.4
+    - clueId: C3_01
+      weight: 0.6
+    contradictingEdges:
+    - clueId: RH1_01
+      weight: 1
+    - clueId: T2_01
+      weight: 0.8
+  startingWrongConclusionId: H0_01
+  completeConclusionId: H2_01
+  parameters:
+    alpha: 0.85
+    contradictionWeight: 2
+    inventedLinkPenalty: 0.15
+    lowThreshold: 0.25
+    highThreshold: 0.8
+  cachedReferenceSupport: 0.28288615
+  solutionTopologicalOrder:
+  - C1_01
+  - T1_01
+  - C2_01
+  - C3_01

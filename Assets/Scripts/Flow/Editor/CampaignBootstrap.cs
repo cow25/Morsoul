@@ -15,6 +15,18 @@ namespace Morsoul.Flow.Editor
             Morsoul.Data.Editor.CaseDatabaseGenerator.Rebuild();
             Morsoul.Hub.Editor.HubCaseLoopSetup.Install();
             Morsoul.Hub.Editor.HubBoardSetup.Install();
+            Morsoul.Hub.Editor.DemoStandInFactory.BuildAll();
+        }
+
+        /// <summary>
+        /// Batch entry point: full campaign wiring + provisional graphs audit,
+        /// then exit so -executeMethod invocations do not linger.
+        /// </summary>
+        public static void RunAllBatch()
+        {
+            RunAll();
+            Morsoul.Data.Editor.EvidenceGraphAuditor.AuditAll();
+            EditorApplication.Exit(0);
         }
     }
 }

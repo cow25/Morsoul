@@ -13,6 +13,9 @@ namespace Morsoul.Data
     public class EvidenceGraphData : ScriptableObject
     {
         public int caseId;
+        /// <summary>Drafted numbers awaiting design sign-off; not yet canonical.</summary>
+        public bool provisional;
+        [TextArea] public string designNote;
         public string[] clueIds = new string[0];
         public ClueReliability[] reliabilities = new ClueReliability[0];
         public WeightedClueEdge[] authoredClueEdges = new WeightedClueEdge[0];

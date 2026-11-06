@@ -221,7 +221,9 @@ namespace Morsoul.Core
                 if (!routes.Contains(key)) routes.Set(key, sceneName);
             }
             Seed(RouteKeys.Title, "Title");
+            Seed(RouteKeys.Opening, "Prologue_2D"); // 2D stand-in until PrologueRuins ships
             Seed(RouteKeys.CaseLoop, "CaseLoop");
+            Seed(RouteKeys.Investigation(1), "Investigation_01_Placeholder"); // vault stand-in
             Seed(RouteKeys.Hub(0), "Hub_LowerMarket");   // tutorial case shares the market hub
             Seed(RouteKeys.Hub(1), "Hub_LowerMarket");
             Seed(RouteKeys.Hub(3), "Hub_Wilderness");    // Whisperwood hub

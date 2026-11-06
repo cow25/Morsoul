@@ -99,8 +99,9 @@ Routes are configured through `GameStateManager.Ensure().routes.Set(key, actualS
 | `caseloop` | `CaseLoop` |
 | `hub.0`, `hub.1` | `Hub_LowerMarket` |
 | `hub.3` | `Hub_Wilderness` |
-| `opening` | Not seeded |
-| `investigation.<caseId>` | Not seeded; register only delivered scenes |
+| `opening` | `Prologue_2D` (2D tutorial stand-in; re-point to `PrologueRuins` when the 3D prologue ships) |
+| `investigation.1` | `Investigation_01_Placeholder` (2D vault stand-in; swap when the 3D vault ships) |
+| `investigation.<caseId>` (other) | Not seeded; register only delivered scenes |
 
 A route entry does not add a scene to a Build Profile. Register real scenes and add them to the active build list together. Do not add nonexistent `C1_Vault` paths to suppress warnings. Continue attempts to fall back to the saved case's hub when its checkpoint scene is unavailable. Not every case currently has a hub route.
 
@@ -149,7 +150,7 @@ Controls exposed by the controllers include **E** for hub interaction/dialogue o
 
 ### Case data
 
-- Cases 0-5 have data assets. Data existence does not imply a corresponding playable investigation scene or registered campaign route.
+- Cases 0-5 have data assets. Cases 0 and 1 have provisional `EvidenceGraphData` (`EVG_*_PROVISIONAL`, numbers pending design sign-off) drafted via **Morsoul > Data > Draft Provisional Evidence Graphs** and wired to their `CaseData`. Data existence does not imply a corresponding playable investigation scene or registered campaign route; the demo stands in with `Prologue_2D` and `Investigation_01_Placeholder` (built by **Morsoul > Setup > Build Demo Stand-In Scenes**, also run by Rebuild Campaign Wiring).
 - Follow the approved GDD/case documents for content decisions. The team's authoritative Obsidian documents are maintained outside this checkout; obtain them from the project owner rather than inventing story facts or assuming another contributor has the same local vault path.
 - Keep clue, premise and inquiry-node IDs stable. Save restoration relies on them.
 - Run **Morsoul > Data > Validate All Cases** after content edits, **Rebuild Clue Registry** after adding/removing clue assets, and **Rebuild Case Database** after adding/removing case assets. **Morsoul > Setup > Rebuild Campaign Wiring** runs the case-database rebuild plus the hub CaseDoor installer in one step. Review the generated asset diff and its `.meta` files.

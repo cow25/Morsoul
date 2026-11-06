@@ -135,16 +135,16 @@ namespace Morsoul.Hub.Editor
 
         // --- Scene assembly ---------------------------------------------------
 
-        static Scene NewEmptyScene() =>
+        internal static Scene NewEmptyScene() =>
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
-        static void CreateArtLoader(string artSceneName)
+        internal static void CreateArtLoader(string artSceneName)
         {
             var loader = new GameObject("ArtSceneLoader");
             loader.AddComponent<HubArtSceneLoader>().artSceneName = artSceneName;
         }
 
-        static GameObject CreatePlayer()
+        internal static GameObject CreatePlayer()
         {
             var player = NewQuadObject("Player",
                 new Color(0.4f, 0.7f, 1f), Vector3.zero);
@@ -157,7 +157,7 @@ namespace Morsoul.Hub.Editor
             return player;
         }
 
-        static CameraFollow2D CreateCamera(Transform target)
+        internal static CameraFollow2D CreateCamera(Transform target)
         {
             var cameraGo = new GameObject("Main Camera");
             cameraGo.tag = "MainCamera";
@@ -170,7 +170,7 @@ namespace Morsoul.Hub.Editor
             return follow;
         }
 
-        static void CreateSpawnPoint()
+        internal static void CreateSpawnPoint()
         {
             var spawn = new GameObject("PlayerSpawn");
             spawn.tag = "PlayerSpawn";
@@ -178,7 +178,7 @@ namespace Morsoul.Hub.Editor
             entry.AddComponent<SceneEntryPoint>();
         }
 
-        static HubContext CreateHubContext()
+        internal static HubContext CreateHubContext()
         {
             var contextGo = new GameObject("HubContext");
             var context = contextGo.AddComponent<HubContext>();
@@ -215,7 +215,7 @@ namespace Morsoul.Hub.Editor
             return context;
         }
 
-        static void WirePlayer(GameObject player, CameraFollow2D cameraFollow, HubContext context)
+        internal static void WirePlayer(GameObject player, CameraFollow2D cameraFollow, HubContext context)
         {
             var controller = player.GetComponent<HubPlayerController>();
             controller.context = context;
@@ -270,7 +270,7 @@ namespace Morsoul.Hub.Editor
         /// Sprites proved unreliable in this project (import/PPU/material
         /// pitfalls); a quad with a colored material always renders.
         /// </summary>
-        static GameObject NewQuadObject(string name, Color tint, Vector3 position)
+        internal static GameObject NewQuadObject(string name, Color tint, Vector3 position)
         {
             var go = GameObject.CreatePrimitive(PrimitiveType.Quad);
             go.name = name;
@@ -332,7 +332,7 @@ namespace Morsoul.Hub.Editor
             return overwrite;
         }
 
-        static void SaveScene(Scene scene, string scenePath)
+        internal static void SaveScene(Scene scene, string scenePath)
         {
             EnsureFolder(ScenesFolder);
             if (EditorSceneManager.SaveScene(scene, scenePath))
@@ -341,7 +341,7 @@ namespace Morsoul.Hub.Editor
                 Debug.LogError($"HubSceneFactory: failed to save scene to '{scenePath}'.");
         }
 
-        static void EnsureFolder(string folderPath)
+        internal static void EnsureFolder(string folderPath)
         {
             if (AssetDatabase.IsValidFolder(folderPath)) return;
             string parent = Path.GetDirectoryName(folderPath)?.Replace('\\', '/');

@@ -26,5 +26,11 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/CaseLoop.unity
     guid: 359085d3e54627648a7acc1c7a5554db
+  - enabled: 1
+    path: Assets/Scenes/Prologue_2D.unity
+    guid: 50e659d5bab749449b95ac58aea7aa46
+  - enabled: 1
+    path: Assets/Scenes/Investigation_01_Placeholder.unity
+    guid: 81eb6a7e72020fb4a9e442e28686d314
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}

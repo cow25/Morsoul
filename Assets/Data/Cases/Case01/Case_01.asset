@@ -34,3 +34,4 @@ MonoBehaviour:
   hasInvestigationScene: 1
   hasInterrogation: 1
   preloadedClues: []
+  evidenceGraph: {fileID: 11400000, guid: e43e8a2abe72d074aa2a5cf7222713c6, type: 2}
