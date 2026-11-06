@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -23,7 +24,7 @@ namespace Morsoul.Core
         static GameStateManager _instance;
 
         [Header("Scene routes (key -> scene name)")]
-        [Tooltip("Keys: title, opening, hub.<caseId>, investigation.<caseId>.")]
+        [Tooltip("Keys: title, opening, caseloop, hub.<caseId>, investigation.<caseId>.")]
         public SceneRouteTable routes = new SceneRouteTable();
 
         /// <summary>The case-loop FSM; transitions are advisory (logged, never block a load).</summary>
@@ -48,6 +49,9 @@ namespace Morsoul.Core
             _instance = core.GetComponent<GameStateManager>();
             if (_instance == null)
                 _instance = core.gameObject.AddComponent<GameStateManager>();
+            // Awake normally wires this; editor-driven Ensure calls (tests,
+            // batch tooling) never get an Awake.
+            if (_instance._core == null) _instance._core = core;
             return _instance;
         }
 
@@ -117,7 +121,12 @@ namespace Morsoul.Core
             }
             CurrentSave = state;
             _core.Session.RestoreFrom(state, _core.ResolveClue);
-            _core.Focus.Restore(state.focusPercent, state.strainedScanUsed);
+            _core.Focus.Restore(state.focusEnergy, state.strainedScanUsed,
+                maximum: state.focusMax > 0f ? state.focusMax : (float?)null,
+                restRemainderSeconds: state.restElapsedRemainderSeconds,
+                closedAtUtc: ParseUtc(state.closedAtUtc),
+                lastOfflineRecoveryAppliedAtUtc: ParseUtc(state.lastOfflineRecoveryAppliedAtUtc));
+            _core.Focus.ApplyOfflineRecovery(DateTime.UtcNow);
             string scene = state.checkpointSceneName;
             if (string.IsNullOrEmpty(scene) || !Application.CanStreamedLevelBeLoaded(scene))
             {
@@ -168,7 +177,13 @@ namespace Morsoul.Core
         public void WriteCheckpoint(string reason, string nextSceneName)
         {
             _core.Session.ApplyTo(CurrentSave);
-            CurrentSave.focusPercent = _core.Focus.Percent;
+            CurrentSave.focusEnergy = _core.Focus.Percent;
+            CurrentSave.focusMax = _core.Focus.Maximum;
+            CurrentSave.restElapsedRemainderSeconds = _core.Focus.RestRemainderSeconds;
+            _core.Focus.MarkClosed(DateTime.UtcNow);
+            CurrentSave.closedAtUtc = FormatUtc(_core.Focus.ClosedAtUtc);
+            CurrentSave.lastOfflineRecoveryAppliedAtUtc =
+                FormatUtc(_core.Focus.LastOfflineRecoveryAppliedAtUtc);
             CurrentSave.strainedScanUsed = _core.Focus.StrainedScanUsed;
             CurrentSave.checkpointSceneName = !string.IsNullOrEmpty(nextSceneName)
                 ? nextSceneName
@@ -184,18 +199,31 @@ namespace Morsoul.Core
                 Debug.LogWarning($"GameStateManager: illegal transition {Fsm.Current} -> {next} (allowed anyway).", this);
         }
 
+        static string FormatUtc(DateTime? utc) =>
+            utc.HasValue ? utc.Value.ToString("o") : "";
+
+        static DateTime? ParseUtc(string iso) =>
+            !string.IsNullOrEmpty(iso) &&
+            DateTime.TryParse(iso, null,
+                System.Globalization.DateTimeStyles.RoundtripKind, out var dt)
+                ? dt
+                : (DateTime?)null;
+
         /// <summary>
         /// Adds built-in routes for scenes that exist today; only fills keys
         /// that are absent, so a Bootstrap scene's inspector table always wins.
         /// Remap as the 3D investigation scenes land.
         /// </summary>
-        void SeedDefaultRoutes()
+        internal void SeedDefaultRoutes()
         {
             void Seed(string key, string sceneName)
             {
                 if (!routes.Contains(key)) routes.Set(key, sceneName);
             }
             Seed(RouteKeys.Title, "Title");
+            Seed(RouteKeys.Opening, "Prologue_2D"); // 2D stand-in until PrologueRuins ships
+            Seed(RouteKeys.CaseLoop, "CaseLoop");
+            Seed(RouteKeys.Investigation(1), "Investigation_01_Placeholder"); // vault stand-in
             Seed(RouteKeys.Hub(0), "Hub_LowerMarket");   // tutorial case shares the market hub
             Seed(RouteKeys.Hub(1), "Hub_LowerMarket");
             Seed(RouteKeys.Hub(3), "Hub_Wilderness");    // Whisperwood hub
@@ -223,7 +251,7 @@ namespace Morsoul.Core
             if (!string.IsNullOrEmpty(e.SceneName)) LoadSceneInternal(e.SceneName);
         }
 
-        void OnCaseCompleted(CaseCompletedEvent e)
+        internal void OnCaseCompleted(CaseCompletedEvent e)
         {
             if (e.Ending != 0)
             {
@@ -232,9 +260,14 @@ namespace Morsoul.Core
                 GoToRoute(RouteKeys.Title, GameFlowState.Title);
                 return;
             }
-            // Normal advance: next case's hub (hub.<caseId+1>), warned-clean
-            // when the route isn't registered yet.
-            GoToRoute(RouteKeys.Hub(e.CaseId + 1), GameFlowState.Hub);
+            // Normal advance: the session case moves on whether or not the
+            // next hub exists yet — the case door always opens the loop for
+            // Session.CurrentCase. Route chain: next hub -> current hub ->
+            // title, so an unregistered route never strands the run.
+            _core.Session.CurrentCase = e.CaseId + 1;
+            if (GoToRoute(RouteKeys.Hub(e.CaseId + 1), GameFlowState.Hub)) return;
+            if (GoToRoute(RouteKeys.Hub(e.CaseId), GameFlowState.Hub)) return;
+            GoToRoute(RouteKeys.Title, GameFlowState.Title);
         }
 
         void OnMistrialRetry(MistrialRetryEvent _)

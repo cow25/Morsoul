@@ -1,6 +1,7 @@
 using System.IO;
 using Morsoul.Board;
 using Morsoul.Cutscene;
+using Morsoul.Data;
 using Morsoul.Dialogue;
 using Morsoul.Hub;
 using Morsoul.Interrogation;
@@ -27,6 +28,7 @@ namespace Morsoul.Flow.Editor
         const string ScenePath = "Assets/Scenes/CaseLoop.unity";
         const string PanelSettingsPath = "Assets/UI Toolkit/MainPanelSettings.asset";
         const string BoardUxmlPath = "Assets/Board.uxml";
+        const string WeightedBoardUxmlPath = "Assets/WeightedBoard.uxml";
         const string InterrogationUxmlPath = "Assets/Interrogation.uxml";
         const string ResolutionUxmlPath = "Assets/Resolution.uxml";
         const string CutsceneUxmlPath = "Assets/Cutscene.uxml";
@@ -39,7 +41,8 @@ namespace Morsoul.Flow.Editor
             if (AssetDatabase.LoadAssetAtPath<SceneAsset>(ScenePath) != null
                 || File.Exists(ScenePath))
             {
-                bool overwrite = EditorUtility.DisplayDialog("Create Case Loop Scene",
+                bool overwrite = Application.isBatchMode || EditorUtility.DisplayDialog(
+                    "Create Case Loop Scene",
                     $"'{ScenePath}' already exists. Overwrite it?", "Overwrite", "Cancel");
                 if (!overwrite) return;
             }
@@ -63,6 +66,8 @@ namespace Morsoul.Flow.Editor
             var hubFlags = storesGo.AddComponent<HubFlags>();
 
             var board = CreatePanel<BoardController>("BoardPanel", panelSettings, BoardUxmlPath);
+            var weightedBoard = CreatePanel<WeightedBoardController>(
+                "WeightedBoardPanel", panelSettings, WeightedBoardUxmlPath);
             var interrogation = CreatePanel<InterrogationController>(
                 "InterrogationPanel", panelSettings, InterrogationUxmlPath);
             var resolution = CreatePanel<ResolutionController>(
@@ -87,14 +92,18 @@ namespace Morsoul.Flow.Editor
             var flowGo = new GameObject("GameFlow");
             var flow = flowGo.AddComponent<GameFlow>();
             flow.board = board;
+            flow.weightedBoard = weightedBoard;
             flow.interrogation = interrogation;
             flow.resolution = resolution;
             flow.cutscenePlayer = cutscene;
             flow.dialogue = dialogue;
             flow.hubJournal = hubJournal;
             flow.flags = hubFlags;
-            // flow.activeCase stays unassigned on purpose — pick the case to
-            // run in the inspector before pressing Play.
+            flow.caseDatabase = AssetDatabase.LoadAssetAtPath<CaseDatabase>(
+                "Assets/Resources/CaseDatabase.asset");
+            // flow.activeCase stays unassigned on purpose — at Play time the
+            // flow resolves Session.CurrentCase through the case database.
+            // Assign activeCase only to pin one case for standalone testing.
 
             if (EditorSceneManager.SaveScene(scene, ScenePath))
                 Debug.Log($"FlowSceneFactory: case-loop scene saved to '{ScenePath}'. " +

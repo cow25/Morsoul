@@ -22,6 +22,10 @@ namespace Morsoul.Flow
     {
         [Header("Case")]
         public CaseData activeCase;
+        [Tooltip("Optional override used to resolve Session.CurrentCase when no " +
+                 "activeCase is assigned; falls back to the generated " +
+                 "Resources/CaseDatabase via CoreRuntime.ResolveCase.")]
+        public CaseDatabase caseDatabase;
         [Tooltip("Fallback runic-log count used only when no CoreRuntime session exists.")]
         public int runicLogsCollected;
         [Tooltip("True once the active case's latent log clue has been collected.")]
@@ -33,6 +37,9 @@ namespace Morsoul.Flow
 
         [Header("Panel controllers")]
         public BoardController board;
+        [Tooltip("Weighted evidence-DAG board (Algorithm.md). Used when the case " +
+                 "has an EvidenceGraph; the legacy board handles slot/premise cases.")]
+        public WeightedBoardController weightedBoard;
         public InterrogationController interrogation;
         public ResolutionController resolution;
         [Tooltip("Plays the ending cutscene selected by the case loop.")]
@@ -69,6 +76,34 @@ namespace Morsoul.Flow
         {
             Bind();
             if (activeCase != null) BeginCase(activeCase);
+            else if (Application.isPlaying) TryBeginSessionCase();
+        }
+
+        /// <summary>
+        /// Resolves the case to play from the Core session (CurrentCase) through
+        /// the case database — the campaign entry used by the shared CaseLoop
+        /// scene when no activeCase is assigned. False (with a warning) when
+        /// nothing resolves.
+        /// </summary>
+        public bool TryBeginSessionCase()
+        {
+            var core = Core.CoreRuntime.Instance;
+            if (core == null)
+            {
+                Debug.LogWarning("GameFlow: no activeCase assigned and no CoreRuntime — nothing to begin.", this);
+                return false;
+            }
+            var data = caseDatabase != null
+                ? caseDatabase.Find(core.Session.CurrentCase)
+                : core.ResolveCase(core.Session.CurrentCase);
+            if (data == null)
+            {
+                Debug.LogWarning($"GameFlow: no CaseData for session case {core.Session.CurrentCase} " +
+                                 "(rebuild the case database).", this);
+                return false;
+            }
+            BeginCase(data);
+            return true;
         }
 
         void OnDisable() => Unbind();
@@ -84,6 +119,12 @@ namespace Morsoul.Flow
                 board.InterrogationUnlocked += HandleInterrogationUnlocked;
                 board.HypothesisRoutesToEnding += HandleRoutesToEnding;
                 board.AnswerResolved += HandleBoardAnswer;
+            }
+            if (weightedBoard != null)
+            {
+                weightedBoard.LinkResolved += HandleWeightedLinkResolved;
+                weightedBoard.EndingResolveRequested += HandleEndingResolveRequested;
+                weightedBoard.BoardSolved += HandleWeightedBoardSolved;
             }
             if (interrogation != null)
             {
@@ -113,6 +154,12 @@ namespace Morsoul.Flow
                 board.InterrogationUnlocked -= HandleInterrogationUnlocked;
                 board.HypothesisRoutesToEnding -= HandleRoutesToEnding;
                 board.AnswerResolved -= HandleBoardAnswer;
+            }
+            if (weightedBoard != null)
+            {
+                weightedBoard.LinkResolved -= HandleWeightedLinkResolved;
+                weightedBoard.EndingResolveRequested -= HandleEndingResolveRequested;
+                weightedBoard.BoardSolved -= HandleWeightedBoardSolved;
             }
             if (interrogation != null)
             {
@@ -160,13 +207,35 @@ namespace Morsoul.Flow
             _reportedStrikes = 0;
             _collectedClues.Clear();
             Bind();
-            if (board != null)
+            bool weighted = weightedBoard != null && caseData.evidenceGraph != null
+                            && weightedBoard.SetCase(caseData,
+                                core != null
+                                    ? core.GetOrCreateBoardState(caseData.caseId)
+                                    : null);
+            if (weighted)
+            {
+                var focus = Core.CoreRuntime.Instance != null
+                    ? Core.CoreRuntime.Instance.Focus : null;
+                weightedBoard.FocusSource = focus != null
+                    ? () => (focus.Percent, focus.Maximum)
+                    : (Func<(float, float)>)null;
+                weightedBoard.FocusSink = focus != null
+                    ? (energy, max) => focus.Sync(energy, max)
+                    : (Action<float, float>)null;
+                weightedBoard.SetClues(ResolveBoardClues(caseData, core));
+            }
+            if (board != null && !weighted)
             {
                 board.SetCase(caseData);
                 board.SetClues(ResolveBoardClues(caseData, core));
                 // Rehydrate in-progress deductions after a Continue.
                 if (core != null) board.RestoreValidatedNodes(core.BoardEdges);
             }
+            else if (board != null)
+            {
+                board.Close();
+            }
+            if (board != null) board.handleBoardHotkey = !weighted;
         }
 
         /// <summary>
@@ -259,6 +328,65 @@ namespace Morsoul.Flow
                 : runicLogsCollected;
             RequestEnding(EndingSelector.Select(boardFailed: false, logs));
         }
+
+        // --- Weighted board handlers (evidence-DAG cases) ----------------------
+
+        /// <summary>Re-emits board Focus costs for HUD parity.</summary>
+        public void HandleWeightedLinkResolved(IReadOnlyList<Morsoul.Engine.ProgressionEvent> events)
+        {
+            if (events == null) return;
+            foreach (var e in events)
+                if (e.Kind == Morsoul.Engine.ProgressionEventKind.LinkWrong)
+                    FocusSpent?.Invoke(Morsoul.Engine.ProgressionConstants.ErrorFocusCost, "Board");
+        }
+
+        /// <summary>
+        /// Case 5 unaffordable erroneous link: the board state still holds the
+        /// pre-error Focus (unaffordable errors are never charged), so the
+        /// Ending Resolver runs on it directly.
+        /// </summary>
+        public void HandleEndingResolveRequested()
+        {
+            if (_endingRequested || weightedBoard == null || weightedBoard.Session == null) return;
+            var state = weightedBoard.Session.State;
+            var result = Morsoul.Engine.EndingResolver.Resolve(new Morsoul.Engine.EndingResolverInput
+            {
+                PreErrorFocus = state.Focus,
+                IncorrectLink = true,
+                BoardSolved = state.BoardSolved,
+                LogsCollected = CurrentLogCount(),
+            });
+            if (result.Ending.HasValue) RequestEnding(result.Ending.Value);
+        }
+
+        /// <summary>
+        /// Weighted board solved: cases with an interrogation proceed to it;
+        /// board-only cases (Case 5) resolve straight to an ending.
+        /// </summary>
+        public void HandleWeightedBoardSolved(Morsoul.Engine.DeductionCertificate cert)
+        {
+            var caseData = _session != null ? _session.Case : activeCase;
+            if (caseData == null) return;
+            if (caseData.hasInterrogation && caseData.interrogation != null)
+            {
+                HandleInterrogationUnlocked(caseData.interrogation);
+                return;
+            }
+            var result = Morsoul.Engine.EndingResolver.Resolve(new Morsoul.Engine.EndingResolverInput
+            {
+                PreErrorFocus = Core.CoreRuntime.Instance != null
+                    ? Core.CoreRuntime.Instance.Focus.Percent : 100f,
+                IncorrectLink = false,
+                BoardSolved = true,
+                LogsCollected = CurrentLogCount(),
+            });
+            if (result.Ending.HasValue) RequestEnding(result.Ending.Value);
+        }
+
+        int CurrentLogCount() =>
+            Core.CoreRuntime.Instance != null
+                ? Core.CoreRuntime.Instance.Session.RunicLogCount
+                : runicLogsCollected;
 
         // --- Interrogation handlers --------------------------------------------
 

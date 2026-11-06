@@ -12,7 +12,7 @@ namespace Morsoul.Core
         public const float FocusDrainPerTick = 1f;
         /// <summary>Seconds per drain/regen tick — engine-tunable, not a fixed design rule.</summary>
         public const float FocusTickSeconds = 0.1f;
-        /// <summary>Rest-spot regen rate (bench/seat pose: fills until full or the player stands).</summary>
+        /// <summary>SUPERSEDED — rest now grants 5/minute via ProgressionConstants.RestEnergyPerMinute; retained for reference only.</summary>
         public const float RestRegenPerSecond = 10f;
         /// <summary>Wrong causal-prompt answer, Cases 1–4 (slot pair clears).</summary>
         public const float WrongCausalCost = 20f;

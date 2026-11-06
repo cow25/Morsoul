@@ -1,0 +1,109 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7590b3e69de7c7b4ea8aee02bf72dec3, type: 3}
+  m_Name: EVG_00_PROVISIONAL
+  m_EditorClassIdentifier: Morsoul.Data::Morsoul.Data.EvidenceGraphData
+  caseId: 0
+  provisional: 1
+  designNote: 'PROVISIONAL pending design approval. S*: C1->C2 (overload = unpowered lockdown), C3->T1 (key calibrated by working sensors), C2->T1 (manual port is the only path). Support on T1 (calibration) only; RH1 pipe contradicts. Tutorial topology: every non-S* link touches the red herring.'
+  clueIds:
+  - C1_00
+  - C2_00
+  - C3_00
+  - T1_00
+  - RH1_00
+  reliabilities:
+  - clueId: C1_00
+    value: 1
+  - clueId: C2_00
+    value: 1
+  - clueId: C3_00
+    value: 1
+  - clueId: T1_00
+    value: 0.85
+  - clueId: RH1_00
+    value: 0.7
+  authoredClueEdges:
+  - sourceId: C1_00
+    targetId: C2_00
+    weight: 1
+  - sourceId: C2_00
+    targetId: T1_00
+    weight: 0.5
+  - sourceId: C3_00
+    targetId: T1_00
+    weight: 0.5
+  - sourceId: RH1_00
+    targetId: C2_00
+    weight: 0.5
+  - sourceId: RH1_00
+    targetId: C3_00
+    weight: 0.4
+  - sourceId: RH1_00
+    targetId: T1_00
+    weight: 0.1
+  solutionEdges:
+  - sourceId: C1_00
+    targetId: C2_00
+  - sourceId: C2_00
+    targetId: T1_00
+  - sourceId: C3_00
+    targetId: T1_00
+  unlockDependencies:
+  - sourceId: C1_00
+    targetId: C2_00
+  - sourceId: C2_00
+    targetId: T1_00
+  - sourceId: C3_00
+    targetId: T1_00
+  conclusions:
+  - id: H0_00
+    text: Force the sealed blast door open.
+    tier: 0
+    supportingEdges:
+    - clueId: RH1_00
+      weight: 0.5
+    - clueId: C2_00
+      weight: 0.2
+    contradictingEdges: []
+  - id: H1_00
+    text: The door is unpowered; something else must open it.
+    tier: 1
+    supportingEdges:
+    - clueId: C1_00
+      weight: 0.3
+    - clueId: C2_00
+      weight: 0.4
+    contradictingEdges: []
+  - id: H2_00
+    text: 'Manual Override Escape: calibrate the ancient key into the manual port.'
+    tier: 2
+    supportingEdges:
+    - clueId: T1_00
+      weight: 1
+    contradictingEdges:
+    - clueId: RH1_00
+      weight: 1
+  startingWrongConclusionId: H0_00
+  completeConclusionId: H2_00
+  parameters:
+    alpha: 0.85
+    contradictionWeight: 2
+    inventedLinkPenalty: 0.15
+    lowThreshold: 0.35
+    highThreshold: 0.8
+  cachedReferenceSupport: 0.35225058
+  solutionTopologicalOrder:
+  - C1_00
+  - C2_00
+  - C3_00
+  - T1_00

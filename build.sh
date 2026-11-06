@@ -89,31 +89,34 @@ src() { find "$ROOT/Assets/Scripts/$1" -maxdepth 1 -name '*.cs' -print; }
 tst() { find "$ROOT/Assets/Tests/$1" -maxdepth 1 -name '*.cs' -print; }
 
 # Runtime assemblies, in dependency order.
-compile Morsoul.Data -- $(src Data)
-compile Morsoul.Core "-r:$OUT/Morsoul.Data.dll" -- $(src Core)
+compile Morsoul.Engine -- $(src Engine)
+compile Morsoul.Data "-r:$OUT/Morsoul.Engine.dll" -- $(src Data)
+compile Morsoul.Core "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Engine.dll" -- $(src Core)
 compile Morsoul.Gameplay "-r:$OUT/Morsoul.Data.dll" -- $(src Gameplay)
 compile Morsoul.Dialogue "-r:$OUT/Morsoul.Data.dll" -- $(src Dialogue)
-compile Morsoul.Board "-r:$OUT/Morsoul.Data.dll" -- $(src Board)
+compile Morsoul.Board "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Engine.dll" -- $(src Board)
 compile Morsoul.Interrogation "-r:$OUT/Morsoul.Data.dll" -- $(src Interrogation)
-compile Morsoul.Hub "-r:$OUT/Morsoul.Core.dll" "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Dialogue.dll" -- $(src Hub)
+compile Morsoul.Hub "-r:$OUT/Morsoul.Core.dll" "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Dialogue.dll" \
+    "-r:$OUT/Morsoul.Board.dll" "-r:$OUT/Morsoul.Engine.dll" -- $(src Hub)
 compile Morsoul.Journal "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Hub.dll" -- $(src Journal)
 compile Morsoul.Cutscene "-r:$OUT/Morsoul.Core.dll" "-r:$OUT/Morsoul.Data.dll" -- $(src Cutscene)
 compile Morsoul.Title "-r:$OUT/Morsoul.Core.dll" "-r:$OUT/Morsoul.Data.dll" -- $(src Title)
 compile Morsoul.Resolution "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Gameplay.dll" -- $(src Resolution)
 compile Morsoul.Flow \
-    "-r:$OUT/Morsoul.Core.dll" "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Board.dll" "-r:$OUT/Morsoul.Gameplay.dll" \
+    "-r:$OUT/Morsoul.Core.dll" "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Engine.dll" \
+    "-r:$OUT/Morsoul.Board.dll" "-r:$OUT/Morsoul.Gameplay.dll" \
     "-r:$OUT/Morsoul.Interrogation.dll" "-r:$OUT/Morsoul.Dialogue.dll" "-r:$OUT/Morsoul.Cutscene.dll" \
     "-r:$OUT/Morsoul.Resolution.dll" "-r:$OUT/Morsoul.Hub.dll" \
     -- $(src Flow)
 
 # Editor assemblies.
-compile Morsoul.Data.Editor "-r:$OUT/Morsoul.Data.dll" -- $(src Data/Editor)
+compile Morsoul.Data.Editor "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Engine.dll" -- $(src Data/Editor)
 compile Morsoul.Board.Editor "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Board.dll" -- $(src Board/Editor)
 compile Morsoul.Dialogue.Editor "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Dialogue.dll" -- $(src Dialogue/Editor)
 compile Morsoul.Interrogation.Editor "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Interrogation.dll" -- $(src Interrogation/Editor)
 compile Morsoul.Hub.Editor \
     "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Dialogue.dll" "-r:$OUT/Morsoul.Hub.dll" \
-    "-r:$OUT/Morsoul.Journal.dll" \
+    "-r:$OUT/Morsoul.Journal.dll" "-r:$OUT/Morsoul.Board.dll" \
     -- $(src Hub/Editor)
 compile Morsoul.Journal.Editor \
     "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Hub.dll" "-r:$OUT/Morsoul.Journal.dll" \
@@ -123,10 +126,18 @@ compile Morsoul.Title.Editor "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Title.d
 compile Morsoul.Resolution.Editor \
     "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Gameplay.dll" "-r:$OUT/Morsoul.Resolution.dll" \
     -- $(src Resolution/Editor)
+compile Morsoul.Flow.Editor \
+    "-r:$OUT/Morsoul.Core.dll" "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Data.Editor.dll" \
+    "-r:$OUT/Morsoul.Board.dll" "-r:$OUT/Morsoul.Gameplay.dll" \
+    "-r:$OUT/Morsoul.Interrogation.dll" "-r:$OUT/Morsoul.Dialogue.dll" "-r:$OUT/Morsoul.Cutscene.dll" \
+    "-r:$OUT/Morsoul.Resolution.dll" "-r:$OUT/Morsoul.Hub.dll" "-r:$OUT/Morsoul.Hub.Editor.dll" \
+    "-r:$OUT/Morsoul.Journal.dll" "-r:$OUT/Morsoul.Flow.dll" \
+    -- $(src Flow/Editor)
 
 # EditMode tests.
 compile Morsoul.Tests.EditMode \
     "-r:$OUT/Morsoul.Core.dll" \
+    "-r:$OUT/Morsoul.Engine.dll" \
     "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Data.Editor.dll" \
     "-r:$OUT/Morsoul.Board.dll" "-r:$OUT/Morsoul.Cutscene.dll" \
     "-r:$OUT/Morsoul.Dialogue.dll" "-r:$OUT/Morsoul.Gameplay.dll" \

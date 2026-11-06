@@ -26,6 +26,12 @@ namespace Morsoul.Board
         public string hintSpeaker = "Eliza";
         /// <summary>Speaker name used for hint popups during case 0 (internal diagnostic voice).</summary>
         public string diagnosticSpeaker = "Internal Diagnostic";
+        /// <summary>
+        /// When false the controller ignores the H toggle (e.g. a weighted
+        /// evidence-graph case owns the board shortcut instead). True by
+        /// default for legacy scenes.
+        /// </summary>
+        public bool handleBoardHotkey = true;
 
         /// <summary>Raised whenever the engine reports a Focus cost (invalid pairing, wrong answer).</summary>
         public event Action<float> FocusCosted;
@@ -131,7 +137,7 @@ namespace Morsoul.Board
             var keyboard = Keyboard.current;
             if (keyboard == null) return;
 
-            if (keyboard.hKey.wasPressedThisFrame)
+            if (handleBoardHotkey && keyboard.hKey.wasPressedThisFrame)
             {
                 if (_isOpen) Close();
                 else Open();

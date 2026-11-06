@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Morsoul.Data;
+using Morsoul.Engine;
 
 namespace Morsoul.Core
 {
@@ -29,6 +30,7 @@ namespace Morsoul.Core
         readonly Dictionary<string, ClueData> _clueAssets = new Dictionary<string, ClueData>(StringComparer.Ordinal);
         readonly Dictionary<string, bool> _flags = new Dictionary<string, bool>(StringComparer.Ordinal);
         readonly List<string> _boardEdges = new List<string>();
+        readonly Dictionary<int, BoardRuntimeState> _boardStates = new Dictionary<int, BoardRuntimeState>();
         readonly bool[] _runicLogs = new bool[4];
         readonly Dictionary<int, Grade> _grades = new Dictionary<int, Grade>();
         readonly HashSet<Tool> _tools = new HashSet<Tool>();
@@ -86,6 +88,15 @@ namespace Morsoul.Core
         /// <summary>True when the case carried a mistrial retry penalty.</summary>
         public bool WasMistrialRetried(int caseId) => HasFlag(MistrialFlagFor(caseId));
 
+        /// <summary>Flag key tracking a per-case strained scan (forfeits Clean).</summary>
+        public static string StrainedScanFlagFor(int caseId) => "Session.StrainedScan." + caseId;
+
+        /// <summary>Marks that a scan ran at 0 Focus during the case.</summary>
+        public void MarkStrainedScan(int caseId) => SetFlag(StrainedScanFlagFor(caseId));
+
+        /// <summary>True when a strained scan was used during the case.</summary>
+        public bool IsStrainedScanUsed(int caseId) => HasFlag(StrainedScanFlagFor(caseId));
+
         // --- Board / logs / grades / tools ------------------------------------
 
         /// <summary>Merges validated board node ids (DeductionBoard.ValidatedNodeIds).</summary>
@@ -98,6 +109,20 @@ namespace Morsoul.Core
         }
 
         public IReadOnlyList<string> BoardEdges => _boardEdges;
+
+        /// <summary>
+        /// Per-case weighted-board runtime states (Data_Schemas
+        /// BoardRuntimeState). Created on demand; persisted in the save
+        /// record and mutated only through Morsoul.Engine.ProgressionRules.
+        /// </summary>
+        public BoardRuntimeState GetOrCreateBoardState(int caseId)
+        {
+            if (!_boardStates.TryGetValue(caseId, out var state))
+                _boardStates[caseId] = state = new BoardRuntimeState { CaseId = caseId };
+            return state;
+        }
+
+        public IReadOnlyDictionary<int, BoardRuntimeState> BoardStates => _boardStates;
 
         /// <summary>Marks runic-log slot (0–3); out-of-range indices ignored.</summary>
         public void MarkRunicLog(int slot)
@@ -183,6 +208,53 @@ namespace Morsoul.Core
             foreach (var kv in _flags)
                 save.uneaseFlags.Add(new UneaseFlag(kv.Key, kv.Value));
             save.toolsUnlocked = new List<Tool>(_tools);
+            save.boardStates = new List<CaseBoardSave>();
+            foreach (var pair in _boardStates)
+                save.boardStates.Add(ToSave(pair.Value));
+        }
+
+        static CaseBoardSave ToSave(BoardRuntimeState s)
+        {
+            var save = new CaseBoardSave
+            {
+                caseId = s.CaseId,
+                visibleClueIds = new List<string>(s.VisibleClueIds),
+                collectedClueIds = new List<string>(s.CollectedClueIds),
+                selectedConclusionId = s.SelectedConclusionId ?? "",
+                caseErrorCount = s.CaseErrorCount,
+                firedHintTiers = new List<int>(s.FiredHintTiers),
+                linkingLockedOut = s.LinkingLockedOut,
+                submittedConclusionId = s.SubmittedConclusionId ?? "",
+                boardSolved = s.BoardSolved,
+                completionRewardApplied = s.CompletionRewardApplied,
+            };
+            foreach (var link in s.Links)
+                save.links.Add(new BoardLinkSave(link.sourceId, link.targetId));
+            foreach (var pair in s.NodePositions)
+                save.nodePositions.Add(new NodePositionSave(pair.Key, pair.Value.x, pair.Value.y));
+            return save;
+        }
+
+        static void FromSave(CaseBoardSave save, BoardRuntimeState s)
+        {
+            s.CaseId = save.caseId;
+            s.VisibleClueIds = new List<string>(save.visibleClueIds ?? new List<string>());
+            s.CollectedClueIds = new List<string>(save.collectedClueIds ?? new List<string>());
+            s.Links = new List<DirectedEdge>();
+            foreach (var l in save.links ?? new List<BoardLinkSave>())
+                if (l != null)
+                    s.Links.Add(new DirectedEdge(l.sourceId, l.targetId));
+            s.NodePositions = new Dictionary<string, NodePosition>();
+            foreach (var p in save.nodePositions ?? new List<NodePositionSave>())
+                if (p != null)
+                    s.NodePositions[p.clueId] = new NodePosition { x = p.x, y = p.y };
+            s.SelectedConclusionId = save.selectedConclusionId;
+            s.CaseErrorCount = save.caseErrorCount;
+            s.FiredHintTiers = new List<int>(save.firedHintTiers ?? new List<int>());
+            s.LinkingLockedOut = save.linkingLockedOut;
+            s.SubmittedConclusionId = save.submittedConclusionId;
+            s.BoardSolved = save.boardSolved;
+            s.CompletionRewardApplied = save.completionRewardApplied;
         }
 
         /// <summary>
@@ -216,6 +288,15 @@ namespace Morsoul.Core
                     if (f != null) SetFlag(f.key, f.value);
             if (save.toolsUnlocked != null)
                 foreach (var t in save.toolsUnlocked) UnlockTool(t);
+            foreach (var boardSave in save.boardStates ?? new List<CaseBoardSave>())
+                if (boardSave != null)
+                {
+                    var s = GetOrCreateBoardState(boardSave.caseId);
+                    FromSave(boardSave, s);
+                }
+            // v1 migration: the global strained-scan flag maps to the current case.
+            if (save.strainedScanUsed)
+                MarkStrainedScan(save.currentCase);
         }
 
         /// <summary>Clears everything (new game).</summary>
@@ -227,6 +308,7 @@ namespace Morsoul.Core
             _clueAssets.Clear();
             _flags.Clear();
             _boardEdges.Clear();
+            _boardStates.Clear();
             Array.Clear(_runicLogs, 0, _runicLogs.Length);
             _grades.Clear();
             _tools.Clear();

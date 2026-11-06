@@ -1,35 +1,57 @@
 using System;
+using Morsoul.Engine;
 
 namespace Morsoul.Core
 {
     /// <summary>
-    /// Single source of truth for persistent Focus (GDD §6.4–§6.6).
+    /// Single source of truth for persistent Focus (GDD §6.4–§6.6,
+    /// Algorithm.md B2, Data_Schemas FocusState).
     ///
-    /// - Percent persists across scenes/cases/hubs and NEVER auto-refills;
-    ///   the only recovery is TickRest at a rest spot.
-    /// - Scanning drains 1% per FocusTickSeconds while above 0.
-    /// - At 0% a held scan is "strained scanning": it still works and costs
+    /// - Energy persists across scenes/cases/hubs and NEVER auto-refills;
+    ///   recovery comes only from rest ticks and closed-game recovery.
+    /// - Maximum starts at 100 and grows +10 per supported complete
+    ///   submission (awarded once per case via ProgressionRules).
+    /// - Scanning drains 1 per FocusTickSeconds while above 0.
+    /// - At 0 a held scan is "strained scanning": it still works and costs
     ///   nothing, but latches StrainedScanUsed — the case is then ineligible
     ///   for Clean.
-    /// - Board costs (wrong causal / invalid pairing) resolve even at 0%;
-    ///   they simply clamp the bar at 0.
+    /// - Rest grants 5 per whole minute (fractional time persists as a
+    ///   remainder for the save layer).
+    /// - Closed-game recovery grants floor(whole minutes closed / 2), capped
+    ///   at max; timestamps prevent crediting an interval twice.
     /// </summary>
     public class FocusModel
     {
         float _tickAccumulator;
+        float _restRemainderSeconds;
 
-        /// <summary>0–100, persistent.</summary>
+        /// <summary>Current energy, 0–Maximum.</summary>
         public float Percent { get; private set; } = FocusTuning.FocusMax;
 
-        /// <summary>True once a scan ran at 0% Focus — forfeits Clean.</summary>
+        /// <summary>Current energy cap — grows on supported complete submissions.</summary>
+        public float Maximum { get; private set; } = FocusTuning.FocusMax;
+
+        /// <summary>0–1 fill fraction for bars that normalize.</summary>
+        public float Normalized => Maximum > 0f ? Percent / Maximum : 0f;
+
+        /// <summary>True once a scan ran at 0 Focus — forfeits Clean.</summary>
         public bool StrainedScanUsed { get; private set; }
 
-        /// <summary>True when the bar has hit zero.</summary>
+        /// <summary>True when energy has hit zero.</summary>
         public bool IsDepleted => Percent <= 0f;
+
+        /// <summary>Un-credited rest time carried toward the next whole minute.</summary>
+        public float RestRemainderSeconds => _restRemainderSeconds;
+
+        /// <summary>When the game last closed, for offline recovery. Null once consumed.</summary>
+        public DateTime? ClosedAtUtc { get; private set; }
+
+        /// <summary>Last time offline recovery was credited — double-credit guard.</summary>
+        public DateTime? LastOfflineRecoveryAppliedAtUtc { get; private set; }
 
         /// <summary>
         /// Advances the held-scan drain by <paramref name="deltaSeconds"/>.
-        /// At 0% the scan still functions but latches StrainedScanUsed.
+        /// At 0 the scan still functions but latches StrainedScanUsed.
         /// </summary>
         public void TickScan(float deltaSeconds)
         {
@@ -48,11 +70,20 @@ namespace Morsoul.Core
             }
         }
 
-        /// <summary>Rest-spot regen — the only way Focus recovers.</summary>
+        /// <summary>
+        /// Rest-spot regen: +5 per whole minute of rest. Sub-minute time is
+        /// kept in the remainder so saves and scene transitions lose nothing.
+        /// </summary>
         public void TickRest(float deltaSeconds)
         {
-            Percent = Math.Min(FocusTuning.FocusMax,
-                Percent + FocusTuning.RestRegenPerSecond * deltaSeconds);
+            if (deltaSeconds <= 0f) return;
+            _restRemainderSeconds += deltaSeconds;
+            const float secondsPerMinute = 60f;
+            while (_restRemainderSeconds >= secondsPerMinute)
+            {
+                _restRemainderSeconds -= secondsPerMinute;
+                Percent = Math.Min(Maximum, Percent + ProgressionConstants.RestEnergyPerMinute);
+            }
         }
 
         /// <summary>Wrong causal-prompt answer on the board (−20%).</summary>
@@ -73,12 +104,69 @@ namespace Morsoul.Core
             if (amount > 0f) Percent = Math.Max(0f, Percent - amount);
         }
 
-        /// <summary>Restores state from a SaveState.</summary>
-        public void Restore(float percent, bool strainedScanUsed)
+        /// <summary>Raises the cap (supported complete submission, +10).</summary>
+        public void IncreaseMaximum(float bonus)
         {
-            Percent = Math.Clamp(percent, 0f, FocusTuning.FocusMax);
+            if (bonus > 0f) Maximum += bonus;
+        }
+
+        /// <summary>Refills energy to the current maximum.</summary>
+        public void Refill()
+        {
+            Percent = Maximum;
+        }
+
+        /// <summary>
+        /// Mirrors externally-computed energy + maximum into the model
+        /// (weighted-board progression mutates its own runtime state; the
+        /// persistent FocusModel stays authoritative for everything else).
+        /// </summary>
+        public void Sync(float energy, float maximum)
+        {
+            Maximum = Math.Max(1f, maximum);
+            Percent = Math.Clamp(energy, 0f, Maximum);
+        }
+
+        /// <summary>Records the close timestamp used by offline recovery.</summary>
+        public void MarkClosed(DateTime closedUtc)
+        {
+            ClosedAtUtc = closedUtc;
+        }
+
+        /// <summary>
+        /// Closed-game recovery: +floor(whole minutes / 2), capped at max,
+        /// measured from the later of close time and the last credit so an
+        /// interval is never recovered twice. Returns the energy granted.
+        /// </summary>
+        public float ApplyOfflineRecovery(DateTime reopenedUtc)
+        {
+            if (ClosedAtUtc == null) return 0f;
+            var from = LastOfflineRecoveryAppliedAtUtc.HasValue &&
+                       LastOfflineRecoveryAppliedAtUtc.Value > ClosedAtUtc.Value
+                ? LastOfflineRecoveryAppliedAtUtc.Value
+                : ClosedAtUtc.Value;
+            int wholeMinutes = (int)Math.Floor((reopenedUtc - from).TotalMinutes);
+            if (wholeMinutes <= 0) return 0f;
+
+            float gain = wholeMinutes / ProgressionConstants.ClosedMinutesPerEnergy;
+            float before = Percent;
+            Percent = Math.Min(Maximum, Percent + gain);
+            LastOfflineRecoveryAppliedAtUtc = reopenedUtc;
+            return Percent - before;
+        }
+
+        /// <summary>Restores state from a SaveState.</summary>
+        public void Restore(float percent, bool strainedScanUsed, float? maximum = null,
+            float restRemainderSeconds = 0f, DateTime? closedAtUtc = null,
+            DateTime? lastOfflineRecoveryAppliedAtUtc = null)
+        {
+            Maximum = maximum ?? FocusTuning.FocusMax;
+            Percent = Math.Clamp(percent, 0f, Maximum);
             StrainedScanUsed = strainedScanUsed;
             _tickAccumulator = 0f;
+            _restRemainderSeconds = Math.Max(0f, restRemainderSeconds);
+            ClosedAtUtc = closedAtUtc;
+            LastOfflineRecoveryAppliedAtUtc = lastOfflineRecoveryAppliedAtUtc;
         }
     }
 }
