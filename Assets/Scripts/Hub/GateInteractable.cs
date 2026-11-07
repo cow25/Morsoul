@@ -18,6 +18,13 @@ namespace Morsoul.Hub
         public string requiredFlag;
         /// <summary>Scene loaded when the gate is open.</summary>
         public string targetScene;
+        /// <summary>
+        /// Optional route-table key (e.g. "investigation.3") resolved through
+        /// the GameStateManager before targetScene. Lets a Zone B seam point
+        /// at a route whose scene is delivered by another lane — the seam
+        /// needs no rewiring when the real scene registers.
+        /// </summary>
+        public string routeKey;
         /// <summary>Played when the gate is locked; optional.</summary>
         public Morsoul.Dialogue.DialogueData lockedDialogue;
 
@@ -36,15 +43,17 @@ namespace Morsoul.Hub
             var flags = ctx != null && ctx.flags != null ? ctx.flags.Set : null;
             if (GateRule.CanPass(requiredFlag, flags))
             {
+                string scene = ResolveTargetScene();
                 CheckpointRequested?.Invoke("Seam");
                 CoreRuntime.Instance?.Bus.Publish(new CheckpointRequestedEvent
                 {
                     Reason = "Seam",
-                    NextSceneName = targetScene
+                    NextSceneName = scene
                 });
-                if (string.IsNullOrEmpty(targetScene))
+                if (string.IsNullOrEmpty(scene))
                 {
-                    Debug.LogWarning($"GateInteractable '{name}': open but targetScene is empty.", this);
+                    Debug.LogWarning($"GateInteractable '{name}': open but no destination " +
+                                     $"(routeKey '{routeKey}' unresolved, targetScene empty).", this);
                     return;
                 }
                 // Single load authority: the GSM guards missing scenes and
@@ -52,10 +61,10 @@ namespace Morsoul.Hub
                 if (CoreRuntime.Instance != null)
                     CoreRuntime.Instance.Bus.Publish(new SceneLoadRequestedEvent
                     {
-                        SceneName = targetScene
+                        SceneName = scene
                     });
                 else
-                    SceneManager.LoadScene(targetScene);
+                    SceneManager.LoadScene(scene);
                 return;
             }
 
@@ -72,6 +81,21 @@ namespace Morsoul.Hub
             if (ctx.flags != null) ctx.dialogue.SetFlags(ctx.flags.Set);
             ctx.dialogue.SetDialogue(lockedDialogue);
             ctx.dialogue.Play();
+        }
+
+        /// <summary>
+        /// Route-table lookup first (when routeKey is set and Core is live),
+        /// serialized targetScene as fallback. Null/empty when neither
+        /// resolves.
+        /// </summary>
+        string ResolveTargetScene()
+        {
+            if (!string.IsNullOrEmpty(routeKey) && GameStateManager.Instance != null)
+            {
+                string routed = GameStateManager.Instance.routes.Resolve(routeKey);
+                if (!string.IsNullOrEmpty(routed)) return routed;
+            }
+            return targetScene;
         }
     }
 }

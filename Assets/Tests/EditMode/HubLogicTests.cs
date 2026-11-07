@@ -186,5 +186,72 @@ namespace Morsoul.Tests
             inspection.clue = null;
             Assert.That(() => inspection.Interact(null), Throws.Nothing);
         }
+
+        // --- TravelRules --------------------------------------------------------
+
+        Morsoul.Core.SceneRouteTable HubRoutes()
+        {
+            var routes = new Morsoul.Core.SceneRouteTable();
+            routes.Set("hub.0", "Hub_LowerMarket");
+            routes.Set("hub.1", "Hub_LowerMarket");
+            routes.Set("hub.2", "Hub_CathedralNave");
+            routes.Set("hub.3", "Hub_Wilderness");
+            routes.Set("hub.4", "Hub_IronHollow");
+            return routes;
+        }
+
+        [Test]
+        public void TravelRules_IsHubUnlocked_ProgressionAndBounds()
+        {
+            Assert.That(TravelRules.IsHubUnlocked(1, 0), Is.False);
+            Assert.That(TravelRules.IsHubUnlocked(0, 0), Is.True);
+            Assert.That(TravelRules.IsHubUnlocked(1, 1), Is.True);
+            Assert.That(TravelRules.IsHubUnlocked(3, 1), Is.False);
+            // Completed cases keep their hubs open (backtracking).
+            Assert.That(TravelRules.IsHubUnlocked(1, 5), Is.True);
+            Assert.That(TravelRules.IsHubUnlocked(-1, 5), Is.False);
+        }
+
+        [Test]
+        public void TravelRules_CollectDestinations_FiltersUnlocksCurrentAndDupes()
+        {
+            var routes = HubRoutes();
+            var ids = new List<int> { 0, 1, 2, 3, 4 };
+            var destinations = TravelRules.CollectDestinations(
+                routes, ids, null, currentCase: 3, currentScene: "Hub_Wilderness",
+                canLoad: null);
+
+            // hub.4 locked (case 4 not reached); hub.3 is the current scene;
+            // hub.0 and hub.1 collapse into one LowerMarket destination.
+            Assert.That(destinations.Count, Is.EqualTo(2));
+            Assert.That(destinations[0].sceneName, Is.EqualTo("Hub_LowerMarket"));
+            Assert.That(destinations[1].sceneName, Is.EqualTo("Hub_CathedralNave"));
+        }
+
+        [Test]
+        public void TravelRules_CollectDestinations_HonoursCanLoadAndLabels()
+        {
+            var routes = HubRoutes();
+            var ids = new List<int> { 0, 1 };
+            var labels = new Dictionary<int, string> { { 0, "Market" }, { 1, "Guild Square" } };
+            var destinations = TravelRules.CollectDestinations(
+                routes, ids, labels, currentCase: 1, currentScene: "Other",
+                canLoad: s => s != "Hub_LowerMarket");
+
+            Assert.That(destinations.Count, Is.EqualTo(0));
+
+            destinations = TravelRules.CollectDestinations(
+                routes, ids, labels, currentCase: 1, currentScene: "Other",
+                canLoad: _ => true);
+            Assert.That(destinations.Count, Is.EqualTo(1));
+            Assert.That(destinations[0].label, Is.EqualTo("Market")); // first id's label wins
+        }
+
+        [Test]
+        public void TravelRules_CollectDestinations_NullInputs_AreSafe()
+        {
+            Assert.That(TravelRules.CollectDestinations(null, null, null, 5, "x", null).Count,
+                Is.EqualTo(0));
+        }
     }
 }

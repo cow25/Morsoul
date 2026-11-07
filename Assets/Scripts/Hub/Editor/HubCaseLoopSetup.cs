@@ -16,6 +16,8 @@ namespace Morsoul.Hub.Editor
     {
         const string LowerMarketScenePath = "Assets/Scenes/Hub_LowerMarket.unity";
         const string WildernessScenePath = "Assets/Scenes/Hub_Wilderness.unity";
+        const string CathedralScenePath = "Assets/Scenes/Hub_CathedralNave.unity";
+        const string IronHollowScenePath = "Assets/Scenes/Hub_IronHollow.unity";
 
         [MenuItem("Morsoul/Hub/Install Case Loop Entry Into Hub Scenes")]
         public static void Install()
@@ -28,6 +30,8 @@ namespace Morsoul.Hub.Editor
                 EditorSceneManager.OpenScene(LowerMarketScenePath, OpenSceneMode.Single);
             Integrate(LowerMarketScenePath, new Vector3(-6f, 2.5f, 0f));
             Integrate(WildernessScenePath, new Vector3(6f, -1f, 0f));
+            Integrate(CathedralScenePath, new Vector3(-6f, 2.5f, 0f));
+            Integrate(IronHollowScenePath, new Vector3(-6f, -1f, 0f));
         }
 
         static void Integrate(string scenePath, Vector3 position)

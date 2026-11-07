@@ -226,7 +226,9 @@ namespace Morsoul.Core
             Seed(RouteKeys.Investigation(1), "Investigation_01_Placeholder"); // vault stand-in
             Seed(RouteKeys.Hub(0), "Hub_LowerMarket");   // tutorial case shares the market hub
             Seed(RouteKeys.Hub(1), "Hub_LowerMarket");
+            Seed(RouteKeys.Hub(2), "Hub_CathedralNave"); // Cathedral of Saint Althea
             Seed(RouteKeys.Hub(3), "Hub_Wilderness");    // Whisperwood hub
+            Seed(RouteKeys.Hub(4), "Hub_IronHollow");    // Iron Hollow railhead
         }
 
         // --- Bus handlers -----------------------------------------------------
