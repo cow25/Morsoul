@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using Morsoul.Board;
 using Morsoul.Data;
+using Morsoul.Dialogue;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -67,9 +68,9 @@ namespace Morsoul.Hub.Editor
             Inspection("RustedPipe",  new Color(0.55f, 0.35f, 0.2f), new Vector3(4f, 1f, 0f),
                 "Assets/Data/Cases/Case00/RH1_00.asset");
 
-            // Exit to Asterveil: advances CurrentCase to 1 so the market's
-            // CaseDoor begins the vault case. Ungated for the demo stand-in;
-            // the real Prologue gates escape on the solved tutorial board.
+            // Exit to Asterveil: gated on the solved tutorial board, then
+            // advances CurrentCase to 1 so the market's CaseDoor begins the
+            // vault case.
             HubSceneFactory.CreateInteractable("RuinsExit",
                 new Color(0.35f, 0.6f, 0.4f), new Vector3(6f, 0f, 0f),
                 out PrologueExitInteractable exit);
@@ -77,6 +78,8 @@ namespace Morsoul.Hub.Editor
             exit.checkpointReason = "PrologueExit";
             exit.targetScene = MarketSceneName;
             exit.nextCaseId = 1;
+            exit.boardCaseId = 0;
+            exit.lockedDialogue = EnsurePrologueLockedDialogue();
 
             HubSceneFactory.SaveScene(scene, PrologueScenePath);
         }
@@ -188,6 +191,30 @@ namespace Morsoul.Hub.Editor
             inspect.clue = AssetDatabase.LoadAssetAtPath<ClueData>(cluePath);
             if (inspect.clue == null)
                 Debug.LogWarning($"DemoStandInFactory: clue asset missing at '{cluePath}'.");
+        }
+
+        static DialogueData EnsurePrologueLockedDialogue()
+        {
+            const string path = "Assets/Data/Dialogue/Case00/D_Prologue_Locked.asset";
+            var data = AssetDatabase.LoadAssetAtPath<DialogueData>(path);
+            if (data != null) return data;
+            HubSceneFactory.EnsureFolder("Assets/Data/Dialogue/Case00");
+            data = ScriptableObject.CreateInstance<DialogueData>();
+            data.id = "D_Prologue_Locked";
+            data.startNodeId = "n1";
+            data.nodes = new[]
+            {
+                new DialogueNodeData
+                {
+                    id = "n1",
+                    speakerName = "Diagnostics",
+                    text = "Manual override unresolved. The blast door stays " +
+                           "sealed until the deduction board reaches a " +
+                           "supported conclusion.",
+                },
+            };
+            AssetDatabase.CreateAsset(data, path);
+            return data;
         }
 
         static void CreateBoardPanel()

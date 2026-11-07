@@ -51,14 +51,18 @@ namespace Morsoul.Hub
             if (core == null || board == null) return false;
             var data = core.ResolveCase(core.Session.CurrentCase);
             if (data == null || data.evidenceGraph == null) return false;
-            if (board.caseData == data && board.Session != null) return true;
-            if (!board.SetCase(data, core.Session.GetOrCreateBoardState(data.caseId)))
-                return false;
+            if (board.caseData != data || board.Session == null)
+            {
+                if (!board.SetCase(data, core.Session.GetOrCreateBoardState(data.caseId)))
+                    return false;
+            }
 
             var focus = core.Focus;
             board.FocusSource = () => (focus.Percent, focus.Maximum);
             board.FocusSink = (energy, max) => focus.Sync(energy, max);
 
+            // Re-push collected clues on every call: the session may have been
+            // built before the player finished collecting in this scene.
             var clues = new List<ClueData>();
             foreach (string id in core.Session.ClueIds)
             {

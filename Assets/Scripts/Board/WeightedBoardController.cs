@@ -224,7 +224,15 @@ namespace Morsoul.Board
 
         public void Open()
         {
-            if (_session == null && (EnsureSession == null || !EnsureSession()))
+            // Re-run the lazy hook on every open so freshly collected clues
+            // and focus state sync into a live session, not just the first.
+            if (EnsureSession != null && !EnsureSession())
+            {
+                if (caseData != null) Debug.LogWarning(
+                    $"WeightedBoardController: no usable evidence graph on '{caseData.title}'; board stays closed.", this);
+                return;
+            }
+            if (_session == null)
             {
                 if (caseData != null) Debug.LogWarning(
                     $"WeightedBoardController: no evidence graph on '{caseData.title}'; board stays closed.", this);
