@@ -5,7 +5,8 @@
         "Morsoul.Core",
         "Morsoul.Data",
         "Morsoul.Hub",
-        "Morsoul.Dialogue"
+        "Morsoul.Dialogue",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

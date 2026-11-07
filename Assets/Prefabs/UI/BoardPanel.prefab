@@ -110,3 +110,4 @@ MonoBehaviour:
   hintPortrait: {fileID: 0}
   hintSpeaker: Eliza
   diagnosticSpeaker: Internal Diagnostic
+  handleBoardHotkey: 1

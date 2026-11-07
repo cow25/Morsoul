@@ -7,7 +7,8 @@
         "Morsoul.Dialogue",
         "Morsoul.Journal",
         "Morsoul.Board",
-        "Morsoul.Dialogue.Editor"
+        "Morsoul.Dialogue.Editor",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [
         "Editor"

@@ -62,6 +62,12 @@ namespace Morsoul.Hub.Editor
                 EditorSceneManager.OpenScene(MarketPath, OpenSceneMode.Single);
 
             foreach (var spec in Specs()) Integrate(spec);
+            foreach (var extra in new[]
+            {
+                "Assets/Scenes/Prologue_2D.unity",
+                "Assets/Scenes/Investigation_01_Placeholder.unity",
+            })
+                UpgradePresentationOnly(extra);
             RegisterBuildScenes();
         }
 
@@ -148,6 +154,7 @@ namespace Morsoul.Hub.Editor
                 if (spec.interludeDialoguePath != null)
                     EnsureInterlude(scene, spec);
                 spec.populate?.Invoke();
+                EnsureInteractablePresentation(scene);
 
                 EditorSceneManager.MarkSceneDirty(scene);
                 if (EditorSceneManager.SaveScene(scene, spec.scenePath))
@@ -324,6 +331,83 @@ namespace Morsoul.Hub.Editor
             Gate("DeepShaftLift", new Color(0.4f, 0.35f, 0.5f), new Vector3(6f, 1.5f, 0f),
                 HubDialogueContentGenerator.OverrideClearanceFlag, "investigation.4",
                 "Assets/Data/Dialogue/Case04/D_Gate_Locked_04.asset", "[E] Enter");
+        }
+
+        /// <summary>
+        /// Upgrades pre-label interactables in place: a legacy quad "Prompt"
+        /// becomes an "[E]" text label (Interactable2D syncs it to promptText
+        /// when shown), and every block gets a permanent NameLabel above it.
+        /// </summary>
+        static void EnsureInteractablePresentation(Scene scene)
+        {
+            foreach (var it in UnityEngine.Object.FindObjectsByType<Interactable2D>())
+            {
+                if (it.gameObject.scene != scene) continue;
+                var t = it.transform;
+                var prompt = t.Find("Prompt");
+                if (prompt != null && prompt.GetComponent<InteractableLabel>() == null)
+                {
+                    UnityEngine.Object.DestroyImmediate(prompt.gameObject);
+                    prompt = null;
+                }
+                if (prompt == null)
+                {
+                    var label = HubSceneFactory.NewWorldLabel("Prompt", "[E]",
+                        t.position + HubSceneFactory.PromptOffset,
+                        HubSceneFactory.PromptFontSize, new Color(1f, 0.85f, 0.2f));
+                    label.transform.SetParent(t, true);
+                    label.SetActive(false);
+                    it.promptIndicator = label;
+                }
+                else if (it.promptIndicator == null)
+                    it.promptIndicator = prompt.gameObject;
+
+                var nameLabel = t.Find("NameLabel");
+                if (nameLabel != null && nameLabel.GetComponent<InteractableLabel>() == null)
+                {
+                    UnityEngine.Object.DestroyImmediate(nameLabel.gameObject);
+                    nameLabel = null;
+                }
+                if (nameLabel == null)
+                {
+                    var tag = HubSceneFactory.NewWorldLabel("NameLabel", it.name,
+                        t.position + HubSceneFactory.NameOffset,
+                        HubSceneFactory.NameFontSize, new Color(1f, 1f, 1f, 0.85f));
+                    tag.transform.SetParent(t, true);
+                }
+            }
+        }
+
+        /// <summary>Runs only the presentation upgrade on a non-hub scene.</summary>
+        static void UpgradePresentationOnly(string scenePath)
+        {
+            if (!File.Exists(scenePath)) return;
+            var preExisting = SceneManager.GetSceneByPath(scenePath);
+            bool wasOpen = preExisting.IsValid() && preExisting.isLoaded;
+            if (wasOpen && preExisting.isDirty)
+            {
+                Debug.LogError($"HubContentSetup: '{scenePath}' is open with " +
+                               "unsaved changes; skipped.");
+                return;
+            }
+            var previousActive = SceneManager.GetActiveScene();
+            var scene = wasOpen ? preExisting
+                : EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Additive);
+            try
+            {
+                SceneManager.SetActiveScene(scene);
+                EnsureInteractablePresentation(scene);
+                EditorSceneManager.MarkSceneDirty(scene);
+                if (EditorSceneManager.SaveScene(scene))
+                    Debug.Log($"HubContentSetup: '{scenePath}' labels upgraded.");
+            }
+            finally
+            {
+                if (previousActive.IsValid() && previousActive.isLoaded)
+                    SceneManager.SetActiveScene(previousActive);
+                if (!wasOpen && scene.IsValid() && scene.isLoaded)
+                    EditorSceneManager.CloseScene(scene, true);
+            }
         }
 
         // --- Content helpers (all name-guarded) --------------------------------

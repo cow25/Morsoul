@@ -7,12 +7,12 @@ using UnityEngine.SceneManagement;
 namespace Morsoul.Hub
 {
     /// <summary>
-    /// Carrier fast-travel node (GDD §3 Transit Node). On interact it offers
-    /// every unlocked regional hub through the scene's
-    /// <see cref="TravelMenuController"/>; a single reachable destination
-    /// travels immediately, preserving the original fixed-target behaviour
-    /// when no menu is wired. Travelling always requests a checkpoint and
-    /// loads through the GameStateManager (direct load only without Core).
+    /// Carrier fast-travel node (GDD §3 Transit Node). On interact it opens
+    /// the scene's <see cref="TravelMenuController"/> listing every unlocked
+    /// regional hub; the fixed serialized target is only used when no menu
+    /// is wired or Core is absent. Travelling always requests a checkpoint
+    /// and loads through the GameStateManager (direct load only without
+    /// Core).
     /// </summary>
     public class CarrierInteractable : Interactable2D
     {
@@ -47,7 +47,7 @@ namespace Morsoul.Hub
             if (offerTravelMenu && menu != null && CoreRuntime.Instance != null)
             {
                 var destinations = menu.CollectDestinations(SceneManager.GetActiveScene().name);
-                if (destinations.Count > 1)
+                if (destinations.Count > 0)
                 {
                     void OnSelected(TravelDestination d)
                     {
@@ -65,12 +65,10 @@ namespace Morsoul.Hub
                     menu.Show(destinations);
                     return;
                 }
-                if (destinations.Count == 1)
-                {
-                    TravelTo(destinations[0].sceneName);
-                    return;
-                }
-                // No unlocked destination: fall through to the fixed target.
+                // Menu is wired but nothing is unlocked yet — warn instead of
+                // silently teleporting to the fixed target.
+                Debug.Log($"CarrierInteractable '{name}': no unlocked hub destinations.", this);
+                return;
             }
 
             TravelTo(targetScene);

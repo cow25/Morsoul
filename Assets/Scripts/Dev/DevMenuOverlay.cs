@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Morsoul.Core;
 using Morsoul.Hub;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 
 namespace Morsoul.Dev
@@ -33,6 +34,10 @@ namespace Morsoul.Dev
         DevSmokeSequences.DevReport _report;
         System.Collections.IEnumerator _running;
 
+        // panels we suspended while the menu is open (restored on close)
+        readonly List<System.ValueTuple<UnityEngine.UIElements.VisualElement,
+            UnityEngine.UIElements.PickingMode>> _suspended = new();
+
         static readonly string[] Tabs =
             { "Scenes", "Session", "Flags", "Clues", "Focus", "Hub", "Scenarios", "Sequences" };
 
@@ -52,7 +57,81 @@ namespace Morsoul.Dev
 
         void Update()
         {
-            if (Input.GetKeyDown(KeyCode.F1)) _visible = !_visible;
+            var keyboard = Keyboard.current;
+            if (keyboard != null && keyboard.f1Key.wasPressedThisFrame)
+            {
+                _visible = !_visible;
+                if (_visible)
+                {
+                    _prevLock = Cursor.lockState;
+                    _prevCursorVisible = Cursor.visible;
+                    SuspendPanelInput();
+                }
+                else
+                {
+                    RestorePanelInput();
+                    Cursor.lockState = _prevLock;
+                    Cursor.visible = _prevCursorVisible;
+                }
+            }
+        }
+
+        CursorLockMode _prevLock;
+        bool _prevCursorVisible;
+
+        // Hub panels re-lock the cursor when they close; a locked cursor
+        // sends every click to screen centre, so keep it free while open.
+        void LateUpdate()
+        {
+            if (!_visible) return;
+            if (Cursor.lockState != CursorLockMode.None) Cursor.lockState = CursorLockMode.None;
+            if (!Cursor.visible) Cursor.visible = true;
+        }
+
+        /// <summary>
+        /// UI Toolkit fullscreen roots swallow pointer events before IMGUI
+        /// sees them — while the menu is open, every live panel root is made
+        /// click-through; originals restored on close.
+        /// </summary>
+        void SuspendPanelInput()
+        {
+            _suspended.Clear();
+            SuspendAll<UnityEngine.UIElements.PanelRenderer>();
+            SuspendAll<UnityEngine.UIElements.UIDocument>();
+        }
+
+        void SuspendAll<T>() where T : Component
+        {
+            foreach (var panel in Object.FindObjectsByType<T>())
+            {
+                var root = RootOf(panel);
+                if (root == null || root.pickingMode ==
+                        UnityEngine.UIElements.PickingMode.Ignore)
+                    continue;
+                _suspended.Add((root, root.pickingMode));
+                root.pickingMode = UnityEngine.UIElements.PickingMode.Ignore;
+            }
+        }
+
+        /// <summary>The root element is exposed as rootVisualElement on
+        /// UIDocument and uiRootVisualElement on newer PanelRenderer builds —
+        /// reflect so either works.</summary>
+        static UnityEngine.UIElements.VisualElement RootOf(Component panel)
+        {
+            foreach (var name in new[] { "rootVisualElement", "uiRootVisualElement" })
+            {
+                var prop = panel.GetType().GetProperty(name);
+                if (prop?.GetValue(panel) is UnityEngine.UIElements.VisualElement v)
+                    return v;
+            }
+            return null;
+        }
+
+        void RestorePanelInput()
+        {
+            foreach (var (root, mode) in _suspended)
+                if (root != null) root.pickingMode = mode;
+            _suspended.Clear();
         }
 
         void OnGUI()

@@ -6,6 +6,7 @@
         "Morsoul.Data",
         "Morsoul.Dialogue",
         "Unity.InputSystem",
+        "Unity.TextMeshPro",
         "Morsoul.Board",
         "Morsoul.Engine"
     ],

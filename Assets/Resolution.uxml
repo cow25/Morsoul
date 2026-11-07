@@ -1,6 +1,6 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
     <Style src="project://database/Assets/Resolution.uss"/>
-    <ui:VisualElement name="Resolution-Root" class="resolution-root" style="position: absolute; width: 100%; height: 100%; display: none;">
+    <ui:VisualElement name="Resolution-Root" class="resolution-root" style="position: absolute; width: 100%; height: 100%; display: none;" picking-mode="Ignore">
         <ui:VisualElement name="Backdrop" class="resolution-backdrop"/>
         <ui:VisualElement name="ResolutionPanel" class="resolution-panel">
             <ui:Label name="HeaderLabel" text="CASE RESOLVED" class="resolution-header"/>

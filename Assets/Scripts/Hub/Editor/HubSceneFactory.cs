@@ -230,13 +230,45 @@ namespace Morsoul.Hub.Editor
             collider.isTrigger = true;
             interactable = go.AddComponent<T>();
 
-            var prompt = NewQuadObject("Prompt",
-                new Color(1f, 0.9f, 0.2f), go.transform.position + new Vector3(0f, 0.9f, 0f));
+            var prompt = NewWorldLabel("Prompt", "[E]",
+                go.transform.position + PromptOffset,
+                PromptFontSize, new Color(1f, 0.85f, 0.2f));
             prompt.transform.SetParent(go.transform, true);
-            prompt.transform.localScale = new Vector3(0.3f, 0.3f, 1f);
             prompt.SetActive(false);
             interactable.promptIndicator = prompt;
+
+            // Permanent name tag so the blockout object is identifiable
+            // without having to stand next to it.
+            var tag = NewWorldLabel("NameLabel", name,
+                go.transform.position + NameOffset,
+                NameFontSize, new Color(1f, 1f, 1f, 0.85f));
+            tag.transform.SetParent(go.transform, true);
+
             ApplyVisualProfile(go);
+            return go;
+        }
+
+        /// <summary>
+        /// World-space text label (TMP). Facing the default -Z camera, drawn
+        /// on sorting order 20 so it floats above blockout quads.
+        /// </summary>
+        // InteractableLabel draws via IMGUI, so sizes are screen pixels and
+        // never depend on pipeline/shader support — visible wherever the
+        // blockout quads are.
+        internal const int PromptFontSize = 22;
+        internal const int NameFontSize = 15;
+        internal static readonly Vector3 PromptOffset = new Vector3(0f, 1.0f, 0f);
+        internal static readonly Vector3 NameOffset = new Vector3(0f, 1.65f, 0f);
+
+        internal static GameObject NewWorldLabel(string name, string text,
+            Vector3 position, int fontSize, Color color)
+        {
+            var go = new GameObject(name);
+            go.transform.position = position;
+            var label = go.AddComponent<InteractableLabel>();
+            label.text = text;
+            label.fontSize = fontSize;
+            label.color = color;
             return go;
         }
 
