@@ -1,0 +1,81 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad6b4272890c70c4eb3d3dfe4810ac24, type: 3}
+  m_Name: D_Interlude_Market_01
+  m_EditorClassIdentifier: Morsoul.Dialogue::Morsoul.Dialogue.DialogueData
+  id: D_Interlude_Market_01
+  nodes:
+  - id: ovan_greeting
+    speakerName: Guildmaster Ovan
+    speakerPortrait: {fileID: 0}
+    text: "\"Ah\u2014the Guild's own miracle worker. I had new audit protocols bound this morning, {PlayerName}. No vault ledger moves a single crate without two signatures ever again.\""
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: ovan_fraud
+  - id: ovan_fraud
+    speakerName: Guildmaster Ovan
+    speakerPortrait: {fileID: 0}
+    text: '"Ignatius'' fraud cost us more than gold, but we''ll survive it. Honesty is a better collateral than pride."'
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: eliza_solvent
+  - id: eliza_solvent
+    speakerName: Eliza
+    speakerPortrait: {fileID: 0}
+    text: '"Good. Because his solvent didn''t come from a market stall. Whoever brokered that deal knew exactly what they were feeding him."'
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: ovan_broker
+  - id: ovan_broker
+    speakerName: Guildmaster Ovan
+    speakerPortrait: {fileID: 0}
+    text: (lowering his voice) "The broker, yes. My people traced the name to a dead counting house on the wharf. Empty rooms. He vanished before the week was out."
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: eliza_circle
+  - id: eliza_circle
+    speakerName: Eliza
+    speakerPortrait: {fileID: 0}
+    text: '"That''s the Circle for you. The trail always runs cold the same way theirs do."'
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: ovan_vault
+  - id: ovan_vault
+    speakerName: Guildmaster Ovan
+    speakerPortrait: {fileID: 0}
+    text: "\"Well\u2014if there's anything left to learn, it's down in that vault of his. We keep it sealed, but you two have standing access.\""
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: eliza_itch
+  - id: eliza_itch
+    speakerName: Eliza
+    speakerPortrait: {fileID: 0}
+    text: (glancing toward the Iron Cellar Grate) "Then let's take one more look, partner. Something down there still itches at the back of my mind."
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: 
+  startNodeId: ovan_greeting
+  portraits: []

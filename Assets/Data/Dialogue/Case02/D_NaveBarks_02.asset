@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad6b4272890c70c4eb3d3dfe4810ac24, type: 3}
+  m_Name: D_NaveBarks_02
+  m_EditorClassIdentifier: Morsoul.Dialogue::Morsoul.Dialogue.DialogueData
+  id: D_NaveBarks_02
+  nodes:
+  - id: bark_1
+    speakerName: Devout Matron
+    speakerPortrait: {fileID: 0}
+    text: Mother Lyra was mid-verse in the Benediction when the bells struck six! The note rang sour, like cracked lead, and her voice was torn right from her throat! Only demonic witchcraft steals a holy hymn!
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: bark_2
+  - id: bark_2
+    speakerName: Zealous Templar Guard
+    speakerPortrait: {fileID: 0}
+    text: "It\u2019s those pagan wanderers from the outer woods. We allowed their acolyte to sweep the cloisters out of mercy, and they repay the Church with a silencing curse. The gallows are too kind."
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: bark_3
+  - id: bark_3
+    speakerName: Cathedral Novice
+    speakerPortrait: {fileID: 0}
+    text: "I saw Accord shivering in the choir pews after the bells stopped. He\u2019s rung that tower for thirty years; he looked like he saw a specter up in the rafters."
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: 
+  startNodeId: bark_1
+  portraits: []

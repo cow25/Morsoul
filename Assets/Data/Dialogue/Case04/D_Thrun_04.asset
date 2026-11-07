@@ -1,0 +1,92 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad6b4272890c70c4eb3d3dfe4810ac24, type: 3}
+  m_Name: D_Thrun_04
+  m_EditorClassIdentifier: Morsoul.Dialogue::Morsoul.Dialogue.DialogueData
+  id: D_Thrun_04
+  nodes:
+  - id: thrun_wrench
+    speakerName: Overseer Thrun
+    speakerPortrait: {fileID: 0}
+    text: (Slamming a heavy brass wrench against the railing) "I don't care about quarterly tonnage quotas, you desk-sitting parasites! My Chief Engineer is suffocating behind half a mile of collapsed granite!"
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: eliza_sigil
+  - id: eliza_sigil
+    speakerName: Eliza
+    speakerPortrait: {fileID: 0}
+    text: (Steps onto the gantry, flashing the Investigator's Guild bronze sigil) "Then save your breath for someone who can clear the rubble, Thrun. Investigator's Guild. What happened down in Drift 09?"
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: thrun_disaster
+  - id: thrun_disaster
+    speakerName: Overseer Thrun
+    speakerPortrait: {fileID: 0}
+    text: '"A total disaster! An hour before shift change, the main pneumatic steam bypass blew its housing. Three hundred tons of bedrock collapsed into the lower junction, sealing off the emergency stasis chamber. Chief Engineer Brokk sealed himself inside to keep the toxic sulfur gas from venting into the residential quarters."'
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: golem_scan
+  - id: golem_scan
+    speakerName: Golem
+    speakerPortrait: {fileID: 0}
+    text: '[OPTICAL SCAN: Ambient sulfur dioxide concentration: 140 PPM (Elevated). Structural bedrock: Fractured by concentrated explosive pressure, not natural tectonic faulting.]
+
+      "Inquiry: What caused the initial pneumatic breach?"'
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: harlan_smirk
+  - id: harlan_smirk
+    speakerName: Harlan
+    speakerPortrait: {fileID: 0}
+    text: (Steps out from the shadows of the tool shed, wiping soot from his leather vest with an indifferent smirk) "Simple physics, automaton. Old Brokk was pushing the drilling rigs past maximum tolerance to hit his safety bonuses. He ignored the safety valves and triggered a steam surge. It was <color=#E5A93C>reckless operator error. Open and shut.</color>"
+    registersClue: {fileID: 11400000, guid: dab66446a89e3164eb2d35dfa9ed8ebf, type: 2}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: eliza_contractor
+  - id: eliza_contractor
+    speakerName: Eliza
+    speakerPortrait: {fileID: 0}
+    text: (Arms crossed, eyes narrowing) "You're pretty quick to pin a fatal accident on a man locked in an airtight vault, Contractor. Who are you?"
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: harlan_intro
+  - id: harlan_intro
+    speakerName: Harlan
+    speakerPortrait: {fileID: 0}
+    text: '"Harlan. Senior blasting contractor for the Outer Seam Syndicate. I oversee the tunnel powder. The Union can cry all they want, but the machinery failed because flesh makes mistakes."'
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: thrun_defense
+  - id: thrun_defense
+    speakerName: Overseer Thrun
+    speakerPortrait: {fileID: 0}
+    text: '"Brokk has maintained those pneumatic lines for forty years! He doesn''t make mistakes with steam pressure! Astra, take this bypass key. If you can get through the ventilation chimney into the sub-drift, find out what happened to my friend!"'
+    registersClue: {fileID: 11400000, guid: e0a98d16b24247e4f88ce3469a7759fc, type: 2}
+    setsFlag: C4_OverrideClearance
+    requiresFlag: 
+    options: []
+    nextNodeId: 
+  startNodeId: thrun_wrench
+  portraits: []

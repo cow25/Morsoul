@@ -1,0 +1,72 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad6b4272890c70c4eb3d3dfe4810ac24, type: 3}
+  m_Name: D_Interlude_Whisperwood_03
+  m_EditorClassIdentifier: Morsoul.Dialogue::Morsoul.Dialogue.DialogueData
+  id: D_Interlude_Whisperwood_03
+  nodes:
+  - id: kaelen_leaves
+    speakerName: Ranger Scout Kaelen
+    speakerPortrait: {fileID: 0}
+    text: '"Look up, {PlayerName}. New growth since the siphon came out. Another season and you''d never know a blade touched its roots."'
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: eliza_dregs
+  - id: eliza_dregs
+    speakerName: Eliza
+    speakerPortrait: {fileID: 0}
+    text: '"And the dregs who drilled it?"'
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: kaelen_glow
+  - id: kaelen_glow
+    speakerName: Ranger Scout Kaelen
+    speakerPortrait: {fileID: 0}
+    text: '"Gone without a trace, as cultists are. But... there''s something odd. Night watch reports a glow under the old altar stones. Cold light, like moonlight trapped in glass."'
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: eliza_memory
+  - id: eliza_memory
+    speakerName: Eliza
+    speakerPortrait: {fileID: 0}
+    text: (quietly) "...I've never stood here before. Why does this place feel like a memory?"
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: kaelen_roots
+  - id: kaelen_roots
+    speakerName: Ranger Scout Kaelen
+    speakerPortrait: {fileID: 0}
+    text: '"The forest keeps more than roots, friend."'
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: eliza_patient
+  - id: eliza_patient
+    speakerName: Eliza
+    speakerPortrait: {fileID: 0}
+    text: (shaking it off) "Whatever's under that stone, it's been patient for a very long time. Let's not keep it waiting, partner."
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: 
+  startNodeId: kaelen_leaves
+  portraits: []

@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad6b4272890c70c4eb3d3dfe4810ac24, type: 3}
+  m_Name: D_IndustrialBarks_04
+  m_EditorClassIdentifier: Morsoul.Dialogue::Morsoul.Dialogue.DialogueData
+  id: D_IndustrialBarks_04
+  nodes:
+  - id: bark_1
+    speakerName: Exhausted Drill Hand
+    speakerPortrait: {fileID: 0}
+    text: "The pressure gauges didn't creep up\u2014they spiked like lightning! Chief Brokk was in that lower chamber inspecting the rock seam when the pneumatic main ruptured. That wasn't a slow leak; that was a clean blow!"
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: bark_2
+  - id: bark_2
+    speakerName: Union Steward
+    speakerPortrait: {fileID: 0}
+    text: Corporate says it's operator error. They always blame the man holding the wrench. If Brokk dies in that stasis vault, the whole shift walks out!
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: bark_3
+  - id: bark_3
+    speakerName: Railhead Loader
+    speakerPortrait: {fileID: 0}
+    text: Those unmarked lead-lined bladders from Whisperwood... they didn't unload them at the refinery. They hauled them straight down past the quarantine gate into the deep fissure line under special contractor escort.
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: 
+  startNodeId: bark_1
+  portraits: []

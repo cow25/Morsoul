@@ -1,0 +1,72 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad6b4272890c70c4eb3d3dfe4810ac24, type: 3}
+  m_Name: D_Sylvan_02
+  m_EditorClassIdentifier: Morsoul.Dialogue::Morsoul.Dialogue.DialogueData
+  id: D_Sylvan_02
+  nodes:
+  - id: sylvan_plea
+    speakerName: Acolyte Sylvan
+    speakerPortrait: {fileID: 0}
+    text: (Timid Spirit-folk youth with pointed ears and iridescent hair; shivering in cold-iron manacles) "Please... I swear by the river spirits, I didn't cast anything! I was only refilling the sanctuary oil lamps!"
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: eliza_easy
+  - id: eliza_easy
+    speakerName: Eliza
+    speakerPortrait: {fileID: 0}
+    text: '"Easy, kid. We''re not Templars. Take a breath and walk us through the sixth bell."'
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: sylvan_bell
+  - id: sylvan_bell
+    speakerName: Acolyte Sylvan
+    speakerPortrait: {fileID: 0}
+    text: '"The Great Bell began to toll for evening prayer. I was standing near the west colonnade, pouring lantern oil right in front of Brother Kenneth. When the third chime rang out, there was this... this screeching vibration in my teeth. Like glass breaking inside my skull. Then Mother Lyra dropped her prayer book and clutched her throat."'
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: golem_inquiry
+  - id: golem_inquiry
+    speakerName: Golem
+    speakerPortrait: {fileID: 0}
+    text: '"Did you project any spiritual mana during the hymn?"'
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: sylvan_never
+  - id: sylvan_never
+    speakerName: Acolyte Sylvan
+    speakerPortrait: {fileID: 0}
+    text: '"Never! If our kind channel magic near consecrated marble, the stone burns our skin! Brother Kenneth was watching my hands the entire time. But the second Mother Lyra collapsed, Accord came running down from the spiral stair, screaming that my <color=#E5A93C>wild spirit magic cursed the sanctuary from the floor!</color>"'
+    registersClue: {fileID: 11400000, guid: 0a884ba8862ddc3468976dcb5380b1d2, type: 2}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: eliza_convenient
+  - id: eliza_convenient
+    speakerName: Eliza
+    speakerPortrait: {fileID: 0}
+    text: '"Convenient for Accord. He had a suspect lined up before the bell even stopped swinging."'
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: 
+  startNodeId: sylvan_plea
+  portraits: []

@@ -1,0 +1,78 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad6b4272890c70c4eb3d3dfe4810ac24, type: 3}
+  m_Name: D_Valerius_Lyra_02
+  m_EditorClassIdentifier: Morsoul.Dialogue::Morsoul.Dialogue.DialogueData
+  id: D_Valerius_Lyra_02
+  nodes:
+  - id: valerius_halt
+    speakerName: Templar Captain Valerius
+    speakerPortrait: {fileID: 0}
+    text: (Barring his halberd across the nave stairs) "Halt. The Sanctuary is under martial quarantine. By decree of the Orthodoxy, no one ascends the altar steps while Mother Lyra is under spiritual affliction."
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: eliza_warrant
+  - id: eliza_warrant
+    speakerName: Eliza
+    speakerPortrait: {fileID: 0}
+    text: (Flashes the bronze Investigator's Guild badge) "Lower the polearm, Captain. Magistrate Corvo signed our jurisdictional warrant. An attack on an ecumenical leader inside Asterveil falls squarely under the Investigator's Guild."
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: valerius_scorn
+  - id: valerius_scorn
+    speakerName: Templar Captain Valerius
+    speakerPortrait: {fileID: 0}
+    text: (Scowls, looking down at the Golem's stone frame) "An automaton and a street rogue? The culprit is already in irons, Astra. The Spirit-folk acolyte cast a foul hex from the nave floor during vespers. We don't need mechanics tinkering with holy mysteries."
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: golem_scan
+  - id: golem_scan
+    speakerName: Golem
+    speakerPortrait: {fileID: 0}
+    text: '[OPTICAL SCAN: Subject 01 (Valerius) adrenaline standard, ideological confirmation bias high.]
+
+      [OPTICAL SCAN: Subject 02 (High Priestess Lyra) vocal chords coated in harmonic crystalline residue. Respiration stable. Zero demonic corruption detected.]
+
+      "Observation: High Priestess Lyra exhibits acoustic mana suppression, not biological necrosis. Permission requested to take her deposition."'
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: lyra_slate
+  - id: lyra_slate
+    speakerName: High Priestess Lyra
+    speakerPortrait: {fileID: 0}
+    text: '(Approaches gently, dressed in white ceremonial robes. She places a hand on Valerius'' arm, gesturing with soft authority to lower his halberd. She holds a small slate tablet and writes quickly with chalk, showing it to the Golem:)
+
+      "Peace, Captain. Truth does not fear scrutiny. Welcome, seekers of clarity. My voice is trapped beneath heavy glass, but my mind is whole. Speak with the child Sylvan before judgment falls."'
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: eliza_thanks
+  - id: eliza_thanks
+    speakerName: Eliza
+    speakerPortrait: {fileID: 0}
+    text: '"Thank you, Mother Lyra. We''ll find out what really poisoned the air."'
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: 
+  startNodeId: valerius_halt
+  portraits: []

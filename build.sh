@@ -131,7 +131,7 @@ compile Morsoul.Flow.Editor \
     "-r:$OUT/Morsoul.Board.dll" "-r:$OUT/Morsoul.Gameplay.dll" \
     "-r:$OUT/Morsoul.Interrogation.dll" "-r:$OUT/Morsoul.Dialogue.dll" "-r:$OUT/Morsoul.Cutscene.dll" \
     "-r:$OUT/Morsoul.Resolution.dll" "-r:$OUT/Morsoul.Hub.dll" "-r:$OUT/Morsoul.Hub.Editor.dll" \
-    "-r:$OUT/Morsoul.Journal.dll" "-r:$OUT/Morsoul.Flow.dll" \
+    "-r:$OUT/Morsoul.Journal.dll" "-r:$OUT/Morsoul.Flow.dll" "-r:$OUT/Morsoul.Dialogue.Editor.dll" \
     -- $(src Flow/Editor)
 
 # EditMode tests.
