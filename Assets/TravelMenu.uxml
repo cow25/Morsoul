@@ -1,0 +1,12 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/TravelMenu.uss"/>
+    <ui:VisualElement name="TravelMenu-Root" class="travel-menu-root" style="position: absolute; width: 100%; height: 100%; display: none;">
+        <ui:VisualElement name="TravelMenuBox" class="travel-menu-box" style="position: absolute; left: 30%; right: 30%; top: 25%; min-height: 20%;">
+            <ui:Label name="TravelTitle" text="Carrier — Choose Destination" class="travel-menu-title" style="flex-shrink: 0;"/>
+            <ui:ScrollView name="DestinationScroll" style="flex-grow: 1; margin-top: 8px;">
+                <ui:VisualElement name="DestinationList"/>
+            </ui:ScrollView>
+            <ui:Label name="TravelHint" text="[W/S] Select | [E] Travel | [ESC] Cancel" class="travel-menu-hint" style="margin-top: 8px; flex-shrink: 0;"/>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

@@ -1,0 +1,42 @@
+.travel-menu-root {
+    -unity-font-definition: url("project://database/Assets/Fonts/Middleearth.ttf");
+}
+
+.travel-menu-box {
+    background-color: rgba(14, 11, 18, 0.94);
+    border-color: rgba(255, 255, 255, 0.35);
+    border-width: 1px;
+    border-radius: 8px;
+    padding: 14px 18px;
+}
+
+.travel-menu-title {
+    font-size: 18px;
+    color: rgb(229, 169, 60);
+    text-shadow: 1px 1px 2px black;
+    -unity-font-style: bold;
+}
+
+.travel-destination {
+    white-space: normal;
+    background-color: rgba(30, 26, 38, 0.9);
+    border-color: rgba(255, 255, 255, 0.2);
+    border-width: 1px;
+    border-radius: 4px;
+    margin-top: 4px;
+    padding: 8px 10px;
+    font-size: 16px;
+    color: white;
+    text-align: left;
+}
+
+.travel-destination--selected {
+    border-color: rgb(229, 169, 60);
+    background-color: rgba(60, 48, 30, 0.95);
+}
+
+.travel-menu-hint {
+    font-size: 13px;
+    color: rgb(200, 200, 200);
+    text-shadow: 1px 1px 2px black;
+}

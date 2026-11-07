@@ -15,8 +15,14 @@ namespace Morsoul.Hub
         public DialogueController dialogue;
         public HubJournal journal;
         public HubFlags flags;
+        /// <summary>Optional carrier travel menu; opened by CarrierInteractable.</summary>
+        public TravelMenuController travelMenu;
 
         /// <summary>True when a dialogue is currently playing (blocks movement/interaction).</summary>
         public bool DialoguePlaying => dialogue != null && dialogue.IsPlaying;
+
+        /// <summary>True while any blocking overlay (dialogue, travel menu) is open.</summary>
+        public bool UiBlocked =>
+            DialoguePlaying || (travelMenu != null && travelMenu.IsOpen);
     }
 }
