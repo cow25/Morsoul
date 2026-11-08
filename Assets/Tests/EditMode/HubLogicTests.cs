@@ -1,7 +1,9 @@
 using System.Collections.Generic;
+using Morsoul.Board;
 using Morsoul.Data;
 using Morsoul.Hub;
 using NUnit.Framework;
+using UnityEditor;
 using UnityEngine;
 
 namespace Morsoul.Tests
@@ -53,6 +55,26 @@ namespace Morsoul.Tests
             context.flags = flags;
             context.journal = journal;
             return context;
+        }
+
+        // --- HubContext -------------------------------------------------------
+
+        [Test]
+        public void HubContext_OpenWeightedBoard_BlocksHubUi()
+        {
+            var context = NewContext(out _, out _);
+            var board = NewComponent<WeightedBoardController>("WeightedBoardPanel");
+            var data = AssetDatabase.LoadAssetAtPath<CaseData>(
+                "Assets/Data/Cases/Case01/Case_01.asset");
+            Assert.NotNull(data);
+            Assert.IsTrue(board.SetCase(data));
+            context.boardPanel = board;
+
+            Assert.IsFalse(context.UiBlocked);
+            board.Open();
+            Assert.IsTrue(context.UiBlocked);
+            board.Close();
+            Assert.IsFalse(context.UiBlocked);
         }
 
         // --- HubFlags ---------------------------------------------------------

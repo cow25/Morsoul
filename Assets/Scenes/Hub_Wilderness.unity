@@ -1419,6 +1419,7 @@ MonoBehaviour:
   promptText: '[E] Travel'
   promptIndicator: {fileID: 842255941}
   targetScene: Hub_LowerMarket
+  routeKey: hub.1
   checkpointReason: Carrier
   offerTravelMenu: 1
 --- !u!61 &1273788576
@@ -1895,7 +1896,7 @@ MonoBehaviour:
   promptIndicator: {fileID: 820407528}
   requiredFlag: 
   targetScene: Hub_LowerMarket
-  routeKey: 
+  routeKey: hub.1
   lockedDialogue: {fileID: 0}
 --- !u!61 &1465228897
 BoxCollider2D:
@@ -2220,6 +2221,7 @@ MonoBehaviour:
   promptText: '[E] Begin Case'
   promptIndicator: {fileID: 594771100}
   targetScene: CaseLoop
+  routeKey: caseloop
   checkpointReason: CaseDoor
   offerTravelMenu: 0
 --- !u!61 &1668432925

@@ -61,13 +61,19 @@ namespace Morsoul.Hub
             board.FocusSource = () => (focus.Percent, focus.Maximum);
             board.FocusSink = (energy, max) => focus.Sync(energy, max);
 
-            // Re-push collected clues on every call: the session may have been
-            // built before the player finished collecting in this scene.
             var clues = new List<ClueData>();
-            foreach (string id in core.Session.ClueIds)
+            if (data.preloadedClues != null && data.preloadedClues.Length > 0)
             {
-                var clue = core.ResolveClue(id);
-                if (clue != null) clues.Add(clue);
+                foreach (var clue in data.preloadedClues)
+                    if (clue != null) clues.Add(clue);
+            }
+            else
+            {
+                foreach (string id in core.Session.ClueIds)
+                {
+                    var clue = core.ResolveClue(id);
+                    if (clue != null) clues.Add(clue);
+                }
             }
             board.SetClues(clues);
             return true;

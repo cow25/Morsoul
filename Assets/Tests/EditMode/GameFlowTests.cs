@@ -480,8 +480,12 @@ namespace Morsoul.Tests
             AssetDatabase.LoadAssetAtPath<CaseData>(
                 "Assets/Data/Cases/Case01/Case_01.asset");
 
+        static CaseData LoadCase(int caseId) =>
+            AssetDatabase.LoadAssetAtPath<CaseData>(
+                $"Assets/Data/Cases/Case0{caseId}/Case_0{caseId}.asset");
+
         [Test]
-        public void CaseOneHubAndInvestigationRoutes_AreSeeded()
+        public void CampaignRoutes_SeedOnlyDeliveredScenes()
         {
             var core = Core.CoreRuntime.Ensure();
             _objects.Add(core.gameObject);
@@ -489,10 +493,37 @@ namespace Morsoul.Tests
 
             gsm.SeedDefaultRoutes();
 
-            Assert.AreEqual("Hub_LowerMarket",
-                gsm.routes.Resolve(Core.RouteKeys.Hub(1)));
+            Assert.AreEqual("Hub_LowerMarket", gsm.routes.Resolve(Core.RouteKeys.Hub(1)));
+            Assert.AreEqual("Hub_CathedralNave", gsm.routes.Resolve(Core.RouteKeys.Hub(2)));
+            Assert.AreEqual("Hub_Wilderness", gsm.routes.Resolve(Core.RouteKeys.Hub(3)));
+            Assert.AreEqual("Hub_IronHollow", gsm.routes.Resolve(Core.RouteKeys.Hub(4)));
+            Assert.IsNull(gsm.routes.Resolve(Core.RouteKeys.Hub(5)));
             Assert.AreEqual("Investigation_01_Placeholder",
                 gsm.routes.Resolve(Core.RouteKeys.Investigation(1)));
+            Assert.IsNull(gsm.routes.Resolve(Core.RouteKeys.Investigation(2)));
+            Assert.IsNull(gsm.routes.Resolve(Core.RouteKeys.Investigation(3)));
+            Assert.IsNull(gsm.routes.Resolve(Core.RouteKeys.Investigation(4)));
+        }
+
+        [Test]
+        public void ContinueScene_MissingCheckpoint_FallsBackToCaseHubThenTitle()
+        {
+            var routes = new Core.SceneRouteTable();
+            routes.Set(Core.RouteKeys.Title, "Title");
+            routes.Set(Core.RouteKeys.Hub(2), "Hub_CathedralNave");
+
+            Assert.AreEqual("Hub_CathedralNave",
+                Core.GameStateManager.ResolveContinueScene("Missing_Scene", 2, routes,
+                    scene => scene != "Missing_Scene"));
+            Assert.AreEqual("Title",
+                Core.GameStateManager.ResolveContinueScene("Missing_Scene", 5, routes,
+                    scene => scene != "Missing_Scene"));
+            Assert.AreEqual("Hub_CathedralNave",
+                Core.GameStateManager.ResolveContinueScene("Hub_CathedralNave", 5, routes,
+                    _ => true));
+            Assert.IsNull(
+                Core.GameStateManager.ResolveContinueScene("Missing_Scene", 5, routes,
+                    _ => false));
         }
 
         [Test]
@@ -536,6 +567,56 @@ namespace Morsoul.Tests
             CollectionAssert.Contains(board.Session.State.CollectedClueIds, "C1_01");
             CollectionAssert.Contains(board.Session.State.CollectedClueIds, "T2_01");
             CollectionAssert.DoesNotContain(board.Session.State.CollectedClueIds, "L1_01");
+        }
+
+        [TestCase(2)]
+        [TestCase(3)]
+        [TestCase(4)]
+        public void BoardHotkey_CampaignCase_LoadsItsAuthoredWeightedSession(int caseId)
+        {
+            var data = LoadCase(caseId);
+            Assert.NotNull(data);
+            Assert.NotNull(data.evidenceGraph);
+            var core = Core.CoreRuntime.Ensure();
+            _objects.Add(core.gameObject);
+            core.Session.Reset();
+            core.Session.CurrentCase = caseId;
+            foreach (var clue in data.clues) core.Session.RegisterClue(clue);
+
+            var board = New<WeightedBoardController>("WeightedBoard");
+            var hotkey = New<BoardHotkey>("BoardHotkey");
+            hotkey.board = board;
+
+            Assert.IsTrue(hotkey.EnsureBoard());
+            Assert.AreSame(data, board.caseData);
+            Assert.NotNull(board.Session);
+            Assert.AreEqual(caseId, board.Session.State.CaseId);
+            Assert.Greater(board.Session.State.CollectedClueIds.Count, 0);
+        }
+
+        [Test]
+        public void BoardHotkey_CaseFive_UsesPreloadedClues()
+        {
+            var data = LoadCase(5);
+            Assert.NotNull(data);
+            Assert.NotNull(data.evidenceGraph);
+            Assert.NotNull(data.preloadedClues);
+            Assert.Greater(data.preloadedClues.Length, 0);
+            var core = Core.CoreRuntime.Ensure();
+            _objects.Add(core.gameObject);
+            core.Session.Reset();
+            core.Session.CurrentCase = 5;
+
+            var board = New<WeightedBoardController>("WeightedBoard");
+            var hotkey = New<BoardHotkey>("BoardHotkey");
+            hotkey.board = board;
+
+            Assert.IsTrue(hotkey.EnsureBoard());
+            Assert.AreSame(data, board.caseData);
+            Assert.NotNull(board.Session);
+            CollectionAssert.AreEquivalent(
+                data.preloadedClues.Where(c => c != null).Select(c => c.id),
+                board.Session.State.CollectedClueIds);
         }
 
         [Test]

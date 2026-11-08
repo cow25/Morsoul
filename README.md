@@ -102,13 +102,16 @@ Routes are configured through `GameStateManager.Ensure().routes.Set(key, actualS
 | `title` | `Title` |
 | `caseloop` | `CaseLoop` |
 | `hub.0`, `hub.1` | `Hub_LowerMarket` |
+| `hub.2` | `Hub_CathedralNave` |
 | `hub.3` | `Hub_Wilderness` |
+| `hub.4` | `Hub_IronHollow` |
+| `hub.5` | Not seeded; Case 5 is board/cutscene-only |
 | `opening` | `Prologue_2D` (2D tutorial stand-in; re-point to `PrologueRuins` when the 3D prologue ships) |
 | `prologue.wilderness` | `Prologue_Wilderness` (post-gate 2D approach and Eliza first contact) |
 | `investigation.1` | `Investigation_01_Placeholder` (2D vault stand-in; swap when the 3D vault ships) |
-| `investigation.<caseId>` (other) | Not seeded; register only delivered scenes |
+| `investigation.2`-`investigation.4` | Not seeded; their hub gates stay route-keyed but safely refuse until real scenes are registered |
 
-A route entry does not add a scene to a Build Profile. Register real scenes and add them to the active build list together. `GateInteractable.routeKey` and `CarrierInteractable.routeKey` resolve through this table before their serialized `targetScene` fallback; do not add nonexistent `C1_Vault` paths to suppress warnings. Continue attempts to fall back to the saved case's hub when its checkpoint scene is unavailable. Not every case currently has a hub route.
+A route entry does not add a scene to a Build Profile. Register real scenes and add them to the active build list together. `GateInteractable.routeKey` and `CarrierInteractable.routeKey` resolve through this table before their serialized `targetScene` fallback; do not add nonexistent scene paths to suppress warnings. Continue resolves the checkpoint scene first, then the saved case's hub, then Title; it clears the saved pose whenever it cannot resume the checkpointed scene.
 
 ## 3D integration checklist
 
@@ -131,7 +134,7 @@ The legacy `ScanController` still has its own 120-point focus and different zero
 ### Existing scenes
 
 - **Title:** normal New Game / Continue entry point.
-- **Hub_LowerMarket / Hub_Wilderness:** generated 2D gameplay scenes with optional additive art overlays.
+- **Hub_LowerMarket / Hub_CathedralNave / Hub_Wilderness / Hub_IronHollow:** generated 2D hub scenes for Cases 1-4, each with player/entry, context stores, weighted-board hotkey, travel/carrier wiring and a `CaseDoor` to `caseloop`. Their `investigation.2`-`investigation.4` gates are intentionally route-keyed with no fake target scene.
 - **Prologue_Wilderness:** dedicated 2D approach loaded by the Prologue gate. It restores the player at `(-8, 0)`, owns the separate full-lane first-contact trigger at `x = 8`, uses `BoxCollider2D` tree/blocker bounds and a `BoxCollider2D` player body, and completes the Prologue only after the in-world Eliza sequence.
 - **PrologueRuins:** 3D-owned scene. Do not regenerate or restructure it from the 2D lane.
 - **CaseLoop:** shared case-loop scene. With no `activeCase` assigned, its `GameFlow` boots Core if needed and resolves `Session.CurrentCase` through `Assets/Resources/CaseDatabase.asset` at Play time; assign `activeCase` only to pin one case for standalone testing. Hub scenes have a "CaseDoor" interactable (`[E] Begin Case`) that travels here through the guarded GSM path.
@@ -151,7 +154,7 @@ The legacy `ScanController` still has its own 120-point focus and different zero
 6. Assign `GameFlow.endingCutscenes[1]`, `[2]`, `[3]` (index 0 unused). For GameFlow-owned endings, leave each `CutsceneData.nextSceneName` empty so `CutsceneEnded` can drive case completion. A cutscene with its own destination owns travel instead.
 7. Missing ending media currently completes the ending immediately. With a live Core, case completion routes to Title; without Core, no GSM travel occurs. Do not mistake either fallback for verified cinematic playback.
 
-Controls exposed by the controllers include **E** for hub interaction/dialogue or cutscene advance, **G** for journal, **H** for board, and holding **Esc** to skip a cutscene. Scene composition must prevent overlapping modal input. The journal pauses simulation while open. On weighted cases the board opens via `WeightedBoardController` (installed in CaseLoop and the 2D stand-ins; `BoardHotkey` lazily builds the session from `Session.CurrentCase`); the legacy `BoardController` gates itself off for weighted cases to avoid `H` conflicts. If a weighted board was already solved in a hub/investigation scene, entering CaseLoop resumes directly into the unlocked interrogation instead of dead-ending on the solved board.
+Controls exposed by the controllers include **E** for hub interaction/dialogue or cutscene advance, **G** for journal, **H** for board, and holding **Esc** to skip a cutscene. Scene composition must prevent overlapping modal input. The journal pauses simulation while open, and `HubContext.UiBlocked` treats an open weighted board as a blocking overlay. On weighted cases the board opens via `WeightedBoardController` (installed in CaseLoop and the 2D stand-ins; `BoardHotkey` lazily builds the session from `Session.CurrentCase`); the legacy `BoardController` gates itself off for weighted cases to avoid `H` conflicts. If a weighted board was already solved in a hub/investigation scene, entering CaseLoop resumes directly into the unlocked interrogation instead of dead-ending on the solved board.
 
 ## Content and asset authoring
 
@@ -212,9 +215,10 @@ Never run a second Unity process against an open project. Wait for Unity batch s
 - Missing scene request warns without stranding Continue.
 - Board validation > checkpoint > reload > premises and weighted-board histories restored. Test actual Unity lifecycle order, not only handler calls.
 - Interrogation mistakes, board errors, wrong conclusions and hint tiers affect grade; mistrial waits for Retry confirmation and retains its penalty after reload.
-- Move in a hub > checkpoint > quit > Continue > position/facing restore; missing checkpoint scenes fall back to the case hub without applying the old pose.
+- Move in a hub > checkpoint > quit > Continue > position/facing restore; missing checkpoint scenes fall back to the case hub, then Title, without applying the old pose.
 - Prologue acceptance: solve Case 0 > unlock/cross the gate > restore at `(-8, 0)` > walk into the Eliza trigger at `(8, 0)` > interrupt and Continue to verify the pre-contact resume > finish and verify `ElizaIntroSeen`, `EasternRouteUnlocked`, `PrologueCompleted`, Case 1 and the `Hub_LowerMarket` route.
 - Case 1 acceptance: talk to Ovan/Ignatius for `T1_01`, `T2_01` and `C1_WarrantGranted` > enter `Investigation_01_Placeholder` > collect `C1_01`, `C2_01`, `C3_01`, `RH1_01` > solve `CASE1_STAGED_INTERNAL_FRAUD` on the weighted board > return through CaseDoor > complete Ignatius `INT_01` > verify resolution, grade, `Case1_UneaseActive`, next-hub route, checkpoint and Continue restore.
+- Campaign spine acceptance: after Case 1 verify `hub.2` loads `Hub_CathedralNave`; `BelfryStair`, `BriarGate` and `DeepShaftLift` remain locked until their dialogue flags and then warn/refuse cleanly because no `investigation.2`-`investigation.4` scenes exist yet; each hub's CaseDoor loads `CaseLoop` for `Session.CurrentCase`; H opens that case's weighted board (Case 5 uses its preloaded rack) and blocks hub input; completion advances to the next delivered hub (Case 4 returns to `hub.4`, where CaseDoor starts board-only Case 5); endings route Title; and Continue falls back checkpoint -> case hub -> Title without applying a stale pose.
 - Graceful quit > reopen > Continue > offline Focus recovery applies once; a backwards clock grants zero without negative time.
 - Collect logs across scenes > verify Session count and journal display > test each ending with real playback and return to Title.
 - Reopen hubs with profiles/art overlays; rerun installer on a test copy and confirm custom assignments survive.
@@ -227,7 +231,7 @@ The last recorded automated run during the Phase 5 work was **313 passed, 0 fail
 Before calling the campaign complete, verify and finish:
 
 - Attach `PrologueGateSeam` inside the 3D-owned `PrologueRuins` scene and finish its robe/key/gate interaction; the adapter is delivered but the 3D scene itself was intentionally left untouched.
-- Delivered 3D investigation scenes, their `investigation.<caseId>` routes and build-profile entries, plus hub routes for cases 2, 4 and 5.
+- Delivered 3D investigation scenes for Cases 2-4, their `investigation.<caseId>` route registrations and active build-profile entries. Do not treat the existing gated hub seams as playable Zone B content until those scenes land. `hub.5` remains intentionally unseeded unless the Case 5 staging design changes.
 - Ending `CutsceneData` assignments per case on `GameFlow.endingCutscenes`; without them, endings complete immediately with no cinematic.
 - 3D prototype Focus/clue migration through the shared APIs.
 - Board lifecycle/late-evidence refresh, journal flag/log refresh and the journal's `MarkedForBoard` action consumer.

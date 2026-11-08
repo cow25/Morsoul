@@ -1,3 +1,4 @@
+using Morsoul.Board;
 using Morsoul.Dialogue;
 using UnityEngine;
 
@@ -17,12 +18,23 @@ namespace Morsoul.Hub
         public HubFlags flags;
         /// <summary>Optional carrier travel menu; opened by CarrierInteractable.</summary>
         public TravelMenuController travelMenu;
+        public WeightedBoardController boardPanel;
 
         /// <summary>True when a dialogue is currently playing (blocks movement/interaction).</summary>
         public bool DialoguePlaying => dialogue != null && dialogue.IsPlaying;
 
-        /// <summary>True while any blocking overlay (dialogue, travel menu) is open.</summary>
+        /// <summary>True while any blocking overlay (dialogue, travel menu, board) is open.</summary>
         public bool UiBlocked =>
-            DialoguePlaying || (travelMenu != null && travelMenu.IsOpen);
+            DialoguePlaying ||
+            (travelMenu != null && travelMenu.IsOpen) ||
+            (ResolveBoardPanel() != null && boardPanel.IsOpen);
+
+        WeightedBoardController ResolveBoardPanel()
+        {
+            if (boardPanel == null)
+                boardPanel = FindAnyObjectByType<WeightedBoardController>(
+                    FindObjectsInactive.Include);
+            return boardPanel;
+        }
     }
 }

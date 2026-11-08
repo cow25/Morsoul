@@ -141,23 +141,38 @@ namespace Morsoul.Core
             // if scene resolution later falls back or fails.
             PersistCurrentSave("Continue");
             string checkpointScene = CurrentSave.checkpointSceneName;
-            string scene = checkpointScene;
-            if (string.IsNullOrEmpty(scene) || !Application.CanStreamedLevelBeLoaded(scene))
-            {
-                // Checkpointed scene missing (e.g. a seam gate to a scene that
-                // hasn't landed yet) — resume at the case's hub instead.
-                if (!string.IsNullOrEmpty(scene))
-                    Debug.LogWarning($"GameStateManager: checkpointed scene '{scene}' not loadable; falling back to case hub.", this);
-                scene = routes.Resolve(RouteKeys.Hub(state.currentCase));
-            }
+            string scene = ResolveContinueScene(checkpointScene, state.currentCase,
+                routes, Application.CanStreamedLevelBeLoaded);
             if (string.IsNullOrEmpty(scene))
             {
                 Debug.LogWarning("GameStateManager: save has no resumable scene.", this);
                 return false;
             }
-            LoadSceneInternal(scene,
+            if (scene != checkpointScene)
+            {
+                if (!string.IsNullOrEmpty(checkpointScene))
+                    Debug.LogWarning($"GameStateManager: checkpointed scene '{checkpointScene}' not loadable; using '{scene}' instead.", this);
+                else
+                    Debug.LogWarning($"GameStateManager: save has no checkpoint scene; using '{scene}'.", this);
+            }
+            return LoadSceneInternal(scene,
                 preserveRestoredPose: scene == checkpointScene);
-            return true;
+        }
+
+        internal static string ResolveContinueScene(string checkpointScene,
+            int currentCase, SceneRouteTable routeTable, Func<string, bool> canLoad)
+        {
+            bool CanLoad(string scene) =>
+                !string.IsNullOrEmpty(scene) && (canLoad == null || canLoad(scene));
+            if (CanLoad(checkpointScene)) return checkpointScene;
+
+            string hub = routeTable != null
+                ? routeTable.Resolve(RouteKeys.Hub(currentCase)) : null;
+            if (CanLoad(hub)) return hub;
+
+            string title = routeTable != null
+                ? routeTable.Resolve(RouteKeys.Title) : null;
+            return CanLoad(title) ? title : null;
         }
 
         /// <summary>

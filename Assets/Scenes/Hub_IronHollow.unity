@@ -2659,6 +2659,7 @@ MonoBehaviour:
   promptText: '[E] Begin Case'
   promptIndicator: {fileID: 594771100}
   targetScene: CaseLoop
+  routeKey: caseloop
   checkpointReason: CaseDoor
   offerTravelMenu: 0
 --- !u!61 &1789994721
@@ -2909,6 +2910,7 @@ MonoBehaviour:
   promptText: '[E] Travel'
   promptIndicator: {fileID: 842255941}
   targetScene: Hub_LowerMarket
+  routeKey: hub.1
   checkpointReason: Carrier
   offerTravelMenu: 1
 --- !u!61 &1968696978

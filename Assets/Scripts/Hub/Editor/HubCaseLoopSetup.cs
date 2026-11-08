@@ -9,8 +9,8 @@ namespace Morsoul.Hub.Editor
     /// <summary>
     /// Adds the case-loop entry interactable ("CaseDoor" — an ungated
     /// CarrierInteractable targeting the CaseLoop scene) to existing saved hub
-    /// scenes without regenerating their layouts. Idempotent: a scene that
-    /// already has a CaseDoor is skipped.
+    /// scenes without regenerating their layouts. Idempotent: existing doors
+    /// are repaired to routeKey "caseloop" with "CaseLoop" as the fallback.
     /// </summary>
     public static class HubCaseLoopSetup
     {
@@ -58,9 +58,12 @@ namespace Morsoul.Hub.Editor
                 if (existing != null)
                 {
                     var existingDoor = existing.GetComponent<CarrierInteractable>();
-                    if (existingDoor != null && existingDoor.routeKey != "caseloop")
+                    if (existingDoor != null &&
+                        (existingDoor.routeKey != "caseloop" ||
+                         existingDoor.targetScene != "CaseLoop"))
                     {
                         existingDoor.routeKey = "caseloop";
+                        existingDoor.targetScene = "CaseLoop";
                         EditorSceneManager.MarkSceneDirty(scene);
                         EditorSceneManager.SaveScene(scene);
                     }
