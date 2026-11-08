@@ -152,6 +152,8 @@ namespace Morsoul.Hub.Editor
             var rb = player.AddComponent<Rigidbody2D>();
             rb.gravityScale = 0f;
             rb.freezeRotation = true;
+            var body = player.AddComponent<BoxCollider2D>();
+            body.size = new Vector2(0.8f, 0.8f);
             player.AddComponent<HubPlayerController>();
             ApplyVisualProfile(player);
             return player;
@@ -219,6 +221,10 @@ namespace Morsoul.Hub.Editor
         {
             var controller = player.GetComponent<HubPlayerController>();
             controller.context = context;
+            var body = player.GetComponent<BoxCollider2D>();
+            if (body == null) body = player.AddComponent<BoxCollider2D>();
+            body.size = new Vector2(0.8f, 0.8f);
+            body.isTrigger = false;
             if (cameraFollow != null) cameraFollow.target = player.transform;
         }
 

@@ -132,7 +132,7 @@ The legacy `ScanController` still has its own 120-point focus and different zero
 
 - **Title:** normal New Game / Continue entry point.
 - **Hub_LowerMarket / Hub_Wilderness:** generated 2D gameplay scenes with optional additive art overlays.
-- **Prologue_Wilderness:** dedicated 2D approach loaded by the Prologue gate. It restores the player at `(-8, 0)`, owns the separate first-contact trigger at `(8, 0)`, and completes the Prologue only after the in-world Eliza sequence.
+- **Prologue_Wilderness:** dedicated 2D approach loaded by the Prologue gate. It restores the player at `(-8, 0)`, owns the separate full-lane first-contact trigger at `x = 8`, uses `BoxCollider2D` tree/blocker bounds and a `BoxCollider2D` player body, and completes the Prologue only after the in-world Eliza sequence.
 - **PrologueRuins:** 3D-owned scene. Do not regenerate or restructure it from the 2D lane.
 - **CaseLoop:** shared case-loop scene. With no `activeCase` assigned, its `GameFlow` resolves `Session.CurrentCase` through `Assets/Resources/CaseDatabase.asset` at Play time; assign `activeCase` only to pin one case for standalone testing. Hub scenes have a "CaseDoor" interactable (`[E] Begin Case`) that travels here through the guarded GSM path.
 

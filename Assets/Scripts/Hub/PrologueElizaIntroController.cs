@@ -58,7 +58,15 @@ namespace Morsoul.Hub
         public void Begin()
         {
             var session = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session : null;
-            if (_running || !PrologueTransitionRules.CanTriggerElizaIntro(session)) return;
+            if (_running || !PrologueTransitionRules.CanTriggerElizaIntro(session))
+            {
+                if (!_running)
+                    Debug.LogWarning($"PrologueElizaIntroController '{name}': trigger ignored " +
+                                     $"(session={session != null}, exitLoaded={session != null && session.PrologueExitLoaded}, " +
+                                     $"seen={session != null && session.ElizaIntroSeen}, " +
+                                     $"activeCutscene='{(session != null ? session.ActiveCutsceneId : "")}').", this);
+                return;
+            }
             _running = true;
             var collider = GetComponent<Collider2D>();
             if (collider != null) collider.enabled = false;

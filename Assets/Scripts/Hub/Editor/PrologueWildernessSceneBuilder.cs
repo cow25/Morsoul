@@ -59,23 +59,32 @@ namespace Morsoul.Hub.Editor
                     new Vector3(7.2f, 0.55f, 0f), active: false);
                 beacon.transform.localScale = new Vector3(0.45f, 0.45f, 1f);
                 var blocker = EnsureQuad("EasternRouteBlocker", new Color(0.2f, 0.25f, 0.3f),
-                    new Vector3(24f, 0f, 0f), active: true);
+                    new Vector3(24f, -0.5f, 0f), active: true);
+                blocker.transform.localScale = new Vector3(1f, 4f, 1f);
                 var blockerCollider = EnsureComponent<BoxCollider2D>(blocker);
                 blockerCollider.isTrigger = false;
-                blockerCollider.size = new Vector2(1f, 3f);
+                blockerCollider.size = Vector2.one;
 
                 EnsureQuad("WildernessPath", new Color(0.22f, 0.28f, 0.2f),
                     new Vector3(8f, -0.75f, 0f), active: true)
                     .transform.localScale = new Vector3(34f, 1f, 1f);
-                EnsureQuad("NorthTreeLine", new Color(0.08f, 0.18f, 0.11f),
-                    new Vector3(8f, 2.2f, 0f), active: true)
-                    .transform.localScale = new Vector3(34f, 1.5f, 1f);
-                EnsureQuad("SouthTreeLine", new Color(0.07f, 0.14f, 0.1f),
-                    new Vector3(8f, -3.2f, 0f), active: true)
-                    .transform.localScale = new Vector3(34f, 1.5f, 1f);
+                var northTrees = EnsureQuad("NorthTreeLine", new Color(0.08f, 0.18f, 0.11f),
+                    new Vector3(8f, 2.2f, 0f), active: true);
+                northTrees.transform.localScale = new Vector3(34f, 1.5f, 1f);
+                var northCollider = EnsureComponent<BoxCollider2D>(northTrees);
+                northCollider.isTrigger = false;
+                northCollider.size = Vector2.one;
+                var southTrees = EnsureQuad("SouthTreeLine", new Color(0.07f, 0.14f, 0.1f),
+                    new Vector3(8f, -3.2f, 0f), active: true);
+                southTrees.transform.localScale = new Vector3(34f, 1.5f, 1f);
+                var southCollider = EnsureComponent<BoxCollider2D>(southTrees);
+                southCollider.isTrigger = false;
+                southCollider.size = Vector2.one;
                 EnsureQuad("ElizaCover", new Color(0.1f, 0.22f, 0.14f),
                     new Vector3(12.7f, 0.2f, 0f), active: true)
                     .transform.localScale = new Vector3(1.2f, 1.4f, 1f);
+                EnsureBoundary("WestBoundary", new Vector3(-10f, -0.5f, 0f),
+                    new Vector2(1f, 7f));
 
                 var elizaEmote = EnsureLabel("ElizaEmote", "",
                     eliza.transform.position + new Vector3(0f, 1.4f, 0f));
@@ -86,10 +95,10 @@ namespace Morsoul.Hub.Editor
                 playerEmote.transform.SetParent(player.transform, true);
                 playerEmote.gameObject.SetActive(false);
 
-                var trigger = EnsureEmpty("ElizaIntroTrigger", new Vector3(8f, 0f, 0f));
+                var trigger = EnsureEmpty("ElizaIntroTrigger", new Vector3(8f, -0.5f, 0f));
                 var triggerCollider = EnsureComponent<BoxCollider2D>(trigger);
                 triggerCollider.isTrigger = true;
-                triggerCollider.size = new Vector2(2f, 3f);
+                triggerCollider.size = new Vector2(2f, 5f);
                 var intro = EnsureComponent<PrologueElizaIntroController>(trigger);
                 intro.context = context;
                 intro.player = player;
@@ -187,6 +196,15 @@ namespace Morsoul.Hub.Editor
             go.name = name;
             go.transform.position = position;
             go.SetActive(active);
+            return go;
+        }
+
+        static GameObject EnsureBoundary(string name, Vector3 position, Vector2 size)
+        {
+            var go = EnsureEmpty(name, position);
+            var collider = EnsureComponent<BoxCollider2D>(go);
+            collider.isTrigger = false;
+            collider.size = size;
             return go;
         }
 
