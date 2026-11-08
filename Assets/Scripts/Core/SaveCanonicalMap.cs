@@ -11,9 +11,16 @@ namespace Morsoul.Core
     /// </summary>
     public static class SaveCanonicalMap
     {
-        public static Dictionary<string, object> ToCanonical(SaveState s)
+        /// <summary>
+        /// Chooses the canonical shape that sealed the stored version. v2
+        /// files must verify against their original map before migration;
+        /// v3 files use the complete persisted-field map below.
+        /// </summary>
+        public static Dictionary<string, object> ToCanonicalForVerification(
+            SaveState s, bool legacyStrainedScanUsed)
         {
-            var map = new Dictionary<string, object>
+            if (s == null || s.saveVersion >= 3) return ToCanonical(s);
+            return new Dictionary<string, object>
             {
                 ["saveVersion"] = s.saveVersion,
                 ["profileId"] = s.profileId ?? "",
@@ -33,9 +40,53 @@ namespace Morsoul.Core
                     ["restElapsedRemainderSeconds"] = s.restElapsedRemainderSeconds,
                     ["closedAtUtc"] = s.closedAtUtc ?? "",
                     ["lastOfflineRecoveryAppliedAtUtc"] = s.lastOfflineRecoveryAppliedAtUtc ?? "",
-                    ["strainedScanUsed"] = s.strainedScanUsed,
+                    ["strainedScanUsed"] = legacyStrainedScanUsed,
                 },
-                ["boardStates"] = BoardStates(s.boardStates),
+                ["boardStates"] = BoardStates(s.boardStates, includeV3Fields: false),
+            };
+        }
+
+        public static Dictionary<string, object> ToCanonical(SaveState s)
+        {
+            var map = new Dictionary<string, object>
+            {
+                ["saveVersion"] = s.saveVersion,
+                ["profileId"] = s.profileId ?? "",
+                ["playerName"] = s.playerName ?? "",
+                ["currentCase"] = s.currentCase,
+                ["checkpointSceneName"] = s.checkpointSceneName ?? "",
+                ["currentSceneMode"] = s.currentSceneMode,
+                ["currentSceneId"] = s.currentSceneId ?? "",
+                ["playerPosition"] = PlayerPosition(s.playerPosition),
+                ["playerFacing2D"] = s.playerFacing2D,
+                ["collectedClueIds"] = new List<object>(Strings(s.collectedClueIds)),
+                ["boardEdges"] = new List<object>(Strings(s.boardEdges)),
+                ["runicLogsCollected"] = new List<object>(Bools(s.runicLogsCollected)),
+                ["caseGrades"] = Grades(s.caseGrades),
+                ["uneaseFlags"] = Flags(s.uneaseFlags),
+                ["toolsUnlocked"] = Tools(s.toolsUnlocked),
+                ["focusState"] = new Dictionary<string, object>
+                {
+                    ["currentEnergy"] = s.focusEnergy,
+                    ["maximumEnergy"] = s.focusMax,
+                    ["restElapsedRemainder"] = s.restElapsedRemainderSeconds,
+                    ["closedAtUtc"] = s.closedAtUtc ?? "",
+                    ["lastTrustedUtc"] = s.lastTrustedUtc ?? "",
+                    ["lastOfflineRecoveryAppliedAtUtc"] = s.lastOfflineRecoveryAppliedAtUtc ?? "",
+                    ["strainedScanUsedByCase"] = new List<object>(Bools(s.strainedScanUsedByCase)),
+                },
+                ["boardStates"] = BoardStates(s.boardStates, includeV3Fields: true),
+                ["caseGradeStates"] = CaseGradeStates(s.caseGradeStates),
+                ["prologueCompleted"] = s.prologueCompleted,
+                ["prologueGateUnlocked"] = s.prologueGateUnlocked,
+                ["prologueRobeCollected"] = s.prologueRobeCollected,
+                ["prologueExitLoaded"] = s.prologueExitLoaded,
+                ["elizaIntroTriggered"] = s.elizaIntroTriggered,
+                ["elizaIntroSeen"] = s.elizaIntroSeen,
+                ["easternRouteUnlocked"] = s.easternRouteUnlocked,
+                ["activeCutsceneId"] = s.activeCutsceneId ?? "",
+                ["preCutsceneCheckpointId"] = s.preCutsceneCheckpointId ?? "",
+                ["activeInterrogation"] = ActiveInterrogation(s.activeInterrogation),
             };
             return map;
         }
@@ -76,7 +127,7 @@ namespace Morsoul.Core
             return list;
         }
 
-        static List<object> BoardStates(List<CaseBoardSave> states)
+        static List<object> BoardStates(List<CaseBoardSave> states, bool includeV3Fields)
         {
             var list = new List<object>();
             foreach (var b in states ?? new List<CaseBoardSave>())
@@ -101,7 +152,7 @@ namespace Morsoul.Core
                         });
                 var tiers = new List<object>();
                 foreach (int t in b.firedHintTiers ?? new List<int>()) tiers.Add(t);
-                list.Add(new Dictionary<string, object>
+                var board = new Dictionary<string, object>
                 {
                     ["caseId"] = b.caseId,
                     ["visibleClueIds"] = new List<object>(Strings(b.visibleClueIds)),
@@ -115,9 +166,62 @@ namespace Morsoul.Core
                     ["submittedConclusionId"] = b.submittedConclusionId ?? "",
                     ["boardSolved"] = b.boardSolved,
                     ["completionRewardApplied"] = b.completionRewardApplied,
-                });
+                };
+                if (includeV3Fields)
+                {
+                    board["submittedWrongConclusionIds"] =
+                        new List<object>(Strings(b.submittedWrongConclusionIds));
+                    board["submittedPartialConclusionIds"] =
+                        new List<object>(Strings(b.submittedPartialConclusionIds));
+                }
+                list.Add(board);
             }
             return list;
+        }
+
+        static List<object> CaseGradeStates(List<CaseGradeSave> states)
+        {
+            var list = new List<object>();
+            foreach (var g in states ?? new List<CaseGradeSave>())
+                if (g != null)
+                    list.Add(new Dictionary<string, object>
+                    {
+                        ["caseId"] = g.caseId,
+                        ["caseErrorCount"] = g.caseErrorCount,
+                        ["submittedWrongConclusionIds"] =
+                            new List<object>(Strings(g.submittedWrongConclusionIds)),
+                        ["submittedPartialConclusionIds"] =
+                            new List<object>(Strings(g.submittedPartialConclusionIds)),
+                        ["interrogationStrikeCount"] = g.interrogationStrikeCount,
+                        ["mistrialUsed"] = g.mistrialUsed,
+                        ["strainedScanUsed"] = g.strainedScanUsed,
+                        ["displayGrade"] = g.displayGrade,
+                    });
+            return list;
+        }
+
+        static object PlayerPosition(PlayerPositionSave position)
+        {
+            if (position == null) return null;
+            return new Dictionary<string, object>
+            {
+                ["x"] = position.x,
+                ["y"] = position.y,
+                ["z"] = position.z,
+            };
+        }
+
+        static object ActiveInterrogation(ActiveInterrogationSave state)
+        {
+            if (state == null) return null;
+            return new Dictionary<string, object>
+            {
+                ["caseId"] = state.caseId,
+                ["phaseIndex"] = state.phaseIndex,
+                ["composureSegmentsRemaining"] = state.composureSegmentsRemaining,
+                ["strikeCount"] = state.strikeCount,
+                ["preInterrogationCheckpointId"] = state.preInterrogationCheckpointId ?? "",
+            };
         }
     }
 }

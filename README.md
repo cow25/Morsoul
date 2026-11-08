@@ -83,11 +83,14 @@ GameFlow -> Board -> Interrogation -> Resolution
 ```
 
 - `CoreRuntime.Ensure()` boots the persistent service stack, including the scene driver. Do not create another service locator, Focus model, persistent diary or save manager.
-- `SessionState` is live cross-scene truth: clue IDs/assets, flags, validated board node IDs, log slots, grades and unlocked tools.
+- `SessionState` is live cross-scene truth: clue IDs/assets, flags, validated board node IDs, per-case weighted-board histories, grade inputs, scene/player context, Prologue/cutscene flags, log slots, grades and unlocked tools.
 - `SaveState` is the serialized checkpoint format. Scene systems should update Session and request a checkpoint rather than editing save JSON directly.
 - `HubJournal` and `HubFlags` are scene-scoped stores, not competing persistent owners. Runtime composition must bind their views/listeners.
 - `CaseSession` tracks grading within the active case. `GameFlow` coordinates panel events and writes results back into Session.
 - Checkpoints live at `Application.persistentDataPath/morsoul_checkpoint.json`. HMAC signatures detect edits; a key embedded in a game client is not tamper-proof security. The primary save replacement path uses `File.Replace`; unsupported-filesystem fallback/recovery still needs platform validation.
+- Save files are sealed `saveVersion` 3 records. Every persisted field is represented in `SaveCanonicalMap`; version-2 sealed files verify against their original canonical map before migration, and version-1 signature files migrate only from explicit completed-case flags.
+- Regular `WriteCheckpoint` calls advance the monotonic `lastTrustedUtc` watermark but do not claim a graceful close. `OnApplicationQuit` calls `WriteCloseCheckpoint`, which writes `closedAtUtc`; Continue applies trusted offline recovery, clears the close marker and immediately persists the consumed interval so it cannot be credited twice.
+- The 2D hub path saves and restores player position/facing. If a checkpoint scene is missing, Continue falls back to the case hub and clears the old pose rather than applying it to the wrong scene.
 
 ### Scene routing
 
@@ -203,13 +206,15 @@ Never run a second Unity process against an open project. Wait for Unity batch s
 - Title alone > New Game > hub, with no duplicate player/camera.
 - Collect clues/flags > checkpoint > stop Play > Continue > restored journal and state.
 - Missing scene request warns without stranding Continue.
-- Board validation > checkpoint > reload > premises restored. Test actual Unity lifecycle order, not only handler calls.
-- Interrogation mistakes affect grade; mistrial waits for Retry confirmation and retains its penalty after reload.
+- Board validation > checkpoint > reload > premises and weighted-board histories restored. Test actual Unity lifecycle order, not only handler calls.
+- Interrogation mistakes, board errors, wrong conclusions and hint tiers affect grade; mistrial waits for Retry confirmation and retains its penalty after reload.
+- Move in a hub > checkpoint > quit > Continue > position/facing restore; missing checkpoint scenes fall back to the case hub without applying the old pose.
+- Graceful quit > reopen > Continue > offline Focus recovery applies once; a backwards clock grants zero without negative time.
 - Collect logs across scenes > verify Session count and journal display > test each ending with real playback and return to Title.
 - Reopen hubs with profiles/art overlays; rerun installer on a test copy and confirm custom assignments survive.
 - Inspect scenes after a real 2D/3D branch merge and verify the active Build Profile.
 
-The last recorded automated run during the integration work was **189 passed, 0 failed**. That is historical evidence, not a guarantee for later edits and not a full Play-test result.
+The last recorded automated run during the Phase 3 work was **304 passed, 0 failed**. That is historical evidence, not a guarantee for later edits and not a full Play-test result.
 
 ## Remaining integration work
 

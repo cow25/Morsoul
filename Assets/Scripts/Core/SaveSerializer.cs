@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
+using Morsoul.Data;
 using Morsoul.Engine;
 using UnityEngine;
 
@@ -18,9 +20,9 @@ namespace Morsoul.Core
     /// launcher holds a real secret — tamper-evident, not tamper-proof.
     ///
     /// Version-1 files ({"payload","signature"}) verify against the legacy
-    /// per-payload HMAC and migrate on load: focusPercent becomes
-    /// focusEnergy at maximum 100, and the obsolete slot/premise counters
-    /// do not populate weighted-board state.
+    /// per-payload HMAC and migrate on load. Explicit completed-case flags
+    /// are the only proof of a grandfathered completion; old board counters
+    /// and scores never mark a weighted board solved.
     /// </summary>
     public static class SaveSerializer
     {
@@ -35,6 +37,36 @@ namespace Morsoul.Core
             public string seal;
             public string signature = null; // legacy v1; populated only by FromJson
         }
+
+        /// <summary>Fields that existed only in pre-v3 payloads.</summary>
+        [Serializable]
+#pragma warning disable CS0649 // populated by JsonUtility on old payloads
+        class LegacySavePayload
+        {
+            public float focusPercent = 100f;
+            public bool strainedScanUsed;
+            public bool[] completedCases;
+            public int[] completedCaseIds;
+            public bool case0Completed;
+            public bool case1Completed;
+            public bool case2Completed;
+            public bool case3Completed;
+            public bool case4Completed;
+            public bool case5Completed;
+            public bool completedCase0;
+            public bool completedCase1;
+            public bool completedCase2;
+            public bool completedCase3;
+            public bool completedCase4;
+            public bool completedCase5;
+            public bool case0Solved;
+            public bool case1Solved;
+            public bool case2Solved;
+            public bool case3Solved;
+            public bool case4Solved;
+            public bool case5Solved;
+        }
+#pragma warning restore CS0649
 
         /// <summary>Serializes the state and seals it per Algorithm B1.</summary>
         public static string Serialize(SaveState state)
@@ -100,17 +132,26 @@ namespace Morsoul.Core
                 return false;
             }
 
-            bool legacy = !string.IsNullOrEmpty(file.signature) &&
-                          string.IsNullOrEmpty(file.stateHash);
-            if (legacy)
+            LegacySavePayload legacy = null;
+            try
+            {
+                legacy = JsonUtility.FromJson<LegacySavePayload>(file.payload);
+            }
+            catch (Exception)
+            {
+                legacy = null;
+            }
+
+            bool legacySignature = !string.IsNullOrEmpty(file.signature) &&
+                                   string.IsNullOrEmpty(file.stateHash);
+            if (legacySignature)
             {
                 if (!FixedTimeEquals(LegacySign(file.payload), file.signature))
                 {
                     error = "signature mismatch — checkpoint was modified";
                     return false;
                 }
-                MigrateLegacy(state);
-                return true;
+                return MigrateLoaded(state, legacy, forceVersionOne: true, out error);
             }
 
             if (string.IsNullOrEmpty(file.stateHash) || string.IsNullOrEmpty(file.seal))
@@ -122,7 +163,9 @@ namespace Morsoul.Core
             string computedHash;
             try
             {
-                computedHash = CanonicalState.ComputeStateHash(SaveCanonicalMap.ToCanonical(state));
+                computedHash = CanonicalState.ComputeStateHash(
+                    SaveCanonicalMap.ToCanonicalForVerification(
+                        state, legacy != null && legacy.strainedScanUsed));
             }
             catch (Exception e)
             {
@@ -143,21 +186,245 @@ namespace Morsoul.Core
                 error = "seal mismatch — checkpoint was modified";
                 return false;
             }
+            return MigrateLoaded(state, legacy, forceVersionOne: false, out error);
+        }
+
+        static bool MigrateLoaded(SaveState state, LegacySavePayload legacy,
+            bool forceVersionOne, out string error)
+        {
+            error = null;
+            if (forceVersionOne) state.saveVersion = 1;
+            if (state.saveVersion > SaveState.CurrentVersion)
+            {
+                error = $"checkpoint version {state.saveVersion} is newer than supported version {SaveState.CurrentVersion}";
+                return false;
+            }
+            if (state.saveVersion < 2) MigrateVersion1(state, legacy);
+            if (state.saveVersion < SaveState.CurrentVersion) MigrateVersion2(state, legacy);
+            state.saveVersion = SaveState.CurrentVersion;
+            NormalizeCurrent(state);
             return true;
         }
 
-        /// <summary>v1 -> v2 defaults. Old board counters stay inert.</summary>
-        static void MigrateLegacy(SaveState state)
+        /// <summary>v1 -> weighted-board defaults. Old board internals stay inert.</summary>
+        static void MigrateVersion1(SaveState state, LegacySavePayload legacy)
         {
-            state.saveVersion = SaveState.CurrentVersion;
-            if (string.IsNullOrEmpty(state.profileId)) state.profileId = "local";
-            state.focusEnergy = state.focusPercent;
+            bool[] completed = CompletedCases(legacy);
+            state.profileId = string.IsNullOrEmpty(state.profileId) ? "local" : state.profileId;
             state.focusMax = FocusTuning.FocusMax;
+            for (int caseId = 1; caseId <= 4; caseId++)
+                if (completed[caseId])
+                    state.focusMax += ProgressionConstants.CompleteSubmissionCapacityBonus;
+            state.focusEnergy = Mathf.Clamp(
+                legacy != null ? legacy.focusPercent : FocusTuning.FocusMax,
+                0f, state.focusMax);
             state.restElapsedRemainderSeconds = 0f;
             state.closedAtUtc = "";
+            state.lastTrustedUtc = "";
             state.lastOfflineRecoveryAppliedAtUtc = "";
-            if (state.boardStates == null) state.boardStates = new System.Collections.Generic.List<CaseBoardSave>();
+            state.boardEdges = new List<string>();
+            state.boardStates = new List<CaseBoardSave>();
+
+            for (int caseId = 0; caseId <= 5; caseId++)
+            {
+                if (!completed[caseId]) continue;
+                var board = GetOrCreateBoard(state, caseId);
+                board.boardSolved = true;
+                board.completionRewardApplied = caseId >= 1 && caseId <= 4;
+            }
+
+            state.caseGrades = FourGrades(state.caseGrades);
+            for (int caseId = 1; caseId <= 4; caseId++)
+                if (completed[caseId])
+                    state.caseGrades[caseId - 1] = Grade.Standard;
+
+            state.strainedScanUsedByCase = FourBools(state.strainedScanUsedByCase);
+            if (legacy != null && legacy.strainedScanUsed &&
+                state.currentCase >= 1 && state.currentCase <= 4)
+                state.strainedScanUsedByCase[state.currentCase - 1] = true;
         }
+
+        /// <summary>v2 -> v3: add persistent clock/context/grade/history state.</summary>
+        static void MigrateVersion2(SaveState state, LegacySavePayload legacy)
+        {
+            NormalizeCurrent(state);
+            state.currentSceneId = string.IsNullOrEmpty(state.currentSceneId)
+                ? state.checkpointSceneName ?? ""
+                : state.currentSceneId;
+            state.boardEdges = new List<string>();
+
+            DateTime? trusted = ParseUtc(state.lastTrustedUtc);
+            DateTime? closed = ParseUtc(state.closedAtUtc);
+            DateTime? applied = ParseUtc(state.lastOfflineRecoveryAppliedAtUtc);
+            if (!trusted.HasValue || (closed.HasValue && closed.Value > trusted.Value)) trusted = closed;
+            if (!trusted.HasValue || (applied.HasValue && applied.Value > trusted.Value)) trusted = applied;
+            state.lastTrustedUtc = FormatUtc(trusted);
+            state.closedAtUtc = FormatUtc(closed);
+            state.lastOfflineRecoveryAppliedAtUtc = FormatUtc(applied);
+
+            state.strainedScanUsedByCase = FourBools(state.strainedScanUsedByCase);
+            for (int caseId = 1; caseId <= 4; caseId++)
+                if (HasFlag(state.uneaseFlags, SessionState.StrainedScanFlagFor(caseId)))
+                    state.strainedScanUsedByCase[caseId - 1] = true;
+            if (legacy != null && legacy.strainedScanUsed &&
+                state.currentCase >= 1 && state.currentCase <= 4)
+                state.strainedScanUsedByCase[state.currentCase - 1] = true;
+
+            state.focusMax = Math.Max(1f, state.focusMax);
+            state.focusEnergy = Mathf.Clamp(state.focusEnergy, 0f, state.focusMax);
+            EnsureCaseGradeStates(state);
+            state.saveVersion = SaveState.CurrentVersion;
+        }
+
+        static void NormalizeCurrent(SaveState state)
+        {
+            state.profileId = string.IsNullOrEmpty(state.profileId) ? "local" : state.profileId;
+            state.playerName ??= "";
+            state.checkpointSceneName ??= "";
+            state.currentSceneId ??= "";
+            state.collectedClueIds ??= new List<string>();
+            state.boardEdges ??= new List<string>();
+            state.runicLogsCollected = FourBools(state.runicLogsCollected);
+            state.caseGrades = FourGrades(state.caseGrades);
+            state.uneaseFlags ??= new List<UneaseFlag>();
+            state.toolsUnlocked ??= new List<Tool>();
+            state.strainedScanUsedByCase = FourBools(state.strainedScanUsedByCase);
+            state.boardStates ??= new List<CaseBoardSave>();
+            state.caseGradeStates ??= new List<CaseGradeSave>();
+            state.activeCutsceneId ??= "";
+            state.preCutsceneCheckpointId ??= "";
+            state.focusMax = Math.Max(1f, state.focusMax);
+            state.focusEnergy = Mathf.Clamp(state.focusEnergy, 0f, state.focusMax);
+            state.restElapsedRemainderSeconds = Math.Max(0f, state.restElapsedRemainderSeconds);
+            EnsureCaseGradeStates(state);
+        }
+
+        static bool[] CompletedCases(LegacySavePayload legacy)
+        {
+            var completed = new bool[6];
+            if (legacy == null) return completed;
+            if (legacy.completedCases != null)
+                for (int i = 0; i < legacy.completedCases.Length && i < completed.Length; i++)
+                    completed[i] = legacy.completedCases[i];
+            if (legacy.completedCaseIds != null)
+                foreach (int caseId in legacy.completedCaseIds)
+                    if (caseId >= 0 && caseId < completed.Length)
+                        completed[caseId] = true;
+            completed[0] |= legacy.case0Completed || legacy.completedCase0 || legacy.case0Solved;
+            completed[1] |= legacy.case1Completed || legacy.completedCase1 || legacy.case1Solved;
+            completed[2] |= legacy.case2Completed || legacy.completedCase2 || legacy.case2Solved;
+            completed[3] |= legacy.case3Completed || legacy.completedCase3 || legacy.case3Solved;
+            completed[4] |= legacy.case4Completed || legacy.completedCase4 || legacy.case4Solved;
+            completed[5] |= legacy.case5Completed || legacy.completedCase5 || legacy.case5Solved;
+            return completed;
+        }
+
+        static CaseBoardSave GetOrCreateBoard(SaveState state, int caseId)
+        {
+            foreach (var board in state.boardStates)
+                if (board != null && board.caseId == caseId)
+                    return board;
+            var created = new CaseBoardSave { caseId = caseId };
+            state.boardStates.Add(created);
+            return created;
+        }
+
+        static void EnsureCaseGradeStates(SaveState state)
+        {
+            for (int caseId = 1; caseId <= 4; caseId++)
+            {
+                CaseGradeSave gradeState = null;
+                foreach (var existing in state.caseGradeStates)
+                    if (existing != null && existing.caseId == caseId)
+                    {
+                        gradeState = existing;
+                        break;
+                    }
+                if (gradeState == null)
+                {
+                    gradeState = new CaseGradeSave { caseId = caseId };
+                    state.caseGradeStates.Add(gradeState);
+                }
+
+                CaseBoardSave board = null;
+                foreach (var existing in state.boardStates)
+                    if (existing != null && existing.caseId == caseId)
+                    {
+                        board = existing;
+                        break;
+                    }
+                if (board != null)
+                {
+                    gradeState.caseErrorCount = board.caseErrorCount;
+                    gradeState.submittedWrongConclusionIds = Unique(
+                        board.submittedWrongConclusionIds);
+                    gradeState.submittedPartialConclusionIds = Unique(
+                        board.submittedPartialConclusionIds);
+                }
+                gradeState.strainedScanUsed = gradeState.strainedScanUsed ||
+                    (state.strainedScanUsedByCase.Count > caseId - 1 &&
+                     state.strainedScanUsedByCase[caseId - 1]);
+                gradeState.mistrialUsed = gradeState.mistrialUsed || HasFlag(
+                    state.uneaseFlags, SessionState.MistrialFlagFor(caseId));
+                if (gradeState.displayGrade != Grade.Ungraded)
+                {
+                    state.caseGrades[caseId - 1] = gradeState.displayGrade;
+                }
+                else if (state.caseGrades.Count > caseId - 1)
+                {
+                    gradeState.displayGrade = state.caseGrades[caseId - 1];
+                }
+            }
+        }
+
+        static List<string> Unique(List<string> source)
+        {
+            var result = new List<string>();
+            foreach (string value in source ?? new List<string>())
+                if (!string.IsNullOrEmpty(value) && !result.Contains(value))
+                    result.Add(value);
+            return result;
+        }
+
+        static List<bool> FourBools(List<bool> source)
+        {
+            var result = new List<bool> { false, false, false, false };
+            if (source != null)
+                for (int i = 0; i < source.Count && i < result.Count; i++)
+                    result[i] = source[i];
+            return result;
+        }
+
+        static List<Grade> FourGrades(List<Grade> source)
+        {
+            var result = new List<Grade>
+            {
+                Grade.Ungraded, Grade.Ungraded, Grade.Ungraded, Grade.Ungraded,
+            };
+            if (source != null)
+                for (int i = 0; i < source.Count && i < result.Count; i++)
+                    result[i] = source[i];
+            return result;
+        }
+
+        static bool HasFlag(List<UneaseFlag> flags, string key)
+        {
+            foreach (var flag in flags ?? new List<UneaseFlag>())
+                if (flag != null && flag.key == key) return flag.value;
+            return false;
+        }
+
+        static DateTime? ParseUtc(string iso)
+        {
+            return !string.IsNullOrEmpty(iso) &&
+                   DateTime.TryParse(iso, null,
+                       System.Globalization.DateTimeStyles.RoundtripKind, out DateTime parsed)
+                ? parsed
+                : (DateTime?)null;
+        }
+
+        static string FormatUtc(DateTime? utc) =>
+            utc.HasValue ? utc.Value.ToString("o") : "";
 
         static string LegacySign(string payload)
         {

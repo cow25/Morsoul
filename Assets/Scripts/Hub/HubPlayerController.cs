@@ -1,6 +1,8 @@
 using System.Collections.Generic;
+using Morsoul.Core;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 namespace Morsoul.Hub
 {
@@ -29,9 +31,12 @@ namespace Morsoul.Hub
         readonly List<Interactable2D> _candidates = new List<Interactable2D>();
         readonly List<Vector2> _candidatePositions = new List<Vector2>();
         Interactable2D _prompted;
+        PlayerFacing2D _facing = PlayerFacing2D.Down;
 
         /// <summary>Current normalized move input (zero while dialogue plays).</summary>
         public Vector2 MoveInput { get; private set; }
+        /// <summary>Last non-zero movement direction, persisted for save/restore.</summary>
+        public PlayerFacing2D CurrentFacing => _facing;
         /// <summary>Nearest interactable currently in range, if any.</summary>
         public Interactable2D CurrentTarget { get; private set; }
 
@@ -40,6 +45,8 @@ namespace Morsoul.Hub
             _rb = GetComponent<Rigidbody2D>();
             _rb.gravityScale = 0f;
             _rb.freezeRotation = true;
+            var session = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session : null;
+            if (session != null) _facing = session.PlayerFacing2D;
         }
 
         void Update()
@@ -55,6 +62,8 @@ namespace Morsoul.Hub
                 || context != null && context.travelMenu != null
                    && context.travelMenu.LastCloseFrame == Time.frameCount;
             MoveInput = dialoguePlaying ? Vector2.zero : ReadMoveInput(keyboard);
+            if (!MoveInput.Equals(Vector2.zero)) _facing = FacingFrom(MoveInput);
+            SyncPlayerContext();
 
             UpdatePromptTarget();
 
@@ -80,6 +89,20 @@ namespace Morsoul.Hub
             if (keyboard.sKey.isPressed) input.y -= 1f;
             if (keyboard.wKey.isPressed) input.y += 1f;
             return input;
+        }
+
+        static PlayerFacing2D FacingFrom(Vector2 input)
+        {
+            return Mathf.Abs(input.x) > Mathf.Abs(input.y)
+                ? (input.x > 0f ? PlayerFacing2D.Right : PlayerFacing2D.Left)
+                : (input.y > 0f ? PlayerFacing2D.Up : PlayerFacing2D.Down);
+        }
+
+        void SyncPlayerContext()
+        {
+            var session = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session : null;
+            session?.SetPlayerContext(SceneMode.Mode2D,
+                SceneManager.GetActiveScene().name, transform.position, _facing);
         }
 
         void UpdatePromptTarget()

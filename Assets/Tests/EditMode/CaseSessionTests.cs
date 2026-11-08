@@ -69,6 +69,34 @@ namespace Morsoul.Tests
         }
 
         [Test]
+        public void BoardErrors_WrongSubmission_OrHintTier_MakeStandard()
+        {
+            var errors = new CaseSession(TestCases.Build(1, true).caseData);
+            errors.SetBoardGradeInputs(1, wrongConclusionSubmitted: false,
+                hintTierFired: false);
+            Assert.That(errors.ComputeGrade(), Is.EqualTo(Grade.Standard));
+
+            var wrong = new CaseSession(TestCases.Build(1, true).caseData);
+            wrong.SetBoardGradeInputs(0, wrongConclusionSubmitted: true,
+                hintTierFired: false);
+            Assert.That(wrong.ComputeGrade(), Is.EqualTo(Grade.Standard));
+
+            var hinted = new CaseSession(TestCases.Build(1, true).caseData);
+            hinted.SetBoardGradeInputs(0, wrongConclusionSubmitted: false,
+                hintTierFired: true);
+            Assert.That(hinted.ComputeGrade(), Is.EqualTo(Grade.Standard));
+        }
+
+        [Test]
+        public void PartialSubmission_Alone_KeepsClean()
+        {
+            var session = new CaseSession(TestCases.Build(1, true).caseData);
+            session.SetBoardGradeInputs(0, wrongConclusionSubmitted: false,
+                hintTierFired: false);
+            Assert.That(session.ComputeGrade(), Is.EqualTo(Grade.Clean));
+        }
+
+        [Test]
         public void PrologueCase_IsUngraded()
         {
             var session = new CaseSession(TestCases.Build(0, false).caseData);

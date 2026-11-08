@@ -169,6 +169,8 @@ namespace Morsoul.Tests
             board.FiredHintTiers.Add(2);
             board.LinkingLockedOut = true;
             board.SubmittedConclusionId = "h_complete";
+            board.SubmittedWrongConclusionIds.Add("h_wrong");
+            board.SubmittedPartialConclusionIds.Add("h_partial");
             board.BoardSolved = true;
             board.CompletionRewardApplied = true;
 
@@ -188,17 +190,102 @@ namespace Morsoul.Tests
             CollectionAssert.AreEqual(new[] { 2 }, rb.FiredHintTiers);
             Assert.IsTrue(rb.LinkingLockedOut);
             Assert.AreEqual("h_complete", rb.SubmittedConclusionId);
+            CollectionAssert.AreEqual(new[] { "h_wrong" }, rb.SubmittedWrongConclusionIds);
+            CollectionAssert.AreEqual(new[] { "h_partial" }, rb.SubmittedPartialConclusionIds);
             Assert.IsTrue(rb.BoardSolved);
             Assert.IsTrue(rb.CompletionRewardApplied);
         }
 
         [Test]
-        public void RestoreFrom_LegacyStrainedScan_MapsToCurrentCase()
+        public void RestoreFrom_PerCaseStrainedScanFlags()
         {
-            var save = new SaveState { currentCase = 3, strainedScanUsed = true };
+            var save = new SaveState
+            {
+                strainedScanUsedByCase = new System.Collections.Generic.List<bool>
+                    { false, false, true, false },
+            };
             _session.RestoreFrom(save);
             Assert.IsTrue(_session.IsStrainedScanUsed(3));
             Assert.IsFalse(_session.IsStrainedScanUsed(2));
+        }
+
+        [Test]
+        public void ScenePrologueAndGradeState_SaveRestoreRoundTrip()
+        {
+            _session.SetPlayerContext(SceneMode.Mode3D, "case00_ruins_3d",
+                new Vector3(1f, 2f, 3f), PlayerFacing2D.Left);
+            _session.PrologueCompleted = true;
+            _session.PrologueGateUnlocked = true;
+            _session.ElizaIntroSeen = true;
+            _session.SetCutsceneContext("eliza_intro", "checkpoint_prologue_exit");
+            _session.SetActiveInterrogation(new ActiveInterrogationSave
+            {
+                caseId = 2,
+                phaseIndex = 1,
+                composureSegmentsRemaining = 2,
+                strikeCount = 1,
+                preInterrogationCheckpointId = "checkpoint_case2",
+            });
+            _session.MarkStrainedScan(2);
+            _session.SetInterrogationStrikeCount(2, 2);
+
+            var save = new SaveState();
+            _session.ApplyTo(save);
+            var restored = new SessionState();
+            restored.RestoreFrom(save);
+
+            Assert.AreEqual(SceneMode.Mode3D, restored.CurrentSceneMode);
+            Assert.AreEqual("case00_ruins_3d", restored.CurrentSceneId);
+            Assert.AreEqual(new Vector3(1f, 2f, 3f), restored.PlayerPosition);
+            Assert.AreEqual(PlayerFacing2D.Left, restored.PlayerFacing2D);
+            Assert.IsTrue(restored.PrologueCompleted);
+            Assert.IsTrue(restored.PrologueGateUnlocked);
+            Assert.IsTrue(restored.ElizaIntroSeen);
+            Assert.AreEqual("eliza_intro", restored.ActiveCutsceneId);
+            Assert.AreEqual("checkpoint_prologue_exit", restored.PreCutsceneCheckpointId);
+            Assert.IsNotNull(restored.ActiveInterrogation);
+            Assert.AreEqual(2, restored.ActiveInterrogation.composureSegmentsRemaining);
+            Assert.AreEqual(2, restored.GetInterrogationStrikeCount(2));
+            Assert.IsTrue(restored.IsStrainedScanUsed(2));
+        }
+
+        [Test]
+        public void PersistedGradeState_RestoresWithoutBoardRecord()
+        {
+            var save = new SaveState
+            {
+                caseGradeStates = new System.Collections.Generic.List<CaseGradeSave>
+                {
+                    new CaseGradeSave
+                    {
+                        caseId = 3,
+                        caseErrorCount = 4,
+                        submittedWrongConclusionIds = { "h_wrong" },
+                        submittedPartialConclusionIds = { "h_partial" },
+                        interrogationStrikeCount = 2,
+                        mistrialUsed = true,
+                        strainedScanUsed = true,
+                        displayGrade = Grade.Flawed,
+                    }
+                }
+            };
+
+            _session.RestoreFrom(save);
+            var roundTrip = new SaveState();
+            _session.ApplyTo(roundTrip);
+            var grade = roundTrip.caseGradeStates.Find(g => g.caseId == 3);
+
+            Assert.IsNotNull(grade);
+            Assert.AreEqual(4, grade.caseErrorCount);
+            CollectionAssert.AreEqual(new[] { "h_wrong" },
+                grade.submittedWrongConclusionIds);
+            CollectionAssert.AreEqual(new[] { "h_partial" },
+                grade.submittedPartialConclusionIds);
+            Assert.AreEqual(2, grade.interrogationStrikeCount);
+            Assert.IsTrue(grade.mistrialUsed);
+            Assert.IsTrue(grade.strainedScanUsed);
+            Assert.AreEqual(Grade.Flawed, grade.displayGrade);
+            Assert.AreEqual(Grade.Flawed, _session.Grades[3]);
         }
 
         [Test]

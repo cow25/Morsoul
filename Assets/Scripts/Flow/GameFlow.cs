@@ -70,7 +70,14 @@ namespace Morsoul.Flow
 
         public CaseSession Session => _session;
         /// <summary>Grade of the current session (Ungraded before BeginCase) — used by save.</summary>
-        public Grade CurrentGrade => _session != null ? _session.ComputeGrade() : Grade.Ungraded;
+        public Grade CurrentGrade
+        {
+            get
+            {
+                SyncBoardGradeInputs();
+                return _session != null ? _session.ComputeGrade() : Grade.Ungraded;
+            }
+        }
 
         void OnEnable()
         {
@@ -192,19 +199,27 @@ namespace Morsoul.Flow
             var core = Core.CoreRuntime.Instance != null ? Core.CoreRuntime.Instance.Session : null;
             if (core != null)
             {
+                var focus = Core.CoreRuntime.Instance.Focus;
+                if (focus.StrainedScanUsed &&
+                    core.CurrentCase >= 1 && core.CurrentCase <= 4)
+                    core.MarkStrainedScan(core.CurrentCase);
                 core.CurrentCase = caseData.caseId;
+                focus.SetStrainedScanUsed(core.IsStrainedScanUsed(caseData.caseId));
                 if (caseData.toolUnlocked != Tool.None) core.UnlockTool(caseData.toolUnlocked);
                 latentLogCollected = core.IsLatentLogCollected(caseData.caseId);
                 // A mistrial recorded before a checkpoint reload keeps the
                 // Flawed penalty on the fresh case session.
                 if (core.WasMistrialRetried(caseData.caseId))
                     _session.RecordMistrialRetry();
+                else
+                    _session.RestoreStrikes(
+                        core.GetInterrogationStrikeCount(caseData.caseId));
             }
             _endingRequested = false;
             _endingCompleted = false;
             _mistrialHandled = false;
             _lastEnding = 0;
-            _reportedStrikes = 0;
+            _reportedStrikes = _session.StrikesLost;
             _collectedClues.Clear();
             Bind();
             bool weighted = weightedBoard != null && caseData.evidenceGraph != null
@@ -236,6 +251,7 @@ namespace Morsoul.Flow
                 board.Close();
             }
             if (board != null) board.handleBoardHotkey = !weighted;
+            SyncBoardGradeInputs();
 
             // CaseLoop has no world content of its own — land the player on
             // the case board instead of an empty screen. Investigation scenes
@@ -420,9 +436,12 @@ namespace Morsoul.Flow
             if (_session == null || _mistrialHandled) return;
             _mistrialHandled = true;
             _session.RecordMistrialRetry();
-            // Persist the penalty so a checkpoint reload still grades Flawed.
-            Core.CoreRuntime.Instance?.Session.SetFlag(
+            _reportedStrikes = 0;
+            // Persist the penalty and the reset strike count through the retry.
+            var coreSession = Core.CoreRuntime.Instance?.Session;
+            coreSession?.SetFlag(
                 Core.SessionState.MistrialFlagFor(_session.Case.caseId));
+            coreSession?.SetInterrogationStrikeCount(_session.Case.caseId, 0);
         }
 
         /// <summary>
@@ -447,6 +466,8 @@ namespace Morsoul.Flow
             int delta = total - _reportedStrikes;
             _reportedStrikes = total;
             if (delta > 0) _session.RecordStrikes(delta);
+            Core.CoreRuntime.Instance?.Session.SetInterrogationStrikeCount(
+                _session.Case.caseId, total);
         }
 
         /// <summary>Dialogue-set flags flow into the hub flag set + Core session.</summary>
@@ -510,15 +531,39 @@ namespace Morsoul.Flow
 
         // --- Internals ------------------------------------------------------------
 
+        void SyncBoardGradeInputs()
+        {
+            if (_session == null || !_session.IsGraded) return;
+            var boardState = weightedBoard != null && weightedBoard.Session != null
+                ? weightedBoard.Session.State
+                : null;
+            var session = Core.CoreRuntime.Instance != null
+                ? Core.CoreRuntime.Instance.Session : null;
+            if (boardState == null && session != null)
+                session.BoardStates.TryGetValue(_session.Case.caseId, out boardState);
+            if (boardState == null || boardState.CaseId != _session.Case.caseId)
+                return;
+            _session.SetBoardGradeInputs(
+                boardState.CaseErrorCount,
+                boardState.SubmittedWrongConclusionIds != null &&
+                    boardState.SubmittedWrongConclusionIds.Count > 0,
+                boardState.FiredHintTiers != null &&
+                    boardState.FiredHintTiers.Count > 0);
+        }
+
         void HandleConfessed()
         {
             var caseData = _session != null ? _session.Case : activeCase;
             if (caseData == null) return;
             var session = Core.CoreRuntime.Instance != null ? Core.CoreRuntime.Instance.Session : null;
+            SyncBoardGradeInputs();
             // Strained scans during the investigation pull the grade to Standard.
             if (Core.CoreRuntime.Instance != null
                 && Core.CoreRuntime.Instance.Focus.StrainedScanUsed)
+            {
                 _session?.RecordStrainedScan();
+                session?.MarkStrainedScan(caseData.caseId);
+            }
             // Unease fires when the case hides a latent log the player never found.
             bool unease = caseData.latentLog != null && !latentLogCollected;
             Grade grade = _session != null ? _session.ComputeGrade() : Grade.Ungraded;

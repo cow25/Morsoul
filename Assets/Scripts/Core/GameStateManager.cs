@@ -56,6 +56,7 @@ namespace Morsoul.Core
         }
 
         CoreRuntime _core;
+        bool _runStateLoaded;
 
         void Awake()
         {
@@ -106,6 +107,7 @@ namespace Morsoul.Core
             _core.Session.PlayerName = playerName;
             CurrentSave = new SaveState { playerName = playerName };
             _core.Focus.Restore(FocusTuning.FocusMax, false);
+            _runStateLoaded = true;
             WriteCheckpoint("NewGame", null);
             GoToRoute(RouteKeys.Opening, GameFlowState.Opening,
                 fallbackKey: RouteKeys.Hub(0), fallbackState: GameFlowState.Hub);
@@ -120,14 +122,24 @@ namespace Morsoul.Core
                 return false;
             }
             CurrentSave = state;
+            _runStateLoaded = true;
             _core.Session.RestoreFrom(state, _core.ResolveClue);
-            _core.Focus.Restore(state.focusEnergy, state.strainedScanUsed,
+            bool strained = state.currentCase >= 1 && state.currentCase <= 4 &&
+                            state.strainedScanUsedByCase != null &&
+                            state.strainedScanUsedByCase.Count >= state.currentCase &&
+                            state.strainedScanUsedByCase[state.currentCase - 1];
+            _core.Focus.Restore(state.focusEnergy, strained,
                 maximum: state.focusMax > 0f ? state.focusMax : (float?)null,
                 restRemainderSeconds: state.restElapsedRemainderSeconds,
                 closedAtUtc: ParseUtc(state.closedAtUtc),
+                lastTrustedUtc: ParseUtc(state.lastTrustedUtc),
                 lastOfflineRecoveryAppliedAtUtc: ParseUtc(state.lastOfflineRecoveryAppliedAtUtc));
             _core.Focus.ApplyOfflineRecovery(DateTime.UtcNow);
-            string scene = state.checkpointSceneName;
+            // Consume the close marker and persist the trusted watermark even
+            // if scene resolution later falls back or fails.
+            PersistCurrentSave("Continue");
+            string checkpointScene = CurrentSave.checkpointSceneName;
+            string scene = checkpointScene;
             if (string.IsNullOrEmpty(scene) || !Application.CanStreamedLevelBeLoaded(scene))
             {
                 // Checkpointed scene missing (e.g. a seam gate to a scene that
@@ -141,7 +153,8 @@ namespace Morsoul.Core
                 Debug.LogWarning("GameStateManager: save has no resumable scene.", this);
                 return false;
             }
-            LoadSceneInternal(scene);
+            LoadSceneInternal(scene,
+                preserveRestoredPose: scene == checkpointScene);
             return true;
         }
 
@@ -173,23 +186,74 @@ namespace Morsoul.Core
             return GoToRoute(key, state) || GoToRoute(fallbackKey, fallbackState);
         }
 
-        /// <summary>Writes the checkpoint, stamping focus + scene.</summary>
-        public void WriteCheckpoint(string reason, string nextSceneName)
+        /// <summary>Writes the checkpoint, stamping trusted time, focus and scene.</summary>
+        public void WriteCheckpoint(string reason, string nextSceneName,
+            bool preserveRestoredPose = false)
         {
+            StampRuntimeState(markClosed: false, nextSceneName,
+                updateCheckpointScene: true, preserveRestoredPose);
+            _core.Save.Save(CurrentSave);
+            Debug.Log($"GameStateManager: checkpoint written ({reason}) -> {CurrentSave.checkpointSceneName}", this);
+        }
+
+        /// <summary>Writes a graceful-close checkpoint with a sealed close timestamp.</summary>
+        public void WriteCloseCheckpoint(string reason)
+        {
+            StampRuntimeState(markClosed: true, nextSceneName: null,
+                updateCheckpointScene: true, preserveRestoredPose: true);
+            _core.Save.Save(CurrentSave);
+            Debug.Log($"GameStateManager: close checkpoint written ({reason}) -> {CurrentSave.checkpointSceneName}", this);
+        }
+
+        void OnApplicationQuit()
+        {
+            if (_core != null && _runStateLoaded && _core.Save.HasSave)
+                WriteCloseCheckpoint("Quit");
+        }
+
+        /// <summary>Persists runtime state without changing the resume scene.</summary>
+        void PersistCurrentSave(string reason)
+        {
+            StampRuntimeState(markClosed: false, nextSceneName: null,
+                updateCheckpointScene: false, preserveRestoredPose: true);
+            _core.Save.Save(CurrentSave);
+            Debug.Log($"GameStateManager: save state stamped ({reason}).", this);
+        }
+
+        void StampRuntimeState(bool markClosed, string nextSceneName,
+            bool updateCheckpointScene, bool preserveRestoredPose)
+        {
+            if (updateCheckpointScene && !preserveRestoredPose &&
+                !string.IsNullOrEmpty(nextSceneName) &&
+                nextSceneName != SceneManager.GetActiveScene().name)
+            {
+                // A travel checkpoint resumes at the destination's entry point;
+                // the loaded scene stamps its real spawn pose on entry.
+                _core.Session.SetSceneContext(
+                    _core.Session.CurrentSceneMode, nextSceneName);
+            }
+            if (_core.Focus.StrainedScanUsed &&
+                _core.Session.CurrentCase >= 1 && _core.Session.CurrentCase <= 4)
+                _core.Session.MarkStrainedScan(_core.Session.CurrentCase);
             _core.Session.ApplyTo(CurrentSave);
+            if (markClosed) _core.Focus.MarkClosed(DateTime.UtcNow);
+            else _core.Focus.StampTrustedNow(DateTime.UtcNow);
+
             CurrentSave.focusEnergy = _core.Focus.Percent;
             CurrentSave.focusMax = _core.Focus.Maximum;
             CurrentSave.restElapsedRemainderSeconds = _core.Focus.RestRemainderSeconds;
-            _core.Focus.MarkClosed(DateTime.UtcNow);
             CurrentSave.closedAtUtc = FormatUtc(_core.Focus.ClosedAtUtc);
+            CurrentSave.lastTrustedUtc = FormatUtc(_core.Focus.LastTrustedUtc);
             CurrentSave.lastOfflineRecoveryAppliedAtUtc =
                 FormatUtc(_core.Focus.LastOfflineRecoveryAppliedAtUtc);
-            CurrentSave.strainedScanUsed = _core.Focus.StrainedScanUsed;
-            CurrentSave.checkpointSceneName = !string.IsNullOrEmpty(nextSceneName)
-                ? nextSceneName
-                : SceneManager.GetActiveScene().name;
-            _core.Save.Save(CurrentSave);
-            Debug.Log($"GameStateManager: checkpoint written ({reason}) -> {CurrentSave.checkpointSceneName}", this);
+            if (updateCheckpointScene)
+            {
+                CurrentSave.checkpointSceneName = !string.IsNullOrEmpty(nextSceneName)
+                    ? nextSceneName
+                    : SceneManager.GetActiveScene().name;
+            }
+            if (string.IsNullOrEmpty(CurrentSave.currentSceneId))
+                CurrentSave.currentSceneId = CurrentSave.checkpointSceneName;
         }
 
         /// <summary>Records an FSM transition; illegal jumps warn but never block.</summary>
@@ -293,7 +357,7 @@ namespace Morsoul.Core
         /// with the destination only once loadability is confirmed; false when
         /// it can't load so caller fallbacks engage.
         /// </summary>
-        bool LoadSceneInternal(string sceneName)
+        bool LoadSceneInternal(string sceneName, bool preserveRestoredPose = false)
         {
             if (!Application.CanStreamedLevelBeLoaded(sceneName))
             {
@@ -303,7 +367,7 @@ namespace Morsoul.Core
                 Debug.LogWarning($"GameStateManager: scene '{sceneName}' is not loadable (missing or not in Build Profiles).", this);
                 return false;
             }
-            WriteCheckpoint("SceneTransition", sceneName);
+            WriteCheckpoint("SceneTransition", sceneName, preserveRestoredPose);
             SceneManager.LoadScene(sceneName);
             return true;
         }
