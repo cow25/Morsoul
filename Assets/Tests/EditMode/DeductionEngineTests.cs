@@ -411,6 +411,46 @@ namespace Morsoul.Tests
         }
 
         [Test]
+        public void EvidenceGraphData_FeedbackLookup_UsesAuthoredAndFallbackData()
+        {
+            var data = ScriptableObject.CreateInstance<EvidenceGraphData>();
+            try
+            {
+                data.conclusions = new[]
+                {
+                    new ConclusionDef
+                    {
+                        id = "wrong", tier = ConclusionTier.Wrong,
+                        text = "Wrong", submissionFeedback = "authored rejection",
+                    },
+                    new ConclusionDef
+                    {
+                        id = "partial", tier = ConclusionTier.Partial,
+                        text = "Partial",
+                    },
+                };
+                data.tutorialRedHerringClueIds = new[] { "rh" };
+                data.tutorialRedHerringFeedback = "red herring feedback";
+                data.tutorialReversedLinkFeedback = "reversed feedback";
+                data.tutorialGenericLinkFeedback = "generic tutorial feedback";
+                data.authoredClueEdges = new[] { E("a", "b") };
+                data.solutionEdges = new[] { L("a", "b") };
+
+                Assert.That(data.GetConclusionSubmissionFeedback("wrong"), Is.EqualTo("authored rejection"));
+                Assert.That(data.GetConclusionSubmissionFeedback("partial"), Is.Null);
+                Assert.That(data.GetConclusionSubmissionFeedback("missing"), Is.Null);
+
+                Assert.That(data.GetTutorialLinkFeedback(L("rh", "a")), Is.EqualTo("red herring feedback"));
+                Assert.That(data.GetTutorialLinkFeedback(L("b", "a")), Is.EqualTo("reversed feedback"));
+                Assert.That(data.GetTutorialLinkFeedback(L("c", "d")), Is.EqualTo("generic tutorial feedback"));
+            }
+            finally
+            {
+                Object.DestroyImmediate(data);
+            }
+        }
+
+        [Test]
         public void CaseData_Validate_FlagsEvidenceGraphProblems()
         {
             var f = TestCases.Build(1, true);

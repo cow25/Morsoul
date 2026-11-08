@@ -277,8 +277,9 @@ namespace Morsoul.Board
                     new ProgressionEvent { Kind = ProgressionEventKind.InvalidInput },
                 };
             SyncFocusIn();
-            var events = _session.DrawLink(new DirectedEdge(sourceId, targetId));
-            ApplyLinkEvents(events);
+            var link = new DirectedEdge(sourceId, targetId);
+            var events = _session.DrawLink(link);
+            ApplyLinkEvents(events, link);
             return events;
         }
 
@@ -315,23 +316,25 @@ namespace Morsoul.Board
                 switch (e.Kind)
                 {
                     case ProgressionEventKind.CaseComplete:
-                        ShowBanner(BannerInfoClass, "Conclusion supported — the case clicks into place.");
+                        ShowBanner(BannerInfoClass, AuthoredSubmissionFeedback(
+                            e.ConclusionId, "Conclusion supported — the case clicks into place."));
                         BoardSolved?.Invoke(cert);
                         break;
                     case ProgressionEventKind.BoardAlreadySolved:
                         ShowBanner(BannerInfoClass, "Conclusion already confirmed.");
                         break;
                     case ProgressionEventKind.ConclusionLocked:
-                        ShowBanner(BannerInfoClass,
-                            "That conclusion is still locked — the evidence doesn't reach it yet.");
+                        ShowBanner(BannerInfoClass, AuthoredLockedFeedback(e.ConclusionId));
                         break;
                     case ProgressionEventKind.WrongConclusionRejected:
-                        ShowBanner(BannerInfoClass,
-                            "The board doesn't support that conclusion. Keep linking.");
+                        ShowBanner(BannerInfoClass, AuthoredSubmissionFeedback(
+                            e.ConclusionId,
+                            "The board doesn't support that conclusion. Keep linking."));
                         break;
                     case ProgressionEventKind.PartialConclusionFeedback:
-                        ShowBanner(BannerInfoClass,
-                            "That explains part of the evidence, but not the whole case.");
+                        ShowBanner(BannerInfoClass, AuthoredSubmissionFeedback(
+                            e.ConclusionId,
+                            "That explains part of the evidence, but not the whole case."));
                         break;
                     case ProgressionEventKind.InvalidInput:
                         ShowBanner(BannerErrorClass, "That submission can't be evaluated.");
@@ -346,7 +349,37 @@ namespace Morsoul.Board
 
         // --- Progression-event application --------------------------------------
 
-        void ApplyLinkEvents(IReadOnlyList<ProgressionEvent> events)
+        string AuthoredSubmissionFeedback(string conclusionId, string fallback)
+        {
+            string authored = caseData != null && caseData.evidenceGraph != null
+                ? caseData.evidenceGraph.GetConclusionSubmissionFeedback(conclusionId)
+                : null;
+            return string.IsNullOrEmpty(authored) ? fallback : authored;
+        }
+
+        string AuthoredLockedFeedback(string conclusionId)
+        {
+            var graphData = caseData != null ? caseData.evidenceGraph : null;
+            if (graphData != null &&
+                graphData.caseId == 0 &&
+                conclusionId == graphData.completeConclusionId &&
+                !string.IsNullOrEmpty(graphData.tutorialLockedConclusionFeedback))
+                return graphData.tutorialLockedConclusionFeedback;
+            return "That conclusion is still locked — the evidence doesn't reach it yet.";
+        }
+
+        string AuthoredTutorialLinkFeedback(DirectedEdge attemptedLink)
+        {
+            var graphData = caseData != null ? caseData.evidenceGraph : null;
+            string authored = graphData != null
+                ? graphData.GetTutorialLinkFeedback(attemptedLink)
+                : null;
+            return string.IsNullOrEmpty(authored)
+                ? "That connection isn't part of the manual override chain."
+                : authored;
+        }
+
+        void ApplyLinkEvents(IReadOnlyList<ProgressionEvent> events, DirectedEdge attemptedLink)
         {
             foreach (var e in events)
             {
@@ -356,8 +389,7 @@ namespace Morsoul.Board
                         ShowBanner(BannerErrorClass, "That link can't be drawn here.");
                         break;
                     case ProgressionEventKind.TutorialLinkRejected:
-                        ShowBanner(BannerInfoClass,
-                            "That connection isn't part of the manual override chain.");
+                        ShowBanner(BannerInfoClass, AuthoredTutorialLinkFeedback(attemptedLink));
                         break;
                     case ProgressionEventKind.Blocked:
                         ShowBanner(BannerErrorClass,
