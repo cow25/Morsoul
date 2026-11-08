@@ -21,6 +21,7 @@ namespace Morsoul.Tests
     public class GameFlowTests
     {
         readonly List<GameObject> _objects = new List<GameObject>();
+        readonly List<Object> _tempAssets = new List<Object>();
 
         GameFlow _flow;
         BoardController _board;
@@ -58,7 +59,34 @@ namespace Morsoul.Tests
             foreach (var go in _objects)
                 if (go != null) Object.DestroyImmediate(go);
             _objects.Clear();
+            foreach (var asset in _tempAssets)
+                if (asset != null) Object.DestroyImmediate(asset);
+            _tempAssets.Clear();
             TestCases.DestroyAll();
+        }
+
+        /// <summary>
+        /// A one-shot cutscene that stays playing in EditMode: the shot needs
+        /// a visual to be playable and waitForInput so it holds until Advance.
+        /// </summary>
+        Cutscene.CutsceneData BuildWaitForInputCutscene()
+        {
+            var tex = new Texture2D(1, 1);
+            _tempAssets.Add(tex);
+            var sprite = Sprite.Create(tex, new Rect(0, 0, 1, 1), Vector2.zero);
+            _tempAssets.Add(sprite);
+            var data = ScriptableObject.CreateInstance<Cutscene.CutsceneData>();
+            _tempAssets.Add(data);
+            data.shots = new[]
+            {
+                new Cutscene.CutsceneShotData
+                {
+                    image = sprite,
+                    caption = "Echoes.",
+                    waitForInput = true,
+                },
+            };
+            return data;
         }
 
         // --- BeginCase ---------------------------------------------------------
@@ -767,8 +795,10 @@ namespace Morsoul.Tests
         }
 
         [Test]
-        public void CaseOneConfession_PersistsGradeAndUneaseFlag()
+        public void CaseOneConfession_ToolGatedLog_PersistsGradeWithoutUnease()
         {
+            // GDD §2.4: Case 1's log needs Aether Sight (unlocked in Case 4),
+            // so it is beyond current tools and no banner/flag fires.
             var case1 = LoadCaseOne();
             Assert.NotNull(case1);
             var core = Core.CoreRuntime.Ensure();
@@ -779,9 +809,54 @@ namespace Morsoul.Tests
             _flow.HandleInterrogationEnded(InterrogationStatus.Confessed);
 
             Assert.IsTrue(_resolution.IsVisible);
-            Assert.IsTrue(_resolution.UneaseVisible);
+            Assert.IsFalse(_resolution.UneaseVisible);
             Assert.AreEqual(Grade.Clean, core.Session.Grades[1]);
-            Assert.IsTrue(core.Session.HasFlag(case1.uneaseFlagKey));
+            Assert.IsFalse(core.Session.HasFlag(case1.uneaseFlagKey));
+        }
+
+        [Test]
+        public void Confession_ReachableMissedLog_ShowsUneaseAndSetsFlag()
+        {
+            var core = EnsureEncounterSession(1);
+            var f = TestCases.Build(1, withInterrogation: true);
+            var log = ScriptableObject.CreateInstance<RunicLogData>();
+            log.id = 1;
+            log.caseId = 1;
+            log.location = "Vault alcove";
+            f.assets.Add(log);
+            f.caseData.latentLog = log;
+            f.caseData.uneaseFlagKey = "Case1_UneaseActive";
+            var latentClue = ScriptableObject.CreateInstance<ClueData>();
+            latentClue.id = "L1_01";
+            latentClue.displayName = "Runic Log #1";
+            latentClue.caseId = 1;
+            latentClue.type = ClueType.Latent;
+            f.assets.Add(latentClue);
+            f.caseData.clues = f.caseData.clues.Concat(new[] { latentClue }).ToArray();
+            _flow.BeginCase(f.caseData);
+
+            _flow.HandleInterrogationEnded(InterrogationStatus.Confessed);
+
+            Assert.IsTrue(_resolution.UneaseVisible);
+            Assert.IsTrue(core.Session.HasFlag("Case1_UneaseActive"));
+        }
+
+        [Test]
+        public void LatentClue_ResolvesUneaseFlagOnCollection()
+        {
+            var case1 = LoadCaseOne();
+            Assert.NotNull(case1);
+            var core = Core.CoreRuntime.Ensure();
+            _objects.Add(core.gameObject);
+            core.Session.Reset();
+            core.Session.SetFlag(case1.uneaseFlagKey);
+            var latentClue = case1.clues.First(c => c != null && c.type == ClueType.Latent);
+            _flow.activeCase = case1;
+
+            _flow.HandleClueRegistered(latentClue);
+
+            Assert.IsTrue(core.Session.IsLatentLogCollected(1));
+            Assert.IsFalse(core.Session.HasFlag(case1.uneaseFlagKey));
         }
 
         // --- Interrogation encounter snapshots -------------------------------------
@@ -1035,6 +1110,111 @@ namespace Morsoul.Tests
             Assert.IsTrue(flags.Has("Test.Flag"));
             Assert.IsTrue(core.Session.HasFlag("Test.Flag"));
             Assert.AreEqual("Vessel", dialogue.playerName);
+        }
+
+        [Test]
+        public void EntryCutscene_DelaysFinaleBoard_ThenOpensItAfterPlayback()
+        {
+            var data = LoadCase(5);
+            Assert.NotNull(data);
+            Assert.IsFalse(data.hasInterrogation);
+            var core = Core.CoreRuntime.Ensure();
+            _objects.Add(core.gameObject);
+            core.Session.Reset();
+            core.Session.CurrentCase = 5;
+
+            var board = New<WeightedBoardController>("WeightedBoard");
+            _flow.weightedBoard = board;
+            var player = New<Cutscene.CutscenePlayerController>("CutscenePlayer");
+            _flow.cutscenePlayer = player;
+            _flow.entryCutscene = BuildWaitForInputCutscene();
+            _flow.Bind();
+
+            _flow.BeginCase(data);
+
+            Assert.IsTrue(player.IsPlaying);
+            Assert.IsFalse(board.IsOpen);
+
+            _flow.HandleCutsceneEnded();
+
+            Assert.IsTrue(board.IsOpen);
+            Assert.IsFalse(_interrogation.IsOpen);
+        }
+
+        [Test]
+        public void EntryCutscene_LatchesOncePerSave_SecondBeginCaseOpensBoardDirectly()
+        {
+            var data = LoadCase(5);
+            var core = Core.CoreRuntime.Ensure();
+            _objects.Add(core.gameObject);
+            core.Session.Reset();
+            core.Session.CurrentCase = 5;
+
+            var board = New<WeightedBoardController>("WeightedBoard");
+            _flow.weightedBoard = board;
+            var player = New<Cutscene.CutscenePlayerController>("CutscenePlayer");
+            _flow.cutscenePlayer = player;
+            _flow.entryCutscene = BuildWaitForInputCutscene();
+            _flow.Bind();
+
+            _flow.BeginCase(data);
+            Assert.IsTrue(player.IsPlaying);
+            _flow.HandleCutsceneEnded();
+            Assert.IsTrue(board.IsOpen);
+
+            player.Stop();
+            board.Close();
+            _flow.BeginCase(data);
+
+            Assert.IsFalse(player.IsPlaying);
+            Assert.IsTrue(board.IsOpen);
+        }
+
+        [Test]
+        public void EntryCutscene_Unassigned_OpensFinaleBoardDirectly()
+        {
+            var data = LoadCase(5);
+            var core = Core.CoreRuntime.Ensure();
+            _objects.Add(core.gameObject);
+            core.Session.Reset();
+            core.Session.CurrentCase = 5;
+
+            var board = New<WeightedBoardController>("WeightedBoard");
+            _flow.weightedBoard = board;
+            _flow.cutscenePlayer = New<Cutscene.CutscenePlayerController>("CutscenePlayer");
+            _flow.entryCutscene = null;
+            _flow.Bind();
+
+            _flow.BeginCase(data);
+
+            Assert.IsTrue(board.IsOpen);
+        }
+
+        [Test]
+        public void AudioCoordinator_PersistsChannelVolumes_AndDucksForCinematics()
+        {
+            var core = Core.CoreRuntime.Ensure();
+            _objects.Add(core.gameObject);
+            var audio = core.Audio;
+            Assert.NotNull(audio);
+
+            audio.SetMasterVolume(0.5f);
+            audio.SetMusicVolume(0.25f);
+            audio.SetSfxVolume(2f); // clamps to 1
+            Assert.AreEqual(0.5f, audio.MasterVolume);
+            Assert.AreEqual(0.25f, audio.MusicVolume);
+            Assert.AreEqual(1f, audio.SfxVolume);
+
+            audio.SetDucked(true);
+            Assert.IsTrue(audio.IsDucked);
+            audio.SetDucked(false);
+            Assert.IsFalse(audio.IsDucked);
+
+            audio.PlaySfx(null); // null-safe no-op
+
+            audio.SetMasterVolume(1f);
+            audio.SetMusicVolume(1f);
+            audio.SetSfxVolume(1f);
         }
     }
 }

@@ -2592,6 +2592,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.CameraFollow2D
   target: {fileID: 1351887598}
   smoothTime: 0.25
+  useBounds: 1
+  boundsMin: {x: -8, y: -5}
+  boundsMax: {x: 8, y: 6}
+  insetByView: 1
 --- !u!20 &1447275831
 Camera:
   m_ObjectHideFlags: 0

@@ -154,7 +154,7 @@ The legacy `ScanController` still has its own 120-point focus and different zero
 6. Assign `GameFlow.endingCutscenes[1]`, `[2]`, `[3]` (index 0 unused). For GameFlow-owned endings, leave each `CutsceneData.nextSceneName` empty so `CutsceneEnded` can drive case completion. A cutscene with its own destination owns travel instead.
 7. Missing ending media currently completes the ending immediately. With a live Core, case completion routes to Title; without Core, no GSM travel occurs. Do not mistake either fallback for verified cinematic playback.
 
-Controls include **E** for interaction/dialogue/cutscene advance, **G** for journal, and holding **Esc** to skip a cinematic. **H is investigation/finale-only**, not a hub shortcut. WeightedBoardController guards opening and gameplay mutations through its scene-owned permission callback; the retained hub BoardHotkey rejects Mode2D. The dedicated Case 5 host explicitly authorizes its board. Cases with evidenceGraph cannot fall back to legacy slot gameplay on a missing/invalid weighted panel. Full modal input/cursor/pause coordination remains a separate completion task.
+Controls include **E** for interaction/dialogue/cutscene advance, **G** for journal, and holding **Esc** to skip a cinematic. **H is investigation/finale-only**, not a hub shortcut. WeightedBoardController guards opening and gameplay mutations through its scene-owned permission callback; the retained hub BoardHotkey rejects Mode2D. The dedicated Case 5 host explicitly authorizes its board. Cases with evidenceGraph cannot fall back to legacy slot gameplay on a missing/invalid weighted panel. Modal coordination runs through `HubContext.UiBlocked`/the scene composer's `CanOpen`: journal, board, interrogation, resolution, dialogue, cutscene, travel and rest all gate each other, and the journal registers itself as a blocker while open. Play-mode verification of cursor/pause behavior across delivered scenes is still outstanding.
 
 ## Content and asset authoring
 
@@ -176,7 +176,7 @@ Controls include **E** for interaction/dialogue/cutscene advance, **G** for jour
 | Dialogue portraits | `Assets/Art/Portraits`; assign dialogue data references |
 | Cutscene stills/video | `Assets/Art/Cutscenes`; assign cutscene shot data |
 | UI textures | `Assets/Art/UI`; assign the relevant UI layout/component |
-| Music, effects, voice | `Assets/Audio/Music`, `SFX`, `VO`; playback wiring remains a separate integration task |
+| Music, effects, voice | `Assets/Audio/Music`, `SFX`, `VO`; play through `core.Audio` (volumes in PlayerPrefs, music/ambience crossfades, cinematic ducking) |
 
 `VisualProfile` holds sprite, tint/material, offset, scale, sorting and optional animator controller. `EntityVisual` applies it and keeps the blockout quad when no sprite exists. Optional animator parameters are `Moving` (Bool), `Speed`, `MoveX`, `MoveY` (Float).
 
@@ -240,12 +240,11 @@ Provenance uses the existing sealed Session flags: `Investigation.Source.Real.<c
 
 Before calling the current 2D vertical slice complete, verify and finish:
 
-- Ending `CutsceneData` assignments per case on `GameFlow.endingCutscenes`; without them, endings complete immediately with no cinematic.
-- Board lifecycle/late-evidence refresh, journal flag/log refresh and the journal's `MarkedForBoard` action consumer.
+- Ending `CutsceneData` assignments per case on `GameFlow.endingCutscenes`, plus the Case 5 `entryCutscene` ("Echoes of the Past"); without them, endings complete immediately and the finale board opens directly, with no cinematic.
 - Per-case grading and checkpoint semantics across all delivered scene transitions, including strained-scan state boundaries and mistrial replay.
 - Save replacement/recovery behavior on target filesystems; the unsupported-Replace fallback is not yet proven.
-- Assigned ending/opening media, portraits, animation, final UI art and audio playback.
-- End-to-end Play testing, modal input coordination and merged-scene inspection.
+- Assigned ending/opening media, portraits, animation, final UI art and audio clips for `core.Audio` playback (music/ambience/SFX sources exist; authored clips do not).
+- End-to-end Play testing and merged-scene inspection.
 
 Out of scope for the current 2D pass: replacement Zone B scenes and other non-2D integration. Do not create throwaway 2D investigation scenes; `investigation.2`-`investigation.4` stay unresolved and their gates warn/refuse cleanly.
 

@@ -177,6 +177,11 @@ namespace Morsoul.Hub.Editor
             camera.orthographicSize = 5f;
             var follow = cameraGo.AddComponent<CameraFollow2D>();
             follow.target = target;
+            // Default bounds cover the authored hub layouts (~x [-7,7], y [-3,5]);
+            // designers tighten them per scene as levels grow.
+            follow.useBounds = true;
+            follow.boundsMin = new Vector2(-8f, -5f);
+            follow.boundsMax = new Vector2(8f, 6f);
             return follow;
         }
 

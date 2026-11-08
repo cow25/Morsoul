@@ -113,6 +113,7 @@ namespace Morsoul.Cutscene
             }
             _isPlaying = true;
             _skipHold = 0f;
+            CoreRuntime.Instance?.Audio?.SetDucked(true);
             if (_root != null) _root.style.display = DisplayStyle.Flex;
             if (manageCursor)
             {
@@ -200,6 +201,7 @@ namespace Morsoul.Cutscene
             _isPlaying = false;
             _shotIndex = -1;
             _skipHold = 0f;
+            CoreRuntime.Instance?.Audio?.SetDucked(false);
             StopShotRoutine();
             StopVideo();
             HideCaption();

@@ -82,7 +82,12 @@ namespace Morsoul.Flow
             foreach (var clue in additions)
             {
                 session.RegisterClue(clue);
-                if (clue.type == ClueType.Latent) session.RegisterLatentClue(clue);
+                if (clue.type == ClueType.Latent)
+                {
+                    session.RegisterLatentClue(clue);
+                    if (!string.IsNullOrEmpty(data.uneaseFlagKey))
+                        session.SetFlag(data.uneaseFlagKey, false);
+                }
             }
             var ids = additions.Select(c => c.id).ToArray();
             if (result.DeductionAccepted || ids.Length > 0)

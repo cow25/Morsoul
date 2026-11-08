@@ -35,6 +35,20 @@ namespace Morsoul.Core
         /// </summary>
         public SessionState Session { get; } = new SessionState();
 
+        /// <summary>
+        /// Shared audio coordinator — auto-attached in Awake alongside the
+        /// GSM; the accessor lazily attaches too because EditMode callers can
+        /// reach this before Awake runs.
+        /// </summary>
+        public AudioCoordinator Audio
+        {
+            get
+            {
+                var audio = GetComponent<AudioCoordinator>();
+                return audio != null ? audio : gameObject.AddComponent<AudioCoordinator>();
+            }
+        }
+
         public bool DevelopmentInvestigationFallbackEnabled { get; set; }
         public string InvestigationStatusMessage { get; set; } = "";
         public System.Func<string, InvestigationEntryResult> InvestigationEntryHandler { get; set; }
@@ -112,9 +126,11 @@ namespace Morsoul.Core
             DontDestroyOnLoad(gameObject);
             // Auto-attach the scene-flow driver so CoreRuntime.Ensure()
             // always yields the full stack (bus + save + focus + session +
-            // GSM) for any publisher that boots Core lazily.
+            // GSM + audio) for any publisher that boots Core lazily.
             if (GetComponent<GameStateManager>() == null)
                 gameObject.AddComponent<GameStateManager>();
+            if (GetComponent<AudioCoordinator>() == null)
+                gameObject.AddComponent<AudioCoordinator>();
         }
 
         void OnDestroy()

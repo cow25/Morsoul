@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Morsoul.Board;
 using Morsoul.Cutscene;
 using Morsoul.Data;
@@ -36,6 +37,10 @@ namespace Morsoul.Flow
         [Header("Endings")]
         [Tooltip("Cutscene per ending (index = ending number, 1-3); played before case completion routes.")]
         public CutsceneData[] endingCutscenes = new CutsceneData[4];
+        [Tooltip("Optional. Played once per save when a case without an interrogation " +
+                 "opens (e.g. the Case 5 'Echoes of the Past' entry cinematic); the " +
+                 "board waits for it to finish. Unassigned opens the board directly.")]
+        public CutsceneData entryCutscene;
 
         [Header("Panel controllers")]
         public BoardController board;
@@ -70,6 +75,7 @@ namespace Morsoul.Flow
         bool _endingRequested;
         bool _endingCompleted;
         bool _mistrialHandled;
+        bool _entryCutscenePending;
         int _lastEnding;
         int _reportedStrikes;
 
@@ -226,6 +232,7 @@ namespace Morsoul.Flow
             _endingRequested = false;
             _endingCompleted = false;
             _mistrialHandled = false;
+            _entryCutscenePending = false;
             _lastEnding = 0;
             _reportedStrikes = _session.StrikesLost;
             _collectedClues.Clear();
@@ -300,6 +307,23 @@ namespace Morsoul.Flow
             // solved in a hub/investigation scene before CaseLoop opened, go
             // straight to the unlocked interrogation instead of dead-ending
             // on an already-solved board.
+            // A once-per-save entry cutscene (the Case 5 "Echoes of the Past"
+            // cinematic) delays the board until it finishes.
+            if (entryCutscene != null && cutscenePlayer != null &&
+                !caseData.hasInterrogation && core != null &&
+                !core.HasFlag(EntryCutsceneFlagFor(caseData.caseId)))
+            {
+                core.SetFlag(EntryCutsceneFlagFor(caseData.caseId));
+                _entryCutscenePending = true;
+                cutscenePlayer.Play(entryCutscene);
+                return;
+            }
+            OpenCaseBoard(weighted, caseData);
+        }
+
+        void OpenCaseBoard(bool weighted, CaseData caseData)
+        {
+            if (caseData == null) return;
             bool solvedWeighted = weighted && weightedBoard.Session != null &&
                                   weightedBoard.Session.State.BoardSolved;
             if (solvedWeighted && caseData.hasInterrogation &&
@@ -308,6 +332,9 @@ namespace Morsoul.Flow
             else if (weighted) weightedBoard.Open();
             else board?.Open();
         }
+
+        /// <summary>Session flag latching the once-per-save entry cutscene.</summary>
+        static string EntryCutsceneFlagFor(int caseId) => $"Case{caseId}_EntryCutsceneSeen";
 
         /// <summary>
         /// M1 clue-rack rule: the case's authored preloadedClues when present
@@ -384,9 +411,14 @@ namespace Morsoul.Flow
             if (interrogation == null || data == null) return;
             int caseId = _session != null ? _session.Case.caseId
                 : activeCase != null ? activeCase.caseId : 0;
-            // Guided first phase for the tutorial case; Emotion Echo auras from case 3 on.
+            // Guided first phase for the tutorial case; Emotion Echo auras
+            // follow the actual unlocked tool, not the case index alone.
+            var sessionTools = Core.CoreRuntime.Instance != null
+                ? Core.CoreRuntime.Instance.Session.Tools : null;
+            bool echo = sessionTools != null
+                ? sessionTools.Contains(Tool.EmotionEcho) : caseId >= 3;
             interrogation.SetInterrogation(data, BuildEvidence(),
-                guided: caseId == 1, echo: caseId >= 3);
+                guided: caseId == 1, echo: echo);
             _mistrialHandled = false;
             board?.Close();
             weightedBoard?.Close();
@@ -660,17 +692,37 @@ namespace Morsoul.Flow
                 session?.RegisterLatentClue(clue);
                 if (activeCase != null && clue.caseId == activeCase.caseId)
                     latentLogCollected = true;
+                // Heeding the banner resolves it: clear the owning case's
+                // unease flag so the journal's dissonance entry disappears
+                // once the log is recovered (including backtrack revisits).
+                if (session != null)
+                {
+                    var owner = Core.CoreRuntime.Instance.ResolveCase(clue.caseId);
+                    if (owner != null && !string.IsNullOrEmpty(owner.uneaseFlagKey))
+                        session.SetFlag(owner.uneaseFlagKey, false);
+                }
             }
             ClueRegistered?.Invoke(clue);
         }
 
         /// <summary>
         /// Ending cutscene finished: completes the case so the GSM routes to
-        /// Title. Ignores cutscene ends unrelated to a requested ending.
+        /// Title; entry cutscene finished: opens the waiting case board.
+        /// Ignores cutscene ends unrelated to either.
         /// </summary>
         public void HandleCutsceneEnded()
         {
-            if (_endingRequested) CompleteEnding();
+            if (_endingRequested)
+            {
+                CompleteEnding();
+                return;
+            }
+            if (_entryCutscenePending)
+            {
+                _entryCutscenePending = false;
+                bool weighted = weightedBoard != null && weightedBoard.Session != null;
+                OpenCaseBoard(weighted, _session != null ? _session.Case : activeCase);
+            }
         }
 
         // --- Internals ------------------------------------------------------------
@@ -709,19 +761,30 @@ namespace Morsoul.Flow
                 _session?.RecordStrainedScan();
                 session?.MarkStrainedScan(caseData.caseId);
             }
-            // Unease fires when the case hides a latent log the player never found.
-            bool unease = caseData.latentLog != null && !latentLogCollected;
             Grade grade = _session != null ? _session.ComputeGrade() : Grade.Ungraded;
+            bool unease;
             if (session != null)
             {
                 session.SetGrade(caseData.caseId, grade);
                 if (caseData.caseId == 4) session.SetFlag("Case4_BrokkFreed");
                 session.SetFlag(Core.SessionState.LatentLogFlagFor(caseData.caseId),
                     latentLogCollected);
+                // Evaluate after the resolution-side flags land so unlocks
+                // granted by this confession (Case4_BrokkFreed) count as
+                // reachable — GDD §2.4 fires the banner only for evidence the
+                // player's current tools could actually reach.
+                unease = caseData.latentLog != null && !latentLogCollected &&
+                         LatentLogReachable(caseData, session);
                 if (!string.IsNullOrEmpty(caseData.uneaseFlagKey))
                     session.SetFlag(caseData.uneaseFlagKey, unease);
                 session.LatentLogCollected = session.LatentLogCollected || latentLogCollected;
                 if (board != null) session.MergeBoardEdges(board.ValidatedNodeIds);
+            }
+            else
+            {
+                // No session to evaluate eligibility against — standalone
+                // scenes/tests keep the legacy "missing log" semantics.
+                unease = caseData.latentLog != null && !latentLogCollected;
             }
             resolution?.Show(caseData.title,
                 grade,
@@ -729,6 +792,22 @@ namespace Morsoul.Flow
                 caseData.latentLog != null ? caseData.latentLog.location : null,
                 null);
             interrogation?.Close();
+        }
+
+        /// <summary>
+        /// GDD §2.4 reachability for the Unease banner: the case's Latent clue
+        /// must pass the shared acquisition rules (required flag, required
+        /// tool, availability window, combined-tool methods) against the live
+        /// session. Returns false when the case has no Latent clue to check.
+        /// </summary>
+        static bool LatentLogReachable(CaseData caseData, Core.SessionState session)
+        {
+            var clue = caseData.clues != null
+                ? System.Array.Find(caseData.clues,
+                    c => c != null && c.type == ClueType.Latent)
+                : null;
+            if (clue == null) return false;
+            return Core.ClueAcquisition.CanAcquire(clue, session, caseData.latentLog, out _);
         }
 
         /// <summary>
