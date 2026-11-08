@@ -1691,10 +1691,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.PrologueExitInteractable
   promptText: '[E] Leave the ruins'
   promptIndicator: {fileID: 1357293390}
-  targetScene: Hub_LowerMarket
+  targetScene: Prologue_Wilderness
   checkpointReason: PrologueExit
   offerTravelMenu: 0
-  nextCaseId: 1
+  routeKey: prologue.wilderness
   boardCaseId: 0
   lockedDialogue: {fileID: 11400000, guid: e15f758450671b94ca8391215f94a051, type: 2}
 --- !u!61 &1631223066

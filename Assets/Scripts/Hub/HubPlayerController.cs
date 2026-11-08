@@ -61,13 +61,18 @@ namespace Morsoul.Hub
                    && context.dialogue.LastEndFrame == Time.frameCount
                 || context != null && context.travelMenu != null
                    && context.travelMenu.LastCloseFrame == Time.frameCount;
-            MoveInput = dialoguePlaying ? Vector2.zero : ReadMoveInput(keyboard);
+            var session = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session : null;
+            bool cutsceneActive = session != null && !string.IsNullOrEmpty(session.ActiveCutsceneId);
+            MoveInput = dialoguePlaying || cutsceneActive
+                ? Vector2.zero
+                : ReadMoveInput(keyboard);
             if (!MoveInput.Equals(Vector2.zero)) _facing = FacingFrom(MoveInput);
             SyncPlayerContext();
 
             UpdatePromptTarget();
 
-            if (!dialoguePlaying && keyboard.eKey.wasPressedThisFrame && CurrentTarget != null)
+            if (!dialoguePlaying && !cutsceneActive && keyboard.eKey.wasPressedThisFrame &&
+                CurrentTarget != null)
                 CurrentTarget.Interact(context);
         }
 

@@ -23,6 +23,12 @@ namespace Morsoul.Core
     {
         /// <summary>Reserved flag key carrying GameFlow's latentLogCollected.</summary>
         public const string LatentLogFlag = "Session.LatentLogCollected";
+        /// <summary>Dedicated post-ruins 2D approach; not the Case 3 Whisperwood hub.</summary>
+        public const string PrologueWildernessSceneId = "Prologue_Wilderness";
+        /// <summary>Active cutscene id used while the in-world Eliza introduction runs.</summary>
+        public const string ElizaIntroCutsceneId = "CS00_ELIZA_INTRO";
+        /// <summary>Checkpoint id captured before the first-contact trigger mutates state.</summary>
+        public const string ElizaPreContactCheckpointId = "case00_eliza_precontact";
 
         public string PlayerName = "";
         public int CurrentCase;
@@ -86,6 +92,25 @@ namespace Morsoul.Core
         public void SetActiveInterrogation(ActiveInterrogationSave state)
         {
             ActiveInterrogation = state;
+        }
+
+        /// <summary>
+        /// Rewinds an interrupted Eliza first-contact save to its pre-trigger
+        /// state. The player resumes west of the trigger so the scene can fire
+        /// once rather than being skipped or resumed halfway through.
+        /// </summary>
+        public bool ResumeInterruptedElizaIntro()
+        {
+            if (ActiveCutsceneId != ElizaIntroCutsceneId ||
+                ElizaIntroSeen || !ElizaIntroTriggered)
+                return false;
+            ElizaIntroTriggered = false;
+            EasternRouteUnlocked = false;
+            PrologueExitLoaded = true;
+            SetCutsceneContext("", "");
+            SetPlayerContext(SceneMode.Mode2D, PrologueWildernessSceneId,
+                new Vector3(6f, 0f, 0f), PlayerFacing2D.Right);
+            return true;
         }
 
         /// <summary>Records the persisted interrogation strike total for a graded case.</summary>

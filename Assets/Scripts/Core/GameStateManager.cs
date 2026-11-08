@@ -124,6 +124,8 @@ namespace Morsoul.Core
             CurrentSave = state;
             _runStateLoaded = true;
             _core.Session.RestoreFrom(state, _core.ResolveClue);
+            if (_core.Session.ResumeInterruptedElizaIntro())
+                state.checkpointSceneName = SessionState.PrologueWildernessSceneId;
             bool strained = state.currentCase >= 1 && state.currentCase <= 4 &&
                             state.strainedScanUsedByCase != null &&
                             state.strainedScanUsedByCase.Count >= state.currentCase &&
@@ -286,6 +288,7 @@ namespace Morsoul.Core
             }
             Seed(RouteKeys.Title, "Title");
             Seed(RouteKeys.Opening, "Prologue_2D"); // 2D stand-in until PrologueRuins ships
+            Seed(RouteKeys.PrologueWilderness, SessionState.PrologueWildernessSceneId);
             Seed(RouteKeys.CaseLoop, "CaseLoop");
             Seed(RouteKeys.Investigation(1), "Investigation_01_Placeholder"); // vault stand-in
             Seed(RouteKeys.Hub(0), "Hub_LowerMarket");   // tutorial case shares the market hub

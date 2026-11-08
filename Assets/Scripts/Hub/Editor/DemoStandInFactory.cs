@@ -15,7 +15,9 @@ namespace Morsoul.Hub.Editor
     /// Builds the 2D demo stand-in scenes that let the campaign loop run while
     /// the 3D lane finishes the real environments:
     ///   - Prologue_2D: tutorial stand-in (five Case 0 clue inspections +
-    ///     weighted board + exit to the market hub).
+    ///     weighted board + exit to the wilderness approach).
+    ///   - Prologue_Wilderness: 2D first-contact approach owned by
+    ///     PrologueWildernessSceneBuilder.
     ///   - Investigation_01_Placeholder: vault stand-in (Case 1 physical clue
     ///     inspections + board + exit back to the market hub).
     /// Also patches Hub_LowerMarket: VaultGate targets the placeholder vault
@@ -27,6 +29,7 @@ namespace Morsoul.Hub.Editor
     public static class DemoStandInFactory
     {
         const string PrologueScenePath = "Assets/Scenes/Prologue_2D.unity";
+        const string PrologueWildernessScenePath = "Assets/Scenes/Prologue_Wilderness.unity";
         const string VaultScenePath = "Assets/Scenes/Investigation_01_Placeholder.unity";
         const string LowerMarketScenePath = "Assets/Scenes/Hub_LowerMarket.unity";
         const string PanelSettingsPath = "Assets/UI Toolkit/MainPanelSettings.asset";
@@ -37,6 +40,7 @@ namespace Morsoul.Hub.Editor
         public static void BuildAll()
         {
             CreatePrologue();
+            PrologueWildernessSceneBuilder.CreateOrUpdate();
             CreateVaultPlaceholder();
             PatchLowerMarket();
             RegisterBuildScenes();
@@ -68,16 +72,16 @@ namespace Morsoul.Hub.Editor
             Inspection("RustedPipe",  new Color(0.55f, 0.35f, 0.2f), new Vector3(4f, 1f, 0f),
                 "Assets/Data/Cases/Case00/RH1_00.asset");
 
-            // Exit to Asterveil: gated on the solved tutorial board, then
-            // advances CurrentCase to 1 so the market's CaseDoor begins the
-            // vault case.
+            // Exit to the wilderness approach: gated on the solved tutorial
+            // board. The separate first-contact sequence owns completion and
+            // the Case 1 advance.
             HubSceneFactory.CreateInteractable("RuinsExit",
                 new Color(0.35f, 0.6f, 0.4f), new Vector3(6f, 0f, 0f),
                 out PrologueExitInteractable exit);
             exit.promptText = "[E] Leave the ruins";
             exit.checkpointReason = "PrologueExit";
-            exit.targetScene = MarketSceneName;
-            exit.nextCaseId = 1;
+            exit.targetScene = "Prologue_Wilderness";
+            exit.routeKey = "prologue.wilderness";
             exit.boardCaseId = 0;
             exit.lockedDialogue = EnsurePrologueLockedDialogue();
 
@@ -241,6 +245,7 @@ namespace Morsoul.Hub.Editor
                 list.Add(new EditorBuildSettingsScene(path, true));
             }
             Add(PrologueScenePath);
+            Add(PrologueWildernessScenePath);
             Add(VaultScenePath);
             EditorBuildSettings.scenes = list.ToArray();
         }

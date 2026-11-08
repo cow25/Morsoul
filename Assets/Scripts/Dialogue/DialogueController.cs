@@ -157,6 +157,28 @@ namespace Morsoul.Dialogue
             }
         }
 
+        /// <summary>
+        /// Shows one scripted line without a DialogueRunner. Timed in-world
+        /// sequences use this so the normal dialogue UI still blocks input but
+        /// no player advance is required. Hide it with <see cref="Stop"/>.
+        /// </summary>
+        public void ShowStandaloneLine(string speakerName, string text)
+        {
+            StopRunner();
+            _isPlaying = true;
+            if (_root != null) _root.style.display = DisplayStyle.Flex;
+            if (manageCursor)
+            {
+                UnityEngine.Cursor.lockState = CursorLockMode.None;
+                UnityEngine.Cursor.visible = true;
+            }
+            RenderNode(new DialogueNodeData
+            {
+                speakerName = speakerName,
+                text = text,
+            });
+        }
+
         void StopRunner()
         {
             if (_runner == null) return;
@@ -198,12 +220,17 @@ namespace Morsoul.Dialogue
 
         void RenderNode(DialogueNodeData node)
         {
-            if (node == null || _runner == null) return;
+            if (node == null) return;
             if (_speakerLabel != null) _speakerLabel.text = node.speakerName ?? "";
-            if (_dialogueText != null) _dialogueText.text = _runner.SubstituteName(node.text);
+            if (_dialogueText != null)
+            {
+                _dialogueText.text = _runner != null
+                    ? _runner.SubstituteName(node.text)
+                    : (node.text ?? "").Replace(DialogueRunner.PlayerNameToken, playerName ?? "");
+            }
             RenderPortrait(node);
 
-            var options = _runner.CurrentOptions;
+            var options = _runner != null ? _runner.CurrentOptions : null;
             int count = options != null ? options.Count : 0;
             for (int i = 0; i < _optionButtons.Length; i++)
             {
@@ -216,7 +243,9 @@ namespace Morsoul.Dialogue
             if (_optionsContainer != null)
                 _optionsContainer.style.display = count > 0 ? DisplayStyle.Flex : DisplayStyle.None;
             if (_continueHint != null)
-                _continueHint.style.display = count > 0 ? DisplayStyle.None : DisplayStyle.Flex;
+                _continueHint.style.display = _runner != null && count == 0
+                    ? DisplayStyle.Flex
+                    : DisplayStyle.None;
         }
 
         void RenderPortrait(DialogueNodeData node)

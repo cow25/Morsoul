@@ -91,6 +91,7 @@ GameFlow -> Board -> Interrogation -> Resolution
 - Save files are sealed `saveVersion` 3 records. Every persisted field is represented in `SaveCanonicalMap`; version-2 sealed files verify against their original canonical map before migration, and version-1 signature files migrate only from explicit completed-case flags.
 - Regular `WriteCheckpoint` calls advance the monotonic `lastTrustedUtc` watermark but do not claim a graceful close. `OnApplicationQuit` calls `WriteCloseCheckpoint`, which writes `closedAtUtc`; Continue applies trusted offline recovery, clears the close marker and immediately persists the consumed interval so it cannot be credited twice.
 - The 2D hub path saves and restores player position/facing. If a checkpoint scene is missing, Continue falls back to the case hub and clears the old pose rather than applying it to the wrong scene.
+- An interrupted `CS00_ELIZA_INTRO` save is rewound on Continue to the `case00_eliza_precontact` state: the player resumes at `(6, 0)` in `Prologue_Wilderness`, `activeCutsceneId` clears, and the trigger can fire once instead of skipping or resuming halfway through.
 
 ### Scene routing
 
@@ -103,6 +104,7 @@ Routes are configured through `GameStateManager.Ensure().routes.Set(key, actualS
 | `hub.0`, `hub.1` | `Hub_LowerMarket` |
 | `hub.3` | `Hub_Wilderness` |
 | `opening` | `Prologue_2D` (2D tutorial stand-in; re-point to `PrologueRuins` when the 3D prologue ships) |
+| `prologue.wilderness` | `Prologue_Wilderness` (post-gate 2D approach and Eliza first contact) |
 | `investigation.1` | `Investigation_01_Placeholder` (2D vault stand-in; swap when the 3D vault ships) |
 | `investigation.<caseId>` (other) | Not seeded; register only delivered scenes |
 
@@ -120,6 +122,7 @@ Read [the full contract](AGENTS.md#3d-integration-contract) before adapting the 
 6. Use `Session.SetFlag` / `HasFlag` for persistent story state. Already-bound scene flag/journal views may need refreshing; a Session write alone is not a UI binding.
 7. For a checkpoint without travel, publish `CheckpointRequestedEvent { Reason = "Investigation" }` on `core.Bus`. For travel, publish `SceneLoadRequestedEvent { SceneName = actualSceneName }`. Do not also call `SceneManager.LoadScene` for the same request.
 8. If adding a 3D asmdef later, reference only the Morsoul assemblies it uses. Coordinate the migration and preserve script GUIDs.
+9. The 3D Prologue gate should attach `Morsoul.Hub.PrologueGateSeam` to its owned trigger/interaction. It requires the Case 0 board solved plus `PrologueGateUnlocked`, stamps the robe flag during the exit interaction, validates `Prologue_Wilderness`, then uses the GSM checkpoint/load path. The separate Eliza trigger owns completion and Case 1 advancement.
 
 The legacy `ScanController` still has its own 120-point focus and different zero-focus behavior. `DiaryManager` stores legacy `ClueNode` objects. Their conversion is a 3D-owner integration task, not evidence that the shared contracts are already in use.
 
@@ -129,6 +132,7 @@ The legacy `ScanController` still has its own 120-point focus and different zero
 
 - **Title:** normal New Game / Continue entry point.
 - **Hub_LowerMarket / Hub_Wilderness:** generated 2D gameplay scenes with optional additive art overlays.
+- **Prologue_Wilderness:** dedicated 2D approach loaded by the Prologue gate. It restores the player at `(-8, 0)`, owns the separate first-contact trigger at `(8, 0)`, and completes the Prologue only after the in-world Eliza sequence.
 - **PrologueRuins:** 3D-owned scene. Do not regenerate or restructure it from the 2D lane.
 - **CaseLoop:** shared case-loop scene. With no `activeCase` assigned, its `GameFlow` resolves `Session.CurrentCase` through `Assets/Resources/CaseDatabase.asset` at Play time; assign `activeCase` only to pin one case for standalone testing. Hub scenes have a "CaseDoor" interactable (`[E] Begin Case`) that travels here through the guarded GSM path.
 
@@ -209,17 +213,19 @@ Never run a second Unity process against an open project. Wait for Unity batch s
 - Board validation > checkpoint > reload > premises and weighted-board histories restored. Test actual Unity lifecycle order, not only handler calls.
 - Interrogation mistakes, board errors, wrong conclusions and hint tiers affect grade; mistrial waits for Retry confirmation and retains its penalty after reload.
 - Move in a hub > checkpoint > quit > Continue > position/facing restore; missing checkpoint scenes fall back to the case hub without applying the old pose.
+- Prologue acceptance: solve Case 0 > unlock/cross the gate > restore at `(-8, 0)` > walk into the Eliza trigger at `(8, 0)` > interrupt and Continue to verify the pre-contact resume > finish and verify `ElizaIntroSeen`, `EasternRouteUnlocked`, `PrologueCompleted`, Case 1 and the `Hub_LowerMarket` route.
 - Graceful quit > reopen > Continue > offline Focus recovery applies once; a backwards clock grants zero without negative time.
 - Collect logs across scenes > verify Session count and journal display > test each ending with real playback and return to Title.
 - Reopen hubs with profiles/art overlays; rerun installer on a test copy and confirm custom assignments survive.
 - Inspect scenes after a real 2D/3D branch merge and verify the active Build Profile.
 
-The last recorded automated run during the Phase 3 work was **304 passed, 0 failed**. That is historical evidence, not a guarantee for later edits and not a full Play-test result.
+The last recorded automated run during the Phase 4 work was **308 passed, 0 failed**. That is historical evidence, not a guarantee for later edits and not a full Play-test result.
 
 ## Remaining integration work
 
 Before calling the campaign complete, verify and finish:
 
+- Attach `PrologueGateSeam` inside the 3D-owned `PrologueRuins` scene and finish its robe/key/gate interaction; the adapter is delivered but the 3D scene itself was intentionally left untouched.
 - Delivered 3D investigation scenes, their `investigation.<caseId>` routes and build-profile entries, plus hub routes for cases 2, 4 and 5.
 - Ending `CutsceneData` assignments per case on `GameFlow.endingCutscenes`; without them, endings complete immediately with no cinematic.
 - 3D prototype Focus/clue migration through the shared APIs.

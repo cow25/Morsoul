@@ -38,5 +38,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Hub_IronHollow.unity
     guid: 4af6fb0c41aa51c45a713dc1816015ea
+  - enabled: 1
+    path: Assets/Scenes/Prologue_Wilderness.unity
+    guid: 00cbdb49f4f722249b57c077e0216a9c
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
