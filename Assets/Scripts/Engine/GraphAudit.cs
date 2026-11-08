@@ -17,10 +17,10 @@ namespace Morsoul.Engine
     ///
     /// Reported per conclusion: how many subsets unlock it and the minimal
     /// unlocking sets (the antichain — boards where removing any one link
-    /// drops the unlock). For the complete conclusion, any minimal set that
-    /// does not contain the full S* is a design error: a shortcut board the
-    /// author did not intend. The spec asks for exactly one unlocking board,
-    /// so a count other than one is a warning for the designer to weigh.
+    /// drops the unlock). For the complete conclusion, S* must be the only
+    /// minimal set: any minimal set missing part of S* is a shortcut design
+    /// error, and extra authored links are permitted supersets but remain
+    /// progression errors when drawn.
     /// </summary>
     public static class GraphAudit
     {
@@ -100,7 +100,8 @@ namespace Morsoul.Engine
                 });
 
                 foreach (var c in graph.Conclusions)
-                    if (DeductionEngine.IsConclusionUnlocked(graph, c, cert.SupportByConclusion[c.id]))
+                    if (DeductionEngine.IsConclusionUnlocked(graph, c,
+                            cert.SupportByConclusion[c.id], links))
                         unlockingMasks[c.id].Add(mask);
             }
 
@@ -169,11 +170,11 @@ namespace Morsoul.Engine
                     $"ERROR complete conclusion '{complete.ConclusionId}' has unintended " +
                     "unlock path(s) missing part of S*: " + string.Join("; ", shortcuts));
             }
-            if (complete.UnlockingSubsetCount != 1)
+            if (complete.MinimalUnlockingSets.Count != 1)
                 report.Findings.Add(
-                    $"WARN complete conclusion '{complete.ConclusionId}' is unlocked by " +
-                    $"{complete.UnlockingSubsetCount} of {report.TotalSubsets} subsets; " +
-                    "User Story 2 expects exactly one unlocking board.");
+                    $"WARN complete conclusion '{complete.ConclusionId}' has " +
+                    $"{complete.MinimalUnlockingSets.Count} minimal unlocking sets; " +
+                    "User Story 2 expects S* to be the only minimal unlock.");
         }
 
         static string FormatSet(List<DirectedEdge> set) =>

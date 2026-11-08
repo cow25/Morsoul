@@ -28,7 +28,15 @@ namespace Morsoul.Hub
         /// <summary>Shows/hides the assigned prompt indicator, if any.</summary>
         public void SetPromptVisible(bool visible)
         {
-            if (promptIndicator != null && promptIndicator.activeSelf != visible)
+            if (promptIndicator == null) return;
+            // Text prompts (TMP labels) mirror promptText whenever shown, so
+            // installers only need to assign promptText once.
+            if (visible)
+            {
+                var label = promptIndicator.GetComponent<InteractableLabel>();
+                if (label != null && label.text != promptText) label.text = promptText;
+            }
+            if (promptIndicator.activeSelf != visible)
                 promptIndicator.SetActive(visible);
         }
 

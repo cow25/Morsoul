@@ -1,0 +1,29 @@
+{
+    "name": "Morsoul.Dev.Editor",
+    "rootNamespace": "Morsoul.Dev.Editor",
+    "references": [
+        "Morsoul.Dev",
+        "Morsoul.Core",
+        "Morsoul.Data",
+        "Morsoul.Data.Editor",
+        "Morsoul.Dialogue",
+        "Morsoul.Dialogue.Editor",
+        "Morsoul.Hub",
+        "Morsoul.Hub.Editor",
+        "Morsoul.Flow",
+        "Morsoul.Flow.Editor",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

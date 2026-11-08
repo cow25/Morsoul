@@ -1,0 +1,83 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad6b4272890c70c4eb3d3dfe4810ac24, type: 3}
+  m_Name: D_Accord_02
+  m_EditorClassIdentifier: Morsoul.Dialogue::Morsoul.Dialogue.DialogueData
+  id: D_Accord_02
+  nodes:
+  - id: accord_prayer
+    speakerName: Accord
+    speakerPortrait: {fileID: 0}
+    text: (An elderly man with trembling hands, clutching a silver Saint Althea pendant tightly against his woolen vest) "Merciful Saint... preserve her... wash the evil from our bells..."
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: eliza_accord
+  - id: eliza_accord
+    speakerName: Eliza
+    speakerPortrait: {fileID: 0}
+    text: '"Accord. You were up in the tower when the chime broke."'
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: accord_startled
+  - id: accord_startled
+    speakerName: Accord
+    speakerPortrait: {fileID: 0}
+    text: "(Jumps, startled) \"Astra! Don't sneak up on an old man! Yes, I was at the ropes! Thirty years I\u2019ve rung the vespers, and never has the Great Bell groaned like that! That heathen boy... I saw him through the floor grate! He <color=#E5A93C>chanted from the tower base and bewitched the machinery! He must have!</color>\""
+    registersClue: {fileID: 11400000, guid: 15c4057c7a0727f4593df3a6fd25f174, type: 2}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: golem_acoustic
+  - id: golem_acoustic
+    speakerName: Golem
+    speakerPortrait: {fileID: 0}
+    text: '[ACOUSTIC SIMULATION: Sound dampening across vertical shaft]
+
+      "Inquiry: The belfry ceiling sits thirty-two meters above the nave floor. Direct vocal enchantment through solid granite arches would require twenty times the legal mana threshold. Did you observe any physical tampering with the bell itself?"'
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: accord_denial
+  - id: accord_denial
+    speakerName: Accord
+    speakerPortrait: {fileID: 0}
+    text: "(Sweating profusely, eyes darting toward the rafter door) \"Tampering?! No! Absolutely not! No one touches Saint Althea\u2019s Bell but me! I keep the tower door locked with my own brass ring! The curse came from the ground, I tell you!\""
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: eliza_key
+  - id: eliza_key
+    speakerName: Eliza
+    speakerPortrait: {fileID: 0}
+    text: '"If nobody else touched it, then you won''t mind if we take a look at the bell. Hand over the tower key, Accord."'
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: accord_key
+  - id: accord_key
+    speakerName: Accord
+    speakerPortrait: {fileID: 0}
+    text: "(Hesitates, trembling, then fumbles a heavy iron key off his belt) \"Take it! But beware the rafters... the devil\u2019s soot is still thick up there.\""
+    registersClue: {fileID: 0}
+    setsFlag: C2_BelfryKeyGranted
+    requiresFlag: 
+    options: []
+    nextNodeId: 
+  startNodeId: accord_prayer
+  portraits: []

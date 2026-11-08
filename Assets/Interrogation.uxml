@@ -1,6 +1,6 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
     <Style src="project://database/Assets/Interrogation.uss"/>
-    <ui:VisualElement name="Interrogation-Root" class="interrogation-root" style="position: absolute; width: 100%; height: 100%; display: none;">
+    <ui:VisualElement name="Interrogation-Root" class="interrogation-root" style="position: absolute; width: 100%; height: 100%; display: none;" picking-mode="Ignore">
         <ui:VisualElement name="Backdrop" class="interrogation-backdrop"/>
         <ui:VisualElement name="InterrogationPanel" class="interrogation-panel" style="position: absolute; top: 6%; left: 12%; width: 76%; height: 88%;">
             <ui:VisualElement name="HeaderRow" style="flex-direction: row; align-items: center; margin-bottom: 10px; flex-shrink: 0;">

@@ -1,0 +1,74 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad6b4272890c70c4eb3d3dfe4810ac24, type: 3}
+  m_Name: D_Vane_03
+  m_EditorClassIdentifier: Morsoul.Dialogue::Morsoul.Dialogue.DialogueData
+  id: D_Vane_03
+  nodes:
+  - id: vane_greeting
+    speakerName: Vane
+    speakerPortrait: {fileID: 0}
+    text: (Polite, clean-shaven man in high-collared scholarly robes, calmly examining a specimen vial of murky gray fluid) "Greetings, travelers. If you are seeking passage into the deeper grove, I strongly advise turning back. The fungal contamination within the hollow has agitated the local dryads beyond rational diplomacy."
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: eliza_guild
+  - id: eliza_guild
+    speakerName: Eliza
+    speakerPortrait: {fileID: 0}
+    text: (Eyes narrowed, resting a hand on her daggers) "We aren't travelers. Investigator's Guild. And you seem awfully composed for a man sitting fifty paces away from an ecological disaster."
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: vane_scholar
+  - id: vane_scholar
+    speakerName: Vane
+    speakerPortrait: {fileID: 0}
+    text: (Chuckles smoothly, adjusting iron-rimmed spectacles) "A man of science cannot afford hysterics, Lady Investigator. I am Master Vane, accredited fellow of the Provincial Botanical Directorate. I am conducting a <color=#E5A93C>sanctioned ecological survey to isolate this aggressive botanical rot before it spreads to agricultural timber.</color>"
+    registersClue: {fileID: 11400000, guid: f6cf69c5df6784446952989bd6f7d76e, type: 2}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: golem_scan
+  - id: golem_scan
+    speakerName: Golem
+    speakerPortrait: {fileID: 0}
+    text: '[OPTICAL SCAN: Subject heart rate: 58 BPM (Abnormally calm). No biological field sampling reagents present on workbench.]
+
+      "Observation: Your laboratory lacks sterile incubation baths, fungal culture mediums, or spore isolation glassware. Your equipment consists entirely of high-pressure fluid valves and empty heavy-duty iron transport drums."'
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: vane_hardens
+  - id: vane_hardens
+    speakerName: Vane
+    speakerPortrait: {fileID: 0}
+    text: (Expression hardens for an instant before smoothing into a patronizing smile) "Heavy-duty sampling requires heavy-duty storage, automaton. Ancient trees do not yield delicate sap. Now, if you will excuse me, my research permits grant me exclusive surveying rights inside the inner sanctum."
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: eliza_warrant
+  - id: eliza_warrant
+    speakerName: Eliza
+    speakerPortrait: {fileID: 0}
+    text: '"Your permit doesn''t supersede a Class-A Guild Warrant. Step aside, ''Scholar.'' {PlayerName}, scan the gate."'
+    registersClue: {fileID: 0}
+    setsFlag: C3_PerimeterSealGranted
+    requiresFlag: 
+    options: []
+    nextNodeId: 
+  startNodeId: vane_greeting
+  portraits: []

@@ -10,100 +10,110 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7590b3e69de7c7b4ea8aee02bf72dec3, type: 3}
-  m_Name: EVG_00_PROVISIONAL
+  m_Name: EVG_00
   m_EditorClassIdentifier: Morsoul.Data::Morsoul.Data.EvidenceGraphData
   caseId: 0
-  provisional: 1
-  designNote: 'PROVISIONAL pending design approval. S*: C1->C2 (overload = unpowered lockdown), C3->T1 (key calibrated by working sensors), C2->T1 (manual port is the only path). Support on T1 (calibration) only; RH1 pipe contradicts. Tutorial topology: every non-S* link touches the red herring.'
+  provisional: 0
+  designNote: Approved Case 0 weighted board. Manual bypass reasoning requires the complete S* chain; tutorial misfires use authored diagnostics without Focus or progression penalties.
+  tutorialRedHerringClueIds:
+  - RH1_00
+  tutorialRedHerringFeedback: The pipe is a lever, not a bypass. It cannot power or turn this lock.
+  tutorialReversedLinkFeedback: That arrow points backward. Follow the evidence toward the manual override.
+  tutorialGenericLinkFeedback: That connection is outside the intended tutorial chain.
+  tutorialLockedConclusionFeedback: The complete conclusion stays locked until the whole manual-bypass chain is drawn.
   clueIds:
+  - T1_00
   - C1_00
   - C2_00
   - C3_00
-  - T1_00
   - RH1_00
   reliabilities:
+  - clueId: T1_00
+    value: 0.9
   - clueId: C1_00
-    value: 1
+    value: 0.85
   - clueId: C2_00
-    value: 1
+    value: 0.95
   - clueId: C3_00
     value: 1
-  - clueId: T1_00
-    value: 0.85
   - clueId: RH1_00
-    value: 0.7
+    value: 0.35
   authoredClueEdges:
+  - sourceId: T1_00
+    targetId: C1_00
+    weight: 0.9
   - sourceId: C1_00
     targetId: C2_00
-    weight: 1
+    weight: 0.9
   - sourceId: C2_00
-    targetId: T1_00
-    weight: 0.5
-  - sourceId: C3_00
-    targetId: T1_00
-    weight: 0.5
-  - sourceId: RH1_00
-    targetId: C2_00
-    weight: 0.5
-  - sourceId: RH1_00
     targetId: C3_00
-    weight: 0.4
-  - sourceId: RH1_00
-    targetId: T1_00
-    weight: 0.1
+    weight: 0.9
+  - sourceId: T1_00
+    targetId: C3_00
+    weight: 0.8
+  - sourceId: T1_00
+    targetId: RH1_00
+    weight: 0.2
   solutionEdges:
+  - sourceId: T1_00
+    targetId: C1_00
   - sourceId: C1_00
     targetId: C2_00
   - sourceId: C2_00
-    targetId: T1_00
-  - sourceId: C3_00
-    targetId: T1_00
+    targetId: C3_00
+  - sourceId: T1_00
+    targetId: C3_00
   unlockDependencies:
-  - sourceId: C1_00
-    targetId: C2_00
-  - sourceId: C2_00
-    targetId: T1_00
-  - sourceId: C3_00
-    targetId: T1_00
+  - sourceId: T1_00
+    targetId: C1_00
   conclusions:
-  - id: H0_00
-    text: Force the sealed blast door open.
+  - id: CASE0_FORCE_BREACH
+    text: Force the door open with the pipe.
     tier: 0
+    submissionFeedback: The pipe is a lever, not a bypass. It cannot power or turn this lock.
     supportingEdges:
     - clueId: RH1_00
       weight: 0.5
-    - clueId: C2_00
-      weight: 0.2
-    contradictingEdges: []
-  - id: H1_00
-    text: The door is unpowered; something else must open it.
+    contradictingEdges:
+    - clueId: C1_00
+      weight: 0.6
+    - clueId: C3_00
+      weight: 0.7
+  - id: CASE0_UNPOWERED_LOCKDOWN
+    text: The door is unpowered, but nothing here opens it.
     tier: 1
+    submissionFeedback: The lock is unpowered, but that does not yet explain how the key releases it.
     supportingEdges:
     - clueId: C1_00
-      weight: 0.3
+      weight: 0.5
     - clueId: C2_00
-      weight: 0.4
-    contradictingEdges: []
-  - id: H2_00
-    text: 'Manual Override Escape: calibrate the ancient key into the manual port.'
-    tier: 2
-    supportingEdges:
-    - clueId: T1_00
-      weight: 1
+      weight: 0.6
     contradictingEdges:
     - clueId: RH1_00
-      weight: 1
-  startingWrongConclusionId: H0_00
-  completeConclusionId: H2_00
+      weight: 0.4
+  - id: CASE0_MANUAL_OVERRIDE
+    text: The ancient key can power the manual override.
+    tier: 2
+    submissionFeedback: ''
+    supportingEdges:
+    - clueId: T1_00
+      weight: 0.8
+    - clueId: C3_00
+      weight: 0.9
+    contradictingEdges:
+    - clueId: RH1_00
+      weight: 0.5
+  startingWrongConclusionId: CASE0_FORCE_BREACH
+  completeConclusionId: CASE0_MANUAL_OVERRIDE
   parameters:
     alpha: 0.85
-    contradictionWeight: 2
-    inventedLinkPenalty: 0.15
+    contradictionWeight: 0.8
+    inventedLinkPenalty: 0.1
     lowThreshold: 0.35
-    highThreshold: 0.8
-  cachedReferenceSupport: 0.35225058
+    highThreshold: 0.93
+  cachedReferenceSupport: 0.454547
   solutionTopologicalOrder:
+  - T1_00
   - C1_00
   - C2_00
   - C3_00
-  - T1_00

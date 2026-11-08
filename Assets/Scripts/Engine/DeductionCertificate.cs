@@ -38,6 +38,7 @@ namespace Morsoul.Engine
     public sealed class DeductionCertificate
     {
         public DeductionStatus Status;
+        public string SelectedConclusionId;
         public ConclusionTier Verdict;                              // tier of the selected conclusion
         public double SelectedSupport;                              // phi(h) in [0, 1]
         public SupportBand Band;

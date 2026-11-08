@@ -1,6 +1,6 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
     <Style src="project://database/Assets/Cutscene.uss"/>
-    <ui:VisualElement name="Cutscene-Root" class="cutscene-root" style="position: absolute; width: 100%; height: 100%; display: none;">
+    <ui:VisualElement name="Cutscene-Root" class="cutscene-root" style="position: absolute; width: 100%; height: 100%; display: none;" picking-mode="Ignore">
         <ui:VisualElement name="StillImage" class="cutscene-surface" style="display: none;"/>
         <ui:VisualElement name="VideoSurface" class="cutscene-surface" style="display: none;"/>
         <ui:VisualElement name="LetterboxTop" class="letterbox-bar" style="top: 0;"/>

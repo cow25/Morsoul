@@ -18,6 +18,8 @@ namespace Morsoul.Hub.Editor
     {
         const string LowerMarketScenePath = "Assets/Scenes/Hub_LowerMarket.unity";
         const string WildernessScenePath = "Assets/Scenes/Hub_Wilderness.unity";
+        const string CathedralScenePath = "Assets/Scenes/Hub_CathedralNave.unity";
+        const string IronHollowScenePath = "Assets/Scenes/Hub_IronHollow.unity";
         const string PanelSettingsPath = "Assets/UI Toolkit/MainPanelSettings.asset";
         const string WeightedBoardUxmlPath = "Assets/WeightedBoard.uxml";
 
@@ -30,6 +32,8 @@ namespace Morsoul.Hub.Editor
                 EditorSceneManager.OpenScene(LowerMarketScenePath, OpenSceneMode.Single);
             Integrate(LowerMarketScenePath);
             Integrate(WildernessScenePath);
+            Integrate(CathedralScenePath);
+            Integrate(IronHollowScenePath);
         }
 
         static void Integrate(string scenePath)

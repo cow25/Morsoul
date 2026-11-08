@@ -224,7 +224,15 @@ namespace Morsoul.Board
 
         public void Open()
         {
-            if (_session == null && (EnsureSession == null || !EnsureSession()))
+            // Re-run the lazy hook on every open so freshly collected clues
+            // and focus state sync into a live session, not just the first.
+            if (EnsureSession != null && !EnsureSession())
+            {
+                if (caseData != null) Debug.LogWarning(
+                    $"WeightedBoardController: no usable evidence graph on '{caseData.title}'; board stays closed.", this);
+                return;
+            }
+            if (_session == null)
             {
                 if (caseData != null) Debug.LogWarning(
                     $"WeightedBoardController: no evidence graph on '{caseData.title}'; board stays closed.", this);
@@ -266,11 +274,12 @@ namespace Morsoul.Board
             if (_session == null)
                 return new List<ProgressionEvent>
                 {
-                    new ProgressionEvent { Kind = ProgressionEventKind.InvalidDraw },
+                    new ProgressionEvent { Kind = ProgressionEventKind.InvalidInput },
                 };
             SyncFocusIn();
-            var events = _session.DrawLink(new DirectedEdge(sourceId, targetId));
-            ApplyLinkEvents(events);
+            var link = new DirectedEdge(sourceId, targetId);
+            var events = _session.DrawLink(link);
+            ApplyLinkEvents(events, link);
             return events;
         }
 
@@ -306,17 +315,29 @@ namespace Morsoul.Board
             {
                 switch (e.Kind)
                 {
-                    case ProgressionEventKind.SubmissionSolved:
-                        ShowBanner(BannerInfoClass, "Conclusion supported — the case clicks into place.");
+                    case ProgressionEventKind.CaseComplete:
+                        ShowBanner(BannerInfoClass, AuthoredSubmissionFeedback(
+                            e.ConclusionId, "Conclusion supported — the case clicks into place."));
                         BoardSolved?.Invoke(cert);
                         break;
-                    case ProgressionEventKind.SubmissionAlreadyRewarded:
+                    case ProgressionEventKind.BoardAlreadySolved:
                         ShowBanner(BannerInfoClass, "Conclusion already confirmed.");
                         break;
-                    case ProgressionEventKind.SubmissionRejected:
-                        ShowBanner(BannerInfoClass, cert.Status == DeductionStatus.ConclusionLocked
-                            ? "That conclusion is still locked — the evidence doesn't reach it yet."
-                            : $"The board doesn't support '{cert.Verdict}' yet. Keep linking.");
+                    case ProgressionEventKind.ConclusionLocked:
+                        ShowBanner(BannerInfoClass, AuthoredLockedFeedback(e.ConclusionId));
+                        break;
+                    case ProgressionEventKind.WrongConclusionRejected:
+                        ShowBanner(BannerInfoClass, AuthoredSubmissionFeedback(
+                            e.ConclusionId,
+                            "The board doesn't support that conclusion. Keep linking."));
+                        break;
+                    case ProgressionEventKind.PartialConclusionFeedback:
+                        ShowBanner(BannerInfoClass, AuthoredSubmissionFeedback(
+                            e.ConclusionId,
+                            "That explains part of the evidence, but not the whole case."));
+                        break;
+                    case ProgressionEventKind.InvalidInput:
+                        ShowBanner(BannerErrorClass, "That submission can't be evaluated.");
                         break;
                 }
             }
@@ -328,20 +349,53 @@ namespace Morsoul.Board
 
         // --- Progression-event application --------------------------------------
 
-        void ApplyLinkEvents(IReadOnlyList<ProgressionEvent> events)
+        string AuthoredSubmissionFeedback(string conclusionId, string fallback)
+        {
+            string authored = caseData != null && caseData.evidenceGraph != null
+                ? caseData.evidenceGraph.GetConclusionSubmissionFeedback(conclusionId)
+                : null;
+            return string.IsNullOrEmpty(authored) ? fallback : authored;
+        }
+
+        string AuthoredLockedFeedback(string conclusionId)
+        {
+            var graphData = caseData != null ? caseData.evidenceGraph : null;
+            if (graphData != null &&
+                graphData.caseId == 0 &&
+                conclusionId == graphData.completeConclusionId &&
+                !string.IsNullOrEmpty(graphData.tutorialLockedConclusionFeedback))
+                return graphData.tutorialLockedConclusionFeedback;
+            return "That conclusion is still locked — the evidence doesn't reach it yet.";
+        }
+
+        string AuthoredTutorialLinkFeedback(DirectedEdge attemptedLink)
+        {
+            var graphData = caseData != null ? caseData.evidenceGraph : null;
+            string authored = graphData != null
+                ? graphData.GetTutorialLinkFeedback(attemptedLink)
+                : null;
+            return string.IsNullOrEmpty(authored)
+                ? "That connection isn't part of the manual override chain."
+                : authored;
+        }
+
+        void ApplyLinkEvents(IReadOnlyList<ProgressionEvent> events, DirectedEdge attemptedLink)
         {
             foreach (var e in events)
             {
                 switch (e.Kind)
                 {
-                    case ProgressionEventKind.InvalidDraw:
+                    case ProgressionEventKind.InvalidInput:
                         ShowBanner(BannerErrorClass, "That link can't be drawn here.");
+                        break;
+                    case ProgressionEventKind.TutorialLinkRejected:
+                        ShowBanner(BannerInfoClass, AuthoredTutorialLinkFeedback(attemptedLink));
                         break;
                     case ProgressionEventKind.Blocked:
                         ShowBanner(BannerErrorClass,
                             $"Linking locked — Focus below {ProgressionConstants.ErrorFocusCost:0}. Rest to recover.");
                         break;
-                    case ProgressionEventKind.LinkDuplicate:
+                    case ProgressionEventKind.DuplicateLink:
                         ShowBanner(BannerInfoClass, "Link already on the board.");
                         break;
                     case ProgressionEventKind.LinkOk:

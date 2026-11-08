@@ -1,0 +1,20 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/HubHud.uss"/>
+    <ui:VisualElement name="HubHud-Root" class="hub-hud-root" style="position: absolute; width: 100%; height: 100%;" picking-mode="Ignore">
+        <ui:VisualElement name="TopBar" style="position: absolute; top: 14px; left: 0; right: 0; flex-direction: row; justify-content: center;">
+            <ui:VisualElement name="ObjectivePanel" class="hub-hud-panel" style="max-width: 60%;">
+                <ui:Label name="CaseLabel" text="" class="hub-hud-case"/>
+                <ui:Label name="ObjectiveLabel" text="" class="hub-hud-objective"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="FocusPanel" class="hub-hud-panel" style="position: absolute; top: 14px; right: 20px; align-items: flex-end;">
+            <ui:Label name="FocusText" text="Focus: 100 / 100" class="hub-hud-text"/>
+            <ui:VisualElement name="FocusBarBackground" class="hub-hud-focus-bg" style="margin-top: 4px;">
+                <ui:VisualElement name="FocusBarFill" class="hub-hud-focus-fill"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="Footer" class="hub-hud-panel" style="position: absolute; bottom: 0; left: 0; right: 0; flex-direction: row; justify-content: center;">
+            <ui:Label name="FooterLabel" text="[WASD] Move | [Shift] Brisk Walk | [E] Interact | [G] Desk/Journal | [H] Board | [ESC] Menu" class="hub-hud-footer"/>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

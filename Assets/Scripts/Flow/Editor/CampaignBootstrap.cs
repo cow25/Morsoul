@@ -13,6 +13,8 @@ namespace Morsoul.Flow.Editor
         public static void RunAll()
         {
             Morsoul.Data.Editor.CaseDatabaseGenerator.Rebuild();
+            Morsoul.Dialogue.Editor.HubDialogueContentGenerator.Generate();
+            Morsoul.Hub.Editor.HubContentSetup.Install();
             Morsoul.Hub.Editor.HubCaseLoopSetup.Install();
             Morsoul.Hub.Editor.HubBoardSetup.Install();
             Morsoul.Hub.Editor.DemoStandInFactory.BuildAll();

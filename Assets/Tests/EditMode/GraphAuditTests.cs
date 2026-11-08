@@ -30,19 +30,20 @@ namespace Morsoul.Tests
         }
 
         [Test]
-        public void FixtureGraph_SingleEdgeBoardIsAShortcut()
+        public void FixtureGraph_OnlySolutionSetIsMinimalCompleteUnlock()
         {
             var report = GraphAudit.Analyze(_graph);
             var complete = Audit(report, "h_complete");
 
-            // {b->c} alone reaches phi 0.857 >= 0.7 — it bypasses the a->b leg
-            // of S*, so the fixture graph itself demonstrates a real shortcut.
-            Assert.AreEqual(4, complete.UnlockingSubsetCount); // all boards containing b->c
+            // {b->c} reaches high support, but S* ⊆ L_valid is required too.
+            // S* plus the optional off-solution d->e link are the two unlocking boards.
+            Assert.AreEqual(2, complete.UnlockingSubsetCount);
             Assert.AreEqual(1, complete.MinimalUnlockingSets.Count);
             CollectionAssert.AreEquivalent(
-                new[] { new DirectedEdge("b", "c") }, complete.MinimalUnlockingSets[0]);
-            Assert.IsTrue(complete.HasSolutionShortcut);
-            Assert.IsTrue(report.HasErrors);
+                new[] { new DirectedEdge("a", "b"), new DirectedEdge("b", "c") },
+                complete.MinimalUnlockingSets[0]);
+            Assert.IsFalse(complete.HasSolutionShortcut);
+            Assert.IsFalse(report.HasErrors);
         }
 
         [Test]
@@ -99,25 +100,29 @@ namespace Morsoul.Tests
         }
 
         [Test]
-        public void ShortcutBoard_IsFlaggedAsError()
+        public void HighSupportNonSolutionBoard_DoesNotUnlockComplete()
         {
             var def = TestGraphs.FiveClueDef();
-            // a->c alone pushes c's propagated support past the high
-            // threshold without the authored S* path.
+            // a->c pushes c's propagated support past the high threshold, but
+            // still cannot bypass the authored a->b leg of S*.
             def.AuthoredClueEdges = def.AuthoredClueEdges
                 .Concat(new[] { TestGraphs.Edge("a", "c", 1f) }).ToArray();
             var g = TestGraphs.BuildValid(def);
 
+            var shortcutCert = DeductionEngine.Solve(g, TestGraphs.Input(g,
+                new[] { new DirectedEdge("a", "c"), new DirectedEdge("b", "c") },
+                "h_complete"));
+            Assert.That(shortcutCert.Status, Is.EqualTo(DeductionStatus.ConclusionLocked));
+
             var report = GraphAudit.Analyze(g);
             var complete = Audit(report, "h_complete");
 
-            Assert.IsTrue(complete.HasSolutionShortcut);
-            Assert.IsTrue(report.HasErrors);
-            Assert.That(report.Findings, Has.Some.StartsWith("ERROR").And.Contains("h_complete"));
-            // {a->c, b->c} bypasses the authored a->b leg of S*.
-            Assert.IsTrue(complete.MinimalUnlockingSets.Any(set =>
-                set.Any(e => e.sourceId == "a" && e.targetId == "c") &&
-                !set.Any(e => e.sourceId == "a" && e.targetId == "b")));
+            Assert.IsFalse(complete.HasSolutionShortcut);
+            Assert.IsFalse(report.HasErrors);
+            Assert.AreEqual(1, complete.MinimalUnlockingSets.Count);
+            CollectionAssert.AreEquivalent(
+                new[] { new DirectedEdge("a", "b"), new DirectedEdge("b", "c") },
+                complete.MinimalUnlockingSets[0]);
         }
 
         [Test]

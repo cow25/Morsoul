@@ -15,8 +15,8 @@ namespace Morsoul.Core
     /// - At 0 a held scan is "strained scanning": it still works and costs
     ///   nothing, but latches StrainedScanUsed — the case is then ineligible
     ///   for Clean.
-    /// - Rest grants 5 per whole minute (fractional time persists as a
-    ///   remainder for the save layer).
+    /// - Rest grants 1 per completed Focus tick (fractional time persists as
+    ///   a remainder for the save layer).
     /// - Closed-game recovery grants floor(whole minutes closed / 2), capped
     ///   at max; timestamps prevent crediting an interval twice.
     /// </summary>
@@ -40,7 +40,7 @@ namespace Morsoul.Core
         /// <summary>True when energy has hit zero.</summary>
         public bool IsDepleted => Percent <= 0f;
 
-        /// <summary>Un-credited rest time carried toward the next whole minute.</summary>
+        /// <summary>Un-credited rest time carried toward the next Focus tick.</summary>
         public float RestRemainderSeconds => _restRemainderSeconds;
 
         /// <summary>When the game last closed, for offline recovery. Null once consumed.</summary>
@@ -71,18 +71,17 @@ namespace Morsoul.Core
         }
 
         /// <summary>
-        /// Rest-spot regen: +5 per whole minute of rest. Sub-minute time is
+        /// Rest-spot regen: +1 per completed Focus tick. Sub-tick time is
         /// kept in the remainder so saves and scene transitions lose nothing.
         /// </summary>
         public void TickRest(float deltaSeconds)
         {
             if (deltaSeconds <= 0f) return;
             _restRemainderSeconds += deltaSeconds;
-            const float secondsPerMinute = 60f;
-            while (_restRemainderSeconds >= secondsPerMinute)
+            while (_restRemainderSeconds >= FocusTuning.FocusTickSeconds)
             {
-                _restRemainderSeconds -= secondsPerMinute;
-                Percent = Math.Min(Maximum, Percent + ProgressionConstants.RestEnergyPerMinute);
+                _restRemainderSeconds -= FocusTuning.FocusTickSeconds;
+                Percent = Math.Min(Maximum, Percent + ProgressionConstants.RestEnergyPerTick);
             }
         }
 

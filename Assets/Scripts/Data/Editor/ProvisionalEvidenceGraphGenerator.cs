@@ -6,14 +6,9 @@ using UnityEngine;
 namespace Morsoul.Data.Editor
 {
     /// <summary>
-    /// Drafts provisional EvidenceGraphData for Case 0 (tutorial) and Case 1
-    /// (vault) so the weighted board can run and be reviewed before final
-    /// design sign-off. Numbers are mapped from the case specs' preserved
-    /// reasoning chains; every asset is flagged provisional and audited on
-    /// generation: each graph must build cleanly and yield exactly one board
-    /// (S*) unlocking the complete conclusion. Re-running overwrites the
-    /// provisional assets in place (stable GUIDs) — do not hand-edit them;
-    /// tune here instead.
+    /// Non-canonical drafting utility for missing or explicitly provisional
+    /// EvidenceGraphData assets. Approved case graphs are owned by their
+    /// serialized assets/spec data and are never overwritten here.
     /// </summary>
     public static class ProvisionalEvidenceGraphGenerator
     {
@@ -31,9 +26,16 @@ namespace Morsoul.Data.Editor
             "lockpick) contradict. Any stray authored link breaks the unlock - " +
             "the dissonance mechanic.";
 
-        [MenuItem("Morsoul/Data/Draft Provisional Evidence Graphs")]
+        [MenuItem("Morsoul/Data/Draft Provisional Evidence Graphs (Non-Canonical)")]
         public static void Draft()
         {
+            if (!EditorUtility.DisplayDialog(
+                    "Draft provisional evidence graphs",
+                    "This is a non-canonical regeneration utility. It only writes missing " +
+                    "assets or assets still flagged provisional; approved graph assets are skipped.",
+                    "Draft", "Cancel"))
+                return;
+
             int written = 0;
             written += Write(Case0(), "Assets/Data/Cases/Case00/EVG_00_PROVISIONAL.asset", Note0);
             written += Write(Case1(), "Assets/Data/Cases/Case01/EVG_01_PROVISIONAL.asset", Note1);
@@ -54,6 +56,11 @@ namespace Morsoul.Data.Editor
             foreach (string e in errors) Debug.LogWarning($"{path}: {e}");
 
             var data = AssetDatabase.LoadAssetAtPath<EvidenceGraphData>(path);
+            if (data != null && !data.provisional)
+            {
+                Debug.Log($"ProvisionalEvidenceGraphGenerator: skipped canonical {path}.");
+                return 0;
+            }
             if (data == null)
             {
                 data = ScriptableObject.CreateInstance<EvidenceGraphData>();

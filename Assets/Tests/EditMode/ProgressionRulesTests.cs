@@ -67,9 +67,62 @@ namespace Morsoul.Tests
         {
             Draw(_state, _graph, "c", "a");
             var second = Draw(_state, _graph, "c", "a");
-            Assert.That(HasEvent(second, ProgressionEventKind.LinkDuplicate), Is.True);
+            Assert.That(HasEvent(second, ProgressionEventKind.DuplicateLink), Is.True);
             Assert.That(_state.CaseErrorCount, Is.EqualTo(1));
             Assert.That(_state.Focus, Is.EqualTo(80f));
+        }
+
+        [Test]
+        public void InvalidDraw_ReturnsInvalidInput_BeforeLockout()
+        {
+            _state.LinkingLockedOut = true;
+            _state.Focus = 0f;
+
+            Assert.That(HasEvent(Draw(_state, _graph, "a", "a"),
+                ProgressionEventKind.InvalidInput), Is.True);
+            Assert.That(HasEvent(Draw(_state, _graph, "ghost", "a"),
+                ProgressionEventKind.InvalidInput), Is.True);
+            Assert.That(_state.Links, Is.Empty);
+            Assert.That(_state.CaseErrorCount, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void DuplicateDraw_WinsOverLockedBoard()
+        {
+            _state.Links.Add(new DirectedEdge("a", "b"));
+            _state.LinkingLockedOut = true;
+            _state.Focus = 0f;
+
+            var events = Draw(_state, _graph, "a", "b");
+            Assert.That(HasEvent(events, ProgressionEventKind.DuplicateLink), Is.True);
+            Assert.That(HasEvent(events, ProgressionEventKind.Blocked), Is.False);
+            Assert.That(_state.Links, Has.Count.EqualTo(1));
+        }
+
+        [Test]
+        public void Case0OffSolutionDraw_IsTutorialRejected_NotAnError()
+        {
+            var def = TestGraphs.FiveClueDef();
+            def.CaseId = 0;
+            var g0 = TestGraphs.BuildValid(def);
+            _state.CaseId = 0;
+            _state.Focus = 10f;
+            _state.LinkingLockedOut = true; // stale state must not trap the tutorial
+            _state.Links.Add(new DirectedEdge("a", "b"));
+
+            var authored = Draw(_state, g0, "d", "e");
+            var invented = Draw(_state, g0, "c", "a");
+            var duplicate = Draw(_state, g0, "a", "b");
+            var solution = Draw(_state, g0, "b", "c");
+
+            Assert.That(HasEvent(authored, ProgressionEventKind.TutorialLinkRejected), Is.True);
+            Assert.That(HasEvent(invented, ProgressionEventKind.TutorialLinkRejected), Is.True);
+            Assert.That(HasEvent(duplicate, ProgressionEventKind.DuplicateLink), Is.True);
+            Assert.That(HasEvent(solution, ProgressionEventKind.LinkOk), Is.True);
+            Assert.That(_state.CaseErrorCount, Is.EqualTo(0));
+            Assert.That(_state.Focus, Is.EqualTo(10f));
+            Assert.That(_state.Links, Has.Count.EqualTo(2));
+            Assert.That(_state.LinkingLockedOut, Is.False);
         }
 
         [Test]
@@ -99,7 +152,7 @@ namespace Morsoul.Tests
             Assert.That(_state.Links, Is.Empty);
 
             // Restoring to exactly 20 unlatches on the next draw.
-            ProgressionRules.OnRestMinutes(_state, 4); // +20 -> F 20
+            ProgressionRules.OnRestTicks(_state, 20); // +20 -> F 20
             var drawn = Draw(_state, _graph, "a", "b");
             Assert.That(HasEvent(drawn, ProgressionEventKind.LinkOk), Is.True);
             Assert.That(_state.LinkingLockedOut, Is.False);
@@ -216,7 +269,7 @@ namespace Morsoul.Tests
         public void RestAndReopen_ApplySpecAmounts()
         {
             _state.Focus = 10f;
-            ProgressionRules.OnRestMinutes(_state, 3); // +15
+            ProgressionRules.OnRestTicks(_state, 15); // +15
             Assert.That(_state.Focus, Is.EqualTo(25f));
             ProgressionRules.OnReopen(_state, 7); // floor(7/2) = +3
             Assert.That(_state.Focus, Is.EqualTo(28f));
@@ -235,33 +288,104 @@ namespace Morsoul.Tests
 
             _state.SelectedConclusionId = "h_complete";
             var first = ProgressionRules.OnSubmission(_state, cert);
-            Assert.That(HasEvent(first, ProgressionEventKind.SubmissionSolved), Is.True);
+            Assert.That(HasEvent(first, ProgressionEventKind.CaseComplete), Is.True);
             Assert.That(_state.BoardSolved, Is.True);
             Assert.That(_state.MaxFocus, Is.EqualTo(110f));
             Assert.That(_state.Focus, Is.EqualTo(110f));
+            Assert.That(_state.CompletionRewardApplied, Is.True);
             Assert.That(_state.SubmittedConclusionId, Is.EqualTo("h_complete"));
 
             var second = ProgressionRules.OnSubmission(_state, cert);
-            Assert.That(HasEvent(second, ProgressionEventKind.SubmissionAlreadyRewarded), Is.True);
+            Assert.That(HasEvent(second, ProgressionEventKind.BoardAlreadySolved), Is.True);
             Assert.That(_state.MaxFocus, Is.EqualTo(110f)); // no double award
+            Assert.That(_state.SubmittedConclusionId, Is.EqualTo("h_complete"));
         }
 
         [Test]
-        public void Submission_PartialOrLocked_Rejected_NoReward()
+        public void Submission_Case0_RefillsWithoutCapacityReward()
         {
+            var def = TestGraphs.FiveClueDef();
+            def.CaseId = 0;
+            var g0 = TestGraphs.BuildValid(def);
+            _state.CaseId = 0;
+            _state.Focus = 30f;
+            _state.SelectedConclusionId = "h_complete";
+            var cert = DeductionEngine.Solve(g0, TestGraphs.Input(g0,
+                new[] { new DirectedEdge("a", "b"), new DirectedEdge("b", "c") },
+                "h_complete"));
+
+            Assert.That(HasEvent(ProgressionRules.OnSubmission(_state, cert),
+                ProgressionEventKind.CaseComplete), Is.True);
+            Assert.That(_state.BoardSolved, Is.True);
+            Assert.That(_state.Focus, Is.EqualTo(100f));
+            Assert.That(_state.MaxFocus, Is.EqualTo(100f));
+            Assert.That(_state.CompletionRewardApplied, Is.False);
+        }
+
+        [Test]
+        public void Submission_Case5_SolvesWithoutProgressionReward()
+        {
+            var def = TestGraphs.FiveClueDef();
+            def.CaseId = 5;
+            var g5 = TestGraphs.BuildValid(def);
+            _state.CaseId = 5;
+            _state.Focus = 30f;
+            _state.SelectedConclusionId = "h_complete";
+            var cert = DeductionEngine.Solve(g5, TestGraphs.Input(g5,
+                new[] { new DirectedEdge("a", "b"), new DirectedEdge("b", "c") },
+                "h_complete"));
+
+            Assert.That(HasEvent(ProgressionRules.OnSubmission(_state, cert),
+                ProgressionEventKind.CaseComplete), Is.True);
+            Assert.That(_state.BoardSolved, Is.True);
+            Assert.That(_state.Focus, Is.EqualTo(30f));
+            Assert.That(_state.MaxFocus, Is.EqualTo(100f));
+            Assert.That(_state.CompletionRewardApplied, Is.False);
+        }
+
+        [Test]
+        public void Submission_WrongAndPartial_RecordUniqueHistory_NoReward()
+        {
+            var wrong = DeductionEngine.Solve(_graph,
+                TestGraphs.Input(_graph, new DirectedEdge[0], "h_wrong"));
+            _state.SelectedConclusionId = "h_wrong";
+            var wrongEvents = ProgressionRules.OnSubmission(_state, wrong);
+            Assert.That(HasEvent(wrongEvents, ProgressionEventKind.WrongConclusionRejected), Is.True);
+            Assert.That(_state.SubmittedWrongConclusionIds, Is.EqualTo(new[] { "h_wrong" }));
+            Assert.That(_state.SubmittedConclusionId, Is.EqualTo("h_wrong"));
+
+            ProgressionRules.OnSubmission(_state, wrong);
+            Assert.That(_state.SubmittedWrongConclusionIds, Has.Count.EqualTo(1));
+
             var partial = DeductionEngine.Solve(_graph,
                 TestGraphs.Input(_graph, new[] { new DirectedEdge("a", "b") }, "h_partial"));
             _state.SelectedConclusionId = "h_partial";
-            var events = ProgressionRules.OnSubmission(_state, partial);
-            Assert.That(HasEvent(events, ProgressionEventKind.SubmissionRejected), Is.True);
+            var partialEvents = ProgressionRules.OnSubmission(_state, partial);
+            Assert.That(HasEvent(partialEvents, ProgressionEventKind.PartialConclusionFeedback), Is.True);
+            Assert.That(_state.SubmittedPartialConclusionIds, Is.EqualTo(new[] { "h_partial" }));
+            Assert.That(_state.SubmittedConclusionId, Is.EqualTo("h_partial"));
             Assert.That(_state.BoardSolved, Is.False);
+            Assert.That(_state.CaseErrorCount, Is.EqualTo(0));
+            Assert.That(_state.Focus, Is.EqualTo(100f));
             Assert.That(_state.MaxFocus, Is.EqualTo(100f));
+        }
 
+        [Test]
+        public void Submission_LockedOrInvalid_NoStateChange()
+        {
             var locked = DeductionEngine.Solve(_graph,
                 TestGraphs.Input(_graph, new DirectedEdge[0], "h_complete"));
-            Assert.That(locked.Status, Is.EqualTo(DeductionStatus.ConclusionLocked));
-            Assert.That(HasEvent(ProgressionRules.OnSubmission(_state, locked),
-                ProgressionEventKind.SubmissionRejected), Is.True);
+            _state.SelectedConclusionId = "h_complete";
+            var lockedEvents = ProgressionRules.OnSubmission(_state, locked);
+            Assert.That(HasEvent(lockedEvents, ProgressionEventKind.ConclusionLocked), Is.True);
+            Assert.That(lockedEvents[0].ConclusionId, Is.EqualTo("h_complete"));
+            Assert.That(_state.SubmittedConclusionId, Is.Null);
+
+            var invalidEvents = ProgressionRules.OnSubmission(_state, null);
+            Assert.That(HasEvent(invalidEvents, ProgressionEventKind.InvalidInput), Is.True);
+            Assert.That(_state.BoardSolved, Is.False);
+            Assert.That(_state.SubmittedWrongConclusionIds, Is.Empty);
+            Assert.That(_state.SubmittedPartialConclusionIds, Is.Empty);
         }
     }
 }

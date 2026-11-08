@@ -1,6 +1,6 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
     <Style src="project://database/Assets/Journal.uss"/>
-    <ui:VisualElement name="Journal-Root" class="journal-root" style="position: absolute; width: 100%; height: 100%; display: none;">
+    <ui:VisualElement name="Journal-Root" class="journal-root" style="position: absolute; width: 100%; height: 100%; display: none;" picking-mode="Ignore">
         <ui:VisualElement name="Backdrop" class="journal-backdrop"/>
         <ui:VisualElement name="JournalPanel" class="journal-panel" style="position: absolute; top: 6%; left: 8%; width: 84%; height: 88%;">
             <ui:VisualElement name="HeaderRow" style="flex-direction: row; align-items: center; margin-bottom: 10px; flex-shrink: 0;">

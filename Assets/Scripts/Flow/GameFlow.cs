@@ -236,6 +236,12 @@ namespace Morsoul.Flow
                 board.Close();
             }
             if (board != null) board.handleBoardHotkey = !weighted;
+
+            // CaseLoop has no world content of its own — land the player on
+            // the case board instead of an empty screen. Investigation scenes
+            // take over case entry once they exist.
+            if (weighted) weightedBoard.Open();
+            else board?.Open();
         }
 
         /// <summary>

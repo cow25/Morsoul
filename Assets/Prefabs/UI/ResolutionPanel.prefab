@@ -106,3 +106,9 @@ MonoBehaviour:
   manageCursor: 1
   uneaseBannerSeconds: 5
   uneasePulseSeconds: 0.9
+  showOnStart: 0
+  debugCaseTitle: Test Case
+  debugGrade: 1
+  debugUnease: 0
+  debugUneaseLocation: Vault alcove
+  debugLocationHint: 

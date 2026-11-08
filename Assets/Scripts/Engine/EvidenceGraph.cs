@@ -55,6 +55,14 @@ namespace Morsoul.Engine
         public bool IsAuthoredLink(DirectedEdge edge) => _authoredEdges.ContainsKey(edge);
         public bool IsSolutionLink(DirectedEdge edge) => _solutionEdges.Contains(edge);
 
+        /// <summary>True when every authored solution link is present in L.</summary>
+        public bool HasAllSolutionLinks(IEnumerable<DirectedEdge> drawnLinks)
+        {
+            if (drawnLinks == null) return false;
+            var drawn = new HashSet<DirectedEdge>(drawnLinks);
+            return _solutionEdges.IsSubsetOf(drawn);
+        }
+
         public ConclusionDef GetConclusion(string id) =>
             id != null && _conclusionsById.TryGetValue(id, out var def) ? def : null;
 
@@ -401,17 +409,26 @@ namespace Morsoul.Engine
                            "recache the asset.");
         }
 
-        /// <summary>Sup(h*) on the complete board C = K, L = E_KK.</summary>
+        /// <summary>rho(h*) = Sup(h*) - lambda * Con(h*) on C = K, L = E_KK.</summary>
         static double ComputeReferenceSupport(EvidenceGraph g)
         {
             var x = DampedPropagation.Run(g._authoredEdges, g._reliability, g.Parameters.alpha,
                 out var kAct);
             var complete = g._conclusionsById[g.CompleteConclusionId];
-            double sup = 0;
-            foreach (var e in complete.supportingEdges ?? new WeightedClueRef[0])
-                if (e != null && kAct.Contains(e.clueId) && x.TryGetValue(e.clueId, out double v))
-                    sup += e.weight * v;
-            return sup;
+            double sup = ScoreEdges(complete.supportingEdges, kAct, x);
+            double con = ScoreEdges(complete.contradictingEdges, kAct, x);
+            return Math.Max(0.0, sup - g.Parameters.contradictionWeight * con);
+        }
+
+        static double ScoreEdges(WeightedClueRef[] edges, HashSet<string> active,
+            IReadOnlyDictionary<string, double> values)
+        {
+            double total = 0;
+            foreach (var e in edges ?? new WeightedClueRef[0])
+                if (e != null && active.Contains(e.clueId) &&
+                    values.TryGetValue(e.clueId, out double v))
+                    total += e.weight * v;
+            return total;
         }
 
         static List<string> ComputeSolutionOrder(EvidenceGraph g)

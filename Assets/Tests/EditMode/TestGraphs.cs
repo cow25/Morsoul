@@ -34,7 +34,7 @@ namespace Morsoul.Tests
             string[] clues = { "a", "b", "c", "d", "e" };
             return new EvidenceGraphDef
             {
-                CaseId = 9,
+                CaseId = 1,
                 ClueIds = clues,
                 Reliabilities = clues.Select(c => new ClueReliability { clueId = c, value = 1f }).ToArray(),
                 AuthoredClueEdges = new[] { Edge("a", "b"), Edge("b", "c"), Edge("d", "e", 0.8f) },

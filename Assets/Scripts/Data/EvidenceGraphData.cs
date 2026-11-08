@@ -16,6 +16,14 @@ namespace Morsoul.Data
         /// <summary>Drafted numbers awaiting design sign-off; not yet canonical.</summary>
         public bool provisional;
         [TextArea] public string designNote;
+
+        /// <summary>Case 0 tutorial IDs that trigger the authored red-herring rejection.</summary>
+        public string[] tutorialRedHerringClueIds = new string[0];
+        [TextArea] public string tutorialRedHerringFeedback;
+        [TextArea] public string tutorialReversedLinkFeedback;
+        [TextArea] public string tutorialGenericLinkFeedback;
+        [TextArea] public string tutorialLockedConclusionFeedback;
+
         public string[] clueIds = new string[0];
         public ClueReliability[] reliabilities = new ClueReliability[0];
         public WeightedClueEdge[] authoredClueEdges = new WeightedClueEdge[0];
@@ -66,6 +74,62 @@ namespace Morsoul.Data
         {
             EvidenceGraph.Build(ToDef(), out var graph);
             return graph;
+        }
+
+        /// <summary>Authored submission banner for a conclusion, or null when none exists.</summary>
+        public string GetConclusionSubmissionFeedback(string conclusionId)
+        {
+            if (string.IsNullOrEmpty(conclusionId) || conclusions == null) return null;
+            foreach (var conclusion in conclusions)
+                if (conclusion != null && conclusion.id == conclusionId)
+                    return string.IsNullOrEmpty(conclusion.submissionFeedback)
+                        ? null
+                        : conclusion.submissionFeedback;
+            return null;
+        }
+
+        /// <summary>
+        /// Case 0 tutorial rejection text for an attempted link, or null when the
+        /// graph does not author a specific response.
+        /// </summary>
+        public string GetTutorialLinkFeedback(DirectedEdge attempted)
+        {
+            if (!string.IsNullOrEmpty(tutorialRedHerringFeedback) &&
+                tutorialRedHerringClueIds != null)
+                foreach (string clueId in tutorialRedHerringClueIds)
+                    if (clueId == attempted.sourceId || clueId == attempted.targetId)
+                        return tutorialRedHerringFeedback;
+
+            if (!string.IsNullOrEmpty(tutorialReversedLinkFeedback))
+            {
+                var reversed = new DirectedEdge(attempted.targetId, attempted.sourceId);
+                if (ContainsEdge(authoredClueEdges, reversed) || ContainsEdge(solutionEdges, reversed))
+                    return tutorialReversedLinkFeedback;
+            }
+
+            return string.IsNullOrEmpty(tutorialGenericLinkFeedback)
+                ? null
+                : tutorialGenericLinkFeedback;
+        }
+
+        static bool ContainsEdge(WeightedClueEdge[] edges, DirectedEdge edge)
+        {
+            if (edges == null) return false;
+            foreach (var candidate in edges)
+                if (candidate != null &&
+                    candidate.sourceId == edge.sourceId &&
+                    candidate.targetId == edge.targetId)
+                    return true;
+            return false;
+        }
+
+        static bool ContainsEdge(DirectedEdge[] edges, DirectedEdge edge)
+        {
+            if (edges == null) return false;
+            foreach (var candidate in edges)
+                if (candidate.Equals(edge))
+                    return true;
+            return false;
         }
     }
 }

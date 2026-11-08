@@ -1,0 +1,83 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad6b4272890c70c4eb3d3dfe4810ac24, type: 3}
+  m_Name: D_Kaelen_03
+  m_EditorClassIdentifier: Morsoul.Dialogue::Morsoul.Dialogue.DialogueData
+  id: D_Kaelen_03
+  nodes:
+  - id: kaelen_bow
+    speakerName: Ranger Scout Kaelen
+    speakerPortrait: {fileID: 0}
+    text: "(Notching an arrow before lowering his longbow at Eliza's badge) \"Lady Astra! Thank the stars the Guild actually sent someone. Keep your construct on the hard stones\u2014the root floor ahead has gone soft as wet flour.\""
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: eliza_rundown
+  - id: eliza_rundown
+    speakerName: Eliza
+    speakerPortrait: {fileID: 0}
+    text: '"Give us the rundown, Kaelen. Your dispatch sounded like the sky was falling."'
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: kaelen_briefing
+  - id: kaelen_briefing
+    speakerName: Ranger Scout Kaelen
+    speakerPortrait: {fileID: 0}
+    text: "\"It might as well be! Five nights ago, the canopy was glowing silver. Then, almost overnight, the needles turned black and the roots began weeping resin. The Elder Spirit Tree is dying, Astra. And the woodland spirits have lost their minds\u2014screaming, attacking anyone who steps into the hollow.\""
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: golem_scan
+  - id: golem_scan
+    speakerName: Golem
+    speakerPortrait: {fileID: 0}
+    text: '[SPECTRAL SCAN: Ambient atmospheric mana density down 64% from provincial baseline.]
+
+      "Inquiry: Has this forest ever experienced sudden botanical blight or parasites of this magnitude?"'
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: kaelen_never
+  - id: kaelen_never
+    speakerName: Ranger Scout Kaelen
+    speakerPortrait: {fileID: 0}
+    text: "\"Never! That\u2019s what I told the scholar over in that fancy tent. He keeps trying to convince me this is a <color=#E5A93C>natural forest blight caused by root-boring beetles.</color> But beetles don't suck a million gallons of ancient sap out of a trunk in five days!\""
+    registersClue: {fileID: 11400000, guid: 082755c29adc52b4e93d22db02cb3bb9, type: 2}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: eliza_scholar
+  - id: eliza_scholar
+    speakerName: Eliza
+    speakerPortrait: {fileID: 0}
+    text: '"Scholar? Who authorized an academic camp in a hazardous spirit zone?"'
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: kaelen_vane
+  - id: kaelen_vane
+    speakerName: Ranger Scout Kaelen
+    speakerPortrait: {fileID: 0}
+    text: "\"Fellow named Vane. Showed up with stamped transit permits from the capital right as the tree started drooping. Claims he\u2019s studying the decay. He\u2019s set up right at the clearing entrance.\""
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: 
+  startNodeId: kaelen_bow
+  portraits: []

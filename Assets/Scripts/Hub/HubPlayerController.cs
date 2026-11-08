@@ -47,11 +47,13 @@ namespace Morsoul.Hub
             var keyboard = Keyboard.current;
             if (keyboard == null) return;
 
-            // Also treat the frame a dialogue ended as busy: the same E press
-            // that closed the panel must not re-trigger the interactable.
-            bool dialoguePlaying = context != null && context.DialoguePlaying
+            // Also treat the frame a blocking overlay ended as busy: the same
+            // E press that closed the panel must not re-trigger the interactable.
+            bool dialoguePlaying = context != null && context.UiBlocked
                 || context != null && context.dialogue != null
-                   && context.dialogue.LastEndFrame == Time.frameCount;
+                   && context.dialogue.LastEndFrame == Time.frameCount
+                || context != null && context.travelMenu != null
+                   && context.travelMenu.LastCloseFrame == Time.frameCount;
             MoveInput = dialoguePlaying ? Vector2.zero : ReadMoveInput(keyboard);
 
             UpdatePromptTarget();
@@ -85,8 +87,8 @@ namespace Morsoul.Hub
             _candidates.Clear();
             _candidatePositions.Clear();
 
-            // No targeting while a dialogue is open; the prompt hides too.
-            if (context != null && context.DialoguePlaying)
+            // No targeting while a blocking overlay is open; the prompt hides too.
+            if (context != null && context.UiBlocked)
             {
                 if (_prompted != null)
                 {

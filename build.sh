@@ -108,6 +108,10 @@ compile Morsoul.Flow \
     "-r:$OUT/Morsoul.Interrogation.dll" "-r:$OUT/Morsoul.Dialogue.dll" "-r:$OUT/Morsoul.Cutscene.dll" \
     "-r:$OUT/Morsoul.Resolution.dll" "-r:$OUT/Morsoul.Hub.dll" \
     -- $(src Flow)
+compile Morsoul.Dev \
+    "-r:$OUT/Morsoul.Core.dll" "-r:$OUT/Morsoul.Data.dll" \
+    "-r:$OUT/Morsoul.Hub.dll" "-r:$OUT/Morsoul.Dialogue.dll" \
+    -- $(src Dev)
 
 # Editor assemblies.
 compile Morsoul.Data.Editor "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Engine.dll" -- $(src Data/Editor)
@@ -116,7 +120,7 @@ compile Morsoul.Dialogue.Editor "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Dial
 compile Morsoul.Interrogation.Editor "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Interrogation.dll" -- $(src Interrogation/Editor)
 compile Morsoul.Hub.Editor \
     "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Dialogue.dll" "-r:$OUT/Morsoul.Hub.dll" \
-    "-r:$OUT/Morsoul.Journal.dll" "-r:$OUT/Morsoul.Board.dll" \
+    "-r:$OUT/Morsoul.Journal.dll" "-r:$OUT/Morsoul.Board.dll" "-r:$OUT/Morsoul.Dialogue.Editor.dll" \
     -- $(src Hub/Editor)
 compile Morsoul.Journal.Editor \
     "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Hub.dll" "-r:$OUT/Morsoul.Journal.dll" \
@@ -131,8 +135,15 @@ compile Morsoul.Flow.Editor \
     "-r:$OUT/Morsoul.Board.dll" "-r:$OUT/Morsoul.Gameplay.dll" \
     "-r:$OUT/Morsoul.Interrogation.dll" "-r:$OUT/Morsoul.Dialogue.dll" "-r:$OUT/Morsoul.Cutscene.dll" \
     "-r:$OUT/Morsoul.Resolution.dll" "-r:$OUT/Morsoul.Hub.dll" "-r:$OUT/Morsoul.Hub.Editor.dll" \
-    "-r:$OUT/Morsoul.Journal.dll" "-r:$OUT/Morsoul.Flow.dll" \
+    "-r:$OUT/Morsoul.Journal.dll" "-r:$OUT/Morsoul.Flow.dll" "-r:$OUT/Morsoul.Dialogue.Editor.dll" \
     -- $(src Flow/Editor)
+compile Morsoul.Dev.Editor \
+    "-r:$OUT/Morsoul.Dev.dll" \
+    "-r:$OUT/Morsoul.Core.dll" "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Data.Editor.dll" \
+    "-r:$OUT/Morsoul.Dialogue.dll" "-r:$OUT/Morsoul.Dialogue.Editor.dll" \
+    "-r:$OUT/Morsoul.Hub.dll" "-r:$OUT/Morsoul.Hub.Editor.dll" \
+    "-r:$OUT/Morsoul.Flow.dll" "-r:$OUT/Morsoul.Flow.Editor.dll" \
+    -- $(src Dev/Editor)
 
 # EditMode tests.
 compile Morsoul.Tests.EditMode \

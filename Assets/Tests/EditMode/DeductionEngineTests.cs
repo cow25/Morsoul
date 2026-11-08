@@ -178,6 +178,22 @@ namespace Morsoul.Tests
             Assert.That(g, Is.Not.Null);
         }
 
+        [Test]
+        public void ReferenceSupport_IncludesCompleteContradictionEdges()
+        {
+            var def = ValidDef();
+            def.Parameters.contradictionWeight = 0.5f;
+            def.Conclusions[2].contradictingEdges = new[] { R("a") };
+
+            Assert.That(EvidenceGraph.Build(def, out var g), Is.Empty);
+            // rho_ref = 0.875 - 0.5 * 0.5 = 0.625.
+            Assert.That(g.ReferenceSupport, Is.EqualTo(0.625).Within(1e-6));
+
+            var cert = DeductionEngine.Solve(g,
+                Input(g, new[] { L("a", "b"), L("b", "c") }, "h_complete"));
+            Assert.That(cert.SelectedSupport, Is.EqualTo(1.0).Within(1e-6));
+        }
+
         // ---------- Solver ----------
 
         [Test]
@@ -209,6 +225,20 @@ namespace Morsoul.Tests
             Assert.That(cert.InventedLinkCount, Is.EqualTo(0)); // authored but off S* is still a valid link
             Assert.That(cert.SelectedSupport, Is.EqualTo(1.0).Within(1e-6));
             Assert.That(cert.SupportByConclusion["h_partial"], Is.EqualTo(0.375 / 0.875).Within(1e-6));
+        }
+
+        [Test]
+        public void HighSupportWithoutAllSolutionLinks_LocksComplete()
+        {
+            var g = ValidGraph();
+            var links = new[] { L("b", "c") };
+            var cert = DeductionEngine.Solve(g, Input(g, links, "h_complete"));
+
+            Assert.That(cert.SelectedSupport, Is.GreaterThanOrEqualTo(g.Parameters.highThreshold));
+            Assert.That(cert.Status, Is.EqualTo(DeductionStatus.ConclusionLocked));
+            Assert.That(cert.IsSolved, Is.False);
+            Assert.That(DeductionEngine.IsConclusionUnlocked(g,
+                g.GetConclusion("h_complete"), cert.SelectedSupport, links), Is.False);
         }
 
         [Test]
@@ -373,6 +403,46 @@ namespace Morsoul.Tests
                 var graph = data.BuildGraph();
                 Assert.That(graph, Is.Not.Null);
                 Assert.That(graph.ReferenceSupport, Is.EqualTo(0.875).Within(1e-6));
+            }
+            finally
+            {
+                Object.DestroyImmediate(data);
+            }
+        }
+
+        [Test]
+        public void EvidenceGraphData_FeedbackLookup_UsesAuthoredAndFallbackData()
+        {
+            var data = ScriptableObject.CreateInstance<EvidenceGraphData>();
+            try
+            {
+                data.conclusions = new[]
+                {
+                    new ConclusionDef
+                    {
+                        id = "wrong", tier = ConclusionTier.Wrong,
+                        text = "Wrong", submissionFeedback = "authored rejection",
+                    },
+                    new ConclusionDef
+                    {
+                        id = "partial", tier = ConclusionTier.Partial,
+                        text = "Partial",
+                    },
+                };
+                data.tutorialRedHerringClueIds = new[] { "rh" };
+                data.tutorialRedHerringFeedback = "red herring feedback";
+                data.tutorialReversedLinkFeedback = "reversed feedback";
+                data.tutorialGenericLinkFeedback = "generic tutorial feedback";
+                data.authoredClueEdges = new[] { E("a", "b") };
+                data.solutionEdges = new[] { L("a", "b") };
+
+                Assert.That(data.GetConclusionSubmissionFeedback("wrong"), Is.EqualTo("authored rejection"));
+                Assert.That(data.GetConclusionSubmissionFeedback("partial"), Is.Null);
+                Assert.That(data.GetConclusionSubmissionFeedback("missing"), Is.Null);
+
+                Assert.That(data.GetTutorialLinkFeedback(L("rh", "a")), Is.EqualTo("red herring feedback"));
+                Assert.That(data.GetTutorialLinkFeedback(L("b", "a")), Is.EqualTo("reversed feedback"));
+                Assert.That(data.GetTutorialLinkFeedback(L("c", "d")), Is.EqualTo("generic tutorial feedback"));
             }
             finally
             {

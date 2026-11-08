@@ -69,7 +69,7 @@ namespace Morsoul.Engine
 
             var selected = graph.GetConclusion(input.SelectedConclusionId);
             double selectedSupport = phi[input.SelectedConclusionId];
-            var status = IsUnlocked(graph, selected, selectedSupport)
+            var status = IsUnlocked(graph, selected, selectedSupport, validEdges.Keys)
                 ? DeductionStatus.Ok
                 : DeductionStatus.ConclusionLocked;
 
@@ -77,6 +77,7 @@ namespace Morsoul.Engine
             return new DeductionCertificate
             {
                 Status = status,
+                SelectedConclusionId = input.SelectedConclusionId,
                 Verdict = selected.tier,
                 SelectedSupport = selectedSupport,
                 Band = BandOf(p, selectedSupport),
@@ -101,21 +102,26 @@ namespace Morsoul.Engine
         }
 
         /// <summary>
-        /// The unlock gate from Step 4: h0 is always unlocked; other
-        /// conclusions need phi at their tier's threshold. Exposed for the
-        /// board UI's conclusion selector.
+        /// The unlock gate from Step 4: h0 is always unlocked; wrong/partial
+        /// conclusions need phi at the low threshold; complete needs both high
+        /// support and the structural S* ⊆ L_valid gate. Exposed for the board
+        /// UI's conclusion selector and the design-time audit.
         /// </summary>
-        public static bool IsConclusionUnlocked(EvidenceGraph graph, ConclusionDef conclusion, double phi)
-            => IsUnlocked(graph, conclusion, phi);
+        public static bool IsConclusionUnlocked(EvidenceGraph graph, ConclusionDef conclusion,
+            double phi, IEnumerable<DirectedEdge> drawnLinks)
+            => IsUnlocked(graph, conclusion, phi, drawnLinks);
 
-        static bool IsUnlocked(EvidenceGraph graph, ConclusionDef conclusion, double phi)
+        static bool IsUnlocked(EvidenceGraph graph, ConclusionDef conclusion, double phi,
+            IEnumerable<DirectedEdge> drawnLinks)
         {
             if (conclusion.id == graph.StartingConclusionId)
                 return true; // h0 is always unlocked.
             double threshold = conclusion.tier == ConclusionTier.Complete
                 ? graph.Parameters.highThreshold
                 : graph.Parameters.lowThreshold;
-            return phi >= threshold - 1e-9;
+            if (phi < threshold - 1e-9) return false;
+            return conclusion.tier != ConclusionTier.Complete ||
+                   graph.HasAllSolutionLinks(drawnLinks);
         }
 
         static SupportBand BandOf(SolverParameters p, double phi)

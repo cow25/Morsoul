@@ -78,6 +78,8 @@ namespace Morsoul.Engine
         public string id;
         public string text;
         public ConclusionTier tier;
+        /// <summary>Optional authored board banner for a submitted conclusion.</summary>
+        public string submissionFeedback;
         public WeightedClueRef[] supportingEdges = new WeightedClueRef[0];
         public WeightedClueRef[] contradictingEdges = new WeightedClueRef[0];
     }
