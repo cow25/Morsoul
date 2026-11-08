@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9593246776ef58d4b86a68be45ad543c, type: 3}
+  m_Name: InvestigationIntegrationCatalog
+  m_EditorClassIdentifier: Morsoul.Data::Morsoul.Data.InvestigationIntegrationCatalog
+  enableDevelopmentFallback: 0
+  areas:
+  - caseId: 0
+    routeKey: opening
+    status: 0
+    allowDevelopmentFallback: 1
+    requiredEntryFlag:
+  - caseId: 1
+    routeKey: investigation.1
+    status: 0
+    allowDevelopmentFallback: 1
+    requiredEntryFlag: C1_WarrantGranted
+  - caseId: 2
+    routeKey: investigation.2
+    status: 0
+    allowDevelopmentFallback: 1
+    requiredEntryFlag: C2_BelfryKeyGranted
+  - caseId: 3
+    routeKey: investigation.3
+    status: 0
+    allowDevelopmentFallback: 1
+    requiredEntryFlag: C3_PerimeterSealGranted
+  - caseId: 4
+    routeKey: investigation.4
+    status: 0
+    allowDevelopmentFallback: 1
+    requiredEntryFlag: C4_OverrideClearance
+  - caseId: 5
+    routeKey: finale
+    status: 2
+    allowDevelopmentFallback: 0
+    requiredEntryFlag:

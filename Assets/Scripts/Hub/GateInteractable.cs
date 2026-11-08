@@ -43,6 +43,12 @@ namespace Morsoul.Hub
             var flags = ctx != null && ctx.flags != null ? ctx.flags.Set : null;
             if (GateRule.CanPass(requiredFlag, flags))
             {
+                if (!string.IsNullOrEmpty(routeKey) && routeKey.StartsWith("investigation.", StringComparison.Ordinal))
+                {
+                    var entry = CoreRuntime.Ensure().EnterInvestigation(routeKey);
+                    Debug.Log(entry.Message, this);
+                    return;
+                }
                 string scene = ResolveTargetScene();
                 if (string.IsNullOrEmpty(scene))
                 {
@@ -51,11 +57,6 @@ namespace Morsoul.Hub
                     return;
                 }
                 CheckpointRequested?.Invoke("Seam");
-                CoreRuntime.Instance?.Bus.Publish(new CheckpointRequestedEvent
-                {
-                    Reason = "Seam",
-                    NextSceneName = scene
-                });
                 // Single load authority: the GSM guards missing scenes and
                 // stamps the checkpoint; direct load only without Core.
                 if (CoreRuntime.Instance != null)
@@ -78,9 +79,7 @@ namespace Morsoul.Hub
                 Debug.LogWarning($"GateInteractable '{name}': locked but no HubContext.dialogue wired.", this);
                 return;
             }
-            if (ctx.flags != null) ctx.dialogue.SetFlags(ctx.flags.Set);
-            ctx.dialogue.SetDialogue(lockedDialogue);
-            ctx.dialogue.Play();
+            ctx.PlayDialogue(lockedDialogue);
         }
 
         /// <summary>

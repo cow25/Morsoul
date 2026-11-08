@@ -7,12 +7,12 @@ using UnityEngine;
 namespace Morsoul.Hub
 {
     /// <summary>
-    /// Wires a weighted-board panel for lazy session initialisation so the
-    /// global "H opens the board everywhere" shortcut works outside the
-    /// CaseLoop scene (GDD §4.2 — the board opens from any scene). Attach
-    /// next to a WeightedBoardController in a hub scene; the controller's
-    /// own Update handles the H key, this only ensures a session exists.
-    /// Weighted cases only — legacy slot/premise boards are scene-scoped.
+    /// Wires lazy weighted-board initialisation for investigation contexts.
+    /// Retained instances in 2D hubs deny opening and gameplay mutations;
+    /// investigation composition must stamp the Core scene mode correctly.
+    /// Attach beside a WeightedBoardController; its Update handles H.
+    /// The visited investigation ID takes precedence over campaign progress.
+    /// Weighted cases only; legacy slot/premise boards are scene-scoped.
     /// </summary>
     public class BoardHotkey : MonoBehaviour
     {
@@ -31,6 +31,7 @@ namespace Morsoul.Hub
                 Debug.LogWarning($"BoardHotkey '{name}': no WeightedBoardController assigned.", this);
                 return;
             }
+            board.CanUse = CanUseBoard;
             board.EnsureSession = EnsureBoard;
         }
 
@@ -38,7 +39,11 @@ namespace Morsoul.Hub
         {
             if (board != null && board.EnsureSession == (System.Func<bool>)EnsureBoard)
                 board.EnsureSession = null;
+            if (board != null) board.CanUse = () => false;
         }
+
+        bool CanUseBoard() => CoreRuntime.Instance != null &&
+            CoreRuntime.Instance.Session.CurrentSceneMode == SceneMode.Mode3D;
 
         /// <summary>
         /// Builds the board session for the session's current case. False
@@ -48,8 +53,11 @@ namespace Morsoul.Hub
         public bool EnsureBoard()
         {
             var core = CoreRuntime.Instance;
-            if (core == null || board == null) return false;
-            var data = core.ResolveCase(core.Session.CurrentCase);
+            if (board != null) board.CanUse = CanUseBoard;
+            if (core == null || board == null || !CanUseBoard()) return false;
+            int caseId = core.Session.InvestigationCaseId >= 0
+                ? core.Session.InvestigationCaseId : core.Session.CurrentCase;
+            var data = core.ResolveCase(caseId);
             if (data == null || data.evidenceGraph == null) return false;
             if (board.caseData != data || board.Session == null)
             {

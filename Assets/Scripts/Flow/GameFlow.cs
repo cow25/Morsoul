@@ -7,6 +7,7 @@ using Morsoul.Dialogue;
 using Morsoul.Gameplay;
 using Morsoul.Hub;
 using Morsoul.Interrogation;
+using Morsoul.Journal;
 using Morsoul.Resolution;
 using UnityEngine;
 
@@ -22,6 +23,7 @@ namespace Morsoul.Flow
     {
         [Header("Case")]
         public CaseData activeCase;
+        public bool investigationScene;
         [Tooltip("Optional override used to resolve Session.CurrentCase when no " +
                  "activeCase is assigned; falls back to the generated " +
                  "Resources/CaseDatabase via CoreRuntime.ResolveCase.")]
@@ -48,6 +50,9 @@ namespace Morsoul.Flow
         public DialogueController dialogue;
         [Tooltip("Optional. Hub-scene clue store; absent outside hub scenes.")]
         public HubJournal hubJournal;
+        [Tooltip("Optional. Journal overlay; gated so it cannot open over the " +
+                 "board, interrogation, resolution or an ending cutscene.")]
+        public JournalController journalPanel;
         [Tooltip("Optional. Dialogue flags flow into this set + the Core session.")]
         public HubFlags flags;
 
@@ -95,9 +100,11 @@ namespace Morsoul.Flow
         public bool TryBeginSessionCase()
         {
             var core = Core.CoreRuntime.Ensure();
+            int caseId = investigationScene && core.Session.InvestigationCaseId >= 0
+                ? core.Session.InvestigationCaseId : core.Session.CurrentCase;
             var data = caseDatabase != null
-                ? caseDatabase.Find(core.Session.CurrentCase)
-                : core.ResolveCase(core.Session.CurrentCase);
+                ? caseDatabase.Find(caseId)
+                : core.ResolveCase(caseId);
             if (data == null)
             {
                 Debug.LogWarning($"GameFlow: no CaseData for session case {core.Session.CurrentCase} " +
@@ -134,6 +141,8 @@ namespace Morsoul.Flow
                 interrogation.MistrialRequested += HandleMistrialRequested;
                 interrogation.RetryRequested += HandleRetryRequested;
                 interrogation.StrikesChanged += HandleInterrogationStrikes;
+                interrogation.StateChanged += HandleInterrogationStateChanged;
+                interrogation.Forfeited += HandleInterrogationForfeited;
             }
             if (resolution != null)
                 resolution.Dismissed += HandleResolutionDismissed;
@@ -169,6 +178,8 @@ namespace Morsoul.Flow
                 interrogation.MistrialRequested -= HandleMistrialRequested;
                 interrogation.RetryRequested -= HandleRetryRequested;
                 interrogation.StrikesChanged -= HandleInterrogationStrikes;
+                interrogation.StateChanged -= HandleInterrogationStateChanged;
+                interrogation.Forfeited -= HandleInterrogationForfeited;
             }
             if (resolution != null)
                 resolution.Dismissed -= HandleResolutionDismissed;
@@ -181,7 +192,7 @@ namespace Morsoul.Flow
                 cutscenePlayer.CutsceneEnded -= HandleCutsceneEnded;
         }
 
-        /// <summary>Starts a case: fresh session, case + clue rack pushed into the board.</summary>
+        /// <summary>Starts the composed investigation, accepted 2D encounter, or finale context.</summary>
         public void BeginCase(CaseData caseData)
         {
             if (caseData == null)
@@ -195,10 +206,12 @@ namespace Morsoul.Flow
             if (core != null)
             {
                 var focus = Core.CoreRuntime.Instance.Focus;
-                if (focus.StrainedScanUsed &&
-                    core.CurrentCase >= 1 && core.CurrentCase <= 4)
-                    core.MarkStrainedScan(core.CurrentCase);
-                core.CurrentCase = caseData.caseId;
+                int focusCase = investigationScene && core.InvestigationCaseId >= 0
+                    ? core.InvestigationCaseId : core.CurrentCase;
+                if (focus.StrainedScanUsed && focusCase >= 1 && focusCase <= 4)
+                    core.MarkStrainedScan(focusCase);
+                if (investigationScene) core.InvestigationCaseId = caseData.caseId;
+                else core.CurrentCase = caseData.caseId;
                 focus.SetStrainedScanUsed(core.IsStrainedScanUsed(caseData.caseId));
                 if (caseData.toolUnlocked != Tool.None) core.UnlockTool(caseData.toolUnlocked);
                 latentLogCollected = core.IsLatentLogCollected(caseData.caseId);
@@ -217,11 +230,45 @@ namespace Morsoul.Flow
             _reportedStrikes = _session.StrikesLost;
             _collectedClues.Clear();
             Bind();
+            bool encounter = core != null && !investigationScene &&
+                             caseData.caseId >= 1 && caseData.caseId <= 4;
+            if (weightedBoard != null)
+                weightedBoard.CanUse = () => !encounter && !_endingRequested &&
+                    !(journalPanel != null && journalPanel.IsOpen) &&
+                    (investigationScene || caseData.caseId == 5 || Core.CoreRuntime.Instance == null);
+            if (journalPanel != null)
+                journalPanel.CanOpen = () =>
+                    !_endingRequested &&
+                    !(interrogation != null && interrogation.IsOpen) &&
+                    !(weightedBoard != null && weightedBoard.IsOpen) &&
+                    !(board != null && board.IsOpen) &&
+                    !(resolution != null && resolution.IsVisible) &&
+                    !(cutscenePlayer != null && cutscenePlayer.IsPlaying) &&
+                    !(dialogue != null && dialogue.IsPlaying);
+            if (encounter)
+            {
+                weightedBoard?.Close();
+                weightedBoard?.SetCase(null);
+                board?.Close();
+                if (board != null) board.handleBoardHotkey = false;
+                SyncBoardGradeInputs();
+                if (core.CanStartInterrogation(caseData.caseId))
+                    HandleInterrogationUnlocked(caseData.interrogation);
+                else Debug.LogWarning("GameFlow: this 2D encounter requires an accepted investigation.", this);
+                return;
+            }
             bool weighted = weightedBoard != null && caseData.evidenceGraph != null
                             && weightedBoard.SetCase(caseData,
                                 core != null
                                     ? core.GetOrCreateBoardState(caseData.caseId)
                                     : null);
+            if (caseData.evidenceGraph != null && !weighted)
+            {
+                board?.Close();
+                if (board != null) board.handleBoardHotkey = false;
+                Debug.LogWarning("GameFlow: a valid weighted board panel is required; legacy fallback is disabled for this case.", this);
+                return;
+            }
             if (weighted)
             {
                 var focus = Core.CoreRuntime.Instance != null
@@ -300,6 +347,9 @@ namespace Morsoul.Flow
             if (interrogation == null) return;
             _mistrialHandled = false;
             interrogation.Reset();
+            int caseId = _session != null ? _session.Case.caseId
+                : activeCase != null ? activeCase.caseId : 0;
+            PrepareInterrogationSnapshot(caseId);
             interrogation.Open();
         }
 
@@ -340,7 +390,81 @@ namespace Morsoul.Flow
             _mistrialHandled = false;
             board?.Close();
             weightedBoard?.Close();
+            journalPanel?.Close();
+            PrepareInterrogationSnapshot(caseId);
             interrogation.Open();
+        }
+
+        /// <summary>
+        /// Restores an in-progress encounter snapshot when the session holds
+        /// one for this case (Continue mid-interrogation), otherwise stamps a
+        /// fresh entry snapshot so an interrupted attempt resumes coherently.
+        /// Only 2D suspect encounters (cases 1-4) are persisted.
+        /// </summary>
+        void PrepareInterrogationSnapshot(int caseId)
+        {
+            var session = Core.CoreRuntime.Instance != null
+                ? Core.CoreRuntime.Instance.Session : null;
+            if (session == null || investigationScene || caseId < 1 || caseId > 4) return;
+            var snapshot = session.ActiveInterrogation;
+            if (snapshot != null && snapshot.caseId == caseId)
+            {
+                interrogation.RestoreState(snapshot.phaseIndex,
+                    snapshot.composureSegmentsRemaining, snapshot.strikeCount);
+                _reportedStrikes = snapshot.strikeCount;
+                return;
+            }
+            session.SetActiveInterrogation(new Core.ActiveInterrogationSave
+            {
+                caseId = caseId,
+                phaseIndex = interrogation.EnginePhaseIndex,
+                composureSegmentsRemaining = interrogation.EngineSegmentsRemaining,
+                strikeCount = interrogation.EngineStrikesLost,
+                entryStrikeCount = session.GetInterrogationStrikeCount(caseId),
+                preInterrogationCheckpointId = Core.GameStateManager.Instance != null &&
+                                               Core.GameStateManager.Instance.CurrentSave != null
+                    ? Core.GameStateManager.Instance.CurrentSave.checkpointSceneName ?? ""
+                    : "",
+            });
+        }
+
+        /// <summary>Keeps the session encounter snapshot in step with engine progress.</summary>
+        public void HandleInterrogationStateChanged()
+        {
+            var snapshot = Core.CoreRuntime.Instance != null
+                ? Core.CoreRuntime.Instance.Session.ActiveInterrogation : null;
+            int caseId = _session != null ? _session.Case.caseId
+                : activeCase != null ? activeCase.caseId : 0;
+            if (snapshot == null || interrogation == null || snapshot.caseId != caseId) return;
+            snapshot.phaseIndex = interrogation.EnginePhaseIndex;
+            snapshot.composureSegmentsRemaining = interrogation.EngineSegmentsRemaining;
+            snapshot.strikeCount = interrogation.EngineStrikesLost;
+        }
+
+        /// <summary>
+        /// ESC forfeit: voids the aborted attempt (strikes rewind to the
+        /// pre-encounter count, snapshot cleared) and returns the player to
+        /// the case hub. Board acceptance and grade history are untouched.
+        /// </summary>
+        public void HandleInterrogationForfeited()
+        {
+            var core = Core.CoreRuntime.Instance;
+            var session = core != null ? core.Session : null;
+            var snapshot = session != null ? session.ActiveInterrogation : null;
+            int caseId = snapshot != null ? snapshot.caseId
+                : _session != null ? _session.Case.caseId
+                : activeCase != null ? activeCase.caseId : 0;
+            if (snapshot != null && session != null)
+            {
+                session.SetInterrogationStrikeCount(snapshot.caseId, snapshot.entryStrikeCount);
+                _reportedStrikes = snapshot.entryStrikeCount;
+                _session?.RestoreStrikes(snapshot.entryStrikeCount);
+                session.SetActiveInterrogation(null);
+            }
+            if (core == null || caseId < 1 || caseId > 4) return;
+            if (!Core.GameStateManager.Ensure().GoToRoute(
+                    Core.RouteKeys.Hub(caseId), Core.GameFlowState.Hub))
+                Debug.LogWarning("GameFlow: forfeited interrogation but no hub route is loadable.", this);
         }
 
         public void HandleRoutesToEnding()
@@ -392,9 +516,24 @@ namespace Morsoul.Flow
         {
             var caseData = _session != null ? _session.Case : activeCase;
             if (caseData == null) return;
+            if (caseData.caseId == 0)
+            {
+                weightedBoard?.Close();
+                Core.CoreRuntime.Instance?.Session.RecordInvestigationSource(0, Core.InvestigationCompletionSource.Real);
+                return;
+            }
             if (caseData.hasInterrogation && caseData.interrogation != null)
             {
-                HandleInterrogationUnlocked(caseData.interrogation);
+                var core = Core.CoreRuntime.Instance;
+                if (core == null) HandleInterrogationUnlocked(caseData.interrogation);
+                else
+                {
+                    weightedBoard?.Close();
+                    core.Session.RecordInvestigationSource(caseData.caseId, Core.InvestigationCompletionSource.Real);
+                    core.Bus.Publish(new Core.InvestigationStateChangedEvent { CaseId = caseData.caseId });
+                    if (!Core.GameStateManager.Ensure().ReturnFromInvestigation(caseData.caseId))
+                        Debug.LogWarning("GameFlow: the accepted investigation has no loadable 2D return location.", this);
+                }
                 return;
             }
             var result = Morsoul.Engine.EndingResolver.Resolve(new Morsoul.Engine.EndingResolverInput
@@ -440,11 +579,13 @@ namespace Morsoul.Flow
             _mistrialHandled = true;
             _session.RecordMistrialRetry();
             _reportedStrikes = 0;
-            // Persist the penalty and the reset strike count through the retry.
+            // Persist the penalty and the reset strike count through the retry;
+            // the encounter snapshot ends so the reload starts a fresh attempt.
             var coreSession = Core.CoreRuntime.Instance?.Session;
             coreSession?.SetFlag(
                 Core.SessionState.MistrialFlagFor(_session.Case.caseId));
             coreSession?.SetInterrogationStrikeCount(_session.Case.caseId, 0);
+            coreSession?.SetActiveInterrogation(null);
         }
 
         /// <summary>
@@ -560,6 +701,7 @@ namespace Morsoul.Flow
             if (caseData == null) return;
             var session = Core.CoreRuntime.Instance != null ? Core.CoreRuntime.Instance.Session : null;
             SyncBoardGradeInputs();
+            session?.SetActiveInterrogation(null);
             // Strained scans during the investigation pull the grade to Standard.
             if (Core.CoreRuntime.Instance != null
                 && Core.CoreRuntime.Instance.Focus.StrainedScanUsed)
@@ -573,6 +715,7 @@ namespace Morsoul.Flow
             if (session != null)
             {
                 session.SetGrade(caseData.caseId, grade);
+                if (caseData.caseId == 4) session.SetFlag("Case4_BrokkFreed");
                 session.SetFlag(Core.SessionState.LatentLogFlagFor(caseData.caseId),
                     latentLogCollected);
                 if (!string.IsNullOrEmpty(caseData.uneaseFlagKey))
@@ -589,11 +732,11 @@ namespace Morsoul.Flow
         }
 
         /// <summary>
-        /// Interrogation evidence = session-collected clues + verified board
-        /// premises. Journal/dialogue lists are rehydrated from Session so a
-        /// fresh CaseLoop entry does not lose clues gathered in earlier
-        /// scenes; a solved weighted board contributes the case's authored
-        /// deduction premises that the legacy board would have produced.
+        /// Weighted interrogations use collected clues, not generated premises.
+        /// Journal/dialogue evidence is rehydrated from Session so a fresh
+        /// CaseLoop entry retains clues gathered in earlier environments.
+        /// Verified premises remain available only to the legacy compatibility
+        /// path for cases without an authored evidence graph.
         /// </summary>
         public List<EvidenceData> BuildEvidence()
         {
@@ -613,15 +756,8 @@ namespace Morsoul.Flow
             if (hubJournal != null)
                 foreach (var clue in hubJournal.Collected) Add(clue);
             foreach (var clue in _collectedClues) Add(clue);
-            if (board != null && board.Premises != null)
+            if (caseData != null && caseData.evidenceGraph == null && board != null && board.Premises != null)
                 foreach (var premise in board.Premises) Add(premise);
-            if (weightedBoard != null && weightedBoard.Session != null &&
-                weightedBoard.Session.State.BoardSolved &&
-                caseData != null && caseData.inquiryNodes != null)
-            {
-                foreach (var node in caseData.inquiryNodes)
-                    if (node != null) Add(node.producesPremise);
-            }
             return evidence;
         }
 
@@ -629,8 +765,11 @@ namespace Morsoul.Flow
         {
             _endingRequested = true;
             _lastEnding = ending;
+            weightedBoard?.Close();
             board?.Close();
             interrogation?.Close();
+            journalPanel?.Close();
+            Core.CoreRuntime.Instance?.Session.SetActiveInterrogation(null);
             EndingRouteRequested?.Invoke(ending);
             var cutscene = endingCutscenes != null
                            && ending >= 0 && ending < endingCutscenes.Length

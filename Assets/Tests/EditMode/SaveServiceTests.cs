@@ -102,6 +102,36 @@ namespace Morsoul.Tests
             };
         }
 
+        [TestCase(false, false)]
+        [TestCase(false, true)]
+        [TestCase(true, false)]
+        [TestCase(true, true)]
+        public void OptionalContexts_RoundTripWithoutInventingZeroValuedObjects(bool position, bool interrogation)
+        {
+            var state = SampleState();
+            if (!position) state.playerPosition = null;
+            if (!interrogation) state.activeInterrogation = null;
+            Assert.IsTrue(SaveSerializer.TryDeserialize(SaveSerializer.Serialize(state), out var loaded, out var error), error);
+            Assert.AreEqual(position, loaded.playerPosition != null);
+            Assert.AreEqual(interrogation, loaded.activeInterrogation != null);
+            Assert.AreEqual(position, loaded.hasPlayerPosition);
+            Assert.AreEqual(interrogation, loaded.hasActiveInterrogation);
+            Assert.IsTrue(SaveCanonicalMap.ToCanonical(loaded).ContainsKey("hasPlayerPosition"));
+            Assert.IsTrue(SaveCanonicalMap.ToCanonical(loaded).ContainsKey("hasActiveInterrogation"));
+        }
+
+        [Test]
+        public void SealedVersionThree_VerifiesOriginalMapBeforeMigration()
+        {
+            var state = SampleState();
+            state.saveVersion = 3;
+            Assert.IsTrue(SaveSerializer.TryDeserialize(SaveSerializer.Serialize(state), out var loaded, out var error), error);
+            Assert.AreEqual(SaveState.CurrentVersion, loaded.saveVersion);
+            Assert.IsTrue(loaded.hasPlayerPosition);
+            Assert.IsTrue(loaded.hasActiveInterrogation);
+            Assert.AreEqual(state.playerPosition.x, loaded.playerPosition.x);
+        }
+
         void WriteLegacyFile(string payload)
         {
             string signature;
@@ -144,7 +174,9 @@ namespace Morsoul.Tests
         [Test]
         public void CanonicalMap_CoversEveryV3SaveField()
         {
-            var map = SaveCanonicalMap.ToCanonical(SampleState());
+            var state = SampleState();
+            state.saveVersion = 3;
+            var map = SaveCanonicalMap.ToCanonical(state);
             CollectionAssert.AreEquivalent(new[]
             {
                 "saveVersion", "profileId", "playerName", "currentCase",
@@ -196,7 +228,7 @@ namespace Morsoul.Tests
             CollectionAssert.AreEquivalent(new[]
             {
                 "caseId", "phaseIndex", "composureSegmentsRemaining",
-                "strikeCount", "preInterrogationCheckpointId",
+                "strikeCount", "entryStrikeCount", "preInterrogationCheckpointId",
             }, interrogation.Keys);
         }
 

@@ -6,6 +6,8 @@ using UnityEngine;
 
 namespace Morsoul.Core
 {
+    public enum InvestigationCompletionSource { Unknown, Real, Simulated }
+
     /// <summary>
     /// Live cross-scene session truth. Scene-scoped stores (HubJournal,
     /// HubFlags) sync against this so progress survives scene loads;
@@ -48,6 +50,28 @@ namespace Morsoul.Core
         public string ActiveCutsceneId = "";
         public string PreCutsceneCheckpointId = "";
         public ActiveInterrogationSave ActiveInterrogation;
+        public WorldReturnSave InvestigationReturn;
+        public int InvestigationCaseId = -1;
+
+        public void CaptureInvestigationReturn()
+        {
+            InvestigationReturn = CurrentSceneMode == SceneMode.Mode2D && HasPlayerPosition &&
+                                  !string.IsNullOrEmpty(CurrentSceneId)
+                ? new WorldReturnSave
+                {
+                    sceneName = CurrentSceneId,
+                    position = new PlayerPositionSave(PlayerPosition.x, PlayerPosition.y, PlayerPosition.z),
+                    facing = PlayerFacing2D,
+                } : null;
+        }
+
+        static WorldReturnSave Clone(WorldReturnSave source) => source == null ? null : new WorldReturnSave
+        {
+            sceneName = source.sceneName,
+            position = source.position == null ? new PlayerPositionSave() :
+                new PlayerPositionSave(source.position.x, source.position.y, source.position.z),
+            facing = source.facing,
+        };
 
         readonly HashSet<string> _clueIds = new HashSet<string>(StringComparer.Ordinal);
         readonly Dictionary<string, ClueData> _clueAssets = new Dictionary<string, ClueData>(StringComparer.Ordinal);
@@ -212,6 +236,63 @@ namespace Morsoul.Core
 
         public IReadOnlyDictionary<int, BoardRuntimeState> BoardStates => _boardStates;
 
+        public bool CanStartInterrogation(int caseId) =>
+            caseId >= 1 && caseId <= 4 && CurrentCase == caseId &&
+            _boardStates.TryGetValue(caseId, out var board) && board.BoardSolved &&
+            (!_grades.TryGetValue(caseId, out var grade) || grade == Grade.Ungraded);
+
+        public BoardRuntimeState CopyBoardState(int caseId)
+        {
+            var copy = new BoardRuntimeState { CaseId = caseId };
+            if (_boardStates.TryGetValue(caseId, out var state))
+            {
+                FromSave(ToSave(state), copy);
+                copy.Focus = state.Focus;
+                copy.MaxFocus = state.MaxFocus;
+            }
+            return copy;
+        }
+
+        public bool AcceptInvestigation(BoardRuntimeState accepted,
+            InvestigationCompletionSource source)
+        {
+            if (accepted == null || !accepted.BoardSolved || accepted.CaseId < 0 || accepted.CaseId > 4)
+                return false;
+            if (_boardStates.TryGetValue(accepted.CaseId, out var existing) && existing.BoardSolved)
+                return false;
+            var copy = new BoardRuntimeState();
+            FromSave(ToSave(accepted), copy);
+            copy.Focus = accepted.Focus;
+            copy.MaxFocus = accepted.MaxFocus;
+            _boardStates[accepted.CaseId] = copy;
+            RecordInvestigationSource(accepted.CaseId, source);
+            return true;
+        }
+
+        public InvestigationCompletionSource GetInvestigationSource(int caseId) =>
+            HasFlag("Investigation.Source.Real." + caseId) ? InvestigationCompletionSource.Real :
+            HasFlag("Investigation.Source.Simulated." + caseId) ? InvestigationCompletionSource.Simulated :
+            InvestigationCompletionSource.Unknown;
+
+        public void RecordInvestigationSource(int caseId, InvestigationCompletionSource source)
+        {
+            if (GetInvestigationSource(caseId) != InvestigationCompletionSource.Unknown ||
+                source == InvestigationCompletionSource.Unknown) return;
+            SetFlag("Investigation.Source." + source + "." + caseId);
+        }
+
+        public bool WasInvestigationSimulated(int caseId) => HasFlag("Investigation.SimulationUsed." + caseId);
+        public bool WasClueSimulated(int caseId, string clueId) =>
+            HasFlag("Investigation.SimulatedClue." + caseId + "." + clueId);
+
+        public void RecordInvestigationSimulation(int caseId, IEnumerable<string> clueIds)
+        {
+            SetFlag("Investigation.SimulationUsed." + caseId);
+            if (clueIds == null) return;
+            foreach (string id in clueIds)
+                if (!string.IsNullOrEmpty(id)) SetFlag("Investigation.SimulatedClue." + caseId + "." + id);
+        }
+
         /// <summary>Marks runic-log slot (0–3); out-of-range indices ignored.</summary>
         public void MarkRunicLog(int slot)
         {
@@ -346,6 +427,8 @@ namespace Morsoul.Core
             save.activeCutsceneId = ActiveCutsceneId;
             save.preCutsceneCheckpointId = PreCutsceneCheckpointId;
             save.activeInterrogation = Clone(ActiveInterrogation);
+            save.investigationReturn = Clone(InvestigationReturn);
+            save.investigationCaseId = InvestigationCaseId;
         }
 
         static CaseBoardSave ToSave(BoardRuntimeState s)
@@ -425,6 +508,7 @@ namespace Morsoul.Core
                 phaseIndex = source.phaseIndex,
                 composureSegmentsRemaining = source.composureSegmentsRemaining,
                 strikeCount = source.strikeCount,
+                entryStrikeCount = source.entryStrikeCount,
                 preInterrogationCheckpointId = source.preInterrogationCheckpointId ?? "",
             };
         }
@@ -500,6 +584,8 @@ namespace Morsoul.Core
             ActiveCutsceneId = save.activeCutsceneId ?? "";
             PreCutsceneCheckpointId = save.preCutsceneCheckpointId ?? "";
             ActiveInterrogation = Clone(save.activeInterrogation);
+            InvestigationReturn = Clone(save.investigationReturn);
+            InvestigationCaseId = save.investigationCaseId;
         }
 
         /// <summary>Clears everything (new game).</summary>
@@ -522,6 +608,8 @@ namespace Morsoul.Core
             ActiveCutsceneId = "";
             PreCutsceneCheckpointId = "";
             ActiveInterrogation = null;
+            InvestigationReturn = null;
+            InvestigationCaseId = -1;
             _clueIds.Clear();
             _clueAssets.Clear();
             _flags.Clear();

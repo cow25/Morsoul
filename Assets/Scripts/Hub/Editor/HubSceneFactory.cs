@@ -72,6 +72,7 @@ namespace Morsoul.Hub.Editor
                 new Color(0.6f, 0.25f, 0.25f), new Vector3(4f, 1.5f, 0f),
                 out NpcInteractable ignatius);
             ignatius.promptText = "[E] Talk";
+            ignatius.interrogationCaseId = 1;
             ignatius.dialogue =
                 LoadDialogue(Case01DialogueFolder + "/D_Ignatius_Claim_01.asset");
 
@@ -100,6 +101,7 @@ namespace Morsoul.Hub.Editor
             caseDoor.checkpointReason = "CaseDoor";
             caseDoor.routeKey = "caseloop";
             caseDoor.targetScene = "CaseLoop";
+            caseDoor.gameObject.SetActive(false);
 
             SaveScene(scene, LowerMarketScenePath);
         }
@@ -134,6 +136,7 @@ namespace Morsoul.Hub.Editor
             caseDoor.checkpointReason = "CaseDoor";
             caseDoor.routeKey = "caseloop";
             caseDoor.targetScene = "CaseLoop";
+            caseDoor.gameObject.SetActive(false);
 
             SaveScene(scene, WildernessScenePath);
         }
@@ -211,6 +214,7 @@ namespace Morsoul.Hub.Editor
             else Debug.LogWarning($"HubSceneFactory: UXML not found at '{JournalUxmlPath}'.");
             var journal = journalGo.AddComponent<Journal.JournalController>();
             journal.journal = context.journal;
+            journal.context = context;
             journal.SetFlags(context.flags.Set);
             var runicLog = AssetDatabase.LoadAssetAtPath<RunicLogData>(Case01RunicLogPath);
             if (runicLog != null)

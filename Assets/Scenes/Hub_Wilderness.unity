@@ -2049,8 +2049,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.HubHudController
   objectiveText: Receive Kaelen's briefing and acquire the Elder Grove Perimeter Seal.
+  postInvestigationObjective: The deduction is accepted - confront Vane the Veiled Circle Operative.
+  objectiveCaseId: 3
   caseText: 'Case 3: The Dying Grove'
-  footerText: '[WASD] Move | [Shift] Brisk Walk | [E] Interact | [G] Desk/Journal | [H] Board | [ESC] Menu'
+  footerText: '[WASD] Move | [Shift] Brisk Walk | [E] Interact | [G] Desk/Journal'
 --- !u!1931382934 &1492194214
 PanelRenderer:
   m_ObjectHideFlags: 0
@@ -2191,7 +2193,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1668432923
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2875,6 +2877,7 @@ MonoBehaviour:
   promptText: '[E] Talk'
   promptIndicator: {fileID: 995860781}
   dialogue: {fileID: 11400000, guid: 5348b1d196741944cbb47b43fe1e93a7, type: 2}
+  interrogationCaseId: 3
 --- !u!61 &1883838718
 BoxCollider2D:
   m_ObjectHideFlags: 0

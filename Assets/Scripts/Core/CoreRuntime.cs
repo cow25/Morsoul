@@ -35,6 +35,24 @@ namespace Morsoul.Core
         /// </summary>
         public SessionState Session { get; } = new SessionState();
 
+        public bool DevelopmentInvestigationFallbackEnabled { get; set; }
+        public string InvestigationStatusMessage { get; set; } = "";
+        public System.Func<string, InvestigationEntryResult> InvestigationEntryHandler { get; set; }
+        public System.Func<int, bool> InterrogationEntryHandler { get; set; }
+
+        public bool EnterInterrogation(int caseId) => Session.CanStartInterrogation(caseId) &&
+            Session.CurrentSceneMode == SceneMode.Mode2D && InterrogationEntryHandler != null &&
+            InterrogationEntryHandler(caseId);
+
+        public InvestigationEntryResult EnterInvestigation(string routeKey)
+        {
+            var result = InvestigationEntryHandler != null
+                ? InvestigationEntryHandler(routeKey)
+                : new InvestigationEntryResult { Message = "Investigation entry adapter is unavailable." };
+            InvestigationStatusMessage = result.Message ?? "";
+            return result;
+        }
+
         Morsoul.Data.ClueRegistry _clueRegistry;
         bool _clueRegistryLoaded;
 

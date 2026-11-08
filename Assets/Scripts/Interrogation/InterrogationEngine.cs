@@ -113,6 +113,31 @@ namespace Morsoul.Interrogation
             Status = InterrogationStatus.InProgress;
         }
 
+        /// <summary>
+        /// Restores a mid-encounter snapshot (ActiveInterrogationSave). Values
+        /// are clamped to the data's bounds; pressed keywords are not part of
+        /// the snapshot and restart unpressed inside the resumed phase.
+        /// </summary>
+        public void RestoreState(int phaseIndex, int segmentsRemaining, int strikesLost)
+        {
+            int phases = Data.phases.Length;
+            if (phaseIndex < 0) phaseIndex = 0;
+            if (phaseIndex > phases) phaseIndex = phases;
+            if (segmentsRemaining < 0) segmentsRemaining = 0;
+            if (segmentsRemaining > phases) segmentsRemaining = phases;
+            if (strikesLost < 0) strikesLost = 0;
+            if (strikesLost > MaxStrikes) strikesLost = MaxStrikes;
+
+            PhaseIndex = phaseIndex;
+            SegmentsRemaining = segmentsRemaining;
+            StrikesLost = strikesLost;
+            ShieldActive = Data.falsehoodShieldActive && PhaseIndex == 0;
+            _pressedKeywords.Clear();
+            Status = PhaseIndex >= phases ? InterrogationStatus.Confessed
+                : StrikesLost >= MaxStrikes ? InterrogationStatus.Mistrial
+                : InterrogationStatus.InProgress;
+        }
+
         MoveResult DoMove(Verb verb, EvidenceData evidence)
         {
             EnsureInProgress();

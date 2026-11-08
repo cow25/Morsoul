@@ -72,6 +72,12 @@ namespace Morsoul.Core
         public static string Serialize(SaveState state)
         {
             if (state == null) throw new ArgumentNullException(nameof(state));
+            if (state.saveVersion >= 4)
+            {
+                state.hasPlayerPosition = state.playerPosition != null;
+                state.hasActiveInterrogation = state.activeInterrogation != null;
+                state.hasInvestigationReturn = state.investigationReturn != null;
+            }
             string payload = JsonUtility.ToJson(state);
             CanonicalState.HashAndSeal(SaveCanonicalMap.ToCanonical(state),
                 state.profileId ?? "local", state.saveVersion, SealKey,
@@ -130,6 +136,13 @@ namespace Morsoul.Core
             {
                 error = "payload deserialized to null";
                 return false;
+            }
+
+            if (state.saveVersion >= 4)
+            {
+                if (!state.hasPlayerPosition) state.playerPosition = null;
+                if (!state.hasActiveInterrogation) state.activeInterrogation = null;
+                if (!state.hasInvestigationReturn) state.investigationReturn = null;
             }
 
             LegacySavePayload legacy = null;
@@ -200,7 +213,15 @@ namespace Morsoul.Core
                 return false;
             }
             if (state.saveVersion < 2) MigrateVersion1(state, legacy);
-            if (state.saveVersion < SaveState.CurrentVersion) MigrateVersion2(state, legacy);
+            if (state.saveVersion < 3) MigrateVersion2(state, legacy);
+            if (state.saveVersion < 4)
+            {
+                state.hasPlayerPosition = state.playerPosition != null;
+                state.hasActiveInterrogation = state.activeInterrogation != null;
+                state.investigationReturn = null;
+                state.hasInvestigationReturn = false;
+                state.investigationCaseId = -1;
+            }
             state.saveVersion = SaveState.CurrentVersion;
             NormalizeCurrent(state);
             return true;
@@ -273,7 +294,7 @@ namespace Morsoul.Core
             state.focusMax = Math.Max(1f, state.focusMax);
             state.focusEnergy = Mathf.Clamp(state.focusEnergy, 0f, state.focusMax);
             EnsureCaseGradeStates(state);
-            state.saveVersion = SaveState.CurrentVersion;
+            state.saveVersion = 3;
         }
 
         static void NormalizeCurrent(SaveState state)

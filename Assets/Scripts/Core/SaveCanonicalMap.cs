@@ -88,6 +88,19 @@ namespace Morsoul.Core
                 ["preCutsceneCheckpointId"] = s.preCutsceneCheckpointId ?? "",
                 ["activeInterrogation"] = ActiveInterrogation(s.activeInterrogation),
             };
+            if (s.saveVersion >= 4)
+            {
+                map["hasPlayerPosition"] = s.hasPlayerPosition;
+                map["hasActiveInterrogation"] = s.hasActiveInterrogation;
+                map["hasInvestigationReturn"] = s.hasInvestigationReturn;
+                map["investigationCaseId"] = s.investigationCaseId;
+                map["investigationReturn"] = s.investigationReturn == null ? null : new Dictionary<string, object>
+                {
+                    ["sceneName"] = s.investigationReturn.sceneName ?? "",
+                    ["position"] = PlayerPosition(s.investigationReturn.position),
+                    ["facing"] = s.investigationReturn.facing,
+                };
+            }
             return map;
         }
 
@@ -220,6 +233,7 @@ namespace Morsoul.Core
                 ["phaseIndex"] = state.phaseIndex,
                 ["composureSegmentsRemaining"] = state.composureSegmentsRemaining,
                 ["strikeCount"] = state.strikeCount,
+                ["entryStrikeCount"] = state.entryStrikeCount,
                 ["preInterrogationCheckpointId"] = state.preInterrogationCheckpointId ?? "",
             };
         }

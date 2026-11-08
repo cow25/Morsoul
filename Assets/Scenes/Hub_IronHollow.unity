@@ -648,6 +648,7 @@ MonoBehaviour:
   promptText: '[E] Talk'
   promptIndicator: {fileID: 995860781}
   dialogue: {fileID: 11400000, guid: 88a8ce9bcbd2b79499f8bb67d196a251, type: 2}
+  interrogationCaseId: 4
 --- !u!61 &766141953
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -1791,8 +1792,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.HubHudController
   objectiveText: Present Guild authority to Overseer Thrun and reach Drift 09.
+  postInvestigationObjective: The deduction is accepted - confront Harlan, the Veiled Circle Infiltrator.
+  objectiveCaseId: 4
   caseText: 'Case 4: The Shattered Seam'
-  footerText: '[WASD] Move | [Shift] Brisk Walk | [E] Interact | [G] Desk/Journal | [H] Board | [ESC] Menu'
+  footerText: '[WASD] Move | [Shift] Brisk Walk | [E] Interact | [G] Desk/Journal'
 --- !u!1931382934 &1389798727
 PanelRenderer:
   m_ObjectHideFlags: 0

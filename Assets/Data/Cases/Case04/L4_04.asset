@@ -18,6 +18,7 @@ MonoBehaviour:
   caseId: 4
   acquisition: 6
   requiredTool: 3
+  requiredFlag: Case4_BrokkFreed
   description: After Brokk is freed, use Aether Sight and Golem Eye at the unsealed sub-lab terminal. The schematics contain operational formulas, fail-safe frequencies and manual core override commands for the ancient stabilizer.
   dissonanceKeyword: 
   isBacktrackingOnly: 0

@@ -55,6 +55,16 @@ namespace Morsoul.Hub.Editor
             try
             {
                 var existing = FindCaseDoor(scene);
+                if (scenePath != IronHollowScenePath)
+                {
+                    if (existing != null)
+                    {
+                        existing.SetActive(false);
+                        EditorSceneManager.MarkSceneDirty(scene);
+                        EditorSceneManager.SaveScene(scene);
+                    }
+                    return;
+                }
                 if (existing != null)
                 {
                     var existingDoor = existing.GetComponent<CarrierInteractable>();

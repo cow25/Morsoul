@@ -12,6 +12,7 @@
         "Morsoul.Cutscene",
         "Morsoul.Resolution",
         "Morsoul.Hub",
+        "Morsoul.Journal",
         "Unity.InputSystem"
     ],
     "includePlatforms": [],

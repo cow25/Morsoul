@@ -105,10 +105,17 @@ namespace Morsoul.Core
         {
             _core.Session.Reset();
             _core.Session.PlayerName = playerName;
+            _core.Session.UnlockTool(Morsoul.Data.Tool.GolemEye);
             CurrentSave = new SaveState { playerName = playerName };
             _core.Focus.Restore(FocusTuning.FocusMax, false);
             _runStateLoaded = true;
             WriteCheckpoint("NewGame", null);
+            if (_core.InvestigationEntryHandler != null)
+            {
+                var entry = _core.EnterInvestigation(RouteKeys.Opening);
+                if (!entry.Success) Debug.LogWarning(entry.Message, this);
+                return;
+            }
             GoToRoute(RouteKeys.Opening, GameFlowState.Opening,
                 fallbackKey: RouteKeys.Hub(0), fallbackState: GameFlowState.Hub);
         }
@@ -126,10 +133,12 @@ namespace Morsoul.Core
             _core.Session.RestoreFrom(state, _core.ResolveClue);
             if (_core.Session.ResumeInterruptedElizaIntro())
                 state.checkpointSceneName = SessionState.PrologueWildernessSceneId;
-            bool strained = state.currentCase >= 1 && state.currentCase <= 4 &&
+            int resumedCase = state.currentSceneMode == SceneMode.Mode3D && state.investigationCaseId >= 0
+                ? state.investigationCaseId : state.currentCase;
+            bool strained = resumedCase >= 1 && resumedCase <= 4 &&
                             state.strainedScanUsedByCase != null &&
-                            state.strainedScanUsedByCase.Count >= state.currentCase &&
-                            state.strainedScanUsedByCase[state.currentCase - 1];
+                            state.strainedScanUsedByCase.Count >= resumedCase &&
+                            state.strainedScanUsedByCase[resumedCase - 1];
             _core.Focus.Restore(state.focusEnergy, strained,
                 maximum: state.focusMax > 0f ? state.focusMax : (float?)null,
                 restRemainderSeconds: state.restElapsedRemainderSeconds,
@@ -150,6 +159,10 @@ namespace Morsoul.Core
             }
             if (scene != checkpointScene)
             {
+                _core.Session.SetSceneContext(SceneMode.Mode2D, scene);
+                _core.Session.InvestigationCaseId = -1;
+                _core.Session.InvestigationReturn = null;
+                _core.Focus.SetStrainedScanUsed(_core.Session.IsStrainedScanUsed(state.currentCase));
                 if (!string.IsNullOrEmpty(checkpointScene))
                     Debug.LogWarning($"GameStateManager: checkpointed scene '{checkpointScene}' not loadable; using '{scene}' instead.", this);
                 else
@@ -157,6 +170,84 @@ namespace Morsoul.Core
             }
             return LoadSceneInternal(scene,
                 preserveRestoredPose: scene == checkpointScene);
+        }
+
+        public bool EnterInvestigationRoute(string routeKey, int caseId)
+        {
+            if (caseId < 0 || caseId > 4) return false;
+            string scene = routes.Resolve(routeKey);
+            if (string.IsNullOrEmpty(scene) || !Application.CanStreamedLevelBeLoaded(scene)) return false;
+            var session = _core.Session;
+            var mode = session.CurrentSceneMode;
+            string origin = session.CurrentSceneId;
+            var position = session.PlayerPosition;
+            var facing = session.PlayerFacing2D;
+            bool hadPosition = session.HasPlayerPosition;
+            session.CaptureInvestigationReturn();
+            int previousCase = session.InvestigationCaseId;
+            session.InvestigationCaseId = caseId;
+            bool previousStrained = _core.Focus.StrainedScanUsed;
+            _core.Focus.SetStrainedScanUsed(session.IsStrainedScanUsed(caseId));
+            bool loaded = false;
+            try
+            {
+                session.SetSceneContext(SceneMode.Mode3D, scene);
+                loaded = GoToRoute(routeKey, GameFlowState.Investigation);
+                return loaded;
+            }
+            finally
+            {
+                if (!loaded)
+                {
+                    session.InvestigationCaseId = previousCase;
+                    _core.Focus.SetStrainedScanUsed(previousStrained);
+                    if (hadPosition) session.SetPlayerContext(mode, origin, position, facing);
+                    else session.SetSceneContext(mode, origin);
+                }
+            }
+        }
+
+        public bool ReturnFromInvestigation(int caseId)
+        {
+            var session = _core.Session;
+            var entry = session.InvestigationReturn;
+            bool restore = entry != null && entry.position != null &&
+                           !string.IsNullOrEmpty(entry.sceneName) && Application.CanStreamedLevelBeLoaded(entry.sceneName);
+            string scene = restore ? entry.sceneName : routes.Resolve(RouteKeys.Hub(caseId));
+            if (string.IsNullOrEmpty(scene) || !Application.CanStreamedLevelBeLoaded(scene)) return false;
+            int previousCase = session.InvestigationCaseId;
+            bool previousStrained = _core.Focus.StrainedScanUsed;
+            if (previousStrained && previousCase >= 1 && previousCase <= 4)
+                session.MarkStrainedScan(previousCase);
+            var previousMode = session.CurrentSceneMode;
+            string previousScene = session.CurrentSceneId;
+            var previousPosition = session.PlayerPosition;
+            var previousFacing = session.PlayerFacing2D;
+            bool hadPosition = session.HasPlayerPosition;
+            bool loaded = false;
+            try
+            {
+                if (restore)
+                    session.SetPlayerContext(SceneMode.Mode2D, scene,
+                        new Vector3(entry.position.x, entry.position.y, entry.position.z), entry.facing);
+                else session.SetSceneContext(SceneMode.Mode2D, scene);
+                session.InvestigationReturn = null;
+                session.InvestigationCaseId = -1;
+                _core.Focus.SetStrainedScanUsed(session.IsStrainedScanUsed(session.CurrentCase));
+                loaded = LoadSceneInternal(scene, preserveRestoredPose: restore);
+                return loaded;
+            }
+            finally
+            {
+                if (!loaded)
+                {
+                    session.InvestigationReturn = entry;
+                    session.InvestigationCaseId = previousCase;
+                    _core.Focus.SetStrainedScanUsed(previousStrained);
+                    if (hadPosition) session.SetPlayerContext(previousMode, previousScene, previousPosition, previousFacing);
+                    else session.SetSceneContext(previousMode, previousScene);
+                }
+            }
         }
 
         internal static string ResolveContinueScene(string checkpointScene,
@@ -249,9 +340,11 @@ namespace Morsoul.Core
                 _core.Session.SetSceneContext(
                     _core.Session.CurrentSceneMode, nextSceneName);
             }
-            if (_core.Focus.StrainedScanUsed &&
-                _core.Session.CurrentCase >= 1 && _core.Session.CurrentCase <= 4)
-                _core.Session.MarkStrainedScan(_core.Session.CurrentCase);
+            int focusCase = _core.Session.CurrentSceneMode == SceneMode.Mode3D &&
+                            _core.Session.InvestigationCaseId >= 0
+                ? _core.Session.InvestigationCaseId : _core.Session.CurrentCase;
+            if (_core.Focus.StrainedScanUsed && focusCase >= 1 && focusCase <= 4)
+                _core.Session.MarkStrainedScan(focusCase);
             _core.Session.ApplyTo(CurrentSave);
             if (markClosed) _core.Focus.MarkClosed(DateTime.UtcNow);
             else _core.Focus.StampTrustedNow(DateTime.UtcNow);
@@ -302,10 +395,10 @@ namespace Morsoul.Core
                 if (!routes.Contains(key)) routes.Set(key, sceneName);
             }
             Seed(RouteKeys.Title, "Title");
-            Seed(RouteKeys.Opening, "Prologue_2D"); // 2D stand-in until PrologueRuins ships
+            Seed(RouteKeys.Opening, "PrologueRuins"); // Integration catalog guards the 3D opening
             Seed(RouteKeys.PrologueWilderness, SessionState.PrologueWildernessSceneId);
             Seed(RouteKeys.CaseLoop, "CaseLoop");
-            Seed(RouteKeys.Investigation(1), "Investigation_01_Placeholder"); // vault stand-in
+            // Investigation routes are registered only when their real levels are delivered.
             Seed(RouteKeys.Hub(0), "Hub_LowerMarket");   // tutorial case shares the market hub
             Seed(RouteKeys.Hub(1), "Hub_LowerMarket");
             Seed(RouteKeys.Hub(2), "Hub_CathedralNave"); // Cathedral of Saint Althea
@@ -349,6 +442,9 @@ namespace Morsoul.Core
             // Session.CurrentCase. Route chain: next hub -> current hub ->
             // title, so an unregistered route never strands the run.
             _core.Session.CurrentCase = e.CaseId + 1;
+            var nextCase = _core.ResolveCase(_core.Session.CurrentCase);
+            if (nextCase != null && nextCase.toolUnlocked != Morsoul.Data.Tool.None)
+                _core.Session.UnlockTool(nextCase.toolUnlocked);
             if (GoToRoute(RouteKeys.Hub(e.CaseId + 1), GameFlowState.Hub)) return;
             if (GoToRoute(RouteKeys.Hub(e.CaseId), GameFlowState.Hub)) return;
             GoToRoute(RouteKeys.Title, GameFlowState.Title);

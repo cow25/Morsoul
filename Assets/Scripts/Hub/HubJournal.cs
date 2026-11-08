@@ -15,6 +15,7 @@ namespace Morsoul.Hub
     public class HubJournal : MonoBehaviour
     {
         readonly List<ClueData> _collected = new List<ClueData>();
+        IEventBus _bus;
 
         /// <summary>Clues collected so far in this hub, in registration order.</summary>
         public IReadOnlyList<ClueData> Collected => _collected;
@@ -34,6 +35,21 @@ namespace Morsoul.Hub
             foreach (var kv in new List<KeyValuePair<string, ClueData>>(session.ClueAssets))
                 if (kv.Value != null && !_collected.Contains(kv.Value))
                     _collected.Add(kv.Value);
+            _bus = CoreRuntime.Instance.Bus;
+            _bus.Subscribe<InvestigationStateChangedEvent>(OnInvestigationChanged);
+        }
+
+        void OnDisable()
+        {
+            _bus?.Unsubscribe<InvestigationStateChangedEvent>(OnInvestigationChanged);
+            _bus = null;
+        }
+
+        void OnInvestigationChanged(InvestigationStateChangedEvent change)
+        {
+            var session = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session : null;
+            if (session == null) return;
+            foreach (var clue in new List<ClueData>(session.ClueAssets.Values)) Register(clue);
         }
 
         /// <summary>Registers the clue if not already present. Returns true when added.</summary>

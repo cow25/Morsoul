@@ -52,6 +52,9 @@ namespace Morsoul.Tests
         [TearDown]
         public void TearDown()
         {
+            // JournalController pauses via Time.timeScale; a failed assert can
+            // strand it at 0 and poison both later tests and TimeManager.asset.
+            Time.timeScale = 1f;
             foreach (var go in _objects)
                 if (go != null) Object.DestroyImmediate(go);
             _objects.Clear();
@@ -485,6 +488,29 @@ namespace Morsoul.Tests
                 $"Assets/Data/Cases/Case0{caseId}/Case_0{caseId}.asset");
 
         [Test]
+        public void InvestigationGate_UsesEntryAdapterWithoutLoadingSerializedStandIn()
+        {
+            var core = Core.CoreRuntime.Ensure();
+            _objects.Add(core.gameObject);
+            int calls = 0;
+            core.InvestigationEntryHandler = route =>
+            {
+                Assert.AreEqual("investigation.2", route);
+                calls++;
+                return new Core.InvestigationEntryResult { Success = true, Message = "Test investigation accepted." };
+            };
+            var gate = New<GateInteractable>("InvestigationGate");
+            gate.routeKey = "investigation.2";
+            gate.targetScene = "This_StandIn_Must_Not_Load";
+            gate.Interact(null);
+            Assert.AreEqual(1, calls);
+            Assert.AreEqual("Test investigation accepted.", core.InvestigationStatusMessage);
+            gate.requiredFlag = "Missing_Clearance";
+            gate.Interact(null);
+            Assert.AreEqual(1, calls);
+        }
+
+        [Test]
         public void CampaignRoutes_SeedOnlyDeliveredScenes()
         {
             var core = Core.CoreRuntime.Ensure();
@@ -498,8 +524,8 @@ namespace Morsoul.Tests
             Assert.AreEqual("Hub_Wilderness", gsm.routes.Resolve(Core.RouteKeys.Hub(3)));
             Assert.AreEqual("Hub_IronHollow", gsm.routes.Resolve(Core.RouteKeys.Hub(4)));
             Assert.IsNull(gsm.routes.Resolve(Core.RouteKeys.Hub(5)));
-            Assert.AreEqual("Investigation_01_Placeholder",
-                gsm.routes.Resolve(Core.RouteKeys.Investigation(1)));
+            Assert.AreEqual("PrologueRuins", gsm.routes.Resolve(Core.RouteKeys.Opening));
+            Assert.IsNull(gsm.routes.Resolve(Core.RouteKeys.Investigation(1)));
             Assert.IsNull(gsm.routes.Resolve(Core.RouteKeys.Investigation(2)));
             Assert.IsNull(gsm.routes.Resolve(Core.RouteKeys.Investigation(3)));
             Assert.IsNull(gsm.routes.Resolve(Core.RouteKeys.Investigation(4)));
@@ -537,12 +563,104 @@ namespace Morsoul.Tests
             var gate = New<GateInteractable>("VaultGate");
             gate.routeKey = Core.RouteKeys.Investigation(1);
             gate.targetScene = "Missing_Vault";
+            gsm.routes.Set(Core.RouteKeys.Investigation(1), "Delivered_Vault");
             var carrier = New<CarrierInteractable>("CaseDoor");
             carrier.routeKey = Core.RouteKeys.CaseLoop;
             carrier.targetScene = "Missing_CaseLoop";
 
-            Assert.AreEqual("Investigation_01_Placeholder", gate.ResolveTargetScene());
+            Assert.AreEqual("Delivered_Vault", gate.ResolveTargetScene());
             Assert.AreEqual("CaseLoop", carrier.ResolveTargetScene());
+        }
+
+        [Test]
+        public void InvestigationRevisit_DoesNotChangeCampaignCase()
+        {
+            var core = Core.CoreRuntime.Ensure();
+            _objects.Add(core.gameObject);
+            core.Session.CurrentCase = 5;
+            core.Session.InvestigationCaseId = 1;
+            core.Session.CurrentSceneMode = Core.SceneMode.Mode3D;
+            _flow.investigationScene = true;
+            _flow.weightedBoard = New<WeightedBoardController>("InvestigationBoard");
+            _flow.BeginCase(LoadCaseOne());
+            Assert.AreEqual(5, core.Session.CurrentCase);
+            Assert.AreEqual(1, core.Session.InvestigationCaseId);
+            Assert.AreEqual(1, _flow.weightedBoard.Session.State.CaseId);
+        }
+
+        [Test]
+        public void AcceptedBoard_NotifiesObserversAfterFocusRewardIsCommitted()
+        {
+            var data = LoadCaseOne();
+            var board = New<WeightedBoardController>("WeightedBoard");
+            board.SetCase(data);
+            board.SetClues(data.clues);
+            float energy = 25f, maximum = 100f;
+            board.FocusSource = () => (energy, maximum);
+            board.FocusSink = (value, cap) => { energy = value; maximum = cap; };
+            foreach (var edge in data.evidenceGraph.solutionEdges)
+                board.DrawLink(edge.sourceId, edge.targetId);
+            Assert.IsTrue(board.SelectConclusion(data.evidenceGraph.completeConclusionId));
+            bool notified = false;
+            board.BoardSolved += certificate =>
+            {
+                notified = true;
+                Assert.AreEqual(110f, energy);
+                Assert.AreEqual(110f, maximum);
+            };
+            board.SubmitConclusion();
+            Assert.IsTrue(notified);
+        }
+
+        [Test]
+        public void WeightedBoardStart_PreservesAlreadyBoundPersistentState()
+        {
+            var board = New<WeightedBoardController>("WeightedBoard");
+            var state = new Morsoul.Engine.BoardRuntimeState { CaseId = 1, CaseErrorCount = 7 };
+            board.SetCase(LoadCaseOne(), state);
+            typeof(WeightedBoardController).GetMethod("Start",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).Invoke(board, null);
+            Assert.AreSame(state, board.Session.State);
+            Assert.AreEqual(7, board.Session.State.CaseErrorCount);
+        }
+
+        [Test]
+        public void HubBoard_RejectsOpenAndMutationEvenWithAnExistingSession()
+        {
+            var core = Core.CoreRuntime.Ensure();
+            _objects.Add(core.gameObject);
+            core.Session.CurrentCase = 1;
+            var board = New<WeightedBoardController>("HubBoard");
+            board.SetCase(LoadCaseOne(), core.Session.GetOrCreateBoardState(1));
+            board.SetClues(LoadCaseOne().clues);
+            var hook = New<BoardHotkey>("HubBoardHook");
+            hook.board = board;
+            Assert.IsFalse(hook.EnsureBoard());
+            board.Open();
+            Assert.IsFalse(board.IsOpen);
+            board.DrawLink("C1_01", "C2_01");
+            Assert.IsEmpty(board.Session.State.Links);
+            Assert.IsFalse(board.SelectConclusion(LoadCaseOne().evidenceGraph.completeConclusionId));
+            Assert.IsEmpty(board.SubmitConclusion());
+        }
+
+        [Test]
+        public void MatchingSuspect_RequiresAcceptedCurrentCaseAndRejectsResolvedCases()
+        {
+            var core = Core.CoreRuntime.Ensure();
+            _objects.Add(core.gameObject);
+            core.Session.CurrentCase = 1;
+            core.Session.GetOrCreateBoardState(1).BoardSolved = true;
+            int calls = 0;
+            core.InterrogationEntryHandler = caseId => { calls++; return true; };
+            var suspect = New<NpcInteractable>("Suspect");
+            suspect.interrogationCaseId = 1;
+            suspect.Interact(null);
+            Assert.AreEqual(1, calls);
+            Assert.IsFalse(core.EnterInterrogation(2));
+            core.Session.SetGrade(1, Grade.Standard);
+            Assert.IsFalse(core.EnterInterrogation(1));
+            Assert.AreEqual(1, calls);
         }
 
         [Test]
@@ -560,6 +678,7 @@ namespace Morsoul.Tests
             var hotkey = New<BoardHotkey>("BoardHotkey");
             hotkey.board = board;
 
+            core.Session.CurrentSceneMode = Core.SceneMode.Mode3D;
             Assert.IsTrue(hotkey.EnsureBoard());
             Assert.AreSame(case1, board.caseData);
             Assert.NotNull(board.Session);
@@ -587,6 +706,7 @@ namespace Morsoul.Tests
             var hotkey = New<BoardHotkey>("BoardHotkey");
             hotkey.board = board;
 
+            core.Session.CurrentSceneMode = Core.SceneMode.Mode3D;
             Assert.IsTrue(hotkey.EnsureBoard());
             Assert.AreSame(data, board.caseData);
             Assert.NotNull(board.Session);
@@ -595,7 +715,7 @@ namespace Morsoul.Tests
         }
 
         [Test]
-        public void BoardHotkey_CaseFive_UsesPreloadedClues()
+        public void FinaleFlow_UsesPreloadedCluesInDedicatedContext()
         {
             var data = LoadCase(5);
             Assert.NotNull(data);
@@ -608,10 +728,10 @@ namespace Morsoul.Tests
             core.Session.CurrentCase = 5;
 
             var board = New<WeightedBoardController>("WeightedBoard");
-            var hotkey = New<BoardHotkey>("BoardHotkey");
-            hotkey.board = board;
+            _flow.weightedBoard = board;
+            _flow.BeginCase(data);
 
-            Assert.IsTrue(hotkey.EnsureBoard());
+            Assert.IsTrue(board.IsOpen);
             Assert.AreSame(data, board.caseData);
             Assert.NotNull(board.Session);
             CollectionAssert.AreEquivalent(
@@ -641,8 +761,8 @@ namespace Morsoul.Tests
             Assert.IsTrue(_interrogation.IsOpen);
             Assert.AreSame(case1.interrogation, _interrogation.interrogationData);
             var evidence = _flow.BuildEvidence();
-            CollectionAssert.Contains(evidence, case1.inquiryNodes[0].producesPremise);
-            CollectionAssert.Contains(evidence, case1.inquiryNodes[1].producesPremise);
+            CollectionAssert.DoesNotContain(evidence, case1.inquiryNodes[0].producesPremise);
+            CollectionAssert.DoesNotContain(evidence, case1.inquiryNodes[1].producesPremise);
             CollectionAssert.Contains(evidence, case1.clues[1]); // C2_01 physical evidence
         }
 
@@ -662,6 +782,259 @@ namespace Morsoul.Tests
             Assert.IsTrue(_resolution.UneaseVisible);
             Assert.AreEqual(Grade.Clean, core.Session.Grades[1]);
             Assert.IsTrue(core.Session.HasFlag(case1.uneaseFlagKey));
+        }
+
+        // --- Interrogation encounter snapshots -------------------------------------
+
+        [Test]
+        public void EngineRestore_ResumesPhaseSegmentsStrikes()
+        {
+            var f = TestCases.Build(1, withInterrogation: true);
+            var engine = new InterrogationEngine(f.interrogation, new EvidenceData[0]);
+
+            engine.RestoreState(1, 2, 1);
+            Assert.AreEqual(1, engine.PhaseIndex);
+            Assert.AreEqual(2, engine.SegmentsRemaining);
+            Assert.AreEqual(1, engine.StrikesLost);
+            Assert.AreEqual(InterrogationStatus.InProgress, engine.Status);
+
+            engine.RestoreState(3, 0, 0); // phase index past the last phase
+            Assert.AreEqual(InterrogationStatus.Confessed, engine.Status);
+            Assert.IsNull(engine.CurrentPhase);
+
+            engine.RestoreState(0, 3, 3);
+            Assert.AreEqual(InterrogationStatus.Mistrial, engine.Status);
+        }
+
+        Core.CoreRuntime EnsureEncounterSession(int caseId, int entryStrikes = 0)
+        {
+            var core = Core.CoreRuntime.Ensure();
+            _objects.Add(core.gameObject);
+            core.Session.Reset();
+            core.Session.CurrentCase = caseId;
+            core.Session.GetOrCreateBoardState(caseId).BoardSolved = true;
+            if (entryStrikes > 0) core.Session.SetInterrogationStrikeCount(caseId, entryStrikes);
+            return core;
+        }
+
+        [Test]
+        public void EncounterOpen_CreatesSnapshot_ConfessionClearsIt()
+        {
+            var core = EnsureEncounterSession(1, entryStrikes: 1);
+            var f = TestCases.Build(1, withInterrogation: true);
+
+            _flow.BeginCase(f.caseData); // encounter path auto-opens the interrogation
+
+            var snap = core.Session.ActiveInterrogation;
+            Assert.NotNull(snap);
+            Assert.AreEqual(1, snap.caseId);
+            Assert.AreEqual(0, snap.phaseIndex);
+            Assert.AreEqual(3, snap.composureSegmentsRemaining);
+            Assert.AreEqual(0, snap.strikeCount);
+            Assert.AreEqual(1, snap.entryStrikeCount, "entry strikes capture committed history");
+
+            _flow.HandleInterrogationEnded(InterrogationStatus.Confessed);
+            Assert.IsNull(core.Session.ActiveInterrogation);
+        }
+
+        [Test]
+        public void EncounterOpen_RestoresPersistedSnapshot()
+        {
+            var core = EnsureEncounterSession(1);
+            core.Session.SetActiveInterrogation(new Core.ActiveInterrogationSave
+            {
+                caseId = 1,
+                phaseIndex = 1,
+                composureSegmentsRemaining = 2,
+                strikeCount = 1,
+            });
+            var f = TestCases.Build(1, withInterrogation: true);
+
+            _flow.BeginCase(f.caseData);
+
+            Assert.IsTrue(_interrogation.IsOpen);
+            Assert.AreEqual(1, _interrogation.EnginePhaseIndex);
+            Assert.AreEqual(2, _interrogation.EngineSegmentsRemaining);
+            Assert.AreEqual(1, _interrogation.EngineStrikesLost);
+        }
+
+        [Test]
+        public void EncounterProgress_UpdatesSnapshot()
+        {
+            var core = EnsureEncounterSession(1);
+            var f = TestCases.Build(1, withInterrogation: true);
+            _flow.BeginCase(f.caseData);
+
+            _interrogation.RestoreState(1, 2, 1); // fires StateChanged -> handler updates the snapshot
+
+            var snap = core.Session.ActiveInterrogation;
+            Assert.NotNull(snap);
+            Assert.AreEqual(1, snap.phaseIndex);
+            Assert.AreEqual(2, snap.composureSegmentsRemaining);
+            Assert.AreEqual(1, snap.strikeCount);
+        }
+
+        [Test]
+        public void InterrogationForfeit_RewindsAttemptStrikesAndClearsSnapshot()
+        {
+            var core = EnsureEncounterSession(1, entryStrikes: 1);
+            var f = TestCases.Build(1, withInterrogation: true);
+            _flow.BeginCase(f.caseData); // snapshot.entryStrikeCount = 1
+
+            _flow.HandleInterrogationStrikes(2); // aborted attempt records strikes
+            Assert.AreEqual(2, core.Session.GetInterrogationStrikeCount(1));
+
+            _flow.HandleInterrogationForfeited();
+
+            Assert.IsNull(core.Session.ActiveInterrogation);
+            Assert.AreEqual(1, core.Session.GetInterrogationStrikeCount(1),
+                "aborted attempt strikes are voided; committed history survives");
+        }
+
+        [Test]
+        public void Mistrial_ClearsSnapshotAndResetsPersistedStrikes()
+        {
+            var core = EnsureEncounterSession(1);
+            var f = TestCases.Build(1, withInterrogation: true);
+            _flow.BeginCase(f.caseData);
+            Assert.NotNull(core.Session.ActiveInterrogation);
+
+            _flow.HandleMistrialRequested();
+
+            Assert.IsNull(core.Session.ActiveInterrogation);
+            Assert.AreEqual(0, core.Session.GetInterrogationStrikeCount(1));
+            Assert.IsTrue(core.Session.HasFlag(Core.SessionState.MistrialFlagFor(1)));
+        }
+
+        // --- Modal coordination -------------------------------------------------------
+
+        [Test]
+        public void Journal_RefusesToOpenWhileUiBlocked_AndBlocksUiWhileOpen()
+        {
+            var core = Core.CoreRuntime.Ensure();
+            _objects.Add(core.gameObject);
+            core.Session.Reset();
+            var context = New<HubContext>("Context");
+            var journal = New<Journal.JournalController>("Journal");
+            // EditMode fires no OnEnable — mirror its context/blocker wiring.
+            journal.context = context;
+            context.AddUiBlocker(() => journal.IsOpen);
+
+            bool extraBlock = false;
+            context.AddUiBlocker(() => extraBlock);
+
+            journal.Open();
+            Assert.IsTrue(journal.IsOpen);
+            Assert.IsTrue(context.UiBlocked, "the open journal blocks hub interaction");
+
+            journal.Close();
+            Assert.IsFalse(context.UiBlocked);
+
+            extraBlock = true;
+            Assert.IsFalse(journal.OpenAllowed());
+            journal.Open();
+            Assert.IsFalse(journal.IsOpen);
+
+            extraBlock = false;
+            journal.CanOpen = () => false;
+            Assert.IsFalse(journal.OpenAllowed());
+            journal.Open();
+            Assert.IsFalse(journal.IsOpen);
+        }
+
+        [Test]
+        public void Journal_RefusesToOpenDuringCutscene()
+        {
+            var core = Core.CoreRuntime.Ensure();
+            _objects.Add(core.gameObject);
+            core.Session.Reset();
+            var context = New<HubContext>("Context");
+            var journal = New<Journal.JournalController>("Journal");
+            journal.context = context;
+
+            core.Session.SetCutsceneContext("Cutscene.Test", "");
+
+            Assert.IsFalse(journal.OpenAllowed());
+            journal.Open();
+            Assert.IsFalse(journal.IsOpen);
+        }
+
+        [Test]
+        public void Journal_SyncsRunicLogsFromSession()
+        {
+            var core = Core.CoreRuntime.Ensure();
+            _objects.Add(core.gameObject);
+            core.Session.Reset();
+            core.Session.MarkRunicLogById(1);
+            var f = TestCases.Build(1, withInterrogation: false);
+            var journal = New<Journal.JournalController>("Journal");
+            var log = ScriptableObject.CreateInstance<RunicLogData>();
+            log.id = 1;
+            f.assets.Add(log);
+            journal.allLogs = new[] { log };
+
+            journal.SyncLogsFromSession();
+
+            CollectionAssert.Contains(journal.collectedLogs, log);
+        }
+
+        [Test]
+        public void HubObjective_SwapsToSuspectTextWhenInterrogationUnlocked()
+        {
+            var core = Core.CoreRuntime.Ensure();
+            _objects.Add(core.gameObject);
+            core.Session.Reset();
+            core.Session.CurrentCase = 1;
+            var hud = New<HubHudController>("Hud");
+            hud.objectiveText = "Base objective.";
+            hud.objectiveCaseId = 1;
+            hud.postInvestigationObjective = "Confront the suspect.";
+
+            hud.RefreshObjective();
+            Assert.AreEqual("Base objective.", hud.AppliedObjective);
+
+            core.Session.GetOrCreateBoardState(1).BoardSolved = true;
+            hud.RefreshObjective();
+            Assert.AreEqual("Confront the suspect.", hud.AppliedObjective);
+        }
+
+        [Test]
+        public void PlayDialogue_BindsEffectsNameAndFlagsOnce()
+        {
+            var core = Core.CoreRuntime.Ensure();
+            _objects.Add(core.gameObject);
+            core.Session.Reset();
+            core.Session.PlayerName = "Vessel";
+            var context = New<HubContext>("Context");
+            var journal = New<HubJournal>("JournalStore");
+            var flags = New<HubFlags>("Flags");
+            var dialogue = New<Dialogue.DialogueController>("Dialogue");
+            context.journal = journal;
+            context.flags = flags;
+            context.dialogue = dialogue;
+
+            var f = TestCases.Build(1, withInterrogation: false);
+            var data = ScriptableObject.CreateInstance<Dialogue.DialogueData>();
+            f.assets.Add(data);
+            data.id = "D_TEST";
+            data.startNodeId = "n1";
+            data.nodes = new[]
+            {
+                new Dialogue.DialogueNodeData
+                {
+                    id = "n1",
+                    text = "Hello.",
+                    registersClue = f.c1,
+                    setsFlag = "Test.Flag",
+                },
+            };
+
+            Assert.IsTrue(context.PlayDialogue(data));
+
+            Assert.IsTrue(journal.Contains(f.c1));
+            Assert.IsTrue(flags.Has("Test.Flag"));
+            Assert.IsTrue(core.Session.HasFlag("Test.Flag"));
+            Assert.AreEqual("Vessel", dialogue.playerName);
         }
     }
 }

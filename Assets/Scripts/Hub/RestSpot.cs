@@ -19,6 +19,8 @@ namespace Morsoul.Hub
         public GameObject restingIndicator;
 
         HubPlayerController _player;
+        HubContext _context;
+        System.Func<bool> _restBlocker;
         int _restStartFrame = -1;
 
         void Reset()
@@ -34,6 +36,14 @@ namespace Morsoul.Hub
         public override void Interact(HubContext ctx)
         {
             base.Interact(ctx);
+            // Register once so UiBlocked (and the journal's open gate) covers
+            // the resting state — resting blocks interaction like an overlay.
+            if (ctx != null && _restBlocker == null)
+            {
+                _restBlocker = () => IsResting;
+                ctx.AddUiBlocker(_restBlocker);
+                _context = ctx;
+            }
             if (IsResting) StopResting();
             else StartResting();
         }
@@ -90,6 +100,11 @@ namespace Morsoul.Hub
         void OnDisable()
         {
             StopResting();
+            if (_context != null && _restBlocker != null)
+            {
+                _context.RemoveUiBlocker(_restBlocker);
+                _restBlocker = null;
+            }
         }
     }
 }

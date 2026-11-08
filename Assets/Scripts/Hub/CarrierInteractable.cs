@@ -40,6 +40,18 @@ namespace Morsoul.Hub
         public override void Interact(HubContext ctx)
         {
             base.Interact(ctx);
+            if (routeKey == RouteKeys.CaseLoop || checkpointReason == "CaseDoor")
+            {
+                var core = CoreRuntime.Instance;
+                string finaleHub = GameStateManager.Instance != null
+                    ? GameStateManager.Instance.routes.Resolve(RouteKeys.Hub(4)) : null;
+                if (core == null || core.Session.CurrentCase != 5 ||
+                    SceneManager.GetActiveScene().name != finaleHub)
+                {
+                    Debug.Log("Speak to the case's suspect after completing its investigation.", this);
+                    return;
+                }
+            }
 
             // Destination picker: unlocked hubs from the route table. Only
             // used when the scene wires a travel menu AND Core is live —
@@ -97,11 +109,6 @@ namespace Morsoul.Hub
                 return;
             }
             CheckpointRequested?.Invoke(checkpointReason);
-            CoreRuntime.Instance?.Bus.Publish(new CheckpointRequestedEvent
-            {
-                Reason = checkpointReason,
-                NextSceneName = scene
-            });
             // Single load authority: the GSM guards missing scenes and stamps
             // the checkpoint; direct load only without Core.
             if (CoreRuntime.Instance != null)

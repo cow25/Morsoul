@@ -32,7 +32,7 @@ namespace Morsoul.Core
     [Serializable]
     public class SaveState
     {
-        public const int CurrentVersion = 3;
+        public const int CurrentVersion = 4;
 
         public int saveVersion = CurrentVersion;
         /// <summary>Identity bound into the seal message; "local" until profiles exist.</summary>
@@ -92,6 +92,19 @@ namespace Morsoul.Core
         public string activeCutsceneId = "";
         public string preCutsceneCheckpointId = "";
         public ActiveInterrogationSave activeInterrogation;
+        public bool hasPlayerPosition;
+        public bool hasActiveInterrogation;
+        public WorldReturnSave investigationReturn;
+        public bool hasInvestigationReturn;
+        public int investigationCaseId = -1;
+    }
+
+    [Serializable]
+    public class WorldReturnSave
+    {
+        public string sceneName;
+        public PlayerPositionSave position = new PlayerPositionSave();
+        public PlayerFacing2D facing;
     }
 
     /// <summary>Persisted player pose; null means no scene-authored pose was saved.</summary>
@@ -199,6 +212,12 @@ namespace Morsoul.Core
         public int phaseIndex;
         public int composureSegmentsRemaining;
         public int strikeCount;
+        /// <summary>
+        /// Per-case strike count recorded before this encounter began. A
+        /// forfeit rewinds grading input to this value so an aborted attempt
+        /// does not count its strikes; a mistrial/commit path ignores it.
+        /// </summary>
+        public int entryStrikeCount;
         public string preInterrogationCheckpointId = "";
     }
 }

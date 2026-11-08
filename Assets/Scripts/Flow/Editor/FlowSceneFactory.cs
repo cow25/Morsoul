@@ -98,6 +98,7 @@ namespace Morsoul.Flow.Editor
             flow.cutscenePlayer = cutscene;
             flow.dialogue = dialogue;
             flow.hubJournal = hubJournal;
+            flow.journalPanel = journal;
             flow.flags = hubFlags;
             flow.caseDatabase = AssetDatabase.LoadAssetAtPath<CaseDatabase>(
                 "Assets/Resources/CaseDatabase.asset");

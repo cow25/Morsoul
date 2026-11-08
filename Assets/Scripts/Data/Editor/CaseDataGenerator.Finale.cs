@@ -61,6 +61,7 @@ namespace Morsoul.Data.Editor
                 AcquisitionMethod.AetherSightPlusGolemEye, Tool.AetherSight,
                 "After Brokk is freed, use Aether Sight and Golem Eye at the unsealed sub-lab terminal. The schematics contain operational formulas, fail-safe frequencies and manual core override commands for the ancient stabilizer.",
                 hasWorldPosition: true, worldPosition: new Vector2(0, 16));
+            l4.requiredFlag = "Case4_BrokkFreed";
             var p1 = Premise(folder, "P1_04", "Coordinated Internal Sabotage",
                 "The pipeline burst was caused by intentional mechanical valve tampering, completely ruling out worker error or natural pressure spikes.");
             var p2 = Premise(folder, "P2_04", "Veiled Circle Infiltration",

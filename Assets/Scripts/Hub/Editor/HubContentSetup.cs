@@ -44,6 +44,7 @@ namespace Morsoul.Hub.Editor
             public string artSceneName;
             public string caseText;
             public string objectiveText;
+            public string postInvestigationObjective;
             public int journalCaseId;              // runic log + dissonance for JournalController
             public string interludeDialoguePath;   // null = no arrival interlude
             public string interludeFlag;
@@ -79,6 +80,7 @@ namespace Morsoul.Hub.Editor
                 artSceneName = "Hub_LowerMarket_Art",
                 caseText = "Case 1: The Poisoned Vault",
                 objectiveText = "Interview Merchant Guildmaster Ovan for storage clearance.",
+                postInvestigationObjective = "The deduction is accepted - confront Master Alchemist Ignatius.",
                 journalCaseId = 1,
                 interludeDialoguePath = "Assets/Data/Dialogue/Interludes/D_Interlude_Market_01.asset",
                 interludeFlag = "Interlude.C1.Played",
@@ -90,6 +92,7 @@ namespace Morsoul.Hub.Editor
                 artSceneName = "Hub_CathedralNave_Art",
                 caseText = "Case 2: The Muted Belfry",
                 objectiveText = "Examine Mother Lyra and secure the Belfry Key.",
+                postInvestigationObjective = "The deduction is accepted - confront Accord the Bell-Ringer.",
                 journalCaseId = 2,
                 interludeDialoguePath = "Assets/Data/Dialogue/Interludes/D_Interlude_Cathedral_02.asset",
                 interludeFlag = "Interlude.C2.Played",
@@ -101,6 +104,7 @@ namespace Morsoul.Hub.Editor
                 artSceneName = "Hub_Wilderness_Art",
                 caseText = "Case 3: The Dying Grove",
                 objectiveText = "Receive Kaelen's briefing and acquire the Elder Grove Perimeter Seal.",
+                postInvestigationObjective = "The deduction is accepted - confront Vane the Veiled Circle Operative.",
                 journalCaseId = 3,
                 interludeDialoguePath = "Assets/Data/Dialogue/Interludes/D_Interlude_Whisperwood_03.asset",
                 interludeFlag = "Interlude.C3.Played",
@@ -112,6 +116,7 @@ namespace Morsoul.Hub.Editor
                 artSceneName = "Hub_IronHollow_Art",
                 caseText = "Case 4: The Shattered Seam",
                 objectiveText = "Present Guild authority to Overseer Thrun and reach Drift 09.",
+                postInvestigationObjective = "The deduction is accepted - confront Harlan, the Veiled Circle Infiltrator.",
                 journalCaseId = 4,
                 interludeDialoguePath = null,
                 interludeFlag = null,
@@ -147,6 +152,8 @@ namespace Morsoul.Hub.Editor
                     out var hud);
                 hud.caseText = spec.caseText;
                 hud.objectiveText = spec.objectiveText;
+                hud.objectiveCaseId = spec.journalCaseId;
+                hud.postInvestigationObjective = spec.postInvestigationObjective;
                 EnsureCaseDoor(scene);
                 EnsureRestSpot(scene);
                 EnsureCarrier(scene);
@@ -215,7 +222,13 @@ namespace Morsoul.Hub.Editor
 
         static void EnsureCaseDoor(Scene scene)
         {
-            if (FindRoot(scene, "CaseDoor") != null) return;
+            var existing = FindRoot(scene, "CaseDoor");
+            if (scene.path != IronHollowPath)
+            {
+                if (existing != null) existing.SetActive(false);
+                return;
+            }
+            if (existing != null) return;
             HubSceneFactory.CreateInteractable("CaseDoor",
                 new Color(0.7f, 0.35f, 0.5f), new Vector3(6f, 2.5f, 0f),
                 out CarrierInteractable door);
@@ -285,7 +298,12 @@ namespace Morsoul.Hub.Editor
         // --- Per-hub content -----------------------------------------------------
 
         /// <summary>Lower Market already ships its Case 1 content; nothing extra.</summary>
-        static void PopulateMarket() { }
+        static void PopulateMarket()
+        {
+            var suspect = FindRoot(SceneManager.GetActiveScene(), "Ignatius");
+            var npc = suspect != null ? suspect.GetComponent<NpcInteractable>() : null;
+            if (npc != null) npc.interrogationCaseId = 1;
+        }
 
         static void PopulateCathedral()
         {
@@ -294,7 +312,7 @@ namespace Morsoul.Hub.Editor
             Npc("Sylvan", new Color(0.4f, 0.75f, 0.6f), new Vector3(-4f, 3f, 0f),
                 "Assets/Data/Dialogue/Case02/D_Sylvan_02.asset", "[E] Talk");
             Npc("Accord", new Color(0.7f, 0.55f, 0.3f), new Vector3(4.5f, 1f, 0f),
-                "Assets/Data/Dialogue/Case02/D_Accord_02.asset", "[E] Talk");
+                "Assets/Data/Dialogue/Case02/D_Accord_02.asset", "[E] Talk", 2);
             Npc("NaveCrowd", new Color(0.5f, 0.5f, 0.5f), new Vector3(-1.5f, -2f, 0f),
                 "Assets/Data/Dialogue/Case02/D_NaveBarks_02.asset", "[E] Listen");
             Inspection("TuningFork", new Color(0.85f, 0.8f, 0.5f), new Vector3(-4.5f, -1f, 0f),
@@ -309,7 +327,7 @@ namespace Morsoul.Hub.Editor
             Npc("Kaelen", new Color(0.35f, 0.55f, 0.3f), new Vector3(-2f, 1f, 0f),
                 "Assets/Data/Dialogue/Case03/D_Kaelen_03.asset", "[E] Talk");
             Npc("Vane", new Color(0.55f, 0.3f, 0.55f), new Vector3(3.5f, 1.5f, 0f),
-                "Assets/Data/Dialogue/Case03/D_Vane_03.asset", "[E] Talk");
+                "Assets/Data/Dialogue/Case03/D_Vane_03.asset", "[E] Talk", 3);
             Npc("ForestOutpost", new Color(0.4f, 0.5f, 0.35f), new Vector3(-4.5f, -2f, 0f),
                 "Assets/Data/Dialogue/Case03/D_ForestBarks_03.asset", "[E] Listen");
             Inspection("BlightBark", new Color(0.5f, 0.4f, 0.3f), new Vector3(1f, -2.5f, 0f),
@@ -324,7 +342,7 @@ namespace Morsoul.Hub.Editor
             Npc("Thrun", new Color(0.65f, 0.45f, 0.25f), new Vector3(2f, 2f, 0f),
                 "Assets/Data/Dialogue/Case04/D_Thrun_04.asset", "[E] Talk");
             Npc("Harlan", new Color(0.4f, 0.35f, 0.3f), new Vector3(4.5f, -1f, 0f),
-                "Assets/Data/Dialogue/Case04/D_Harlan_04.asset", "[E] Talk");
+                "Assets/Data/Dialogue/Case04/D_Harlan_04.asset", "[E] Talk", 4);
             Npc("MinerCrowd", new Color(0.45f, 0.4f, 0.35f), new Vector3(-3f, -2f, 0f),
                 "Assets/Data/Dialogue/Case04/D_IndustrialBarks_04.asset", "[E] Listen");
             Inspection("DrillBit", new Color(0.55f, 0.55f, 0.6f), new Vector3(-4.5f, 1f, 0f),
@@ -413,10 +431,19 @@ namespace Morsoul.Hub.Editor
 
         // --- Content helpers (all name-guarded) --------------------------------
 
-        static void Npc(string name, Color tint, Vector3 pos, string dialoguePath, string prompt)
+        static void Npc(string name, Color tint, Vector3 pos, string dialoguePath, string prompt,
+            int interrogationCaseId = -1)
         {
-            if (FindRoot(SceneManager.GetActiveScene(), name) != null) return;
+            var existing = FindRoot(SceneManager.GetActiveScene(), name);
+            if (existing != null)
+            {
+                var existingNpc = existing.GetComponent<NpcInteractable>();
+                if (existingNpc != null && interrogationCaseId > 0)
+                    existingNpc.interrogationCaseId = interrogationCaseId;
+                return;
+            }
             HubSceneFactory.CreateInteractable(name, tint, pos, out NpcInteractable npc);
+            npc.interrogationCaseId = interrogationCaseId;
             npc.promptText = prompt;
             npc.dialogue = AssetDatabase.LoadAssetAtPath<DialogueData>(dialoguePath);
             if (npc.dialogue == null)

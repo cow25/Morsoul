@@ -824,7 +824,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &476467815
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2011,6 +2011,7 @@ MonoBehaviour:
   promptText: '[E] Talk'
   promptIndicator: {fileID: 371479687}
   dialogue: {fileID: 11400000, guid: 47c6e03c141b5e542bc0b289044f2558, type: 2}
+  interrogationCaseId: 1
 --- !u!61 &1046551834
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -2661,8 +2662,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.HubHudController
   objectiveText: Interview Merchant Guildmaster Ovan for storage clearance.
+  postInvestigationObjective: The deduction is accepted - confront Master Alchemist Ignatius.
+  objectiveCaseId: 1
   caseText: 'Case 1: The Poisoned Vault'
-  footerText: '[WASD] Move | [Shift] Brisk Walk | [E] Interact | [G] Desk/Journal | [H] Board | [ESC] Menu'
+  footerText: '[WASD] Move | [Shift] Brisk Walk | [E] Interact | [G] Desk/Journal'
 --- !u!1931382934 &1541868465
 PanelRenderer:
   m_ObjectHideFlags: 0

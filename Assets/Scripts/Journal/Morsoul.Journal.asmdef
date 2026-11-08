@@ -2,6 +2,7 @@
     "name": "Morsoul.Journal",
     "rootNamespace": "Morsoul.Journal",
     "references": [
+        "Morsoul.Core",
         "Morsoul.Data",
         "Morsoul.Hub",
         "Unity.InputSystem"

@@ -2031,8 +2031,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.HubHudController
   objectiveText: Examine Mother Lyra and secure the Belfry Key.
+  postInvestigationObjective: The deduction is accepted - confront Accord the Bell-Ringer.
+  objectiveCaseId: 2
   caseText: 'Case 2: The Muted Belfry'
-  footerText: '[WASD] Move | [Shift] Brisk Walk | [E] Interact | [G] Desk/Journal | [H] Board | [ESC] Menu'
+  footerText: '[WASD] Move | [Shift] Brisk Walk | [E] Interact | [G] Desk/Journal'
 --- !u!1931382934 &1312224222
 PanelRenderer:
   m_ObjectHideFlags: 0
@@ -2799,7 +2801,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1511586042
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3442,6 +3444,7 @@ MonoBehaviour:
   promptText: '[E] Talk'
   promptIndicator: {fileID: 995860781}
   dialogue: {fileID: 11400000, guid: 554f90cc3be37de45a06f742699afc8f, type: 2}
+  interrogationCaseId: 2
 --- !u!61 &2024974863
 BoxCollider2D:
   m_ObjectHideFlags: 0

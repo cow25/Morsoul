@@ -11,7 +11,7 @@ Unity investigation game combining 2D hubs, 3D investigations, dialogue, deducti
 3. Add this repository folder in Unity Hub and let Unity restore packages and import assets. Do not commit `Library`, `Temp`, `Logs` or generated IDE files.
 4. Read the ownership rules below. The 2D/Core work is developed on branch `2D`; coordinate integration with the 3D owner rather than assuming both branches have identical scenes.
 5. Open `Assets/Scenes/Title.unity` **by itself** and enter Play. Do not leave the market scene loaded alongside Title: both scenes' players and cameras would run.
-6. New Game currently falls back to `Hub_LowerMarket` when no opening route is configured. Continue requires a readable checkpoint.
+6. For development with unintegrated investigations, enable **F1 > Session > Investigation development fallback** before New Game. The runtime catalog gates the opening and case entrances; disabled/unavailable paths report status instead of loading stand-ins. Continue requires a readable checkpoint.
 7. Check **File > Build Profiles** if travel fails. An active profile can override the shared scene list.
 
 Do not regenerate scenes or content merely to open the project. Generators can overwrite authored work.
@@ -88,7 +88,7 @@ GameFlow -> Board -> Interrogation -> Resolution
 - `HubJournal` and `HubFlags` are scene-scoped stores, not competing persistent owners. Runtime composition must bind their views/listeners.
 - `CaseSession` tracks grading within the active case. `GameFlow` coordinates panel events and writes results back into Session.
 - Checkpoints live at `Application.persistentDataPath/morsoul_checkpoint.json`. HMAC signatures detect edits; a key embedded in a game client is not tamper-proof security. The primary save replacement path uses `File.Replace`; unsupported-filesystem fallback/recovery still needs platform validation.
-- Save files are sealed `saveVersion` 3 records. Every persisted field is represented in `SaveCanonicalMap`; version-2 sealed files verify against their original canonical map before migration, and version-1 signature files migrate only from explicit completed-case flags.
+- Save files are sealed `saveVersion` 4 records. Optional player/interrogation/return contexts carry explicit presence flags because Unity JSON expands null inline objects into zero-valued objects. Every persisted field is represented in `SaveCanonicalMap`; version-2 and version-3 sealed files verify against their original maps before migration, and version-1 signature files migrate only from explicit completed-case flags.
 - Regular `WriteCheckpoint` calls advance the monotonic `lastTrustedUtc` watermark but do not claim a graceful close. `OnApplicationQuit` calls `WriteCloseCheckpoint`, which writes `closedAtUtc`; Continue applies trusted offline recovery, clears the close marker and immediately persists the consumed interval so it cannot be credited twice.
 - The 2D hub path saves and restores player position/facing. If a checkpoint scene is missing, Continue falls back to the case hub and clears the old pose rather than applying it to the wrong scene.
 - An interrupted `CS00_ELIZA_INTRO` save is rewound on Continue to the `case00_eliza_precontact` state: the player resumes at `(6, 0)` in `Prologue_Wilderness`, `activeCutsceneId` clears, and the trigger can fire once instead of skipping or resuming halfway through.
@@ -106,9 +106,9 @@ Routes are configured through `GameStateManager.Ensure().routes.Set(key, actualS
 | `hub.3` | `Hub_Wilderness` |
 | `hub.4` | `Hub_IronHollow` |
 | `hub.5` | Not seeded; Case 5 is board/cutscene-only |
-| `opening` | `Prologue_2D` (2D tutorial stand-in; re-point to `PrologueRuins` when the 3D prologue ships) |
+| `opening` | `PrologueRuins`, guarded by the explicit integration catalog; development simulation goes directly to `Prologue_Wilderness` |
 | `prologue.wilderness` | `Prologue_Wilderness` (post-gate 2D approach and Eliza first contact) |
-| `investigation.1` | `Investigation_01_Placeholder` (2D vault stand-in; swap when the 3D vault ships) |
+| `investigation.1` | Not seeded; normal entrance dispatches through the catalog, with opt-in development simulation until the real vault is integrated |
 | `investigation.2`-`investigation.4` | Not seeded; their hub gates stay route-keyed but safely refuse until real scenes are registered |
 
 A route entry does not add a scene to a Build Profile. Register real scenes and add them to the active build list together. `GateInteractable.routeKey` and `CarrierInteractable.routeKey` resolve through this table before their serialized `targetScene` fallback; do not add nonexistent scene paths to suppress warnings. Continue resolves the checkpoint scene first, then the saved case's hub, then Title; it clears the saved pose whenever it cannot resume the checkpointed scene.
@@ -118,7 +118,7 @@ A route entry does not add a scene to a Build Profile. Register real scenes and 
 Read [the full contract](AGENTS.md#3d-integration-contract) before adapting the prototype scripts.
 
 1. Cache `CoreRuntime.Ensure()` in the scene adapter. Keep the existing 3D player/spawn owner; do not add the 2D `SceneEntryPoint` beside `PlayerSpawner`.
-2. While actively scanning, call `core.Focus.TickScan(Time.deltaTime)` **once per frame**. Display `Percent` on a 0-100 scale. Zero Focus must not block scanning: strained scans remain functional. Rest regeneration uses `TickRest` only during rest.
+2. While actively scanning, call `core.Focus.TickScan(Time.deltaTime)` **once per frame**. Display raw `Percent` energy / `Maximum`, using `Normalized` for bar fill. Zero Focus must not block scanning: strained scans remain functional. Rest regeneration uses `TickRest` only during rest.
 3. Resolve a stable authored clue ID using `core.ResolveClue(id)`. Reject an unresolved ID visibly; do not mark collection successful without its asset.
 4. If the scene has a bound `GameFlow`, call `flow.HandleClueRegistered(clue)`. It forwards to the journal/Session and handles latent clues. Do not independently fire several collection pipelines.
 5. Without GameFlow, `core.Session.RegisterClue(clue)` persists the clue. For an actual latent clue, also call `RegisterLatentClue(clue)` after tool/access checks. The current convention maps `L1_01` through `L4_04` to log slots 0-3 and per-case latent flags. Explicit `MarkRunicLogById(log.id)` uses **1-based** log IDs; `MarkRunicLog(slot)` uses **0-based** slots. Do not infer collection just from entering a zone.
@@ -134,15 +134,15 @@ The legacy `ScanController` still has its own 120-point focus and different zero
 ### Existing scenes
 
 - **Title:** normal New Game / Continue entry point.
-- **Hub_LowerMarket / Hub_CathedralNave / Hub_Wilderness / Hub_IronHollow:** generated 2D hub scenes for Cases 1-4, each with player/entry, context stores, weighted-board hotkey, travel/carrier wiring and a `CaseDoor` to `caseloop`. Their `investigation.2`-`investigation.4` gates are intentionally route-keyed with no fake target scene.
+- **Hub_LowerMarket / Hub_CathedralNave / Hub_Wilderness / Hub_IronHollow:** 2D hubs with movement, dialogue, gated investigation entrances and carrier travel. Hub boards are denied opening/mutation. Ignatius, Accord, Vane and Harlan explicitly enter their accepted current-case interrogation; legacy CaseDoors are inactive in the first three hubs. Iron Hollow retains the Case 5 entry, guarded to the correct hub and campaign state. Investigation gates use the integration catalog, not fake scene targets.
 - **Prologue_Wilderness:** dedicated 2D approach loaded by the Prologue gate. It restores the player at `(-8, 0)`, owns the separate full-lane first-contact trigger at `x = 8`, uses `BoxCollider2D` tree/blocker bounds and a `BoxCollider2D` player body, and completes the Prologue only after the in-world Eliza sequence.
 - **PrologueRuins:** 3D-owned scene. Do not regenerate or restructure it from the 2D lane.
-- **CaseLoop:** shared case-loop scene. With no `activeCase` assigned, its `GameFlow` boots Core if needed and resolves `Session.CurrentCase` through `Assets/Resources/CaseDatabase.asset` at Play time; assign `activeCase` only to pin one case for standalone testing. Hub scenes have a "CaseDoor" interactable (`[E] Begin Case`) that travels here through the guarded GSM path.
+- **CaseLoop:** dedicated 2D encounter host for accepted Cases 1–4, and the board/cinematic exception for Case 5. With no `activeCase`, GameFlow resolves `Session.CurrentCase` through CaseDatabase. Cases 1–4 with Core never open a board here and require an accepted, unresolved current-case investigation. Set `GameFlow.investigationScene = true` only in real investigation scene composition; that mode uses `Session.InvestigationCaseId`, persists board state and returns to 2D rather than starting interrogation in 3D.
 
 ### Campaign progression
 
-- Entering the case loop begins `Session.CurrentCase`. Completing a case without an ending advances `CurrentCase` and routes `hub.<id+1>` -> `hub.<id>` -> `title` in order until one loads. An ending (`Ending != 0`) routes to Title after its cutscene.
-- `Case_05` (board-only, authored `preloadedClues`) can be played end-to-end today; investigation cases still need their evidence collected into Session first (or a 3D scene delivering it).
+- Accepted Cases 1–4 unlock the matching 2D suspect interaction, which enters CaseLoop for `Session.CurrentCase`. Confession/resolution still owns case completion. Completing a case advances `CurrentCase`, unlocks the next case's authored tool, and routes `hub.<id+1>` -> `hub.<id>` -> `title`. An ending routes to Title after its cutscene.
+- `Case_05` (board-only, authored `preloadedClues`) can be played end-to-end today. For Cases 2-4, **F1 > Scenarios > C<n>: board ready** seeds their authored non-latent clues, unlock flag and current-case hub; the unavailable investigation gates remain locked instead of using throwaway stand-ins.
 
 ### CaseLoop setup
 
@@ -154,13 +154,13 @@ The legacy `ScanController` still has its own 120-point focus and different zero
 6. Assign `GameFlow.endingCutscenes[1]`, `[2]`, `[3]` (index 0 unused). For GameFlow-owned endings, leave each `CutsceneData.nextSceneName` empty so `CutsceneEnded` can drive case completion. A cutscene with its own destination owns travel instead.
 7. Missing ending media currently completes the ending immediately. With a live Core, case completion routes to Title; without Core, no GSM travel occurs. Do not mistake either fallback for verified cinematic playback.
 
-Controls exposed by the controllers include **E** for hub interaction/dialogue or cutscene advance, **G** for journal, **H** for board, and holding **Esc** to skip a cutscene. Scene composition must prevent overlapping modal input. The journal pauses simulation while open, and `HubContext.UiBlocked` treats an open weighted board as a blocking overlay. On weighted cases the board opens via `WeightedBoardController` (installed in CaseLoop and the 2D stand-ins; `BoardHotkey` lazily builds the session from `Session.CurrentCase`); the legacy `BoardController` gates itself off for weighted cases to avoid `H` conflicts. If a weighted board was already solved in a hub/investigation scene, entering CaseLoop resumes directly into the unlocked interrogation instead of dead-ending on the solved board.
+Controls include **E** for interaction/dialogue/cutscene advance, **G** for journal, and holding **Esc** to skip a cinematic. **H is investigation/finale-only**, not a hub shortcut. WeightedBoardController guards opening and gameplay mutations through its scene-owned permission callback; the retained hub BoardHotkey rejects Mode2D. The dedicated Case 5 host explicitly authorizes its board. Cases with evidenceGraph cannot fall back to legacy slot gameplay on a missing/invalid weighted panel. Full modal input/cursor/pause coordination remains a separate completion task.
 
 ## Content and asset authoring
 
 ### Case data
 
-- Cases 0-5 have data assets and wired `EvidenceGraphData`. Cases 0-1 use approved spec datasets; Cases 2-5 carry provisionally approved datasets pending playtest tuning. Data existence does not imply a corresponding playable investigation scene or registered campaign route; the demo stands in with `Prologue_2D` and `Investigation_01_Placeholder` (built by **Morsoul > Setup > Build Demo Stand-In Scenes**, also run by Rebuild Campaign Wiring). Use **Morsoul > Setup > Patch Demo Route Wiring** to add route keys to already-saved stand-in scenes without regenerating them.
+- Cases 0-5 have data assets and wired `EvidenceGraphData`. Cases 0-1 use approved datasets; Cases 2-5 are provisionally approved pending tuning. Data existence is not integration readiness. Rebuild Campaign Wiring no longer builds stand-ins or installs hub boards. Legacy stand-in assets/menus remain isolated compatibility fixtures; normal investigation entry uses the explicit catalog and opt-in simulation, with no automatic missing-scene success.
 - Follow the approved GDD/case documents for content decisions. The team's authoritative Obsidian documents are maintained outside this checkout; obtain them from the project owner rather than inventing story facts or assuming another contributor has the same local vault path.
 - Keep clue, premise and inquiry-node IDs stable. Save restoration relies on them.
 - Run **Morsoul > Data > Validate All Cases** after content edits, **Rebuild Clue Registry** after adding/removing clue assets, and **Rebuild Case Database** after adding/removing case assets. **Morsoul > Setup > Rebuild Campaign Wiring** runs the case-database rebuild plus the hub CaseDoor installer in one step. Review the generated asset diff and its `.meta` files.
@@ -217,27 +217,36 @@ Never run a second Unity process against an open project. Wait for Unity batch s
 - Interrogation mistakes, board errors, wrong conclusions and hint tiers affect grade; mistrial waits for Retry confirmation and retains its penalty after reload.
 - Move in a hub > checkpoint > quit > Continue > position/facing restore; missing checkpoint scenes fall back to the case hub, then Title, without applying the old pose.
 - Prologue acceptance: solve Case 0 > unlock/cross the gate > restore at `(-8, 0)` > walk into the Eliza trigger at `(8, 0)` > interrupt and Continue to verify the pre-contact resume > finish and verify `ElizaIntroSeen`, `EasternRouteUnlocked`, `PrologueCompleted`, Case 1 and the `Hub_LowerMarket` route.
-- Case 1 acceptance: talk to Ovan/Ignatius for `T1_01`, `T2_01` and `C1_WarrantGranted` > enter `Investigation_01_Placeholder` > collect `C1_01`, `C2_01`, `C3_01`, `RH1_01` > solve `CASE1_STAGED_INTERNAL_FRAUD` on the weighted board > return through CaseDoor > complete Ignatius `INT_01` > verify resolution, grade, `Case1_UneaseActive`, next-hub route, checkpoint and Continue restore.
-- Campaign spine acceptance: after Case 1 verify `hub.2` loads `Hub_CathedralNave`; `BelfryStair`, `BriarGate` and `DeepShaftLift` remain locked until their dialogue flags and then warn/refuse cleanly because no `investigation.2`-`investigation.4` scenes exist yet; each hub's CaseDoor loads `CaseLoop` for `Session.CurrentCase`; H opens that case's weighted board (Case 5 uses its preloaded rack) and blocks hub input; completion advances to the next delivered hub (Case 4 returns to `hub.4`, where CaseDoor starts board-only Case 5); endings route Title; and Continue falls back checkpoint -> case hub -> Title without applying a stale pose.
+- Case 1 development acceptance: enable the explicit fallback, talk to Ovan/Ignatius for testimony/warrant > interact with VaultGate > verify marked simulated eligible clues and accepted deduction without a stand-in load > talk to Ignatius again > complete INT_01 > verify grade/Unease, next hub, checkpoint and Continue. H and the retired CaseDoor must not open a board in the hub. Test actual board UI in an investigation host or the dedicated finale, not by restoring hub shortcuts.
+- Campaign spine acceptance: progress through the four hubs with development fallback enabled, satisfy each normal access flag, enter its catalog-backed gate, then interrogate Accord/Vane/Harlan through their NPC interactions. Confirm tool unlocks before Cases 3/4, no hub boards, no replayed rewards, preserved locked logs and Brokk's post-confession terminal gate. At campaign Case 5 revisit earlier entrances for newly eligible logs without changing CurrentCase; only Iron Hollow's finale entry may enter Case 5. Disable fallback to verify unintegrated refusal. Continue must restore real return context or clear stale poses on a missing-scene fallback.
 - Graceful quit > reopen > Continue > offline Focus recovery applies once; a backwards clock grants zero without negative time.
 - Collect logs across scenes > verify Session count and journal display > test each ending with real playback and return to Title.
 - Reopen hubs with profiles/art overlays; rerun installer on a test copy and confirm custom assignments survive.
 - Inspect scenes after a real 2D/3D branch merge and verify the active Build Profile.
 
-The last recorded automated run during the Phase 5 work was **313 passed, 0 failed**. That is evidence for the code covered by EditMode tests at that point, not a guarantee for later edits and not a full Play-test result.
+The restructuring checkpoint executed **348 EditMode tests: 348 passed, 0 failed**, and `bash build.sh` reported **0 errors, 0 warnings**. These checks cover the tested contracts and compile surface, not full Play-mode campaign, media or serialized-scene acceptance.
 
-## Remaining integration work
+## Remaining 2D-scope work
 
-Before calling the campaign complete, verify and finish:
+### Investigation restructuring (in progress)
 
-- Attach `PrologueGateSeam` inside the 3D-owned `PrologueRuins` scene and finish its robe/key/gate interaction; the adapter is delivered but the 3D scene itself was intentionally left untouched.
-- Delivered 3D investigation scenes for Cases 2-4, their `investigation.<caseId>` route registrations and active build-profile entries. Do not treat the existing gated hub seams as playable Zone B content until those scenes land. `hub.5` remains intentionally unseeded unless the Case 5 staging design changes.
+`Assets/Resources/InvestigationIntegrationCatalog.asset` defines explicit per-area readiness and per-area fallback opt-ins. All Case 0–4 investigations are currently NotIntegrated; Case 5 is NotApplicable. The global default is off. In Editor/Development builds, enable **F1 > Session > Investigation development fallback** before New Game or entering a case gate. `InvestigationEntryDriver` installs the entry adapter at runtime: New Game dispatches the opening through it, and route-keyed investigation gates dispatch after normal access checks. Integrated areas with broken routes fail rather than simulate. Cases 1–4 simulate in the current hub; Case 0 proceeds to the real `Prologue_Wilderness` approach without marking Eliza's scene complete. No stand-in scene is loaded by this path.
+
+`ClueAcquisition.CanAcquire` checks tool, combined acquisition, story-flag, log availability and post-Case-4 revisit restrictions. `ClueData.requiredFlag` is additive authored metadata; L4 requires `Case4_BrokkFreed`, set by the Case 4 confession outcome and preserved by its content generator.
+
+`InvestigationCompletion.TrySimulate` is the headless development-only completion operation for the future entry adapter. It stages existing board history, adds only eligible clues and missing solution links, submits through `WeightedBoardSession`, then commits the normal once-only reward without advancing the campaign or opening interrogation. Locked/invalid/unsolvable states fail without partial mutation. Already-solved boards are preserved; lawful revisits can collect newly eligible logs. The entry driver enforces catalog/access gates, checkpoints changed state once and notifies bound hub clue/flag views. F1 displays status and simulation history; newly eligible clues can be collected on a later valid visit.
+
+Provenance uses the existing sealed Session flags: `Investigation.Source.Real.<case>`, `Investigation.Source.Simulated.<case>`, `Investigation.SimulationUsed.<case>`, and `Investigation.SimulatedClue.<case>.<clueId>`. Use Session query methods rather than writing these flags directly. Old saves have Unknown source; revisits must not relabel accepted deductions. Real investigation entry captures the origin 2D scene/pose/facing and `InvestigationCaseId` in the sealed save, separately from campaign `CurrentCase`. Accepted boards return through GSM to that pose (or the case hub fallback) without advancing campaign case. The four delivered suspects are wired into 2D encounter entry; old non-finale CaseDoors are inactive. Physical legacy board objects/assembly dependencies remain for compatibility, but hub interaction/mutation is denied. Journal log-view hydration, full modal coordination, interrogation snapshots/abort restoration, finale confirmation/content and final campaign assets still require completion.
+
+Before calling the current 2D vertical slice complete, verify and finish:
+
 - Ending `CutsceneData` assignments per case on `GameFlow.endingCutscenes`; without them, endings complete immediately with no cinematic.
-- 3D prototype Focus/clue migration through the shared APIs.
 - Board lifecycle/late-evidence refresh, journal flag/log refresh and the journal's `MarkedForBoard` action consumer.
-- Per-case grading and checkpoint semantics across all real scene transitions, including strained-scan state boundaries and mistrial replay.
+- Per-case grading and checkpoint semantics across all delivered scene transitions, including strained-scan state boundaries and mistrial replay.
 - Save replacement/recovery behavior on target filesystems; the unsupported-Replace fallback is not yet proven.
 - Assigned ending/opening media, portraits, animation, final UI art and audio playback.
 - End-to-end Play testing, modal input coordination and merged-scene inspection.
+
+Out of scope for the current 2D pass: replacement Zone B scenes and other non-2D integration. Do not create throwaway 2D investigation scenes; `investigation.2`-`investigation.4` stay unresolved and their gates warn/refuse cleanly.
 
 When a contract, route, scene or asset workflow changes, update this README and the relevant rules in AGENTS.md in the same change. Do not replace verified limitations with completion claims just because an engine compiles.
