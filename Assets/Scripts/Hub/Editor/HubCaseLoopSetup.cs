@@ -54,8 +54,16 @@ namespace Morsoul.Hub.Editor
                 : EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Additive);
             try
             {
-                if (FindCaseDoor(scene) != null)
+                var existing = FindCaseDoor(scene);
+                if (existing != null)
                 {
+                    var existingDoor = existing.GetComponent<CarrierInteractable>();
+                    if (existingDoor != null && existingDoor.routeKey != "caseloop")
+                    {
+                        existingDoor.routeKey = "caseloop";
+                        EditorSceneManager.MarkSceneDirty(scene);
+                        EditorSceneManager.SaveScene(scene);
+                    }
                     Debug.Log($"HubCaseLoopSetup: '{scenePath}' already has a CaseDoor; skipped.");
                     return;
                 }
@@ -65,6 +73,7 @@ namespace Morsoul.Hub.Editor
                     out CarrierInteractable door);
                 door.promptText = "[E] Begin Case";
                 door.checkpointReason = "CaseDoor";
+                door.routeKey = "caseloop";
                 door.targetScene = "CaseLoop";
                 EditorSceneManager.MarkSceneDirty(scene);
                 if (EditorSceneManager.SaveScene(scene))

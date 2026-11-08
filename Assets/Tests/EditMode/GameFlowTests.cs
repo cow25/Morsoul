@@ -7,6 +7,7 @@ using Morsoul.Hub;
 using Morsoul.Interrogation;
 using Morsoul.Resolution;
 using NUnit.Framework;
+using UnityEditor;
 using UnityEngine;
 
 namespace Morsoul.Tests
@@ -471,6 +472,115 @@ namespace Morsoul.Tests
             gsm.OnCaseCompleted(new Core.CaseCompletedEvent { CaseId = 1, Ending = 0 });
 
             Assert.AreEqual(2, core.Session.CurrentCase);
+        }
+
+        // --- Case 1 route/session integration -----------------------------------
+
+        static CaseData LoadCaseOne() =>
+            AssetDatabase.LoadAssetAtPath<CaseData>(
+                "Assets/Data/Cases/Case01/Case_01.asset");
+
+        [Test]
+        public void CaseOneHubAndInvestigationRoutes_AreSeeded()
+        {
+            var core = Core.CoreRuntime.Ensure();
+            _objects.Add(core.gameObject);
+            var gsm = Core.GameStateManager.Ensure();
+
+            gsm.SeedDefaultRoutes();
+
+            Assert.AreEqual("Hub_LowerMarket",
+                gsm.routes.Resolve(Core.RouteKeys.Hub(1)));
+            Assert.AreEqual("Investigation_01_Placeholder",
+                gsm.routes.Resolve(Core.RouteKeys.Investigation(1)));
+        }
+
+        [Test]
+        public void RouteBackedDestinations_PreferRouteTableOverFallback()
+        {
+            var core = Core.CoreRuntime.Ensure();
+            _objects.Add(core.gameObject);
+            var gsm = Core.GameStateManager.Ensure();
+            gsm.SeedDefaultRoutes();
+
+            var gate = New<GateInteractable>("VaultGate");
+            gate.routeKey = Core.RouteKeys.Investigation(1);
+            gate.targetScene = "Missing_Vault";
+            var carrier = New<CarrierInteractable>("CaseDoor");
+            carrier.routeKey = Core.RouteKeys.CaseLoop;
+            carrier.targetScene = "Missing_CaseLoop";
+
+            Assert.AreEqual("Investigation_01_Placeholder", gate.ResolveTargetScene());
+            Assert.AreEqual("CaseLoop", carrier.ResolveTargetScene());
+        }
+
+        [Test]
+        public void BoardHotkey_CaseOne_LoadsSessionCollectedClues()
+        {
+            var case1 = LoadCaseOne();
+            Assert.NotNull(case1);
+            var core = Core.CoreRuntime.Ensure();
+            _objects.Add(core.gameObject);
+            core.Session.Reset();
+            core.Session.CurrentCase = 1;
+            foreach (var clue in case1.clues) core.Session.RegisterClue(clue);
+
+            var board = New<WeightedBoardController>("WeightedBoard");
+            var hotkey = New<BoardHotkey>("BoardHotkey");
+            hotkey.board = board;
+
+            Assert.IsTrue(hotkey.EnsureBoard());
+            Assert.AreSame(case1, board.caseData);
+            Assert.NotNull(board.Session);
+            Assert.AreEqual(6, board.Session.State.CollectedClueIds.Count);
+            CollectionAssert.Contains(board.Session.State.CollectedClueIds, "C1_01");
+            CollectionAssert.Contains(board.Session.State.CollectedClueIds, "T2_01");
+            CollectionAssert.DoesNotContain(board.Session.State.CollectedClueIds, "L1_01");
+        }
+
+        [Test]
+        public void SolvedCaseOneBoard_ResumesIntoInterrogationWithSessionEvidence()
+        {
+            var case1 = LoadCaseOne();
+            Assert.NotNull(case1);
+            var core = Core.CoreRuntime.Ensure();
+            _objects.Add(core.gameObject);
+            core.Session.Reset();
+            core.Session.CurrentCase = 1;
+            foreach (var clue in case1.clues) core.Session.RegisterClue(clue);
+            var state = core.Session.GetOrCreateBoardState(1);
+            state.BoardSolved = true;
+
+            var weighted = New<WeightedBoardController>("WeightedBoard");
+            _flow.weightedBoard = weighted;
+
+            _flow.BeginCase(case1);
+
+            Assert.IsFalse(weighted.IsOpen);
+            Assert.IsTrue(_interrogation.IsOpen);
+            Assert.AreSame(case1.interrogation, _interrogation.interrogationData);
+            var evidence = _flow.BuildEvidence();
+            CollectionAssert.Contains(evidence, case1.inquiryNodes[0].producesPremise);
+            CollectionAssert.Contains(evidence, case1.inquiryNodes[1].producesPremise);
+            CollectionAssert.Contains(evidence, case1.clues[1]); // C2_01 physical evidence
+        }
+
+        [Test]
+        public void CaseOneConfession_PersistsGradeAndUneaseFlag()
+        {
+            var case1 = LoadCaseOne();
+            Assert.NotNull(case1);
+            var core = Core.CoreRuntime.Ensure();
+            _objects.Add(core.gameObject);
+            core.Session.Reset();
+
+            _flow.BeginCase(case1);
+            _flow.HandleInterrogationEnded(InterrogationStatus.Confessed);
+
+            Assert.IsTrue(_resolution.IsVisible);
+            Assert.IsTrue(_resolution.UneaseVisible);
+            Assert.AreEqual(Grade.Clean, core.Session.Grades[1]);
+            Assert.IsTrue(core.Session.HasFlag(case1.uneaseFlagKey));
         }
     }
 }

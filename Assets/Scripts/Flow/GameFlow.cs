@@ -94,12 +94,7 @@ namespace Morsoul.Flow
         /// </summary>
         public bool TryBeginSessionCase()
         {
-            var core = Core.CoreRuntime.Instance;
-            if (core == null)
-            {
-                Debug.LogWarning("GameFlow: no activeCase assigned and no CoreRuntime — nothing to begin.", this);
-                return false;
-            }
+            var core = Core.CoreRuntime.Ensure();
             var data = caseDatabase != null
                 ? caseDatabase.Find(core.Session.CurrentCase)
                 : core.ResolveCase(core.Session.CurrentCase);
@@ -254,9 +249,16 @@ namespace Morsoul.Flow
             SyncBoardGradeInputs();
 
             // CaseLoop has no world content of its own — land the player on
-            // the case board instead of an empty screen. Investigation scenes
-            // take over case entry once they exist.
-            if (weighted) weightedBoard.Open();
+            // the case board instead of an empty screen. If the board was
+            // solved in a hub/investigation scene before CaseLoop opened, go
+            // straight to the unlocked interrogation instead of dead-ending
+            // on an already-solved board.
+            bool solvedWeighted = weighted && weightedBoard.Session != null &&
+                                  weightedBoard.Session.State.BoardSolved;
+            if (solvedWeighted && caseData.hasInterrogation &&
+                caseData.interrogation != null)
+                HandleInterrogationUnlocked(caseData.interrogation);
+            else if (weighted) weightedBoard.Open();
             else board?.Open();
         }
 
@@ -337,6 +339,7 @@ namespace Morsoul.Flow
                 guided: caseId == 1, echo: caseId >= 3);
             _mistrialHandled = false;
             board?.Close();
+            weightedBoard?.Close();
             interrogation.Open();
         }
 
@@ -572,6 +575,8 @@ namespace Morsoul.Flow
                 session.SetGrade(caseData.caseId, grade);
                 session.SetFlag(Core.SessionState.LatentLogFlagFor(caseData.caseId),
                     latentLogCollected);
+                if (!string.IsNullOrEmpty(caseData.uneaseFlagKey))
+                    session.SetFlag(caseData.uneaseFlagKey, unease);
                 session.LatentLogCollected = session.LatentLogCollected || latentLogCollected;
                 if (board != null) session.MergeBoardEdges(board.ValidatedNodeIds);
             }
@@ -583,8 +588,14 @@ namespace Morsoul.Flow
             interrogation?.Close();
         }
 
-        /// <summary>Interrogation evidence = journal-/dialogue-collected clues + verified board premises.</summary>
-        List<EvidenceData> BuildEvidence()
+        /// <summary>
+        /// Interrogation evidence = session-collected clues + verified board
+        /// premises. Journal/dialogue lists are rehydrated from Session so a
+        /// fresh CaseLoop entry does not lose clues gathered in earlier
+        /// scenes; a solved weighted board contributes the case's authored
+        /// deduction premises that the legacy board would have produced.
+        /// </summary>
+        public List<EvidenceData> BuildEvidence()
         {
             var evidence = new List<EvidenceData>();
             var seen = new HashSet<EvidenceData>();
@@ -592,11 +603,25 @@ namespace Morsoul.Flow
             {
                 if (item != null && seen.Add(item)) evidence.Add(item);
             }
+
+            var caseData = _session != null ? _session.Case : activeCase;
+            var session = Core.CoreRuntime.Instance != null
+                ? Core.CoreRuntime.Instance.Session : null;
+            if (session != null && caseData != null && caseData.clues != null)
+                foreach (var clue in caseData.clues)
+                    if (clue != null && session.HasClue(clue.id)) Add(clue);
             if (hubJournal != null)
                 foreach (var clue in hubJournal.Collected) Add(clue);
             foreach (var clue in _collectedClues) Add(clue);
             if (board != null && board.Premises != null)
                 foreach (var premise in board.Premises) Add(premise);
+            if (weightedBoard != null && weightedBoard.Session != null &&
+                weightedBoard.Session.State.BoardSolved &&
+                caseData != null && caseData.inquiryNodes != null)
+            {
+                foreach (var node in caseData.inquiryNodes)
+                    if (node != null) Add(node.producesPremise);
+            }
             return evidence;
         }
 

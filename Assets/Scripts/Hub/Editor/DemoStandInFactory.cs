@@ -43,7 +43,16 @@ namespace Morsoul.Hub.Editor
             PrologueWildernessSceneBuilder.CreateOrUpdate();
             CreateVaultPlaceholder();
             PatchLowerMarket();
+            PatchVaultPlaceholder();
             RegisterBuildScenes();
+        }
+
+        /// <summary>Patches route keys in saved stand-in scenes without regenerating them.</summary>
+        [MenuItem("Morsoul/Setup/Patch Demo Route Wiring")]
+        public static void PatchRouteWiring()
+        {
+            PatchLowerMarket();
+            PatchVaultPlaceholder();
         }
 
         // --- Prologue stand-in ------------------------------------------------
@@ -116,6 +125,7 @@ namespace Morsoul.Hub.Editor
                 out CarrierInteractable exit);
             exit.promptText = "[E] Return to the market";
             exit.checkpointReason = "Investigation";
+            exit.routeKey = "hub.1";
             exit.targetScene = MarketSceneName;
 
             HubSceneFactory.SaveScene(scene, VaultScenePath);
@@ -146,13 +156,30 @@ namespace Morsoul.Hub.Editor
                 SceneManager.SetActiveScene(scene);
                 bool dirty = false;
 
-                // VaultGate now targets the placeholder vault (was "C1_Vault").
+                // VaultGate follows the investigation.1 route; the placeholder
+                // scene remains only as the no-route fallback.
                 foreach (var gate in Object.FindObjectsByType<GateInteractable>())
                 {
                     if (gate.gameObject.scene != scene || gate.name != "VaultGate") continue;
-                    if (gate.targetScene != "Investigation_01_Placeholder")
+                    if (gate.routeKey != "investigation.1" ||
+                        gate.targetScene != "Investigation_01_Placeholder")
                     {
+                        gate.routeKey = "investigation.1";
                         gate.targetScene = "Investigation_01_Placeholder";
+                        dirty = true;
+                    }
+                }
+
+                // CaseDoor/carrier follow route keys instead of second
+                // hard-coded load paths; targetScene remains the fallback.
+                foreach (var carrier in Object.FindObjectsByType<CarrierInteractable>())
+                {
+                    if (carrier.gameObject.scene != scene) continue;
+                    string key = carrier.name == "CaseDoor" ? "caseloop"
+                        : carrier.name == "Carrier" ? "hub.3" : null;
+                    if (key != null && carrier.routeKey != key)
+                    {
+                        carrier.routeKey = key;
                         dirty = true;
                     }
                 }
@@ -175,6 +202,56 @@ namespace Morsoul.Hub.Editor
                     EditorSceneManager.MarkSceneDirty(scene);
                     EditorSceneManager.SaveScene(scene);
                     Debug.Log("DemoStandInFactory: patched VaultGate + RestSpot in Hub_LowerMarket.");
+                }
+            }
+            finally
+            {
+                if (previousActive.IsValid() && previousActive.isLoaded)
+                    SceneManager.SetActiveScene(previousActive);
+                if (!wasOpen && scene.IsValid() && scene.isLoaded)
+                    EditorSceneManager.CloseScene(scene, true);
+            }
+        }
+
+        static void PatchVaultPlaceholder()
+        {
+            if (!File.Exists(VaultScenePath))
+            {
+                Debug.LogWarning($"DemoStandInFactory: '{VaultScenePath}' not found; skipped.");
+                return;
+            }
+            var preExisting = SceneManager.GetSceneByPath(VaultScenePath);
+            bool wasOpen = preExisting.IsValid() && preExisting.isLoaded;
+            if (wasOpen && preExisting.isDirty)
+            {
+                Debug.LogError($"DemoStandInFactory: '{VaultScenePath}' is open with " +
+                               "unsaved changes; skipped. Save or revert it first.");
+                return;
+            }
+            var previousActive = SceneManager.GetActiveScene();
+            var scene = wasOpen ? preExisting
+                : EditorSceneManager.OpenScene(VaultScenePath, OpenSceneMode.Additive);
+            try
+            {
+                SceneManager.SetActiveScene(scene);
+                bool dirty = false;
+                foreach (var carrier in Object.FindObjectsByType<CarrierInteractable>())
+                {
+                    if (carrier.gameObject.scene != scene || carrier.name != "VaultExit") continue;
+                    if (carrier.routeKey != "hub.1" ||
+                        carrier.targetScene != MarketSceneName)
+                    {
+                        carrier.routeKey = "hub.1";
+                        carrier.targetScene = MarketSceneName;
+                        dirty = true;
+                    }
+                }
+
+                if (dirty)
+                {
+                    EditorSceneManager.MarkSceneDirty(scene);
+                    EditorSceneManager.SaveScene(scene);
+                    Debug.Log("DemoStandInFactory: patched VaultExit route in Investigation_01_Placeholder.");
                 }
             }
             finally

@@ -45,6 +45,12 @@ namespace Morsoul.Hub
             _rb = GetComponent<Rigidbody2D>();
             _rb.gravityScale = 0f;
             _rb.freezeRotation = true;
+            var body = GetComponent<BoxCollider2D>();
+            if (body == null)
+            {
+                body = gameObject.AddComponent<BoxCollider2D>();
+                body.size = new Vector2(0.8f, 0.8f);
+            }
             var session = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session : null;
             if (session != null) _facing = session.PlayerFacing2D;
         }

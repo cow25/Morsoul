@@ -221,6 +221,7 @@ namespace Morsoul.Hub.Editor
                 out CarrierInteractable door);
             door.promptText = "[E] Begin Case";
             door.checkpointReason = "CaseDoor";
+            door.routeKey = "caseloop";
             door.targetScene = "CaseLoop";
         }
 

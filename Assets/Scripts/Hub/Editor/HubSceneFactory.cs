@@ -55,7 +55,8 @@ namespace Morsoul.Hub.Editor
                 out GateInteractable gateInteractable);
             gateInteractable.promptText = "[E] Enter";
             gateInteractable.requiredFlag = "C1_WarrantGranted";
-            gateInteractable.targetScene = "C1_Vault";
+            gateInteractable.routeKey = "investigation.1";
+            gateInteractable.targetScene = "Investigation_01_Placeholder";
             gateInteractable.lockedDialogue =
                 LoadDialogue(Case01DialogueFolder + "/D_Gate_Locked_01.asset");
 
@@ -87,6 +88,7 @@ namespace Morsoul.Hub.Editor
                 new Color(0.3f, 0.6f, 0.4f), new Vector3(-6f, -1f, 0f),
                 out CarrierInteractable carrierInteractable);
             carrierInteractable.promptText = "[E] Travel";
+            carrierInteractable.routeKey = "hub.3";
             carrierInteractable.targetScene = "Hub_Wilderness";
 
             // Case door: ungated entry into the shared case loop; the loop
@@ -96,6 +98,7 @@ namespace Morsoul.Hub.Editor
                 out CarrierInteractable caseDoor);
             caseDoor.promptText = "[E] Begin Case";
             caseDoor.checkpointReason = "CaseDoor";
+            caseDoor.routeKey = "caseloop";
             caseDoor.targetScene = "CaseLoop";
 
             SaveScene(scene, LowerMarketScenePath);
@@ -120,6 +123,7 @@ namespace Morsoul.Hub.Editor
                 out GateInteractable exitGate);
             exitGate.promptText = "[E] Leave";
             exitGate.requiredFlag = ""; // ungated
+            exitGate.routeKey = "hub.1";
             exitGate.targetScene = "Hub_LowerMarket";
 
             // Case door: ungated entry into the shared case loop.
@@ -128,6 +132,7 @@ namespace Morsoul.Hub.Editor
                 out CarrierInteractable caseDoor);
             caseDoor.promptText = "[E] Begin Case";
             caseDoor.checkpointReason = "CaseDoor";
+            caseDoor.routeKey = "caseloop";
             caseDoor.targetScene = "CaseLoop";
 
             SaveScene(scene, WildernessScenePath);

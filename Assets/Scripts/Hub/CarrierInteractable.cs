@@ -16,8 +16,10 @@ namespace Morsoul.Hub
     /// </summary>
     public class CarrierInteractable : Interactable2D
     {
-        /// <summary>Fallback scene loaded when no travel menu is available.</summary>
+        /// <summary>Fallback scene loaded when no route/menu destination is available.</summary>
         public string targetScene;
+        /// <summary>Optional route-table key resolved before targetScene.</summary>
+        public string routeKey;
         /// <summary>Reason stamped on the travel checkpoint ("Carrier", "CaseDoor", ...).</summary>
         public string checkpointReason = "Carrier";
         /// <summary>
@@ -71,23 +73,35 @@ namespace Morsoul.Hub
                 return;
             }
 
-            TravelTo(targetScene);
+            TravelTo(ResolveTargetScene());
+        }
+
+        /// <summary>Route-table lookup first, serialized targetScene as fallback.</summary>
+        public string ResolveTargetScene()
+        {
+            if (!string.IsNullOrEmpty(routeKey) && GameStateManager.Instance != null)
+            {
+                string routed = GameStateManager.Instance.routes.Resolve(routeKey);
+                if (!string.IsNullOrEmpty(routed)) return routed;
+            }
+            return targetScene;
         }
 
         /// <summary>Checkpoints and loads <paramref name="scene"/> through the GSM.</summary>
         protected void TravelTo(string scene)
         {
+            if (string.IsNullOrEmpty(scene))
+            {
+                Debug.LogWarning($"CarrierInteractable '{name}': no destination " +
+                                 $"(routeKey '{routeKey}' unresolved, targetScene empty).", this);
+                return;
+            }
             CheckpointRequested?.Invoke(checkpointReason);
             CoreRuntime.Instance?.Bus.Publish(new CheckpointRequestedEvent
             {
                 Reason = checkpointReason,
                 NextSceneName = scene
             });
-            if (string.IsNullOrEmpty(scene))
-            {
-                Debug.LogWarning($"CarrierInteractable '{name}': targetScene is empty.", this);
-                return;
-            }
             // Single load authority: the GSM guards missing scenes and stamps
             // the checkpoint; direct load only without Core.
             if (CoreRuntime.Instance != null)

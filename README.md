@@ -108,7 +108,7 @@ Routes are configured through `GameStateManager.Ensure().routes.Set(key, actualS
 | `investigation.1` | `Investigation_01_Placeholder` (2D vault stand-in; swap when the 3D vault ships) |
 | `investigation.<caseId>` (other) | Not seeded; register only delivered scenes |
 
-A route entry does not add a scene to a Build Profile. Register real scenes and add them to the active build list together. Do not add nonexistent `C1_Vault` paths to suppress warnings. Continue attempts to fall back to the saved case's hub when its checkpoint scene is unavailable. Not every case currently has a hub route.
+A route entry does not add a scene to a Build Profile. Register real scenes and add them to the active build list together. `GateInteractable.routeKey` and `CarrierInteractable.routeKey` resolve through this table before their serialized `targetScene` fallback; do not add nonexistent `C1_Vault` paths to suppress warnings. Continue attempts to fall back to the saved case's hub when its checkpoint scene is unavailable. Not every case currently has a hub route.
 
 ## 3D integration checklist
 
@@ -134,7 +134,7 @@ The legacy `ScanController` still has its own 120-point focus and different zero
 - **Hub_LowerMarket / Hub_Wilderness:** generated 2D gameplay scenes with optional additive art overlays.
 - **Prologue_Wilderness:** dedicated 2D approach loaded by the Prologue gate. It restores the player at `(-8, 0)`, owns the separate full-lane first-contact trigger at `x = 8`, uses `BoxCollider2D` tree/blocker bounds and a `BoxCollider2D` player body, and completes the Prologue only after the in-world Eliza sequence.
 - **PrologueRuins:** 3D-owned scene. Do not regenerate or restructure it from the 2D lane.
-- **CaseLoop:** shared case-loop scene. With no `activeCase` assigned, its `GameFlow` resolves `Session.CurrentCase` through `Assets/Resources/CaseDatabase.asset` at Play time; assign `activeCase` only to pin one case for standalone testing. Hub scenes have a "CaseDoor" interactable (`[E] Begin Case`) that travels here through the guarded GSM path.
+- **CaseLoop:** shared case-loop scene. With no `activeCase` assigned, its `GameFlow` boots Core if needed and resolves `Session.CurrentCase` through `Assets/Resources/CaseDatabase.asset` at Play time; assign `activeCase` only to pin one case for standalone testing. Hub scenes have a "CaseDoor" interactable (`[E] Begin Case`) that travels here through the guarded GSM path.
 
 ### Campaign progression
 
@@ -145,19 +145,19 @@ The legacy `ScanController` still has its own 120-point focus and different zero
 
 1. Open `Assets/Scenes/CaseLoop.unity`. To pin a case for standalone testing assign `GameFlow.activeCase` (e.g. `Assets/Data/Cases/Case05/Case_05.asset`); leave it unassigned for session-driven play.
 2. Check the board, interrogation, resolution, cutscene, dialogue, journal and flag-store references. The factory creates the panel wiring, but it does not author all content.
-3. For production/session-backed testing, ensure Core exists **before** `BeginCase` — entering via the hub CaseDoor or Title guarantees this. Starting CaseLoop alone does not automatically create Core. Without Core, GameFlow retains standalone evidence/log-count fallbacks; that mode is not a persistence test.
+3. For production/session-backed testing, enter through Title or the hub CaseDoor so the save/session lifecycle is real. Opening CaseLoop alone now lazily creates the default Core/Session, which is useful for inspecting the current case but is not a New Game or Continue test.
 4. Investigation cases use Session-collected clues at case initialization when Core is live. Board-only authored `preloadedClues` take precedence. Late collection needs an explicit rack refresh through `BoardController.SetClues`; do not assume every Session change rebuilds every view.
 5. Bind journal/dialogue flags at runtime with `SetFlags(hubFlags.Set)`. The flag set is not serialized; calling SetFlags only inside an editor generator does not persist that binding. Populate journal `allLogs` and synchronize its displayed collected logs with Session as part of scene composition.
 6. Assign `GameFlow.endingCutscenes[1]`, `[2]`, `[3]` (index 0 unused). For GameFlow-owned endings, leave each `CutsceneData.nextSceneName` empty so `CutsceneEnded` can drive case completion. A cutscene with its own destination owns travel instead.
 7. Missing ending media currently completes the ending immediately. With a live Core, case completion routes to Title; without Core, no GSM travel occurs. Do not mistake either fallback for verified cinematic playback.
 
-Controls exposed by the controllers include **E** for hub interaction/dialogue or cutscene advance, **G** for journal, **H** for board, and holding **Esc** to skip a cutscene. Scene composition must prevent overlapping modal input. The journal pauses simulation while open. On weighted cases the board opens via `WeightedBoardController` (installed in CaseLoop and both hub scenes; `BoardHotkey` lazily builds the session from `Session.CurrentCase`); the legacy `BoardController` gates itself off for weighted cases to avoid `H` conflicts.
+Controls exposed by the controllers include **E** for hub interaction/dialogue or cutscene advance, **G** for journal, **H** for board, and holding **Esc** to skip a cutscene. Scene composition must prevent overlapping modal input. The journal pauses simulation while open. On weighted cases the board opens via `WeightedBoardController` (installed in CaseLoop and the 2D stand-ins; `BoardHotkey` lazily builds the session from `Session.CurrentCase`); the legacy `BoardController` gates itself off for weighted cases to avoid `H` conflicts. If a weighted board was already solved in a hub/investigation scene, entering CaseLoop resumes directly into the unlocked interrogation instead of dead-ending on the solved board.
 
 ## Content and asset authoring
 
 ### Case data
 
-- Cases 0-5 have data assets and wired `EvidenceGraphData`. Cases 0-1 use approved spec datasets; Cases 2-5 carry provisionally approved datasets pending playtest tuning. Data existence does not imply a corresponding playable investigation scene or registered campaign route; the demo stands in with `Prologue_2D` and `Investigation_01_Placeholder` (built by **Morsoul > Setup > Build Demo Stand-In Scenes**, also run by Rebuild Campaign Wiring).
+- Cases 0-5 have data assets and wired `EvidenceGraphData`. Cases 0-1 use approved spec datasets; Cases 2-5 carry provisionally approved datasets pending playtest tuning. Data existence does not imply a corresponding playable investigation scene or registered campaign route; the demo stands in with `Prologue_2D` and `Investigation_01_Placeholder` (built by **Morsoul > Setup > Build Demo Stand-In Scenes**, also run by Rebuild Campaign Wiring). Use **Morsoul > Setup > Patch Demo Route Wiring** to add route keys to already-saved stand-in scenes without regenerating them.
 - Follow the approved GDD/case documents for content decisions. The team's authoritative Obsidian documents are maintained outside this checkout; obtain them from the project owner rather than inventing story facts or assuming another contributor has the same local vault path.
 - Keep clue, premise and inquiry-node IDs stable. Save restoration relies on them.
 - Run **Morsoul > Data > Validate All Cases** after content edits, **Rebuild Clue Registry** after adding/removing clue assets, and **Rebuild Case Database** after adding/removing case assets. **Morsoul > Setup > Rebuild Campaign Wiring** runs the case-database rebuild plus the hub CaseDoor installer in one step. Review the generated asset diff and its `.meta` files.
@@ -214,12 +214,13 @@ Never run a second Unity process against an open project. Wait for Unity batch s
 - Interrogation mistakes, board errors, wrong conclusions and hint tiers affect grade; mistrial waits for Retry confirmation and retains its penalty after reload.
 - Move in a hub > checkpoint > quit > Continue > position/facing restore; missing checkpoint scenes fall back to the case hub without applying the old pose.
 - Prologue acceptance: solve Case 0 > unlock/cross the gate > restore at `(-8, 0)` > walk into the Eliza trigger at `(8, 0)` > interrupt and Continue to verify the pre-contact resume > finish and verify `ElizaIntroSeen`, `EasternRouteUnlocked`, `PrologueCompleted`, Case 1 and the `Hub_LowerMarket` route.
+- Case 1 acceptance: talk to Ovan/Ignatius for `T1_01`, `T2_01` and `C1_WarrantGranted` > enter `Investigation_01_Placeholder` > collect `C1_01`, `C2_01`, `C3_01`, `RH1_01` > solve `CASE1_STAGED_INTERNAL_FRAUD` on the weighted board > return through CaseDoor > complete Ignatius `INT_01` > verify resolution, grade, `Case1_UneaseActive`, next-hub route, checkpoint and Continue restore.
 - Graceful quit > reopen > Continue > offline Focus recovery applies once; a backwards clock grants zero without negative time.
 - Collect logs across scenes > verify Session count and journal display > test each ending with real playback and return to Title.
 - Reopen hubs with profiles/art overlays; rerun installer on a test copy and confirm custom assignments survive.
 - Inspect scenes after a real 2D/3D branch merge and verify the active Build Profile.
 
-The last recorded automated run during the Phase 4 work was **308 passed, 0 failed**. That is historical evidence, not a guarantee for later edits and not a full Play-test result.
+The last recorded automated run during the Phase 5 work was **313 passed, 0 failed**. That is evidence for the code covered by EditMode tests at that point, not a guarantee for later edits and not a full Play-test result.
 
 ## Remaining integration work
 

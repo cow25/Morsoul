@@ -44,18 +44,18 @@ namespace Morsoul.Hub
             if (GateRule.CanPass(requiredFlag, flags))
             {
                 string scene = ResolveTargetScene();
-                CheckpointRequested?.Invoke("Seam");
-                CoreRuntime.Instance?.Bus.Publish(new CheckpointRequestedEvent
-                {
-                    Reason = "Seam",
-                    NextSceneName = scene
-                });
                 if (string.IsNullOrEmpty(scene))
                 {
                     Debug.LogWarning($"GateInteractable '{name}': open but no destination " +
                                      $"(routeKey '{routeKey}' unresolved, targetScene empty).", this);
                     return;
                 }
+                CheckpointRequested?.Invoke("Seam");
+                CoreRuntime.Instance?.Bus.Publish(new CheckpointRequestedEvent
+                {
+                    Reason = "Seam",
+                    NextSceneName = scene
+                });
                 // Single load authority: the GSM guards missing scenes and
                 // stamps the checkpoint; direct load only without Core.
                 if (CoreRuntime.Instance != null)
@@ -88,7 +88,7 @@ namespace Morsoul.Hub
         /// serialized targetScene as fallback. Null/empty when neither
         /// resolves.
         /// </summary>
-        string ResolveTargetScene()
+        public string ResolveTargetScene()
         {
             if (!string.IsNullOrEmpty(routeKey) && GameStateManager.Instance != null)
             {

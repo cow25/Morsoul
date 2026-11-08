@@ -11,8 +11,6 @@ namespace Morsoul.Hub
     /// </summary>
     public class PrologueExitInteractable : CarrierInteractable
     {
-        /// <summary>Route resolved before the serialized targetScene fallback.</summary>
-        public string routeKey = RouteKeys.PrologueWilderness;
         /// <summary>Case whose board must be solved before leaving (0 = tutorial).</summary>
         public int boardCaseId;
         /// <summary>Played while the board is unsolved; optional.</summary>
@@ -74,19 +72,8 @@ namespace Morsoul.Hub
 
         void CompleteExit(HubContext ctx)
         {
-            if (CoreRuntime.Instance != null) targetScene = ResolveTargetScene();
             // No Core: permissive standalone fallback (same as carriers).
             base.Interact(ctx);
-        }
-
-        string ResolveTargetScene()
-        {
-            if (!string.IsNullOrEmpty(routeKey) && GameStateManager.Instance != null)
-            {
-                string routed = GameStateManager.Instance.routes.Resolve(routeKey);
-                if (!string.IsNullOrEmpty(routed)) return routed;
-            }
-            return targetScene;
         }
     }
 }
