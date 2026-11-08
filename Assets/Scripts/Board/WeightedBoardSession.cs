@@ -66,7 +66,7 @@ namespace Morsoul.Board
 
         /// <summary>
         /// Draws a directed link. Structurally invalid draws (self-link or an
-        /// endpoint outside C) return a single InvalidDraw event and are never
+        /// endpoint outside C) return a single InvalidInput event and are never
         /// charged. Otherwise forwards to ProgressionRules.OnLinkDrawn — the
         /// returned events drive focus charges, clears/lockout and tier hints.
         /// </summary>
@@ -78,7 +78,7 @@ namespace Morsoul.Board
             {
                 return new List<ProgressionEvent>
                 {
-                    new ProgressionEvent { Kind = ProgressionEventKind.InvalidDraw },
+                    new ProgressionEvent { Kind = ProgressionEventKind.InvalidInput },
                 };
             }
             return ProgressionRules.OnLinkDrawn(State, Graph, link);
@@ -148,7 +148,7 @@ namespace Morsoul.Board
                          cert.SupportByConclusion.TryGetValue(conclusionId, out double v)
                 ? v
                 : 0.0;
-            return DeductionEngine.IsConclusionUnlocked(Graph, conclusion, phi);
+            return DeductionEngine.IsConclusionUnlocked(Graph, conclusion, phi, State.Links);
         }
 
         /// <summary>All currently selectable conclusions (locked ones hidden).</summary>
@@ -163,8 +163,8 @@ namespace Morsoul.Board
 
         /// <summary>
         /// Submits the selected conclusion: solves, then runs
-        /// ProgressionRules.OnSubmission (supported complete = solved,
-        /// +10 max and refill, once per case).
+        /// ProgressionRules.OnSubmission (only a supported complete board
+        /// solves; rewards are Case 0 refill, Cases 1-4 +10, Case 5 none).
         /// </summary>
         public List<ProgressionEvent> Submit(out DeductionCertificate certificate)
         {
@@ -189,9 +189,9 @@ namespace Morsoul.Board
             State.MaxFocus = maximum;
         }
 
-        /// <summary>Rest: +5 per whole minute, capped at max.</summary>
-        public void ApplyRestMinutes(int wholeMinutes) =>
-            ProgressionRules.OnRestMinutes(State, wholeMinutes);
+        /// <summary>Rest: +1 per completed Focus tick, capped at max.</summary>
+        public void ApplyRestTicks(int completedTicks) =>
+            ProgressionRules.OnRestTicks(State, completedTicks);
 
         /// <summary>Closed-game recovery: +floor(minutes/2), capped at max.</summary>
         public void ApplyClosedMinutes(int wholeMinutesClosed) =>

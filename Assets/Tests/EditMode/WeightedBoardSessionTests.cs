@@ -61,7 +61,7 @@ namespace Morsoul.Tests
         {
             CollectAll();
             var events = _session.DrawLink(new DirectedEdge("a", "a"));
-            Assert.That(HasEvent(events, ProgressionEventKind.InvalidDraw), Is.True);
+            Assert.That(HasEvent(events, ProgressionEventKind.InvalidInput), Is.True);
             Assert.That(_state.Links, Is.Empty);
             Assert.That(_state.CaseErrorCount, Is.EqualTo(0));
             Assert.That(_state.Focus, Is.EqualTo(100f));
@@ -73,7 +73,7 @@ namespace Morsoul.Tests
             _session.SetVisibleClues(new[] { "a" });
             _session.CollectClue("a"); // "b" visible-in-graph but not collected
             var events = _session.DrawLink(new DirectedEdge("a", "b"));
-            Assert.That(HasEvent(events, ProgressionEventKind.InvalidDraw), Is.True);
+            Assert.That(HasEvent(events, ProgressionEventKind.InvalidInput), Is.True);
             Assert.That(_state.Links, Is.Empty);
         }
 
@@ -148,7 +148,7 @@ namespace Morsoul.Tests
 
             var events = _session.Submit(out var cert);
             Assert.That(cert.IsSolved, Is.True);
-            Assert.That(HasEvent(events, ProgressionEventKind.SubmissionSolved), Is.True);
+            Assert.That(HasEvent(events, ProgressionEventKind.CaseComplete), Is.True);
             Assert.That(_state.BoardSolved, Is.True);
             Assert.That(_state.MaxFocus, Is.EqualTo(110f));
             Assert.That(_state.Focus, Is.EqualTo(110f));
@@ -165,7 +165,8 @@ namespace Morsoul.Tests
             CollectAll();
             var events = _session.Submit(out var cert); // h_wrong selected by default
             Assert.That(cert.IsSolved, Is.False);
-            Assert.That(HasEvent(events, ProgressionEventKind.SubmissionRejected), Is.True);
+            Assert.That(HasEvent(events, ProgressionEventKind.WrongConclusionRejected), Is.True);
+            Assert.That(_state.SubmittedWrongConclusionIds, Is.EqualTo(new[] { "h_wrong" }));
             Assert.That(_state.BoardSolved, Is.False);
         }
 
@@ -181,7 +182,7 @@ namespace Morsoul.Tests
         public void RestAndClosed_ApplyEngineConstants()
         {
             _state.Focus = 50f;
-            _session.ApplyRestMinutes(3); // +15
+            _session.ApplyRestTicks(15); // +15
             Assert.That(_state.Focus, Is.EqualTo(65f));
             _session.ApplyClosedMinutes(10); // +5
             Assert.That(_state.Focus, Is.EqualTo(70f));

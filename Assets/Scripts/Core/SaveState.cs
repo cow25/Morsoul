@@ -42,7 +42,7 @@ namespace Morsoul.Core
         public float focusEnergy = 100f;
         /// <summary>Focus cap — starts 100, +10 per supported complete submission.</summary>
         public float focusMax = 100f;
-        /// <summary>Un-credited rest time toward the next whole minute.</summary>
+        /// <summary>Un-credited rest time toward the next Focus tick.</summary>
         public float restElapsedRemainderSeconds;
         /// <summary>ISO-8601 close timestamp for offline recovery; empty when consumed.</summary>
         public string closedAtUtc = "";

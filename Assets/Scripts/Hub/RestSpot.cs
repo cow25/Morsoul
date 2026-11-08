@@ -6,7 +6,7 @@ namespace Morsoul.Hub
 {
     /// <summary>
     /// Bench/seat rest spot (Algorithm.md B2, GDD §6.4): interact to start
-    /// resting, Focus regenerates +5 per whole minute while resting, any
+    /// resting, Focus regenerates +1 per Focus tick while resting, any
     /// movement key, the interact key or Escape cancels. Resting blocks
     /// player movement (no auto-refill — capped at the current maximum).
     /// </summary>

@@ -274,7 +274,7 @@ namespace Morsoul.Board
             if (_session == null)
                 return new List<ProgressionEvent>
                 {
-                    new ProgressionEvent { Kind = ProgressionEventKind.InvalidDraw },
+                    new ProgressionEvent { Kind = ProgressionEventKind.InvalidInput },
                 };
             SyncFocusIn();
             var events = _session.DrawLink(new DirectedEdge(sourceId, targetId));
@@ -314,17 +314,27 @@ namespace Morsoul.Board
             {
                 switch (e.Kind)
                 {
-                    case ProgressionEventKind.SubmissionSolved:
+                    case ProgressionEventKind.CaseComplete:
                         ShowBanner(BannerInfoClass, "Conclusion supported — the case clicks into place.");
                         BoardSolved?.Invoke(cert);
                         break;
-                    case ProgressionEventKind.SubmissionAlreadyRewarded:
+                    case ProgressionEventKind.BoardAlreadySolved:
                         ShowBanner(BannerInfoClass, "Conclusion already confirmed.");
                         break;
-                    case ProgressionEventKind.SubmissionRejected:
-                        ShowBanner(BannerInfoClass, cert.Status == DeductionStatus.ConclusionLocked
-                            ? "That conclusion is still locked — the evidence doesn't reach it yet."
-                            : $"The board doesn't support '{cert.Verdict}' yet. Keep linking.");
+                    case ProgressionEventKind.ConclusionLocked:
+                        ShowBanner(BannerInfoClass,
+                            "That conclusion is still locked — the evidence doesn't reach it yet.");
+                        break;
+                    case ProgressionEventKind.WrongConclusionRejected:
+                        ShowBanner(BannerInfoClass,
+                            "The board doesn't support that conclusion. Keep linking.");
+                        break;
+                    case ProgressionEventKind.PartialConclusionFeedback:
+                        ShowBanner(BannerInfoClass,
+                            "That explains part of the evidence, but not the whole case.");
+                        break;
+                    case ProgressionEventKind.InvalidInput:
+                        ShowBanner(BannerErrorClass, "That submission can't be evaluated.");
                         break;
                 }
             }
@@ -342,14 +352,18 @@ namespace Morsoul.Board
             {
                 switch (e.Kind)
                 {
-                    case ProgressionEventKind.InvalidDraw:
+                    case ProgressionEventKind.InvalidInput:
                         ShowBanner(BannerErrorClass, "That link can't be drawn here.");
+                        break;
+                    case ProgressionEventKind.TutorialLinkRejected:
+                        ShowBanner(BannerInfoClass,
+                            "That connection isn't part of the manual override chain.");
                         break;
                     case ProgressionEventKind.Blocked:
                         ShowBanner(BannerErrorClass,
                             $"Linking locked — Focus below {ProgressionConstants.ErrorFocusCost:0}. Rest to recover.");
                         break;
-                    case ProgressionEventKind.LinkDuplicate:
+                    case ProgressionEventKind.DuplicateLink:
                         ShowBanner(BannerInfoClass, "Link already on the board.");
                         break;
                     case ProgressionEventKind.LinkOk:

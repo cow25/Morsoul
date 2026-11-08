@@ -41,7 +41,7 @@ namespace Morsoul.Tests
                 strainedScanUsed = true,
                 focusEnergy = 62.5f,
                 focusMax = 110f,
-                restElapsedRemainderSeconds = 30f,
+                restElapsedRemainderSeconds = 0.06f,
                 boardStates =
                 {
                     new CaseBoardSave
@@ -86,7 +86,7 @@ namespace Morsoul.Tests
             Assert.IsTrue(loaded.strainedScanUsed);
             Assert.AreEqual(62.5f, loaded.focusEnergy, 0.001f);
             Assert.AreEqual(110f, loaded.focusMax);
-            Assert.AreEqual(30f, loaded.restElapsedRemainderSeconds);
+            Assert.AreEqual(0.06f, loaded.restElapsedRemainderSeconds);
             Assert.AreEqual(1, loaded.boardStates.Count);
             var board = loaded.boardStates[0];
             Assert.AreEqual(2, board.caseId);

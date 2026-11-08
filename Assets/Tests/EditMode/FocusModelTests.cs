@@ -57,24 +57,24 @@ namespace Morsoul.Tests
         }
 
         [Test]
-        public void Rest_RegensPerWholeMinute_CapsAtMax()
+        public void Rest_RegensPerFocusTick_CapsAtMax()
         {
             _focus.Restore(50f, false);
-            _focus.TickRest(59.9f); // no whole minute yet
+            _focus.TickRest(FocusTuning.FocusTickSeconds - 0.001f); // no tick yet
             Assert.AreEqual(50f, _focus.Percent, 0.001f);
-            _focus.TickRest(60f); // crosses one minute -> +5
-            Assert.AreEqual(55f, _focus.Percent, 0.001f);
-            _focus.TickRest(1200f); // 20 minutes -> capped at max
+            _focus.TickRest(FocusTuning.FocusTickSeconds); // crosses one tick -> +1
+            Assert.AreEqual(51f, _focus.Percent, 0.001f);
+            _focus.TickRest(FocusTuning.FocusTickSeconds * 100f); // capped at max
             Assert.AreEqual(100f, _focus.Percent);
         }
 
         [Test]
-        public void Rest_SubMinuteRemainder_PersistsAcrossTicks()
+        public void Rest_SubTickRemainder_PersistsAcrossTicks()
         {
             _focus.Restore(50f, false);
-            _focus.TickRest(30f);
-            _focus.TickRest(30f); // two halves -> one whole minute
-            Assert.AreEqual(55f, _focus.Percent, 0.001f);
+            _focus.TickRest(FocusTuning.FocusTickSeconds * 0.6f);
+            _focus.TickRest(FocusTuning.FocusTickSeconds * 0.4f); // two halves -> one tick
+            Assert.AreEqual(51f, _focus.Percent, 0.001f);
             Assert.AreEqual(0f, _focus.RestRemainderSeconds, 0.001f);
         }
 

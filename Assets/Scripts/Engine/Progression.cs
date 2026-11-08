@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Morsoul.Engine
 {
@@ -13,8 +12,8 @@ namespace Morsoul.Engine
     {
         /// <summary>Focus lost per erroneous link (Pwrong).</summary>
         public const float ErrorFocusCost = 20f;
-        /// <summary>Focus regained per whole minute of rest.</summary>
-        public const float RestEnergyPerMinute = 5f;
+        /// <summary>Focus regained per completed Focus rest tick.</summary>
+        public const float RestEnergyPerTick = 1f;
         /// <summary>Whole closed minutes required per recovered Focus point.</summary>
         public const int ClosedMinutesPerEnergy = 2;
         /// <summary>Case error counts at which hint tiers fire, once each.</summary>
@@ -54,36 +53,45 @@ namespace Morsoul.Engine
         public List<int> FiredHintTiers = new List<int>();
         public bool LinkingLockedOut;
         public string SubmittedConclusionId;
+        public List<string> SubmittedWrongConclusionIds = new List<string>();
+        public List<string> SubmittedPartialConclusionIds = new List<string>();
         public bool BoardSolved;
         public bool CompletionRewardApplied;
         public float Focus = 100f;
         public float MaxFocus = 100f;
     }
 
+    /// <summary>ProgressionEvent.type values from the approved schema.</summary>
     public enum ProgressionEventKind
     {
-        /// <summary>Structurally invalid draw (self-link or uncollected endpoint) — never charged.</summary>
-        InvalidDraw,
-        /// <summary>Linking locked out and Focus below the penalty — draw ignored.</summary>
-        Blocked,
-        /// <summary>The link is already on the board — duplicate delivery, no charge.</summary>
-        LinkDuplicate,
+        /// <summary>Malformed IDs, self-link, unknown clue or uncollected endpoint.</summary>
+        InvalidInput,
+        /// <summary>Case 0 off-S* draw rejected before joining the board.</summary>
+        TutorialLinkRejected,
+        /// <summary>The link is already on the board — no error or charge.</summary>
+        DuplicateLink,
         /// <summary>The link is on the solution path (in S*) — free.</summary>
         LinkOk,
         /// <summary>Off-S* link: error counted, Focus charged (was affordable).</summary>
         LinkWrong,
         /// <summary>Off-S* link the player could not afford (Cases 1-4): board cleared, linking locked.</summary>
         LinksCleared,
+        /// <summary>Linking locked out and Focus below the penalty — draw ignored.</summary>
+        Blocked,
+        /// <summary>Submission after boardSolved: strict no-op.</summary>
+        BoardAlreadySolved,
+        /// <summary>Selected conclusion is locked by support or the structural S* gate.</summary>
+        ConclusionLocked,
+        /// <summary>Unlocked wrong conclusion: records history and affects Clean eligibility.</summary>
+        WrongConclusionRejected,
+        /// <summary>Unlocked partial conclusion: records history without grade impact.</summary>
+        PartialConclusionFeedback,
+        /// <summary>Supported complete submission: board solved and case reward applied.</summary>
+        CaseComplete,
         /// <summary>Off-S* link the player could not afford (Case 5): run the Ending Resolver.</summary>
         ResolveEnding,
         /// <summary>An error-tier threshold fired once (Tier = 1..3).</summary>
         HintTierFired,
-        /// <summary>Supported complete submission: board solved, capacity bonus applied.</summary>
-        SubmissionSolved,
-        /// <summary>Wrong/partial (or locked) submission: nothing awarded.</summary>
-        SubmissionRejected,
-        /// <summary>Complete submission again after the reward was already applied.</summary>
-        SubmissionAlreadyRewarded,
     }
 
     public sealed class ProgressionEvent
@@ -97,6 +105,8 @@ namespace Morsoul.Engine
         /// "something's missing" dialogue instead of a highlight.
         /// </summary>
         public bool HintClueCollected;
+        /// <summary>Submitted conclusion for conclusion-history events.</summary>
+        public string ConclusionId;
     }
 
     /// <summary>
@@ -108,31 +118,48 @@ namespace Morsoul.Engine
     public static class ProgressionRules
     {
         /// <summary>
-        /// on_link_drawn: validates the link once. Off-S* links cost 20
-        /// Focus when affordable; unaffordable errors clear the board and
-        /// lock linking (Cases 1-4) or request the Ending Resolver (Case 5)
-        /// before any tier effects. Solution links are free.
+        /// on_link_drawn: validate IDs, collapse duplicate delivery, apply the
+        /// Case 0 tutorial reject branch, then charge Cases 1-5 progression
+        /// errors. Affordability is captured before the Focus deduction.
         /// </summary>
         public static List<ProgressionEvent> OnLinkDrawn(
             BoardRuntimeState state, EvidenceGraph graph, DirectedEdge link)
         {
+            if (state == null) throw new ArgumentNullException(nameof(state));
             var events = new List<ProgressionEvent>();
-            if (state.LinkingLockedOut && state.Focus < ProgressionConstants.ErrorFocusCost)
+
+            if (graph == null || link.sourceId == link.targetId ||
+                !graph.ContainsClue(link.sourceId) ||
+                !graph.ContainsClue(link.targetId) ||
+                !state.CollectedClueIds.Contains(link.sourceId) ||
+                !state.CollectedClueIds.Contains(link.targetId))
+            {
+                events.Add(new ProgressionEvent { Kind = ProgressionEventKind.InvalidInput });
+                return events;
+            }
+
+            if (state.Links.Contains(link))
+            {
+                events.Add(new ProgressionEvent { Kind = ProgressionEventKind.DuplicateLink });
+                return events;
+            }
+
+            if (graph.CaseId == 0 && !graph.IsSolutionLink(link))
+            {
+                events.Add(new ProgressionEvent { Kind = ProgressionEventKind.TutorialLinkRejected });
+                return events;
+            }
+
+            if (graph.CaseId != 0 && state.LinkingLockedOut &&
+                state.Focus < ProgressionConstants.ErrorFocusCost)
             {
                 events.Add(new ProgressionEvent { Kind = ProgressionEventKind.Blocked });
                 return events;
             }
-
             state.LinkingLockedOut = false;
-            if (state.Links.Contains(link))
-            {
-                // Same link delivered twice (UI re-entry) — never charge twice.
-                events.Add(new ProgressionEvent { Kind = ProgressionEventKind.LinkDuplicate });
-                return events;
-            }
             state.Links.Add(link);
 
-            if (graph != null && graph.IsSolutionLink(link))
+            if (graph.IsSolutionLink(link))
             {
                 events.Add(new ProgressionEvent { Kind = ProgressionEventKind.LinkOk });
                 return events;
@@ -143,7 +170,7 @@ namespace Morsoul.Engine
             {
                 state.Focus -= ProgressionConstants.ErrorFocusCost;
             }
-            else if (graph != null && graph.CaseId == 5)
+            else if (graph.CaseId == 5)
             {
                 events.Add(new ProgressionEvent { Kind = ProgressionEventKind.ResolveEnding });
                 return events;
@@ -174,7 +201,7 @@ namespace Morsoul.Engine
                     state.Focus = Math.Min(state.MaxFocus,
                         state.Focus + ProgressionConstants.TierOneEnergyReward);
                 }
-                else if (graph != null)
+                else
                 {
                     tierEvent.HintClueId = tierId == 2
                         ? graph.NextUnfinishedSolutionClue(state.Links)
@@ -187,49 +214,102 @@ namespace Morsoul.Engine
             return events;
         }
 
-        /// <summary>on_rest_minute: +5 per whole minute rested, capped at max.</summary>
-        public static void OnRestMinutes(BoardRuntimeState state, int wholeMinutes)
+        /// <summary>on_rest_tick: +1 per completed rest tick, capped at max.</summary>
+        public static void OnRestTicks(BoardRuntimeState state, int completedTicks)
         {
-            if (wholeMinutes <= 0) return;
+            if (state == null || completedTicks <= 0) return;
             state.Focus = Math.Min(state.MaxFocus,
-                state.Focus + ProgressionConstants.RestEnergyPerMinute * wholeMinutes);
+                state.Focus + ProgressionConstants.RestEnergyPerTick * completedTicks);
         }
 
         /// <summary>on_reopen: +floor(minutes_closed / 2), capped at max.</summary>
         public static void OnReopen(BoardRuntimeState state, int wholeMinutesClosed)
         {
-            if (wholeMinutesClosed <= 0) return;
+            if (state == null || wholeMinutesClosed <= 0) return;
             state.Focus = Math.Min(state.MaxFocus,
                 state.Focus + wholeMinutesClosed / ProgressionConstants.ClosedMinutesPerEnergy);
         }
 
         /// <summary>
-        /// on_submit: a supported complete submission solves the board and,
-        /// once per case, raises max Focus by 10 and refills. Wrong/partial
-        /// or locked submissions award nothing and never mark the board.
+        /// on_submit: locked conclusions no-op; wrong and partial submissions
+        /// update history only; supported complete submissions solve the board
+        /// and apply the case-specific reward once. Solved boards reject every
+        /// later submission before any state change.
         /// </summary>
         public static List<ProgressionEvent> OnSubmission(
             BoardRuntimeState state, DeductionCertificate certificate)
         {
+            if (state == null) throw new ArgumentNullException(nameof(state));
             var events = new List<ProgressionEvent>();
-            if (certificate == null || !certificate.IsSolved)
+
+            if (state.BoardSolved)
             {
-                events.Add(new ProgressionEvent { Kind = ProgressionEventKind.SubmissionRejected });
+                events.Add(new ProgressionEvent { Kind = ProgressionEventKind.BoardAlreadySolved });
                 return events;
             }
 
-            state.SubmittedConclusionId = state.SelectedConclusionId;
-            state.BoardSolved = true;
-            if (state.CompletionRewardApplied)
+            if (certificate == null || certificate.Status == DeductionStatus.InvalidInput)
             {
-                events.Add(new ProgressionEvent { Kind = ProgressionEventKind.SubmissionAlreadyRewarded });
+                events.Add(new ProgressionEvent { Kind = ProgressionEventKind.InvalidInput });
                 return events;
             }
 
-            state.CompletionRewardApplied = true;
-            state.MaxFocus += ProgressionConstants.CompleteSubmissionCapacityBonus;
-            state.Focus = state.MaxFocus;
-            events.Add(new ProgressionEvent { Kind = ProgressionEventKind.SubmissionSolved });
+            string conclusionId = certificate.SelectedConclusionId ?? state.SelectedConclusionId;
+            if (certificate.Status == DeductionStatus.ConclusionLocked)
+            {
+                events.Add(new ProgressionEvent
+                {
+                    Kind = ProgressionEventKind.ConclusionLocked,
+                    ConclusionId = conclusionId,
+                });
+                return events;
+            }
+
+            state.SubmittedConclusionId = conclusionId;
+            switch (certificate.Verdict)
+            {
+                case ConclusionTier.Wrong:
+                    if (!string.IsNullOrEmpty(conclusionId) &&
+                        !state.SubmittedWrongConclusionIds.Contains(conclusionId))
+                        state.SubmittedWrongConclusionIds.Add(conclusionId);
+                    events.Add(new ProgressionEvent
+                    {
+                        Kind = ProgressionEventKind.WrongConclusionRejected,
+                        ConclusionId = conclusionId,
+                    });
+                    break;
+
+                case ConclusionTier.Partial:
+                    if (!string.IsNullOrEmpty(conclusionId) &&
+                        !state.SubmittedPartialConclusionIds.Contains(conclusionId))
+                        state.SubmittedPartialConclusionIds.Add(conclusionId);
+                    events.Add(new ProgressionEvent
+                    {
+                        Kind = ProgressionEventKind.PartialConclusionFeedback,
+                        ConclusionId = conclusionId,
+                    });
+                    break;
+
+                case ConclusionTier.Complete:
+                    state.BoardSolved = true;
+                    if (state.CaseId >= 1 && state.CaseId <= 4 &&
+                        !state.CompletionRewardApplied)
+                    {
+                        state.CompletionRewardApplied = true;
+                        state.MaxFocus += ProgressionConstants.CompleteSubmissionCapacityBonus;
+                        state.Focus = state.MaxFocus;
+                    }
+                    else if (state.CaseId == 0)
+                    {
+                        state.Focus = state.MaxFocus;
+                    }
+                    events.Add(new ProgressionEvent
+                    {
+                        Kind = ProgressionEventKind.CaseComplete,
+                        ConclusionId = conclusionId,
+                    });
+                    break;
+            }
             return events;
         }
     }
