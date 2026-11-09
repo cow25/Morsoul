@@ -15,10 +15,8 @@ MonoBehaviour:
   caseId: 1
   title: The Poisoned Vault of Asterveil
   region: Guild Quarter & Lower Market District, Asterveil
-  inquiryNodes:
-  - {fileID: 11400000, guid: e4accc27dbea07d42b2f53e6365dc1e1, type: 2}
-  - {fileID: 11400000, guid: a767a0b151f027d42859492dac3529e1, type: 2}
-  hypothesis: {fileID: 11400000, guid: f692dea3db2c38f4eb33c60f76b5e7c7, type: 2}
+  inquiryNodes: []
+  hypothesis: {fileID: 0}
   interrogation: {fileID: 11400000, guid: 6853d42f5dacdb4448fca0825e1cd59b, type: 2}
   clues:
   - {fileID: 11400000, guid: 0066f2bffa0259746805d3019de693ea, type: 2}

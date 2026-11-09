@@ -24,7 +24,7 @@ MonoBehaviour:
     video: {fileID: 0}
     durationSeconds: 6
     waitForInput: 1
-    caption: "{PlayerName}! Steady\u2014what's happening to your core?! The ambient mana down here is tearing your regulators apart!"
+    caption: "{PlayerName}! Steady\u2014what's happening to your core?! The ambient mana down here is tearing you apart!"
     captionSpeaker: Eliza
   - image: {fileID: 21300000, guid: 8c889eebdea7e514b99d349204bb85de, type: 3}
     video: {fileID: 0}
@@ -46,7 +46,7 @@ MonoBehaviour:
     video: {fileID: 0}
     durationSeconds: 6
     waitForInput: 1
-    caption: Good. Draw your breath, Detective. The Overseer is right ahead.
+    caption: Good. Draw your breath, partner. The Overseer is right ahead.
     captionSpeaker: Eliza
   nextSceneName: 
   skipToScene: 1

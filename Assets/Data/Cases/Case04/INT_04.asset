@@ -52,7 +52,7 @@ MonoBehaviour:
       breaksComposureSegment: 0
       strikeCost: 1
       isCoreContradiction: 0
-      responseDialogue: A broken drill? Tools snap down here daily. Your logic circuits need a calibration overhaul.
+      responseDialogue: A broken drill? Tools snap down here daily. Your stone skull's wound too tight, machine.
       emotionAura: 0
   - suspectClaim: Why would anyone intentionally collapse a dead-end rock face?! What possible gain is there in blowing out useless granite?!
     keywords: []

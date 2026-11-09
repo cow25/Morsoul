@@ -15,10 +15,8 @@ MonoBehaviour:
   caseId: 0
   title: Awakening in the Ashes
   region: Subterranean Research Facility Ruins & Wilderness Threshold
-  inquiryNodes:
-  - {fileID: 11400000, guid: d1be78aba1adfde4f807b5f4ca53d557, type: 2}
-  - {fileID: 11400000, guid: d05bc401ca54f704fbb5b8a25233ab40, type: 2}
-  hypothesis: {fileID: 11400000, guid: f433ae3969018be4ab80f2e73ad309c4, type: 2}
+  inquiryNodes: []
+  hypothesis: {fileID: 0}
   interrogation: {fileID: 0}
   clues:
   - {fileID: 11400000, guid: b48596c93b690ae40980cf2b612d7d21, type: 2}

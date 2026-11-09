@@ -55,7 +55,7 @@ MonoBehaviour:
   - id: harlan_smirk
     speakerName: Harlan
     speakerPortrait: {fileID: 0}
-    text: (Steps out from the shadows of the tool shed, wiping soot from his leather vest with an indifferent smirk) "Simple physics, automaton. Old Brokk was pushing the drilling rigs past maximum tolerance to hit his safety bonuses. He ignored the safety valves and triggered a steam surge. It was <color=#E5A93C>reckless operator error. Open and shut.</color>"
+    text: (Steps out from the shadows of the tool shed, wiping soot from his leather vest with an indifferent smirk) "Simple as a snapped pick, automaton. Old Brokk was pushing the drilling rigs past maximum tolerance to hit his safety bonuses. He ignored the safety valves and triggered a steam surge. It was <color=#E5A93C>reckless operator error. Open and shut.</color>"
     registersClue: {fileID: 11400000, guid: dab66446a89e3164eb2d35dfa9ed8ebf, type: 2}
     setsFlag: 
     requiresFlag: 

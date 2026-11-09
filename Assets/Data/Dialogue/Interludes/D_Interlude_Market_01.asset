@@ -53,7 +53,7 @@ MonoBehaviour:
   - id: eliza_circle
     speakerName: Eliza
     speakerPortrait: {fileID: 0}
-    text: '"That''s the Circle for you. The trail always runs cold the same way theirs do."'
+    text: '"That''s how these people work. The trail always runs cold the same way."'
     registersClue: {fileID: 0}
     setsFlag: 
     requiresFlag: 
