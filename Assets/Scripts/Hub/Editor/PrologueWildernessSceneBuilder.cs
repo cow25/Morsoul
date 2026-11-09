@@ -50,14 +50,16 @@ namespace Morsoul.Hub.Editor
                 var player = FindComponent<HubPlayerController>(scene);
                 var camera = FindComponent<CameraFollow2D>(scene);
                 var cameraTarget = EnsureEmpty("ElizaIntroCameraTarget", new Vector3(8.75f, 0f, 0f));
+                var elizaCameraTarget = EnsureEmpty("ElizaCutawayCameraTarget", new Vector3(12f, 0f, 0f));
+                var elizaWalkStart = EnsureEmpty("ElizaWalkStart", new Vector3(14f, 0f, 0f));
                 var eliza = EnsureQuad("Eliza", new Color(0.55f, 0.2f, 0.2f),
                     new Vector3(12f, 0f, 0f), active: false);
-                var key = EnsureQuad("AncientChamberKey", new Color(0.9f, 0.75f, 0.25f),
-                    new Vector3(7.7f, 0.35f, 0f), active: false);
-                key.transform.localScale = new Vector3(0.35f, 0.35f, 1f);
-                var beacon = EnsureQuad("DiagnosticBeacon", new Color(0.1f, 0.85f, 1f),
-                    new Vector3(7.2f, 0.55f, 0f), active: false);
-                beacon.transform.localScale = new Vector3(0.45f, 0.45f, 1f);
+                RemoveRoot(scene, "AncientChamberKey");
+                RemoveRoot(scene, "DiagnosticBeacon");
+                var beacon = EnsureQuad("EyeHighlight", new Color(0.1f, 0.85f, 1f),
+                    new Vector3(12.7f, 0.4f, 0f), active: false);
+                beacon.name = "EyeHighlight";
+                beacon.transform.localScale = new Vector3(1.5f, 1.6f, 1f);
                 var blocker = EnsureQuad("EasternRouteBlocker", new Color(0.2f, 0.25f, 0.3f),
                     new Vector3(24f, -0.5f, 0f), active: true);
                 blocker.transform.localScale = new Vector3(1f, 4f, 1f);
@@ -80,9 +82,9 @@ namespace Morsoul.Hub.Editor
                 var southCollider = EnsureComponent<BoxCollider2D>(southTrees);
                 southCollider.isTrigger = false;
                 southCollider.size = Vector2.one;
-                EnsureQuad("ElizaCover", new Color(0.1f, 0.22f, 0.14f),
-                    new Vector3(12.7f, 0.2f, 0f), active: true)
-                    .transform.localScale = new Vector3(1.2f, 1.4f, 1f);
+                var bush = EnsureQuad("ElizaCover", new Color(0.1f, 0.22f, 0.14f),
+                    new Vector3(12.7f, 0.2f, 0f), active: true);
+                bush.transform.localScale = new Vector3(1.2f, 1.4f, 1f);
                 EnsureBoundary("WestBoundary", new Vector3(-10f, -0.5f, 0f),
                     new Vector2(1f, 7f));
 
@@ -104,9 +106,11 @@ namespace Morsoul.Hub.Editor
                 intro.player = player;
                 intro.cameraFollow = camera;
                 intro.cameraTarget = cameraTarget.transform;
+                intro.elizaCameraTarget = elizaCameraTarget.transform;
                 intro.eliza = eliza.transform;
-                intro.keyProp = key.transform;
-                intro.diagnosticBeacon = beacon.transform;
+                intro.elizaWalkStart = elizaWalkStart.transform;
+                intro.bushProp = bush.transform;
+                intro.eyeHighlight = beacon.transform;
                 intro.elizaEmote = elizaEmote;
                 intro.playerEmote = playerEmote;
                 intro.routeBlocker = blocker;
@@ -179,6 +183,12 @@ namespace Morsoul.Hub.Editor
             foreach (var root in scene.GetRootGameObjects())
                 if (root.name == name) return root;
             return null;
+        }
+
+        static void RemoveRoot(Scene scene, string name)
+        {
+            var go = FindRoot(scene, name);
+            if (go != null) Object.DestroyImmediate(go);
         }
 
         static GameObject EnsureEmpty(string name, Vector3 position)

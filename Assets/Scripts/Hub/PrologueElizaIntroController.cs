@@ -3,6 +3,7 @@ using Morsoul.Core;
 using Morsoul.Dialogue;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.Serialization;
 
 namespace Morsoul.Hub
 {
@@ -18,9 +19,12 @@ namespace Morsoul.Hub
         public HubPlayerController player;
         public CameraFollow2D cameraFollow;
         public Transform cameraTarget;
+        public Transform elizaCameraTarget;
         public Transform eliza;
-        public Transform keyProp;
-        public Transform diagnosticBeacon;
+        public Transform elizaWalkStart;
+        public Transform bushProp;
+        [FormerlySerializedAs("diagnosticBeacon")]
+        public Transform eyeHighlight;
         public InteractableLabel elizaEmote;
         public InteractableLabel playerEmote;
         public GameObject routeBlocker;
@@ -104,60 +108,113 @@ namespace Morsoul.Hub
 
         IEnumerator RunSequence(SessionState session)
         {
-            yield return Wait(5f);
+            var dialogue = context != null ? context.dialogue : null;
+
+            // A. Cutaway — Eliza surveying the path toward the ruins.
+            yield return FadeTo(dialogue, 1f, 0.5f);
+            if (cameraFollow != null && elizaCameraTarget != null)
+                cameraFollow.target = elizaCameraTarget;
+            yield return FadeTo(dialogue, 0f, 0.5f);
 
             SetActive(eliza, true);
-            yield return MoveTo(eliza, new Vector3(10f, 0f, 0f), 2f);
+            if (elizaWalkStart != null && eliza != null)
+                eliza.position = elizaWalkStart.position;
+            yield return MoveTo(eliza, new Vector3(12f, 0f, 0f), 2f);
             yield return Emote(elizaEmote, "!", 1.5f);
-            yield return Line("Eliza",
-                "Hold it right there, scrap-heap! Hands where I can see them!", 4f);
+            // She mistakes the approaching figure for a monster and dives into the bush.
+            yield return MoveTo(eliza,
+                bushProp != null ? bushProp.position : new Vector3(12f, 0f, 0f), 0.5f);
+            SetActive(eliza, false);
 
-            yield return Emote(playerEmote, "...", 2f);
-            yield return Line("Eliza",
-                "Don't play dumb. Machines don't dig themselves out of sealed ruins. " +
-                "Who sent you, and why were you buried down there?", 6f);
-            yield return MoveTo(eliza, new Vector3(9f, 0f, 0f), 2f);
+            yield return FadeTo(dialogue, 1f, 0.4f);
+            if (cameraFollow != null && cameraTarget != null)
+                cameraFollow.target = cameraTarget;
+            yield return FadeTo(dialogue, 0f, 0.4f);
 
-            SetActive(keyProp, true);
-            SetActive(diagnosticBeacon, true);
-            yield return Line("Golem",
-                "[DIAGNOSTIC BEACON ACTIVE: Unit Type: Forensic & Analytical " +
-                "Assistance Construct. Combat Subroutines: OFFLINE. Core Identity: UNKNOWN.]",
-                5f);
-
-            yield return MoveTo(eliza, new Vector3(8.5f, 0f, 0f), 2f);
-            yield return Emote(elizaEmote, "?", 1.5f);
-            yield return Line("Eliza",
-                "Forensic assistance...? You don't have an attack core at all, do you?", 4f);
-            yield return Line("Eliza",
-                "Wait... that ocular frequency. Why does looking at you make my chest ache...?", 5f);
-
-            yield return Line("Eliza",
-                "An old surveyor key? You didn't smash your way through that seal... " +
-                "you solved the manual lock mechanism.", 5f);
-            SetActive(keyProp, false);
-            SetActive(diagnosticBeacon, false);
-            yield return Line("Eliza",
-                "An ancient machine that solves logic puzzles instead of ripping heads off. " +
-                "If the City Watch catches you lumbering down the Imperial Road, they'll " +
-                "seize you for scrap metal or sell your mana core to the Alchemist Guild.", 7f);
-
-            yield return Line("Eliza",
-                "An old forensic construct with working optical translation... " +
-                "Looks like I just found myself an ancient detective.", 5f);
-            yield return Emote(elizaEmote, "...", 1.5f);
-            yield return Line("Eliza",
-                "...Why did saying that feel so natural?", 3f);
-            yield return Line("Eliza",
-                "Lucky for you, my pockets are empty and the Investigator's Guild pays " +
-                "bounties for sharp eyes. Pull that hood down over your brass plates, " +
-                "keep your mouth shut, and follow me.", 7f);
-            yield return Line("Eliza",
-                "Name's Eliza Astra. Let's see what Asterveil makes of you... partner.", 5f);
-
-            yield return MoveTo(eliza, new Vector3(24f, 0f, 0f), 6f);
+            // B. The protagonist enters, still acclimating to the Golem Eye.
             yield return MoveTo(player != null ? player.transform : null,
-                new Vector3(8f, 0f, 0f), 2f);
+                new Vector3(9f, 0f, 0f), 2f);
+            yield return Emote(playerEmote, "...", 1.5f);
+            yield return Line("System",
+                "[OCULAR CALIBRATION: ambient mana saturation nominal. Terrain survey in progress.]", 3f);
+
+            // The Eye detects her concealment; the Golem cautiously approaches.
+            SetActive(eyeHighlight, true);
+            yield return Line("System",
+                "[ANOMALY DETECTED: biological signature concealed — vegetation, east. " +
+                "Heart rate: elevated. Posture: watchful.]", 4f);
+            yield return MoveTo(player != null ? player.transform : null,
+                new Vector3(10f, 0f, 0f), 1.5f);
+
+            // Alarmed, she bursts from the bush, ready to attack.
+            SetActive(eliza, true);
+            yield return MoveTo(eliza, new Vector3(11f, 0f, 0f), 0.7f);
+            yield return Emote(elizaEmote, "!", 1.2f);
+            yield return Line("???", "\u27E6\u2593\u2592 \u2593\u2593\u2593 \u2592\u2593\u2593\u2593 \u2593\u2592!\u27E7", 3f);
+
+            // The Golem attempts to communicate; neither can parse the other.
+            yield return Line("Golem", "\u27E6\u2593\u2593\u2592 \u2593 \u2593\u2593\u2592 \u2592\u2593\u27E7", 3f);
+            yield return Emote(elizaEmote, "?", 1.5f);
+
+            // The Eye completes spoken decipherment against the recovered log corpus.
+            yield return Line("System",
+                "[LINGUISTIC DECRYPTION: correlating phoneme stream against recovered " +
+                "textual corpus (Torn Desk Logs, C0_C1)... PATTERN MATCH: modern Agarthan. " +
+                "Spoken comprehension: ONLINE.]", 5f);
+
+            // Just as she moves to strike, it answers in her language.
+            yield return Line("Golem", "Wait. I mean no harm.", 3f);
+            yield return Emote(elizaEmote, "?", 1.5f);
+            yield return Line("Eliza", "It... it talks? Relics don't talk—", 3f);
+            yield return Line("Golem",
+                "I awoke inside those ruins. I do not remember what I am.", 4f);
+            yield return Emote(elizaEmote, "...", 1.5f);
+            SetActive(eyeHighlight, false);
+
+            // C. Narrative bridge — fade to black, explanation card, fade back in.
+            yield return FadeTo(dialogue, 1f, 0.8f);
+            if (dialogue != null)
+                dialogue.SetFadeText("You explained your situation to the wary stranger.");
+            yield return Wait(2.5f);
+            if (dialogue != null) dialogue.SetFadeText("");
+            yield return FadeTo(dialogue, 0f, 0.8f);
+
+            // D. First dialogue — wary, then the broker's curiosity wins.
+            yield return Line("Eliza",
+                "Ohh~ Fascinating! The ruins have been inaccessible for as long as I can " +
+                "remember. No one knows how to get inside, nor do they have the means " +
+                "to open them.", 6f);
+            yield return Line("Eliza", "You're pretty clever, huh?", 3f);
+            yield return Line("Eliza",
+                "Name's Eliza. I'm an information broker at the Guild.", 4f);
+            yield return Line("Eliza", "What's yours? Do you even have one?", 3f);
+
+            if (dialogue != null && dialogue.ShowNamePrompt())
+            {
+                string enteredName = null;
+                void OnName(string n) => enteredName = n;
+                dialogue.NameSubmitted += OnName;
+                while (enteredName == null) yield return null;
+                dialogue.NameSubmitted -= OnName;
+                if (session != null) session.PlayerName = enteredName;
+            }
+
+            yield return Line("Eliza", "{PlayerName}, huh? Nice to meet you!", 3f);
+            yield return Line("Eliza",
+                "I don't know why, but I had a strong urge to survey the ruins today...", 5f);
+            yield return Line("Eliza", "Must be fate, meeting you here!", 3f);
+            yield return Line("Eliza",
+                "Come on, follow me back to the Guild. I have to report my findings.", 5f);
+            yield return Line("Eliza",
+                "I'll answer your questions along the way. We've got time.", 4f);
+
+            // E. Exit — she walks out; the Golem follows two paces behind.
+            yield return MoveTo(eliza, new Vector3(13f, 0f, 0f), 1f);
+            var follow = StartCoroutine(MoveTo(player != null ? player.transform : null,
+                new Vector3(24f, 0f, 0f), 7f));
+            yield return MoveTo(eliza, new Vector3(24f, 0f, 0f), 5f);
+            yield return follow;
+            yield return FadeTo(dialogue, 1f, 0.8f);
 
             session.ElizaIntroSeen = true;
             session.EasternRouteUnlocked = true;
@@ -171,17 +228,25 @@ namespace Morsoul.Hub
                 player != null ? player.transform.position : safeResumePosition,
                 PlayerFacing2D.Right);
 
-            yield return Line("",
-                "PROLOGUE COMPLETED — PROCEEDING TO ZONE A: ASTERVEIL LOWER MARKET", 4f);
+            if (dialogue != null)
+                dialogue.SetFadeText("PROLOGUE COMPLETED — PROCEEDING TO ZONE A: ASTERVEIL LOWER MARKET");
+            yield return Wait(3f);
             if (autoLoadNextScene && !string.IsNullOrEmpty(nextSceneName))
                 RequestNextScene();
             else
             {
+                if (dialogue != null) yield return dialogue.FadeTo(0f, 0.5f);
                 if (cameraFollow != null && player != null)
                     cameraFollow.target = player.transform;
                 if (player != null) player.enabled = true;
             }
             _running = false;
+        }
+
+        IEnumerator FadeTo(DialogueController dialogue, float targetOpacity, float seconds)
+        {
+            if (dialogue != null) yield return dialogue.FadeTo(targetOpacity, seconds / timingScale);
+            else yield return Wait(seconds);
         }
 
         void RequestNextScene()
