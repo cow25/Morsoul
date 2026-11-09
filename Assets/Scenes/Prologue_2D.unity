@@ -169,6 +169,7 @@ MonoBehaviour:
   promptText: '[E] Inspect'
   promptIndicator: {fileID: 1380260183}
   clue: {fileID: 11400000, guid: e16640d894349cb40bf34656574551ef, type: 2}
+  inspectionDialogue: {fileID: 0}
 --- !u!61 &152340751
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -339,6 +340,7 @@ MonoBehaviour:
   promptText: '[E] Inspect'
   promptIndicator: {fileID: 379376329}
   clue: {fileID: 11400000, guid: ac06cca2e1b3c66438d240ea994bd57a, type: 2}
+  inspectionDialogue: {fileID: 0}
 --- !u!61 &212638645
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -634,6 +636,7 @@ MonoBehaviour:
   promptText: '[E] Inspect'
   promptIndicator: {fileID: 842255941}
   clue: {fileID: 11400000, guid: b48596c93b690ae40980cf2b612d7d21, type: 2}
+  inspectionDialogue: {fileID: 0}
 --- !u!61 &643018983
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -1021,6 +1024,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.CameraFollow2D
   target: {fileID: 1858143856}
   smoothTime: 0.25
+  useBounds: 0
+  boundsMin: {x: 0, y: 0}
+  boundsMax: {x: 0, y: 0}
+  insetByView: 1
 --- !u!20 &1281342757
 Camera:
   m_ObjectHideFlags: 0
@@ -1137,6 +1144,7 @@ MonoBehaviour:
   promptText: '[E] Inspect'
   promptIndicator: {fileID: 371479687}
   clue: {fileID: 11400000, guid: 052604a5970f0234a8ee427ae48dfeb5, type: 2}
+  inspectionDialogue: {fileID: 0}
 --- !u!61 &1302864507
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -1457,6 +1465,7 @@ MonoBehaviour:
   journal: {fileID: 1410254410}
   flags: {fileID: 1410254411}
   travelMenu: {fileID: 0}
+  boardPanel: {fileID: 0}
 --- !u!4 &1410254413
 Transform:
   m_ObjectHideFlags: 0
@@ -1692,11 +1701,12 @@ MonoBehaviour:
   promptText: '[E] Leave the ruins'
   promptIndicator: {fileID: 1357293390}
   targetScene: Prologue_Wilderness
+  routeKey: prologue.wilderness
   checkpointReason: PrologueExit
   offerTravelMenu: 0
-  routeKey: prologue.wilderness
   boardCaseId: 0
   lockedDialogue: {fileID: 11400000, guid: e15f758450671b94ca8391215f94a051, type: 2}
+  robeDialogue: {fileID: 0}
 --- !u!61 &1631223066
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -1848,6 +1858,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Morsoul.Journal::Morsoul.Journal.JournalController
   journal: {fileID: 1410254410}
+  context: {fileID: 0}
   allLogs:
   - {fileID: 11400000, guid: a5818faf8ec5ac346932bc54ccc04a80, type: 2}
   dossiers: []
@@ -2197,6 +2208,8 @@ MonoBehaviour:
   interactLayers:
     serializedVersion: 2
     m_Bits: 4294967295
+  footstepClips: []
+  stepIntervalSeconds: 0.42
 --- !u!50 &1858143859
 Rigidbody2D:
   serializedVersion: 5
@@ -2331,6 +2344,7 @@ MonoBehaviour:
   promptText: '[E] Inspect'
   promptIndicator: {fileID: 995860781}
   clue: {fileID: 11400000, guid: 02ca76cf8686bfe43882f4cf7b237937, type: 2}
+  inspectionDialogue: {fileID: 0}
 --- !u!61 &1927619683
 BoxCollider2D:
   m_ObjectHideFlags: 0

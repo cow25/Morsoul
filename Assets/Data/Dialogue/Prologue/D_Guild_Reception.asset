@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad6b4272890c70c4eb3d3dfe4810ac24, type: 3}
+  m_Name: D_Guild_Reception
+  m_EditorClassIdentifier: Morsoul.Dialogue::Morsoul.Dialogue.DialogueData
+  id: D_Guild_Reception
+  nodes:
+  - id: eliza_desk
+    speakerName: Eliza
+    speakerPortrait: {fileID: 0}
+    text: "\"Front desk is Marta \u2014 the Guild clerk. Every open job in Asterveil passes her board. Best eyes in the city for who's hiring.\""
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: marta_shock
+  - id: marta_shock
+    speakerName: Marta
+    speakerPortrait: {fileID: 0}
+    text: "\"Back from the ruins already, Eliza? And you've brought\u2014 oh. Oh my. What in the Saints' name is THAT?\""
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: eliza_vouch
+  - id: eliza_vouch
+    speakerName: Eliza
+    speakerPortrait: {fileID: 0}
+    text: '"A friend, Marta. A very strange friend. We''re going up to see Ovan."'
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: marta_stairs
+  - id: marta_stairs
+    speakerName: Marta
+    speakerPortrait: {fileID: 0}
+    text: "\"Well\u2014 he's in his office, upstairs at the end of the hall. Do try not to let it break anything.\""
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: 
+  startNodeId: eliza_desk
+  portraits: []

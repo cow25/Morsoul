@@ -18,6 +18,7 @@ MonoBehaviour:
   caseId: 2
   acquisition: 0
   requiredTool: 0
+  requiredFlag: 
   description: "A crumpled letter hidden behind the timber scaffolding addressed to Accord, sealed with the Veiled Circle's veil sigil (later recognized on Vane's ritual dagger in Case 3). Demands the application of the \"damping powder\" before the vesper chime, threatening Accord's sister Marian \u2014 her medical debt called in full and her sanctuary asylum revoked."
   dissonanceKeyword: 
   isBacktrackingOnly: 0

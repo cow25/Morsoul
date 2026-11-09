@@ -170,8 +170,9 @@ namespace Morsoul.Dialogue
         {
             _isPlaying = false;
             LastEndFrame = Time.frameCount;
+            HideNamePrompt();
             StopRunner();
-            if (_root != null) _root.style.display = DisplayStyle.None;
+            if (_root != null) _root.style.display = FadeActive ? DisplayStyle.Flex : DisplayStyle.None;
             if (manageCursor)
             {
                 UnityEngine.Cursor.lockState = CursorLockMode.Locked;
@@ -225,6 +226,13 @@ namespace Morsoul.Dialogue
         {
             if (_nameInputContainer == null || _nameInputField == null) return false;
             NamePromptActive = true;
+            _isPlaying = true;
+            if (_root != null) _root.style.display = DisplayStyle.Flex;
+            if (manageCursor)
+            {
+                UnityEngine.Cursor.lockState = CursorLockMode.None;
+                UnityEngine.Cursor.visible = true;
+            }
             _nameInputField.value = "";
             _nameInputContainer.style.display = DisplayStyle.Flex;
             if (_continueHint != null) _continueHint.style.display = DisplayStyle.None;
@@ -306,7 +314,7 @@ namespace Morsoul.Dialogue
         {
             _isPlaying = false;
             LastEndFrame = Time.frameCount;
-            if (_root != null) _root.style.display = DisplayStyle.None;
+            if (_root != null) _root.style.display = FadeActive ? DisplayStyle.Flex : DisplayStyle.None;
             if (manageCursor)
             {
                 UnityEngine.Cursor.lockState = CursorLockMode.Locked;

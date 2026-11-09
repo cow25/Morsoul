@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9593246776ef58d4b86a68be45ad543c, type: 3}
   m_Name: InvestigationIntegrationCatalog
   m_EditorClassIdentifier: Morsoul.Data::Morsoul.Data.InvestigationIntegrationCatalog
-  enableDevelopmentFallback: 0
+  enableDevelopmentFallback: 1
   areas:
   - caseId: 0
     routeKey: opening

@@ -189,6 +189,8 @@ MonoBehaviour:
   interactLayers:
     serializedVersion: 2
     m_Bits: 4294967295
+  footstepClips: []
+  stepIntervalSeconds: 0.42
 --- !u!50 &327875144
 Rigidbody2D:
   serializedVersion: 5
@@ -463,6 +465,7 @@ MonoBehaviour:
   promptText: '[E] Inspect'
   promptIndicator: {fileID: 371479687}
   clue: {fileID: 11400000, guid: 0066f2bffa0259746805d3019de693ea, type: 2}
+  inspectionDialogue: {fileID: 0}
 --- !u!61 &556708646
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -664,6 +667,7 @@ MonoBehaviour:
   promptText: '[E] Inspect'
   promptIndicator: {fileID: 1380260183}
   clue: {fileID: 11400000, guid: b564b4ab52aadf14dad45e9fa97861a4, type: 2}
+  inspectionDialogue: {fileID: 0}
 --- !u!61 &781489603
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -862,6 +866,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Morsoul.Journal::Morsoul.Journal.JournalController
   journal: {fileID: 1874073102}
+  context: {fileID: 0}
   allLogs:
   - {fileID: 11400000, guid: a5818faf8ec5ac346932bc54ccc04a80, type: 2}
   dossiers: []
@@ -1039,6 +1044,7 @@ MonoBehaviour:
   promptText: '[E] Inspect'
   promptIndicator: {fileID: 379376329}
   clue: {fileID: 11400000, guid: 9ab9923cb8f7c9649b70f0ce62f858a3, type: 2}
+  inspectionDialogue: {fileID: 0}
 --- !u!61 &1128240872
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -1472,6 +1478,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.CameraFollow2D
   target: {fileID: 327875141}
   smoothTime: 0.25
+  useBounds: 0
+  boundsMin: {x: 0, y: 0}
+  boundsMax: {x: 0, y: 0}
+  insetByView: 1
 --- !u!20 &1556192177
 Camera:
   m_ObjectHideFlags: 0
@@ -1695,6 +1705,7 @@ MonoBehaviour:
   promptText: '[E] Inspect'
   promptIndicator: {fileID: 995860781}
   clue: {fileID: 11400000, guid: bd6194f06c3e4a94890682502e0d7f2b, type: 2}
+  inspectionDialogue: {fileID: 0}
 --- !u!61 &1750621244
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -2044,6 +2055,7 @@ MonoBehaviour:
   journal: {fileID: 1874073102}
   flags: {fileID: 1874073103}
   travelMenu: {fileID: 0}
+  boardPanel: {fileID: 0}
 --- !u!4 &1874073105
 Transform:
   m_ObjectHideFlags: 0

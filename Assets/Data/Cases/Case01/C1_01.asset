@@ -18,6 +18,7 @@ MonoBehaviour:
   caseId: 1
   acquisition: 0
   requiredTool: 1
+  requiredFlag: 
   description: Heavy Dwarven multi-pin cylinder lock; tumblers and pins pristine with zero tool marks, shearing, or acid burns. Must have been opened with an authentic key.
   dissonanceKeyword: 
   isBacktrackingOnly: 0

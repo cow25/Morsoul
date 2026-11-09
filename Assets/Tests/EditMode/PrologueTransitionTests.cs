@@ -2,6 +2,7 @@ using Morsoul.Core;
 using Morsoul.Hub;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace Morsoul.Tests
 {
@@ -27,6 +28,190 @@ namespace Morsoul.Tests
             _session.SetCutsceneContext("", "");
             _session.ElizaIntroSeen = true;
             Assert.IsFalse(PrologueTransitionRules.CanTriggerElizaIntro(_session));
+        }
+
+        [Test]
+        public void IntroLine_UsesNpcRunner_AndWaitsForAdvance()
+        {
+            var go = new GameObject("IntroTest", typeof(BoxCollider2D));
+            var npc = ScriptableObject.CreateInstance<Morsoul.Dialogue.DialogueData>();
+            npc.id = "NPC_TEST";
+            npc.startNodeId = "hello";
+            npc.nodes = new[]
+            {
+                new Morsoul.Dialogue.DialogueNodeData { id = "hello", speakerName = "NPC", text = "Hello." },
+            };
+            try
+            {
+                var dialogue = go.AddComponent<Morsoul.Dialogue.DialogueController>();
+                dialogue.manageCursor = false;
+                var context = go.AddComponent<HubContext>();
+                context.dialogue = dialogue;
+                dialogue.SetDialogue(npc);
+                var intro = go.AddComponent<PrologueElizaIntroController>();
+                intro.context = context;
+                var method = typeof(PrologueElizaIntroController).GetMethod("Line",
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                var line = (System.Collections.IEnumerator)method.Invoke(intro,
+                    new object[] { "Golem", "Can you understand me?" });
+
+                Assert.IsTrue(line.MoveNext());
+                Assert.IsNotNull(dialogue.Runner);
+                Assert.AreEqual("Can you understand me?", dialogue.Runner.Current.text);
+                Assert.IsTrue(line.MoveNext());
+                Assert.IsTrue(dialogue.IsPlaying);
+                dialogue.Runner.Advance();
+                Assert.IsFalse(line.MoveNext());
+                Assert.IsFalse(dialogue.IsPlaying);
+                Assert.AreSame(npc, dialogue.dialogueData);
+                Assert.IsTrue(context.PlayDialogue(npc));
+                Assert.AreEqual("Hello.", dialogue.Runner.Current.text);
+                Assert.IsTrue(dialogue.IsPlaying);
+                dialogue.Runner.Advance();
+                Assert.IsFalse(dialogue.IsPlaying);
+            }
+            finally
+            {
+                Object.DestroyImmediate(go);
+                Object.DestroyImmediate(npc);
+            }
+        }
+
+        [Test]
+        public void Encounter_OnlyElizasFirstWarningIsCorrupted_AndSpeechWaitsForInput()
+        {
+            var go = new GameObject("EncounterContentTest", typeof(BoxCollider2D));
+            try
+            {
+                var dialogue = go.AddComponent<Morsoul.Dialogue.DialogueController>();
+                dialogue.manageCursor = false;
+                var context = go.AddComponent<HubContext>();
+                context.dialogue = dialogue;
+                var intro = go.AddComponent<PrologueElizaIntroController>();
+                intro.context = context;
+                var sequence = (System.Collections.IEnumerator)typeof(PrologueElizaIntroController)
+                    .GetMethod("RunSequence", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                    .Invoke(intro, new object[] { _session });
+                int corrupted = 0;
+                bool deciphered = false;
+                bool finished = false;
+                bool plea = false, monster = false, noWeapons = false;
+                while (!finished && sequence.MoveNext())
+                {
+                    var line = sequence.Current as System.Collections.IEnumerator;
+                    if (line == null || !line.GetType().Name.StartsWith("<Line>")) continue;
+                    try
+                    {
+                        Assert.IsTrue(line.MoveNext());
+                        var node = dialogue.Runner.Current;
+                        if (node.text.Contains("\u2593"))
+                        {
+                            corrupted++;
+                            Assert.AreEqual("???", node.speakerName);
+                            Assert.IsFalse(deciphered);
+                        }
+                        Assert.IsFalse(node.text.Contains("Relics"));
+                        Assert.IsFalse(node.text.Contains("don't want to hurt"));
+                        Assert.IsFalse(node.text.Contains("do not remember"));
+                        Assert.IsFalse(node.text.Contains("you can speak"));
+                        Assert.AreNotEqual("System", node.speakerName);
+                        if (node.text.Contains("words in the notes")) deciphered = true;
+                        if (node.text == "Wait. I mean no harm.") Assert.IsTrue(deciphered);
+                        plea |= node.text == "Look, wait! Don't hurt me!" && !deciphered;
+                        monster |= node.text == "Why should I listen to a monster like you?"
+                                   && deciphered && node.speakerName == "???";
+                        noWeapons |= node.text == "I have no weapons on me! At least hear me out first!"
+                                     && deciphered;
+                        finished = node.text == "I'll answer your questions along the way. We've got time.";
+                        Assert.IsTrue(line.MoveNext());
+                        dialogue.Runner.Advance();
+                        Assert.IsFalse(line.MoveNext());
+                    }
+                    finally
+                    {
+                        (line as System.IDisposable)?.Dispose();
+                    }
+                }
+                Assert.IsTrue(finished);
+                Assert.AreEqual(1, corrupted);
+                Assert.IsTrue(plea && monster && noWeapons);
+            }
+            finally
+            {
+                Object.DestroyImmediate(go);
+            }
+        }
+
+        [TestCase(1.333333f)]
+        [TestCase(1.777778f)]
+        [TestCase(2.333333f)]
+        public void Opening_StagesPlayerOutsideBothShots_WithoutHidingRenderer(float aspect)
+        {
+            var cameraGo = new GameObject("IntroCamera", typeof(Camera), typeof(CameraFollow2D));
+            var playerGo = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            var elizaGo = new GameObject("Eliza");
+            var shot = new GameObject("OpeningShot");
+            var entrance = new GameObject("EntranceShot");
+            var walkStart = new GameObject("ElizaWalkStart");
+            var trigger = new GameObject("IntroTrigger", typeof(BoxCollider2D));
+            try
+            {
+                var camera = cameraGo.GetComponent<Camera>();
+                camera.orthographic = true;
+                camera.orthographicSize = 5f;
+                camera.aspect = aspect;
+                cameraGo.transform.position = new Vector3(0f, 0f, -10f);
+                shot.transform.position = new Vector3(12f, 0f, 0f);
+                entrance.transform.position = new Vector3(8.75f, 0f, 0f);
+                walkStart.transform.position = new Vector3(14f, 0f, 0f);
+                var intro = trigger.AddComponent<PrologueElizaIntroController>();
+                intro.player = playerGo.AddComponent<HubPlayerController>();
+                intro.cameraFollow = cameraGo.GetComponent<CameraFollow2D>();
+                intro.elizaCameraTarget = shot.transform;
+                intro.cameraTarget = entrance.transform;
+                intro.eliza = elizaGo.transform;
+                intro.elizaWalkStart = walkStart.transform;
+                typeof(PrologueElizaIntroController).GetMethod("StageOpening",
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                    .Invoke(intro, null);
+
+                var renderer = playerGo.GetComponent<Renderer>();
+                Assert.IsTrue(renderer.enabled);
+                Assert.AreEqual(shot.transform.position.x, cameraGo.transform.position.x);
+                Assert.AreEqual(walkStart.transform.position, elizaGo.transform.position);
+                Assert.Less(renderer.bounds.max.x, shot.transform.position.x - 5f * aspect);
+                Assert.Less(renderer.bounds.max.x, entrance.transform.position.x - 5f * aspect);
+            }
+            finally
+            {
+                foreach (var go in new[] { trigger, playerGo, cameraGo, elizaGo, shot, entrance, walkStart })
+                    Object.DestroyImmediate(go);
+            }
+        }
+
+        [Test]
+        public void NamePrompt_ReopensPanelAfterDialogueEnds()
+        {
+            var go = new GameObject("NamePromptTest");
+            try
+            {
+                var dialogue = go.AddComponent<Morsoul.Dialogue.DialogueController>();
+                dialogue.manageCursor = false;
+                var tree = UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.UIElements.VisualTreeAsset>(
+                    "Assets/Dialogue.uxml").CloneTree();
+                typeof(Morsoul.Dialogue.DialogueController).GetMethod("OnUIReload",
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                    .Invoke(dialogue, new object[] { null, tree, 1 });
+                dialogue.Stop();
+                Assert.IsTrue(dialogue.ShowNamePrompt());
+                Assert.IsTrue(dialogue.IsPlaying);
+                Assert.AreEqual(UnityEngine.UIElements.DisplayStyle.Flex,
+                    tree.Q<UnityEngine.UIElements.VisualElement>("Dialogue-Root").style.display.value);
+            }
+            finally
+            {
+                Object.DestroyImmediate(go);
+            }
         }
 
         [Test]

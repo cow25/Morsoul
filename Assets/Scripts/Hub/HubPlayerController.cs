@@ -16,6 +16,7 @@ namespace Morsoul.Hub
     /// or CameraFollow2D.
     /// </summary>
     [RequireComponent(typeof(Rigidbody2D))]
+    [RequireComponent(typeof(YSort2D))]
     public class HubPlayerController : MonoBehaviour
     {
         public float moveSpeed = 3.5f;
@@ -57,6 +58,8 @@ namespace Morsoul.Hub
                 body = gameObject.AddComponent<BoxCollider2D>();
                 body.size = new Vector2(0.8f, 0.8f);
             }
+            if (GetComponent<YSort2D>() == null)
+                gameObject.AddComponent<YSort2D>();
             var session = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session : null;
             if (session != null) _facing = session.PlayerFacing2D;
         }

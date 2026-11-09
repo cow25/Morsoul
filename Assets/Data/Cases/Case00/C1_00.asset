@@ -18,6 +18,7 @@ MonoBehaviour:
   caseId: 0
   acquisition: 1
   requiredTool: 1
+  requiredFlag: 
   description: Torn pre-cataclysm technical manifests scattered across a workstation. Scanning with Golem Eye (Tab) initiates linguistic deciphering, teaching the Golem the modern tongue and identifying the site as an unauthorized governmental mana research installation.
   dissonanceKeyword: 
   isBacktrackingOnly: 0

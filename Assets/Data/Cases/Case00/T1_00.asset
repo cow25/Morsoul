@@ -18,6 +18,7 @@ MonoBehaviour:
   caseId: 0
   acquisition: 7
   requiredTool: 0
+  requiredFlag: 
   description: "Chassis Integrity: 42%. Consciousness core reconstituted from temporal drift. Memory sectors 01\u201389: Unreadable/Wiped. Optical Translation Protocol: Online."
   dissonanceKeyword: memory sectors wiped
   isBacktrackingOnly: 0

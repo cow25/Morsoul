@@ -19,6 +19,12 @@ namespace Morsoul.Hub
         /// <summary>Scene loaded when the gate is open.</summary>
         public string targetScene;
         /// <summary>
+        /// Optional named spawn in the destination scene (matches a
+        /// SceneSpawnMarker's entryId). Empty = the scene's default spawn.
+        /// Used so doors deposit the player at their own doorway.
+        /// </summary>
+        public string entryId;
+        /// <summary>
         /// Optional route-table key (e.g. "investigation.3") resolved through
         /// the GameStateManager before targetScene. Lets a Zone B seam point
         /// at a route whose scene is delivered by another lane — the seam
@@ -57,6 +63,10 @@ namespace Morsoul.Hub
                     return;
                 }
                 CheckpointRequested?.Invoke("Seam");
+                // Named-spawn handoff survives the travel checkpoint's pose
+                // clear and is consumed by SceneEntryPoint in the next scene.
+                if (CoreRuntime.Instance != null && !string.IsNullOrEmpty(entryId))
+                    CoreRuntime.Instance.Session.PendingEntryPointId = entryId;
                 // Single load authority: the GSM guards missing scenes and
                 // stamps the checkpoint; direct load only without Core.
                 if (CoreRuntime.Instance != null)

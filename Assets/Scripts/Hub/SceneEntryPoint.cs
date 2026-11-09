@@ -38,6 +38,26 @@ namespace Morsoul.Hub
                 ? GameStateManager.Instance.CurrentSave
                 : null;
             string sceneName = SceneManager.GetActiveScene().name;
+
+            // A gate that named a destination spawn (entryId) wins over both
+            // resume and default spawn — doors deposit you at their doorway.
+            if (session != null && !string.IsNullOrEmpty(session.PendingEntryPointId))
+            {
+                string pending = session.PendingEntryPointId;
+                session.PendingEntryPointId = "";
+                foreach (var marker in FindObjectsByType<SceneSpawnMarker>(
+                    FindObjectsInactive.Include))
+                {
+                    if (marker == null || marker.entryId != pending) continue;
+                    target.position = marker.transform.position;
+                    session.SetPlayerContext(SceneMode.Mode2D, sceneName,
+                        target.position, session.PlayerFacing2D);
+                    return;
+                }
+                Debug.LogWarning($"SceneEntryPoint: no SceneSpawnMarker for " +
+                                 $"entry '{pending}'; falling back.", this);
+            }
+
             bool isResumeScene = session != null && session.HasPlayerPosition &&
                 ((save != null && save.checkpointSceneName == sceneName) ||
                  session.CurrentSceneId == sceneName);

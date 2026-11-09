@@ -18,6 +18,7 @@ MonoBehaviour:
   caseId: 0
   acquisition: 0
   requiredTool: 0
+  requiredFlag: 
   description: Shattered glass vacuum tube surrounded by crystallized mana slag. Demonstrates that power to the primary hydraulic security blast door was severed during a forced emergency system overload.
   dissonanceKeyword: 
   isBacktrackingOnly: 0

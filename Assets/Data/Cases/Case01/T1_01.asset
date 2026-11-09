@@ -18,6 +18,7 @@ MonoBehaviour:
   caseId: 1
   acquisition: 2
   requiredTool: 0
+  requiredFlag: 
   description: "Only two physical keys exist for that chamber \u2014 Ignatius carries one, and the Guild Archive holds the duplicate under wax seal. The door was locked from the outside."
   dissonanceKeyword: locked from the outside
   isBacktrackingOnly: 0

@@ -68,7 +68,7 @@ namespace Morsoul.Hub.Editor
                 blockerCollider.size = Vector2.one;
 
                 EnsureQuad("WildernessPath", new Color(0.22f, 0.28f, 0.2f),
-                    new Vector3(8f, -0.75f, 0f), active: true)
+                    new Vector3(8f, -0.75f, 0.25f), active: true)
                     .transform.localScale = new Vector3(34f, 1f, 1f);
                 var northTrees = EnsureQuad("NorthTreeLine", new Color(0.08f, 0.18f, 0.11f),
                     new Vector3(8f, 2.2f, 0f), active: true);

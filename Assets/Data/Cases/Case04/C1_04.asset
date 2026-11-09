@@ -18,6 +18,7 @@ MonoBehaviour:
   caseId: 4
   acquisition: 0
   requiredTool: 0
+  requiredFlag: 
   description: High-pressure pneumatic release valves manually wrenched past safety tolerances and jammed with iron wedge pins. Backpressure was intentionally forced to trigger a pipeline rupture.
   dissonanceKeyword: 
   isBacktrackingOnly: 0

@@ -18,6 +18,7 @@ MonoBehaviour:
   caseId: 3
   acquisition: 0
   requiredTool: 0
+  requiredFlag: 
   description: Ceremonial silver dagger bearing the stylized eclipsed eye insignia of the Veiled Circle. The blade edge is chemically coated with the same solvent volatility stabilizer identified in Case 1.
   dissonanceKeyword: 
   isBacktrackingOnly: 0

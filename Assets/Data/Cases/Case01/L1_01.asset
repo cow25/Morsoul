@@ -18,6 +18,7 @@ MonoBehaviour:
   caseId: 1
   acquisition: 5
   requiredTool: 3
+  requiredFlag: 
   description: Pre-cataclysm formula on synthetic mana solvent flash points and sublimation rates. Required for Ending 3.
   dissonanceKeyword: 
   isBacktrackingOnly: 1

@@ -43,6 +43,10 @@ namespace Morsoul.Hub
             if (player == null) player = FindAnyObjectByType<HubPlayerController>();
             if (cameraFollow == null) cameraFollow = FindAnyObjectByType<CameraFollow2D>();
             if (player != null) _playerBody = player.GetComponent<Rigidbody2D>();
+            // Eliza moves during the sequence — she needs the same dynamic
+            // Y-sort the player and interactables carry.
+            if (eliza != null && eliza.GetComponent<YSort2D>() == null)
+                eliza.gameObject.AddComponent<YSort2D>();
 
             var session = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session : null;
             if (session != null && session.CurrentCase == 0 && !session.PrologueCompleted)
@@ -76,14 +80,14 @@ namespace Morsoul.Hub
             if (collider != null) collider.enabled = false;
             CapturePreContactCheckpoint(session);
             LockPlayer();
-            if (cameraFollow != null && cameraTarget != null)
-                cameraFollow.target = cameraTarget;
             StartCoroutine(RunSequence(session));
         }
 
         void CapturePreContactCheckpoint(SessionState session)
         {
-            SetPlayerPosition(safeResumePosition);
+            // Record the rewind pose in the session WITHOUT moving the player:
+            // teleporting the transform here (before the fade covers the
+            // staging) produced a visible backward "leap" on trigger.
             session.SetPlayerContext(SceneMode.Mode2D,
                 SceneManager.GetActiveScene().name,
                 safeResumePosition, PlayerFacing2D.Right);
@@ -112,13 +116,8 @@ namespace Morsoul.Hub
 
             // A. Cutaway — Eliza surveying the path toward the ruins.
             yield return FadeTo(dialogue, 1f, 0.5f);
-            if (cameraFollow != null && elizaCameraTarget != null)
-                cameraFollow.target = elizaCameraTarget;
+            StageOpening();
             yield return FadeTo(dialogue, 0f, 0.5f);
-
-            SetActive(eliza, true);
-            if (elizaWalkStart != null && eliza != null)
-                eliza.position = elizaWalkStart.position;
             yield return MoveTo(eliza, new Vector3(12f, 0f, 0f), 2f);
             yield return Emote(elizaEmote, "!", 1.5f);
             // She mistakes the approaching figure for a monster and dives into the bush.
@@ -128,21 +127,18 @@ namespace Morsoul.Hub
 
             yield return FadeTo(dialogue, 1f, 0.4f);
             if (cameraFollow != null && cameraTarget != null)
-                cameraFollow.target = cameraTarget;
+                cameraFollow.SnapToTarget(cameraTarget);
             yield return FadeTo(dialogue, 0f, 0.4f);
 
             // B. The protagonist enters, still acclimating to the Golem Eye.
             yield return MoveTo(player != null ? player.transform : null,
                 new Vector3(9f, 0f, 0f), 2f);
             yield return Emote(playerEmote, "...", 1.5f);
-            yield return Line("System",
-                "[OCULAR CALIBRATION: ambient mana saturation nominal. Terrain survey in progress.]", 3f);
+            yield return Line("Golem (thought)", "Everything looks different through this eye.");
 
             // The Eye detects her concealment; the Golem cautiously approaches.
             SetActive(eyeHighlight, true);
-            yield return Line("System",
-                "[ANOMALY DETECTED: biological signature concealed — vegetation, east. " +
-                "Heart rate: elevated. Posture: watchful.]", 4f);
+            yield return Line("Golem (thought)", "Someone is hiding in that bush.");
             yield return MoveTo(player != null ? player.transform : null,
                 new Vector3(10f, 0f, 0f), 1.5f);
 
@@ -150,32 +146,30 @@ namespace Morsoul.Hub
             SetActive(eliza, true);
             yield return MoveTo(eliza, new Vector3(11f, 0f, 0f), 0.7f);
             yield return Emote(elizaEmote, "!", 1.2f);
-            yield return Line("???", "\u27E6\u2593\u2592 \u2593\u2593\u2593 \u2592\u2593\u2593\u2593 \u2593\u2592!\u27E7", 3f);
+            yield return Line("???", "\u27E6\u2593\u2592 \u2593\u2593\u2593 \u2592\u2593\u2593\u2593 \u2593\u2592!\u27E7");
 
             // The Golem attempts to communicate; neither can parse the other.
-            yield return Line("Golem", "\u27E6\u2593\u2593\u2592 \u2593 \u2593\u2593\u2592 \u2592\u2593\u27E7", 3f);
+            yield return Line("Golem", "Look, wait! Don't hurt me!");
             yield return Emote(elizaEmote, "?", 1.5f);
 
             // The Eye completes spoken decipherment against the recovered log corpus.
-            yield return Line("System",
-                "[LINGUISTIC DECRYPTION: correlating phoneme stream against recovered " +
-                "textual corpus (Torn Desk Logs, C0_C1)... PATTERN MATCH: modern Agarthan. " +
-                "Spoken comprehension: ONLINE.]", 5f);
+            yield return Line("Golem (thought)",
+                "Those sounds... the words in the notes. I can make sense of them now.");
 
             // Just as she moves to strike, it answers in her language.
-            yield return Line("Golem", "Wait. I mean no harm.", 3f);
+            yield return Line("Golem", "Wait. I mean no harm.");
             yield return Emote(elizaEmote, "?", 1.5f);
-            yield return Line("Eliza", "It... it talks? Relics don't talk—", 3f);
+            yield return Line("???", "Why should I listen to a monster like you?");
             yield return Line("Golem",
-                "I awoke inside those ruins. I do not remember what I am.", 4f);
+                "I have no weapons on me! At least hear me out first!");
             yield return Emote(elizaEmote, "...", 1.5f);
             SetActive(eyeHighlight, false);
 
             // C. Narrative bridge — fade to black, explanation card, fade back in.
             yield return FadeTo(dialogue, 1f, 0.8f);
             if (dialogue != null)
-                dialogue.SetFadeText("You explained your situation to the wary stranger.");
-            yield return Wait(2.5f);
+                dialogue.SetFadeText("You explained your situation to the wary stranger.\n\n(E) continue");
+            yield return Line("", "You explained your situation to the wary stranger.");
             if (dialogue != null) dialogue.SetFadeText("");
             yield return FadeTo(dialogue, 0f, 0.8f);
 
@@ -183,30 +177,37 @@ namespace Morsoul.Hub
             yield return Line("Eliza",
                 "Ohh~ Fascinating! The ruins have been inaccessible for as long as I can " +
                 "remember. No one knows how to get inside, nor do they have the means " +
-                "to open them.", 6f);
-            yield return Line("Eliza", "You're pretty clever, huh?", 3f);
+                "to open them.");
+            yield return Line("Eliza", "You're pretty clever, huh?");
             yield return Line("Eliza",
-                "Name's Eliza. I'm an information broker at the Guild.", 4f);
-            yield return Line("Eliza", "What's yours? Do you even have one?", 3f);
+                "Name's Eliza. I'm an information broker at the Guild.");
+            yield return Line("Eliza", "What's yours? Do you even have one?");
 
             if (dialogue != null && dialogue.ShowNamePrompt())
             {
                 string enteredName = null;
                 void OnName(string n) => enteredName = n;
                 dialogue.NameSubmitted += OnName;
-                while (enteredName == null) yield return null;
-                dialogue.NameSubmitted -= OnName;
-                if (session != null) session.PlayerName = enteredName;
+                try
+                {
+                    while (enteredName == null) yield return null;
+                    if (session != null) session.PlayerName = enteredName;
+                }
+                finally
+                {
+                    dialogue.NameSubmitted -= OnName;
+                    dialogue.HideNamePrompt();
+                }
             }
 
-            yield return Line("Eliza", "{PlayerName}, huh? Nice to meet you!", 3f);
+            yield return Line("Eliza", "{PlayerName}, huh? Nice to meet you!");
             yield return Line("Eliza",
-                "I don't know why, but I had a strong urge to survey the ruins today...", 5f);
-            yield return Line("Eliza", "Must be fate, meeting you here!", 3f);
+                "I don't know why, but I had a strong urge to survey the ruins today...");
+            yield return Line("Eliza", "Must be fate, meeting you here!");
             yield return Line("Eliza",
-                "Come on, follow me back to the Guild. I have to report my findings.", 5f);
+                "Come on, follow me back to the Guild. I have to report my findings.");
             yield return Line("Eliza",
-                "I'll answer your questions along the way. We've got time.", 4f);
+                "I'll answer your questions along the way. We've got time.");
 
             // E. Exit — she walks out; the Golem follows two paces behind.
             yield return MoveTo(eliza, new Vector3(13f, 0f, 0f), 1f);
@@ -265,12 +266,48 @@ namespace Morsoul.Hub
             core.Bus.Publish(new SceneLoadRequestedEvent { SceneName = nextSceneName });
         }
 
-        IEnumerator Line(string speaker, string text, float seconds)
+        IEnumerator Line(string speaker, string text)
         {
             var dialogue = context != null ? context.dialogue : null;
-            if (dialogue != null) dialogue.ShowStandaloneLine(speaker, text);
-            yield return Wait(seconds);
-            if (dialogue != null) dialogue.Stop();
+            if (dialogue == null) yield break;
+            var previous = dialogue.dialogueData;
+            var data = ScriptableObject.CreateInstance<DialogueData>();
+            data.id = SessionState.ElizaIntroCutsceneId;
+            data.startNodeId = "line";
+            data.portraits = previous != null ? previous.portraits : null;
+            data.nodes = new[]
+            {
+                new DialogueNodeData { id = "line", speakerName = speaker, text = text },
+            };
+            try
+            {
+                if (!context.PlayDialogue(data)) yield break;
+                while (dialogue.IsPlaying) yield return null;
+            }
+            finally
+            {
+                dialogue.Stop();
+                dialogue.SetDialogue(previous);
+                if (Application.isPlaying) Destroy(data);
+                else DestroyImmediate(data);
+            }
+        }
+
+        void StageOpening()
+        {
+            if (cameraFollow == null || elizaCameraTarget == null || cameraTarget == null) return;
+            cameraFollow.SnapToTarget(elizaCameraTarget);
+            var camera = cameraFollow.GetComponent<Camera>();
+            float halfWidth = camera != null ? camera.orthographicSize * camera.aspect : 9f;
+            float actorHalfWidth = 0.5f;
+            if (player != null)
+                foreach (var renderer in player.GetComponentsInChildren<Renderer>())
+                    actorHalfWidth = Mathf.Max(actorHalfWidth, renderer.bounds.max.x - player.transform.position.x);
+            float leftEdge = Mathf.Min(cameraFollow.transform.position.x, cameraTarget.position.x) - halfWidth;
+            SetPlayerPosition(new Vector3(leftEdge - actorHalfWidth - 1f, 0f, 0f));
+            if (elizaWalkStart != null && eliza != null)
+                eliza.position = elizaWalkStart.position;
+            SetActive(eliza, true);
         }
 
         IEnumerator Emote(InteractableLabel label, string text, float seconds)

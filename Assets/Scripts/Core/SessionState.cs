@@ -49,6 +49,12 @@ namespace Morsoul.Core
         public bool EasternRouteUnlocked;
         public string ActiveCutsceneId = "";
         public string PreCutsceneCheckpointId = "";
+        /// <summary>
+        /// Runtime-only handoff set by exits that name a destination spawn
+        /// marker (GateInteractable.entryId). Consumed by SceneEntryPoint on
+        /// arrival; never serialized, so checkpoints fall back to pose/spawn.
+        /// </summary>
+        public string PendingEntryPointId = "";
         public ActiveInterrogationSave ActiveInterrogation;
         public WorldReturnSave InvestigationReturn;
         public int InvestigationCaseId = -1;
@@ -607,6 +613,7 @@ namespace Morsoul.Core
             EasternRouteUnlocked = false;
             ActiveCutsceneId = "";
             PreCutsceneCheckpointId = "";
+            PendingEntryPointId = "";
             ActiveInterrogation = null;
             InvestigationReturn = null;
             InvestigationCaseId = -1;

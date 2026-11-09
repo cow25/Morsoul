@@ -25,6 +25,15 @@ namespace Morsoul.Hub
 
         Vector2 _velocity;
 
+        public void SnapToTarget(Transform newTarget)
+        {
+            target = newTarget;
+            _velocity = Vector2.zero;
+            if (target == null) return;
+            transform.position = new Vector3(ClampX(target.position.x),
+                ClampY(target.position.y), transform.position.z);
+        }
+
         void LateUpdate()
         {
             if (target == null) return;
