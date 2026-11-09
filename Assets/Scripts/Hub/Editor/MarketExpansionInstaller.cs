@@ -57,7 +57,7 @@ namespace Morsoul.Hub.Editor
                     marker = new GameObject("Spawn_GuildDoor");
                     marker.AddComponent<SceneSpawnMarker>().entryId = "guild_door";
                 }
-                marker.transform.position = new Vector3(3f, 2.3f, 0f);
+                marker.transform.position = new Vector3(3f, 2.4f, 0f);
 
                 // Ambient townsfolk so the market reads inhabited.
                 foreach (var (name, pos) in new (string, Vector3)[]
@@ -100,6 +100,20 @@ namespace Morsoul.Hub.Editor
                 arrival.doorDialogue = AssetDatabase.LoadAssetAtPath<DialogueData>(
                     GuildIntroContentGenerator.Folder + "/D_Guild_Door.asset");
 
+                // The notice board is a physical object — you bump into it —
+                // parked beside the Guild door, clear of the door walkway.
+                foreach (var interactable in Object.FindObjectsByType<Interactable2D>(
+                    FindObjectsInactive.Include))
+                    if (interactable.gameObject.scene == scene &&
+                        interactable.name == "NoticeBoard")
+                    {
+                        interactable.blocksMovement = true;
+                        interactable.transform.position = new Vector3(1.85f, 2.35f, 0f);
+                        if (interactable is InspectionInteractable inspection &&
+                            inspection.inspectionDialogue == null)
+                            inspection.inspectionDialogue = EnsureNoticeDialogue();
+                    }
+
                 // Belt-and-braces: dynamic Y-sort on every actor serialized
                 // before the RequireComponent rule existed.
                 foreach (var interactable in Object.FindObjectsByType<Interactable2D>(
@@ -117,6 +131,46 @@ namespace Morsoul.Hub.Editor
                 if (scene.IsValid() && scene.isLoaded)
                     EditorSceneManager.CloseScene(scene, true);
             }
+        }
+
+        /// <summary>Re-readable market notice text for the physical board.</summary>
+        static DialogueData EnsureNoticeDialogue()
+        {
+            const string path = "Assets/Data/Dialogue/Case01/D_NoticeBoard_01.asset";
+            var data = AssetDatabase.LoadAssetAtPath<DialogueData>(path);
+            if (data != null) return data;
+            data = ScriptableObject.CreateInstance<DialogueData>();
+            data.id = "D_NoticeBoard_01";
+            data.startNodeId = "n1";
+            data.nodes = new[]
+            {
+                new DialogueNodeData
+                {
+                    id = "n1",
+                    speakerName = "Notice Board",
+                    text = "GUILD NOTICE — Vault goods must be sealed and " +
+                           "registered before market days, by order of the " +
+                           "Merchant Guild.",
+                    nextNodeId = "n2",
+                },
+                new DialogueNodeData
+                {
+                    id = "n2",
+                    speakerName = "Notice Board",
+                    text = "WANTED — Steady hands for caravan escort to the " +
+                           "Whisperwood road. Apply at the Guild counter.",
+                    nextNodeId = "n3",
+                },
+                new DialogueNodeData
+                {
+                    id = "n3",
+                    speakerName = "Notice Board",
+                    text = "LOST — One copper kettle, dented, answers to no " +
+                           "name. Return to the plaza stalls.",
+                },
+            };
+            AssetDatabase.CreateAsset(data, path);
+            return data;
         }
 
         static GameObject FindRoot(Scene scene, string name)

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Morsoul.Core;
+using Morsoul.Data;
 using Morsoul.Hub;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -303,6 +304,7 @@ namespace Morsoul.Dev
             {
                 var clue = core.ResolveClue(_clueInput);
                 if (clue == null) Debug.LogWarning($"DevMenu: no clue '{_clueInput}'.");
+                else if (clue.type == ClueType.Latent) s.RegisterLatentClue(clue);
                 else s.RegisterClue(clue);
             }
             GUILayout.EndHorizontal();

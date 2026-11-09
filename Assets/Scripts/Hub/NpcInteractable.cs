@@ -16,6 +16,9 @@ namespace Morsoul.Hub
         public DialogueData dialogue;
         public int interrogationCaseId = -1;
 
+        /// <summary>NPCs are solid: the player walks up to them, not through.</summary>
+        protected override bool BlocksMovement => true;
+
         public override void Interact(HubContext ctx)
         {
             base.Interact(ctx);

@@ -38,6 +38,12 @@ namespace Morsoul.Hub
                 ? GameStateManager.Instance.CurrentSave
                 : null;
             string sceneName = SceneManager.GetActiveScene().name;
+            // Preserve whatever mode the arrival mechanism stamped — plain
+            // hub entries arrive as Mode2D, but EnterInvestigationRoute
+            // stamps Mode3D and the deduction board's CanUse gate reads it.
+            // Stamping Mode2D unconditionally here would close the board in
+            // investigation stand-ins (e.g. the vault placeholder).
+            SceneMode mode = session != null ? session.CurrentSceneMode : SceneMode.Mode2D;
 
             // A gate that named a destination spawn (entryId) wins over both
             // resume and default spawn — doors deposit you at their doorway.
@@ -50,7 +56,7 @@ namespace Morsoul.Hub
                 {
                     if (marker == null || marker.entryId != pending) continue;
                     target.position = marker.transform.position;
-                    session.SetPlayerContext(SceneMode.Mode2D, sceneName,
+                    session.SetPlayerContext(mode, sceneName,
                         target.position, session.PlayerFacing2D);
                     return;
                 }
@@ -64,7 +70,7 @@ namespace Morsoul.Hub
             if (isResumeScene)
             {
                 target.position = session.PlayerPosition;
-                session.SetPlayerContext(SceneMode.Mode2D, sceneName,
+                session.SetPlayerContext(mode, sceneName,
                     target.position, session.PlayerFacing2D);
                 return;
             }
@@ -76,7 +82,7 @@ namespace Morsoul.Hub
                 return;
             }
             target.position = spawn.transform.position;
-            session?.SetPlayerContext(SceneMode.Mode2D, sceneName,
+            session?.SetPlayerContext(mode, sceneName,
                 target.position, session.PlayerFacing2D);
         }
     }

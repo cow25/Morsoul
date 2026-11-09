@@ -127,6 +127,11 @@ namespace Morsoul.Hub.Editor
             exit.checkpointReason = "Investigation";
             exit.routeKey = "hub.1";
             exit.targetScene = MarketSceneName;
+            // Runs the return contract: origin pose + Mode2D restored,
+            // InvestigationCaseId cleared — plain travel would strand
+            // Mode3D and the hub would look broken (board usable in the
+            // market, interrogation entry refused).
+            exit.exitsInvestigation = true;
 
             HubSceneFactory.SaveScene(scene, VaultScenePath);
         }
@@ -239,10 +244,12 @@ namespace Morsoul.Hub.Editor
                 {
                     if (carrier.gameObject.scene != scene || carrier.name != "VaultExit") continue;
                     if (carrier.routeKey != "hub.1" ||
-                        carrier.targetScene != MarketSceneName)
+                        carrier.targetScene != MarketSceneName ||
+                        !carrier.exitsInvestigation)
                     {
                         carrier.routeKey = "hub.1";
                         carrier.targetScene = MarketSceneName;
+                        carrier.exitsInvestigation = true;
                         dirty = true;
                     }
                 }

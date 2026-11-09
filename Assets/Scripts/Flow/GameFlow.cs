@@ -417,7 +417,7 @@ namespace Morsoul.Flow
                 ? Core.CoreRuntime.Instance.Session.Tools : null;
             bool echo = sessionTools != null
                 ? sessionTools.Contains(Tool.EmotionEcho) : caseId >= 3;
-            interrogation.SetInterrogation(data, BuildEvidence(),
+            interrogation.SetInterrogation(data, BuildEvidence(data),
                 guided: caseId == 1, echo: echo);
             _mistrialHandled = false;
             board?.Close();
@@ -817,7 +817,7 @@ namespace Morsoul.Flow
         /// Verified premises remain available only to the legacy compatibility
         /// path for cases without an authored evidence graph.
         /// </summary>
-        public List<EvidenceData> BuildEvidence()
+        public List<EvidenceData> BuildEvidence(InterrogationData interrogationData = null)
         {
             var evidence = new List<EvidenceData>();
             var seen = new HashSet<EvidenceData>();
@@ -837,6 +837,17 @@ namespace Morsoul.Flow
             foreach (var clue in _collectedClues) Add(clue);
             if (caseData != null && caseData.evidenceGraph == null && board != null && board.Premises != null)
                 foreach (var premise in board.Premises) Add(premise);
+            // Weighted boards don't mint PremiseData at runtime — an
+            // interrogation only opens once its board is solved, so the
+            // deduction premises its valid moves ask for are earned content
+            // by construction. ClueData stays collection-gated above.
+            if (interrogationData != null && caseData != null &&
+                caseData.evidenceGraph != null && interrogationData.phases != null)
+                foreach (var phase in interrogationData.phases)
+                    if (phase != null && phase.validMoves != null)
+                        foreach (var move in phase.validMoves)
+                            if (move != null && move.evidence is PremiseData)
+                                Add(move.evidence);
             return evidence;
         }
 

@@ -24,7 +24,19 @@ namespace Morsoul.Hub
         public override void Interact(HubContext ctx)
         {
             base.Interact(ctx);
-            if (_inspected || clue == null) return;
+            if (_inspected) return;
+            if (clue == null)
+            {
+                // Flavor-only inspection (notice boards and the like): no
+                // clue to register, just re-readable text.
+                if (inspectionDialogue != null)
+                {
+                    if (ctx == null)
+                        Debug.LogWarning($"InspectionInteractable '{name}': no HubContext supplied.", this);
+                    else ctx.PlayDialogue(inspectionDialogue);
+                }
+                return;
+            }
             if (ctx == null || ctx.journal == null)
             {
                 Debug.LogWarning($"InspectionInteractable '{name}': no HubContext.journal wired.", this);

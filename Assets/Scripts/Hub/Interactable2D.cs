@@ -16,9 +16,20 @@ namespace Morsoul.Hub
         public string promptText = "[E] Talk";
         /// <summary>Optional world-space prompt (sprite/[E] child) toggled while the player is in range.</summary>
         public GameObject promptIndicator;
+        /// <summary>
+        /// When set, a solid BoxCollider2D is added so the player cannot walk
+        /// through the object. Gates/stairs leave it off — you interact with
+        /// them, you don't bump into them. NPCs always block.
+        /// </summary>
+        public bool blocksMovement;
+        /// <summary>World-space size of the solid body added when blocking.</summary>
+        public Vector2 blockSize = new Vector2(0.55f, 0.5f);
 
         /// <summary>Raised each time Interact is invoked.</summary>
         public event Action Interacted;
+
+        /// <summary>Whether this interactable physically blocks the player.</summary>
+        protected virtual bool BlocksMovement => blocksMovement;
 
         void Awake()
         {
@@ -26,6 +37,20 @@ namespace Morsoul.Hub
             // sorter exists on objects serialized before the requirement.
             if (GetComponent<YSort2D>() == null)
                 gameObject.AddComponent<YSort2D>();
+            if (BlocksMovement) EnsureBlockCollider();
+        }
+
+        /// <summary>
+        /// Adds a small non-trigger collider (kept separate from the
+        /// detection trigger the player scans with OverlapCircleAll).
+        /// </summary>
+        void EnsureBlockCollider()
+        {
+            foreach (var col in GetComponents<BoxCollider2D>())
+                if (!col.isTrigger) return;
+            var body = gameObject.AddComponent<BoxCollider2D>();
+            body.isTrigger = false;
+            body.size = blockSize;
         }
 
         /// <summary>Interaction entry point. Base implementation only raises Interacted.</summary>

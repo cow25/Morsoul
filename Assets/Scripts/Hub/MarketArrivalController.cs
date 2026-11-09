@@ -28,12 +28,14 @@ namespace Morsoul.Hub
         [Min(0.1f)] public float timingScale = 1f;
 
         [Header("Staging")]
-        public Vector3 playerEntry = new Vector3(-8f, 0f, 0f);
-        public Vector3 elizaEntry = new Vector3(-9f, 0.2f, 0f);
-        public Vector3 elizaLead = new Vector3(-4.5f, -0.8f, 0f);
-        public Vector3 elizaDoor = new Vector3(2.6f, 2.6f, 0f);
-        public Vector3 playerDoor = new Vector3(3.6f, 2.6f, 0f);
-        public Vector3 elizaInside = new Vector3(3f, 3.3f, 0f);
+        // All waypoints sit on the drawn paths: entry on the west street
+        // (y = -1), door step on the guild branch (x = 3).
+        public Vector3 playerEntry = new Vector3(-8.5f, -1f, 0f);
+        public Vector3 elizaEntry = new Vector3(-7.4f, -1f, 0f);
+        public Vector3 elizaLead = new Vector3(-4.5f, -1f, 0f);
+        public Vector3 elizaDoor = new Vector3(3f, 2.6f, 0f);
+        public Vector3 playerDoor = new Vector3(3.4f, 2.35f, 0f);
+        public Vector3 elizaInside = new Vector3(3f, 3.4f, 0f);
 
         Rigidbody2D _playerBody;
 
@@ -74,10 +76,13 @@ namespace Morsoul.Hub
             yield return MoveTo(eliza, elizaLead, 1.6f);
             yield return Play(entryDialogue);
 
-            // Down the street together, to the Guild hall's bannered door.
+            // Down the street to the Guild hall's bannered door: same lane,
+            // the Golem trailing a step behind at matching speed.
+            var escort = StartCoroutine(MoveTo(eliza, elizaDoor, 4f));
+            yield return Wait(0.5f);
             var follow = StartCoroutine(MoveTo(
-                player != null ? player.transform : null, playerDoor, 4.5f));
-            yield return MoveTo(eliza, elizaDoor, 4f);
+                player != null ? player.transform : null, playerDoor, 5.4f));
+            yield return escort;
             yield return follow;
             yield return Play(doorDialogue);
 

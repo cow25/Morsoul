@@ -133,7 +133,9 @@ namespace Morsoul.Hub
         void SyncPlayerContext()
         {
             var session = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session : null;
-            session?.SetPlayerContext(SceneMode.Mode2D,
+            // Keep the mode the entry mechanism stamped — investigation
+            // stand-ins run as Mode3D and the board's CanUse gate reads it.
+            session?.SetPlayerContext(session.CurrentSceneMode,
                 SceneManager.GetActiveScene().name, transform.position, _facing);
         }
 

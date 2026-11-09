@@ -116,6 +116,90 @@ namespace Morsoul.Tests
         }
 
         [Test]
+        public void SceneEntryPoint_PreservesInvestigationMode()
+        {
+            // EnterInvestigationRoute stamps Mode3D; the spawn-stamp must
+            // not downgrade it or the deduction board's CanUse gate closes.
+            var core = CoreRuntime.Ensure();
+            var spawn = new GameObject("PlayerSpawn");
+            spawn.tag = "PlayerSpawn";
+            var playerGo = new GameObject("Player");
+            playerGo.tag = "Player";
+            var entryGo = new GameObject("SceneEntryPoint");
+            entryGo.AddComponent<SceneEntryPoint>();
+            try
+            {
+                core.Session.SetSceneContext(SceneMode.Mode3D, "Investigation_01_Placeholder");
+                typeof(SceneEntryPoint).GetMethod("Start",
+                    System.Reflection.BindingFlags.Instance |
+                    System.Reflection.BindingFlags.NonPublic)
+                    .Invoke(entryGo.GetComponent<SceneEntryPoint>(), null);
+
+                Assert.AreEqual(SceneMode.Mode3D, core.Session.CurrentSceneMode,
+                    "Spawn stamping must preserve the investigation scene mode.");
+            }
+            finally
+            {
+                core.Session.SetSceneContext(SceneMode.Mode2D, "");
+                foreach (var go in new[] { entryGo, playerGo, spawn, core.gameObject })
+                    Object.DestroyImmediate(go);
+            }
+        }
+
+        [Test]
+        public void NpcInteractable_BlocksMovementWithSolidCollider()
+        {
+            // NPCs get a second, non-trigger collider so the player walks up
+            // to them instead of through them; the detection trigger stays.
+            var go = new GameObject("Npc", typeof(BoxCollider2D));
+            go.GetComponent<BoxCollider2D>().isTrigger = true;
+            go.AddComponent<NpcInteractable>();
+            try
+            {
+                var solids = 0;
+                foreach (var col in go.GetComponents<BoxCollider2D>())
+                    if (!col.isTrigger) solids++;
+                Assert.AreEqual(1, solids,
+                    "NPC should carry exactly one solid block collider.");
+            }
+            finally
+            {
+                Object.DestroyImmediate(go);
+            }
+        }
+
+        [Test]
+        public void Interactable2D_OptInBlockingOnly()
+        {
+            var go = new GameObject("Board", typeof(BoxCollider2D));
+            go.GetComponent<BoxCollider2D>().isTrigger = true;
+            go.AddComponent<InspectionInteractable>();
+            try
+            {
+                var inspection = go.GetComponent<InspectionInteractable>();
+                foreach (var col in go.GetComponents<BoxCollider2D>())
+                    Assert.IsTrue(col.isTrigger,
+                        "Non-blocking interactable should stay trigger-only.");
+
+                // Awake ran already with blocking off; add the collider the
+                // same way the scene's next load would.
+                inspection.blocksMovement = true;
+                typeof(Interactable2D).GetMethod("EnsureBlockCollider",
+                    System.Reflection.BindingFlags.Instance |
+                    System.Reflection.BindingFlags.NonPublic)
+                    .Invoke(inspection, null);
+                var solids = 0;
+                foreach (var col in go.GetComponents<BoxCollider2D>())
+                    if (!col.isTrigger) solids++;
+                Assert.AreEqual(1, solids);
+            }
+            finally
+            {
+                Object.DestroyImmediate(go);
+            }
+        }
+
+        [Test]
         public void PropCollider_KeepsAuthoredWorldFootprintUnderScale()
         {
             // A 0.7x0.5 trunk at (0,-0.75) under a 1.8x2.2-scaled quad must

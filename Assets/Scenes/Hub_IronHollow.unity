@@ -133,6 +133,7 @@ GameObject:
   - component: {fileID: 238293355}
   - component: {fileID: 238293354}
   - component: {fileID: 238293353}
+  - component: {fileID: 238293359}
   m_Layer: 0
   m_Name: DrillBit
   m_TagString: Untagged
@@ -168,6 +169,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.InspectionInteractable
   promptText: '[E] Inspect'
   promptIndicator: {fileID: 379376329}
+  blocksMovement: 0
+  blockSize: {x: 0.55, y: 0.5}
   clue: {fileID: 11400000, guid: 33300352d0376ea418009a4251537502, type: 2}
   inspectionDialogue: {fileID: 0}
 --- !u!61 &238293355
@@ -290,6 +293,19 @@ Transform:
   - {fileID: 939267122}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &238293359
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 238293352}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b04bc8c462fa5ba42b83d456a609df74, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.YSort2D
+  bias: 0
 --- !u!1 &262064844
 GameObject:
   m_ObjectHideFlags: 0
@@ -614,6 +630,7 @@ GameObject:
   - component: {fileID: 766141953}
   - component: {fileID: 766141952}
   - component: {fileID: 766141951}
+  - component: {fileID: 766141957}
   m_Layer: 0
   m_Name: Harlan
   m_TagString: Untagged
@@ -649,6 +666,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.NpcInteractable
   promptText: '[E] Talk'
   promptIndicator: {fileID: 995860781}
+  blocksMovement: 0
+  blockSize: {x: 0.55, y: 0.5}
   dialogue: {fileID: 11400000, guid: 88a8ce9bcbd2b79499f8bb67d196a251, type: 2}
   interrogationCaseId: 4
 --- !u!61 &766141953
@@ -771,6 +790,19 @@ Transform:
   - {fileID: 1825667052}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &766141957
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 766141950}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b04bc8c462fa5ba42b83d456a609df74, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.YSort2D
+  bias: 0
 --- !u!1 &842255941
 GameObject:
   m_ObjectHideFlags: 0
@@ -1296,6 +1328,7 @@ GameObject:
   - component: {fileID: 1190102442}
   - component: {fileID: 1190102441}
   - component: {fileID: 1190102440}
+  - component: {fileID: 1190102446}
   m_Layer: 0
   m_Name: DeepShaftLift
   m_TagString: Untagged
@@ -1331,8 +1364,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.GateInteractable
   promptText: '[E] Enter'
   promptIndicator: {fileID: 1357293390}
+  blocksMovement: 0
+  blockSize: {x: 0.55, y: 0.5}
   requiredFlag: C4_OverrideClearance
   targetScene: 
+  entryId: 
   routeKey: investigation.4
   lockedDialogue: {fileID: 11400000, guid: 88bf1ced4496ec34eac25b24ff326b1d, type: 2}
 --- !u!61 &1190102442
@@ -1455,6 +1491,19 @@ Transform:
   - {fileID: 1200344772}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1190102446
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1190102439}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b04bc8c462fa5ba42b83d456a609df74, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.YSort2D
+  bias: 0
 --- !u!1 &1200344771
 GameObject:
   m_ObjectHideFlags: 0
@@ -1563,6 +1612,7 @@ GameObject:
   - component: {fileID: 1281669545}
   - component: {fileID: 1281669544}
   - component: {fileID: 1281669543}
+  - component: {fileID: 1281669549}
   m_Layer: 0
   m_Name: RestSpot
   m_TagString: Untagged
@@ -1598,6 +1648,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.RestSpot
   promptText: '[E] Rest'
   promptIndicator: {fileID: 1628340123}
+  blocksMovement: 0
+  blockSize: {x: 0.55, y: 0.5}
   restingIndicator: {fileID: 0}
   restCue: {fileID: 0}
 --- !u!61 &1281669545
@@ -1720,6 +1772,19 @@ Transform:
   - {fileID: 262064845}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1281669549
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1281669542}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b04bc8c462fa5ba42b83d456a609df74, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.YSort2D
+  bias: 0
 --- !u!1 &1357293390
 GameObject:
   m_ObjectHideFlags: 0
@@ -1983,6 +2048,7 @@ GameObject:
   - component: {fileID: 1419085995}
   - component: {fileID: 1419085994}
   - component: {fileID: 1419085993}
+  - component: {fileID: 1419085999}
   m_Layer: 0
   m_Name: Thrun
   m_TagString: Untagged
@@ -2018,6 +2084,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.NpcInteractable
   promptText: '[E] Talk'
   promptIndicator: {fileID: 371479687}
+  blocksMovement: 0
+  blockSize: {x: 0.55, y: 0.5}
   dialogue: {fileID: 11400000, guid: 2e831c09d8479a44d85e18c2512e89bf, type: 2}
   interrogationCaseId: -1
 --- !u!61 &1419085995
@@ -2140,6 +2208,19 @@ Transform:
   - {fileID: 1409769250}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1419085999
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1419085992}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b04bc8c462fa5ba42b83d456a609df74, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.YSort2D
+  bias: 0
 --- !u!1 &1437628902
 GameObject:
   m_ObjectHideFlags: 0
@@ -2528,6 +2609,7 @@ GameObject:
   - component: {fileID: 1769939126}
   - component: {fileID: 1769939125}
   - component: {fileID: 1769939124}
+  - component: {fileID: 1769939129}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -2669,6 +2751,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1769939122}
   m_Mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1769939129
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1769939122}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b04bc8c462fa5ba42b83d456a609df74, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.YSort2D
+  bias: 0
 --- !u!1 &1789994718
 GameObject:
   m_ObjectHideFlags: 0
@@ -2683,6 +2778,7 @@ GameObject:
   - component: {fileID: 1789994721}
   - component: {fileID: 1789994720}
   - component: {fileID: 1789994719}
+  - component: {fileID: 1789994725}
   m_Layer: 0
   m_Name: CaseDoor
   m_TagString: Untagged
@@ -2718,6 +2814,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.CarrierInteractable
   promptText: '[E] Begin Case'
   promptIndicator: {fileID: 594771100}
+  blocksMovement: 0
+  blockSize: {x: 0.55, y: 0.5}
   targetScene: CaseLoop
   routeKey: caseloop
   checkpointReason: CaseDoor
@@ -2842,6 +2940,19 @@ Transform:
   - {fileID: 579222917}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1789994725
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1789994718}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b04bc8c462fa5ba42b83d456a609df74, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.YSort2D
+  bias: 0
 --- !u!1 &1806678796
 GameObject:
   m_ObjectHideFlags: 0
@@ -2934,6 +3045,7 @@ GameObject:
   - component: {fileID: 1968696978}
   - component: {fileID: 1968696977}
   - component: {fileID: 1968696976}
+  - component: {fileID: 1968696982}
   m_Layer: 0
   m_Name: Carrier
   m_TagString: Untagged
@@ -2969,6 +3081,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.CarrierInteractable
   promptText: '[E] Travel'
   promptIndicator: {fileID: 842255941}
+  blocksMovement: 0
+  blockSize: {x: 0.55, y: 0.5}
   targetScene: Hub_LowerMarket
   routeKey: hub.1
   checkpointReason: Carrier
@@ -3093,6 +3207,19 @@ Transform:
   - {fileID: 1438288328}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1968696982
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1968696975}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b04bc8c462fa5ba42b83d456a609df74, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.YSort2D
+  bias: 0
 --- !u!1 &2088534041
 GameObject:
   m_ObjectHideFlags: 0
@@ -3107,6 +3234,7 @@ GameObject:
   - component: {fileID: 2088534044}
   - component: {fileID: 2088534043}
   - component: {fileID: 2088534042}
+  - component: {fileID: 2088534048}
   m_Layer: 0
   m_Name: MinerCrowd
   m_TagString: Untagged
@@ -3142,6 +3270,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.NpcInteractable
   promptText: '[E] Listen'
   promptIndicator: {fileID: 1380260183}
+  blocksMovement: 0
+  blockSize: {x: 0.55, y: 0.5}
   dialogue: {fileID: 11400000, guid: e4ee7399a44122545b3bbd56410b2c9a, type: 2}
   interrogationCaseId: -1
 --- !u!61 &2088534044
@@ -3264,6 +3394,19 @@ Transform:
   - {fileID: 1268856843}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2088534048
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2088534041}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b04bc8c462fa5ba42b83d456a609df74, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.YSort2D
+  bias: 0
 --- !u!1 &2092520054
 GameObject:
   m_ObjectHideFlags: 0

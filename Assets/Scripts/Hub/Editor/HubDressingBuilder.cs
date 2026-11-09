@@ -33,6 +33,10 @@ namespace Morsoul.Hub.Editor
             public Vector2 ColOffset;
             public bool Blocks;
             public bool Ground;
+            /// <summary>Flat decals on the ground (paths, carpets, water):
+            /// drawn in front of the ground plane but behind every actor —
+            /// they must never use prop Y-sort or they'd occlude feet.</summary>
+            public bool Floor;
         }
 
         // Biome-agnostic prop vocabulary. Tints only matter until a sprite is
@@ -69,8 +73,8 @@ namespace Morsoul.Hub.Editor
             ["Rock"]        = new PropDef { Tint = new Color(0.40f, 0.40f, 0.44f), Size = new Vector2(0.9f, 0.7f), Blocks = true, ColSize = new Vector2(0.85f, 0.55f) },
             ["SlagRock"]    = new PropDef { Tint = new Color(0.19f, 0.17f, 0.20f), Size = new Vector2(1.0f, 0.8f), Blocks = true, ColSize = new Vector2(0.95f, 0.6f) },
             ["Fence"]       = new PropDef { Tint = new Color(0.44f, 0.31f, 0.17f), Size = new Vector2(1.0f, 0.35f), Blocks = true, ColSize = new Vector2(1f, 0.35f) },
-            ["PathDirt"]    = new PropDef { Tint = new Color(0.52f, 0.42f, 0.29f), Size = new Vector2(1.0f, 1.0f) },
-            ["Carpet"]      = new PropDef { Tint = new Color(0.42f, 0.13f, 0.15f), Size = new Vector2(1.3f, 1.0f) },
+            ["PathDirt"]    = new PropDef { Tint = new Color(0.52f, 0.42f, 0.29f), Size = new Vector2(1.0f, 1.0f), Floor = true },
+            ["Carpet"]      = new PropDef { Tint = new Color(0.42f, 0.13f, 0.15f), Size = new Vector2(1.3f, 1.0f), Floor = true },
             ["HouseWall"]   = new PropDef { Tint = new Color(0.68f, 0.58f, 0.46f), Size = new Vector2(3.0f, 1.7f), Blocks = true, ColSize = new Vector2(3f, 1.7f) },
             ["HouseRoof"]   = new PropDef { Tint = new Color(0.50f, 0.23f, 0.18f), Size = new Vector2(3.4f, 1.1f) },
             ["Stall"]       = new PropDef { Tint = new Color(0.55f, 0.42f, 0.28f), Size = new Vector2(1.6f, 1.1f), Blocks = true, ColSize = new Vector2(1.6f, 1.0f) },
@@ -85,7 +89,7 @@ namespace Morsoul.Hub.Editor
             ["Cart"]        = new PropDef { Tint = new Color(0.28f, 0.28f, 0.30f), Size = new Vector2(1.0f, 0.75f), Blocks = true, ColSize = new Vector2(0.95f, 0.65f) },
             ["Tent"]        = new PropDef { Tint = new Color(0.42f, 0.36f, 0.28f), Size = new Vector2(1.7f, 1.4f), Blocks = true, ColSize = new Vector2(1.6f, 1.2f) },
             ["Campfire"]    = new PropDef { Tint = new Color(0.85f, 0.45f, 0.15f), Size = new Vector2(0.7f, 0.4f), Blocks = true, ColSize = new Vector2(0.5f, 0.3f), ColOffset = new Vector2(0f, -0.05f) },
-            ["Pond"]        = new PropDef { Tint = new Color(0.18f, 0.34f, 0.50f), Size = new Vector2(2.2f, 1.2f), Blocks = true, ColSize = new Vector2(2.1f, 1.05f) },
+            ["Pond"]        = new PropDef { Tint = new Color(0.18f, 0.34f, 0.50f), Size = new Vector2(2.2f, 1.2f), Blocks = true, ColSize = new Vector2(2.1f, 1.05f), Floor = true },
             ["Ruin"]        = new PropDef { Tint = new Color(0.45f, 0.44f, 0.40f), Size = new Vector2(0.9f, 1.6f), Blocks = true, ColSize = new Vector2(0.85f, 0.7f), ColOffset = new Vector2(0f, -0.4f) },
         };
 
@@ -124,21 +128,26 @@ namespace Morsoul.Hub.Editor
             p.Add(new P("Tree", -7.3f, 4.6f)); p.Add(new P("Pine", 6.3f, 4.7f));
             p.Add(new P("Tree", -3f, 5.2f)); p.Add(new P("Tree", 1f, 5.2f));
             // Plaza well between the stalls — a landmark players steer by.
-            p.Add(new P("Well", 0f, -2.4f));
-            // South fence line; east/west framed by trees.
+            // Offset west of the north-south path so it doesn't block it.
+            p.Add(new P("Well", -1.7f, -2.4f));
+            // South fence line; east/west framed by trees. The west frame
+            // leaves a gap at the street entry (y -0.5) so the arrival walk
+            // reads as emerging from the treeline, not through a trunk.
             for (float x = -7f; x <= 7f; x += 1f) p.Add(new P("Fence", x, -3.9f));
-            foreach (float y in new[] { -2.5f, -0.5f, 1.5f, 3.4f })
-            {
+            foreach (float y in new[] { -2.5f, 0.4f, 1.5f, 3.4f })
                 p.Add(new P("Tree", -7.4f, y));
+            foreach (float y in new[] { -2.5f, -0.5f, 1.5f, 3.4f })
                 p.Add(new P("Pine", 7.4f, y));
-            }
             // Market stalls flanking the plaza; crates and barrels nearby.
             p.Add(new P("Stall", -4.5f, -2.9f)); p.Add(new P("Stall", 4.5f, -2.9f));
             p.Add(new P("Crate", -3.6f, -3.3f)); p.Add(new P("Crate", 5.4f, -3.3f));
             p.Add(new P("Barrel", 3.6f, -3.4f)); p.Add(new P("Barrel", -5.5f, -3.3f));
-            // Dirt paths: an east-west walk and a north-south walk crossing it.
-            for (float x = -6f; x <= 6f; x += 1f) p.Add(new P("PathDirt", x, -1f));
+            // Dirt paths: an east-west street reaching the west treeline
+            // (the arrival entry), a north-south plaza walk crossing it, and
+            // a short branch from the street north to the Guild door.
+            for (float x = -9f; x <= 6f; x += 1f) p.Add(new P("PathDirt", x, -1f));
             for (float y = -3.4f; y <= 3.4f; y += 1f) p.Add(new P("PathDirt", 0f, y));
+            foreach (float y in new[] { 0f, 1f, 2f }) p.Add(new P("PathDirt", 3f, y));
             // Corner lamps and scatter decor.
             foreach (float x in new[] { -6.6f, 6.6f })
                 foreach (float y in new[] { -3.2f, 3.4f })
@@ -324,7 +333,9 @@ namespace Morsoul.Hub.Editor
             var def = Types[placement.Type];
             float z = def.Ground
                 ? 0.45f
-                : placement.Y * YSort2D.DepthPerUnitY + PropDepthBias + index * 0.00001f;
+                : def.Floor
+                    ? 0.44f
+                    : placement.Y * YSort2D.DepthPerUnitY + PropDepthBias + index * 0.00001f;
             var go = HubSceneFactory.NewQuadObject(
                 $"Env_{placement.Type}_{index:D2}", def.Tint,
                 new Vector3(placement.X, placement.Y, z));

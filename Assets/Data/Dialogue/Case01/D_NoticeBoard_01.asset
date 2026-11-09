@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad6b4272890c70c4eb3d3dfe4810ac24, type: 3}
+  m_Name: D_NoticeBoard_01
+  m_EditorClassIdentifier: Morsoul.Dialogue::Morsoul.Dialogue.DialogueData
+  id: D_NoticeBoard_01
+  nodes:
+  - id: n1
+    speakerName: Notice Board
+    speakerPortrait: {fileID: 0}
+    text: "GUILD NOTICE \u2014 Vault goods must be sealed and registered before market days, by order of the Merchant Guild."
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: n2
+  - id: n2
+    speakerName: Notice Board
+    speakerPortrait: {fileID: 0}
+    text: "WANTED \u2014 Steady hands for caravan escort to the Whisperwood road. Apply at the Guild counter."
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: n3
+  - id: n3
+    speakerName: Notice Board
+    speakerPortrait: {fileID: 0}
+    text: "LOST \u2014 One copper kettle, dented, answers to no name. Return to the plaza stalls."
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: 
+  startNodeId: n1
+  portraits: []

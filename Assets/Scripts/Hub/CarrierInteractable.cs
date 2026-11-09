@@ -28,6 +28,13 @@ namespace Morsoul.Hub
         /// targetScene behaviour — used by CaseDoor and the prologue exit.
         /// </summary>
         public bool offerTravelMenu = false;
+        /// <summary>
+        /// When true, exiting goes through ReturnFromInvestigation: the
+        /// origin pose is restored, scene mode returns to Mode2D and the
+        /// investigation case handoff clears. Used by investigation-area
+        /// exits (e.g. the vault stand-in's VaultExit).
+        /// </summary>
+        public bool exitsInvestigation;
 
         /// <summary>Fired just before scene load; argument is the checkpoint reason.</summary>
         public event Action<string> CheckpointRequested;
@@ -85,6 +92,16 @@ namespace Morsoul.Hub
                 return;
             }
 
+            // Investigation exits run the return contract — restores the
+            // captured origin pose/mode; falls back to the fixed target
+            // when there's no active investigation or the return fails.
+            if (exitsInvestigation && CoreRuntime.Instance != null)
+            {
+                int caseId = CoreRuntime.Instance.Session.InvestigationCaseId;
+                if (caseId >= 0 &&
+                    GameStateManager.Ensure().ReturnFromInvestigation(caseId))
+                    return;
+            }
             TravelTo(ResolveTargetScene());
         }
 

@@ -30,11 +30,16 @@ namespace Morsoul.Hub.Editor
         [MenuItem("Morsoul/Hub/Build Guild Expansion (All)")]
         public static void BuildAll()
         {
+            // Restore installer-owned market content first (HUD/focus panel,
+            // travel menu, rest spot, interlude trigger, route wiring) so a
+            // reverted scene comes back complete — all idempotent.
+            HubContentSetup.Install();
+            DemoStandInFactory.PatchRouteWiring();
             Build();
             MarketExpansionInstaller.Install();
             HubDressingBuilder.DressAll();
-            Debug.Log("Guild expansion built: Hub_Guild scene, market door + " +
-                      "arrival escort, re-dressed environments.");
+            Debug.Log("Guild expansion built: hub content restored, Hub_Guild " +
+                      "scene, market door + arrival escort, re-dressed environments.");
         }
 
         [MenuItem("Morsoul/Hub/Create Guild Interior Scene (Hub_Guild)")]
@@ -95,13 +100,14 @@ namespace Morsoul.Hub.Editor
                 new Color(0.6f, 0.48f, 0.3f), new Vector3(-3f, 1.8f, 0f),
                 out InspectionInteractable board);
             board.promptText = "[E] Inspect";
+            board.blocksMovement = true;
 
             // Adventurers — the guild floor feels inhabited.
             foreach (var (name, pos) in new (string, Vector3)[]
             {
                 ("Adventurer_Scarred", new Vector3(3.2f, -2.2f, 0f)),
                 ("Adventurer_Young", new Vector3(-4.2f, -2.6f, 0f)),
-                ("Adventurer_Ranger", new Vector3(5.4f, 0.4f, 0f)),
+                ("Adventurer_Ranger", new Vector3(5.4f, 1.3f, 0f)),
             })
             {
                 HubSceneFactory.CreateInteractable(name,
