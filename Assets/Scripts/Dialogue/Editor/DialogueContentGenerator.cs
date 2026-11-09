@@ -99,7 +99,7 @@ namespace Morsoul.Dialogue.Editor
                     next: "ovan_challenge"),
                 Node("ovan_challenge", "Guildmaster Ovan",
                     "(Wiping sweat from his brow with an embroidered handkerchief) " +
-                    "\"Astra? The Council sent an apprentice surveyor? And what in " +
+                    "\"Astra? The Council sent their surveyor? And what in " +
                     "Saint Althea\u2019s name is that... that walking boulder behind you?\"",
                     next: "golem_scan"),
                 Node("golem_scan", "Golem",

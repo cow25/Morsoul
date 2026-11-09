@@ -26,7 +26,7 @@ MonoBehaviour:
   - id: ovan_challenge
     speakerName: Guildmaster Ovan
     speakerPortrait: {fileID: 0}
-    text: "(Wiping sweat from his brow with an embroidered handkerchief) \"Astra? The Council sent an apprentice surveyor? And what in Saint Althea\u2019s name is that... that walking boulder behind you?\""
+    text: "(Wiping sweat from his brow with an embroidered handkerchief) \"Astra? The Council sent their surveyor? And what in Saint Althea\u2019s name is that... that walking boulder behind you?\""
     registersClue: {fileID: 0}
     setsFlag: 
     requiresFlag: 

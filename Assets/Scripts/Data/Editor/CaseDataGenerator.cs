@@ -104,7 +104,7 @@ namespace Morsoul.Data.Editor
 
             var c1 = Clue(folder, "C1_00", "Torn Desk Logs", ClueType.Physical, 0,
                 AcquisitionMethod.GolemEyeScan, Tool.GolemEye,
-                "Torn pre-cataclysm technical manifests scattered across a workstation. Scanning with Golem Eye (Tab) initiates linguistic deciphering, teaching the Golem the modern tongue and identifying the site as an unauthorized governmental mana research installation.");
+                "Torn modern-tongue notes scattered across a workstation, left by a human who studied these ruins long after the Cataclysm. Scanning with Golem Eye (Tab) initiates linguistic deciphering, teaching the Golem the modern tongue and identifying the site only as a sealed research installation.");
             var c2 = Clue(folder, "C2_00", "Overloaded Capacitor Relay", ClueType.Physical, 0,
                 AcquisitionMethod.Raycast3D, Tool.None,
                 "Shattered glass vacuum tube surrounded by crystallized mana slag. Demonstrates that power to the primary hydraulic security blast door was severed during a forced emergency system overload.");
@@ -121,7 +121,7 @@ namespace Morsoul.Data.Editor
 
             var caseData = LoadOrCreate<CaseData>($"{folder}/Case_00.asset");
             caseData.caseId = 0;
-            caseData.title = "Awakening in the Ashes";
+            caseData.title = "Awakening Beneath the Ruins";
             caseData.region = "Subterranean Research Facility Ruins & Wilderness Threshold";
             caseData.interrogation = null;
             caseData.clues = new[] { c1, c2, c3, t1, rh1 };
@@ -195,9 +195,11 @@ namespace Morsoul.Data.Editor
                 new InterrogationPhase
                 {
                     suspectClaim = "Even if mundane solvent was used, some skilled cat burglar must have jimmied the locks from the back alley while Asterveil slept!",
-                    keywords = new string[0],
+                    keywords = new[] { "jimmied the locks from the back alley" },
                     validMoves = new[]
                     {
+                        Move(Verb.Press, null, false, 0, false,
+                            "I lock up strictly at the eighth bell! Any thief with a standard pick-set could slip past the sleepy market watch and force the cylinder!"),
                         Move(Verb.PresentEvidence, p1, true, 0, false,
                             "The cylinder pins bear no scratches, and the Guild holds the only duplicate. That substantiates a single conclusion \u2014 the door was opened with a registered key, and only yours and the Guildmaster's exist. So whose key turned it?"),
                     },
@@ -210,9 +212,11 @@ namespace Morsoul.Data.Editor
                 new InterrogationPhase
                 {
                     suspectClaim = "This is absurd! Why would I destroy ten thousand gold ducats worth of inventory? I am financially ruined by this loss!",
-                    keywords = new string[0],
+                    keywords = new[] { "financially ruined by this loss" },
                     validMoves = new[]
                     {
+                        Move(Verb.Press, null, false, 0, false,
+                            "My entire life's work, my retirement, my family's trust fund was tied into Batch #408! If the City Treasury does not approve my emergency compensation by noon, I am bankrupt!"),
                         Move(Verb.Contradict, c3, true, 0, false,
                             "You destroyed nothing of value. Batch records confirm shipment #408 was never bottled. You staged an attack to collect guild insurance on phantom goods."),
                     },
@@ -306,9 +310,11 @@ namespace Morsoul.Data.Editor
                 new InterrogationPhase
                 {
                     suspectClaim = "Then the creature must have snuck up while I wasn't looking! I saw them, I swear \u2014 they chanted from the tower base and bewitched the machinery!",
-                    keywords = new string[0],
+                    keywords = new[] { "chanted from the tower base" },
                     validMoves = new[]
                     {
+                        Move(Verb.Press, null, false, 0, false,
+                            "I was busy oiling the rope pulleys! A cunning sorcerer could whisper upward through the floor flues without making a sound!"),
                         Move(Verb.PresentEvidence, p1, true, 0, false,
                             "The acoustics substantiate a redirect: a spell from the base cannot coat a clapper suspended eighty feet in the rafters. The damping agent was applied manually by whoever climbed the belfry before vespers."),
                     },
@@ -321,9 +327,11 @@ namespace Morsoul.Data.Editor
                 new InterrogationPhase
                 {
                     suspectClaim = "I am a faithful servant of Saint Althea! I have dedicated twenty years to ringing these bells! What possible motive could I have to harm Mother Lyra?!",
-                    keywords = new string[0],
+                    keywords = new[] { "What possible motive could I have" },
                     validMoves = new[]
                     {
+                        Move(Verb.Press, null, false, 0, false,
+                            "I love this parish more than my own life! I would sever my own fingers before I willingly silenced the Lady! You cannot invent a reason for me to commit blasphemy!"),
                         Move(Verb.Contradict, c3, true, 0, false,
                             "You didn't want to harm her, Accord. You were cornered. The hooded stranger held your family's exile over your head."),
                     },
@@ -393,6 +401,12 @@ namespace Morsoul.Data.Editor
             var pressMove = Move(Verb.Press, null, false, 0, false,
                 "The regional council granted me unrestricted access to sample fungal spread! My tools are delicate biological instruments, not weapons!");
             pressMove.emotionAura = Aura.Amber;
+            var press2Move = Move(Verb.Press, null, false, 0, false,
+                "Alchemical houses pay fortunes for raw spirit-resin! I am an opportunist, nothing more! Smuggling contraband is a municipal civil infraction, not a hanging offense!");
+            press2Move.emotionAura = Aura.Amber;
+            var press3Move = Move(Verb.Press, null, false, 0, false,
+                "Nature dies to make way for the strong! This woodland decay is localized, irrelevant, and forgotten by tomorrow's sunrise!");
+            press3Move.emotionAura = Aura.Amber;
 
             var interrogation = LoadOrCreate<InterrogationData>($"{folder}/INT_03.asset");
             interrogation.id = "INT_03";
@@ -416,9 +430,10 @@ namespace Morsoul.Data.Editor
                 new InterrogationPhase
                 {
                     suspectClaim = "Fine, I tapped the tree for alchemical commerce! But a lone merchant selling sap on the black market hardly concerns your guild's grand conspiracy theories!",
-                    keywords = new string[0],
+                    keywords = new[] { "lone merchant selling sap" },
                     validMoves = new[]
                     {
+                        press2Move,
                         Move(Verb.PresentEvidence, c2, true, 0, false,
                             "This redirects your 'lone merchant' story. Black-market traders do not carry daggers bearing the eclipsed eye of the Veiled Circle, treated with the exact same chemical solvent used in Asterveil's vault. Who do you actually work for?"),
                     },
@@ -431,9 +446,10 @@ namespace Morsoul.Data.Editor
                 new InterrogationPhase
                 {
                     suspectClaim = "You cannot stop what is coming! You have no proof this tree connects to anything beyond these miserable woods!",
-                    keywords = new string[0],
+                    keywords = new[] { "no proof this tree connects to anything" },
                     validMoves = new[]
                     {
+                        press3Move,
                         Move(Verb.Contradict, c3, true, 0, false,
                             "Your own cloak betrays you, Vane \u2014 the Emotion Echo reads the fanatical zeal and deceit soaked into it. You serve the Veiled Circle's Sanctum Core ritual, and this tree feeds it."),
                     },

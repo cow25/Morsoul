@@ -65,6 +65,12 @@ namespace Morsoul.Data.Editor
             var press = Move(Verb.Press, null, false, 0, false,
                 "Brokk was rushing quota! He forgot the bypass sequence and the lines blew. Simple industrial accident!");
             press.emotionAura = Aura.Amber;
+            var press2 = Move(Verb.Press, null, false, 0, false,
+                "My crew stays above the 400-meter mark! We don't touch hydraulic copper or acid baths! If chemical rot dissolved those lines, talk to the refinery alchemists!");
+            press2.emotionAura = Aura.Violet;
+            var press3 = Move(Verb.Press, null, false, 0, false,
+                "The earth is dead rock! Shattering a few granite boulders doesn't threaten your precious city! The Grand Overseer will purify this blighted subterranean filth!");
+            press3.emotionAura = Aura.Violet;
             var solvent = Move(Verb.PresentEvidence, c2, true, 0, false,
                 "The bypass cables were melted with the same synthetic mana solvent found in Ignatius' vault and Vane's camp. This is a wider operation. Who supplied you?");
             solvent.emotionAura = Aura.Violet;
@@ -90,8 +96,8 @@ namespace Morsoul.Data.Editor
                 new InterrogationPhase
                 {
                     suspectClaim = "So someone jammed a valve. That proves nothing against me! I was contracted solely for upper-tier masonry and never touched the subterranean conduits!",
-                    keywords = new string[0],
-                    validMoves = new[] { solvent },
+                    keywords = new[] { "never touched the subterranean conduits" },
+                    validMoves = new[] { press2, solvent },
                     invalidMoves = new[]
                     {
                         Move(Verb.PresentEvidence, rh1, false, 1, false,
@@ -101,9 +107,10 @@ namespace Morsoul.Data.Editor
                 new InterrogationPhase
                 {
                     suspectClaim = "Why would anyone intentionally collapse a dead-end rock face?! What possible gain is there in blowing out useless granite?!",
-                    keywords = new string[0],
+                    keywords = new[] { "useless granite" },
                     validMoves = new[]
                     {
+                        press3,
                         Move(Verb.Contradict, c3, true, 0, false,
                             "It wasn't a dead end. The rock concealed the blast doors of an ancient research facility. You caused the blowout to breach it for the Veiled Circle.")
                     },
