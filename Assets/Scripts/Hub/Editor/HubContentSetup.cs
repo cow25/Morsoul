@@ -504,6 +504,14 @@ namespace Morsoul.Hub.Editor
             }
             Add(CathedralPath);
             Add(IronHollowPath);
+            // Art overlays are additive loads — register the ones that exist
+            // so HubArtSceneLoader's CanStreamedLevelBeLoaded check passes.
+            foreach (var spec in Specs())
+            {
+                if (string.IsNullOrEmpty(spec.artSceneName)) continue;
+                var artPath = $"Assets/Scenes/{spec.artSceneName}.unity";
+                if (File.Exists(artPath)) Add(artPath);
+            }
             EditorBuildSettings.scenes = list.ToArray();
         }
     }

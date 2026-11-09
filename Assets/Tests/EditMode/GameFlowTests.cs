@@ -1216,5 +1216,54 @@ namespace Morsoul.Tests
             audio.SetMusicVolume(1f);
             audio.SetSfxVolume(1f);
         }
+
+        [Test]
+        public void SceneAudioLoop_StartsOwnedLoops_AndReleasesThemOnUnload()
+        {
+            var core = Core.CoreRuntime.Ensure();
+            _objects.Add(core.gameObject);
+            var audio = core.Audio;
+            var music = AudioClip.Create("loopMusic", 44100, 1, 44100, false);
+            var amb = AudioClip.Create("loopAmb", 44100, 1, 44100, false);
+            _tempAssets.Add(music);
+            _tempAssets.Add(amb);
+
+            var loop = New<Core.SceneAudioLoop>("SceneAudio");
+            loop.music = music;
+            loop.ambience = amb;
+            loop.Play();
+
+            Assert.AreSame(music, audio.CurrentMusic);
+            Assert.AreSame(amb, audio.CurrentAmbience);
+
+            // OnDestroy doesn't fire for non-ExecuteAlways components in
+            // EditMode — invoke it the way a scene unload would.
+            typeof(Core.SceneAudioLoop).GetMethod("OnDestroy",
+                System.Reflection.BindingFlags.Instance |
+                System.Reflection.BindingFlags.NonPublic).Invoke(loop, null);
+
+            Assert.IsNull(audio.CurrentMusic);
+            Assert.IsNull(audio.CurrentAmbience);
+        }
+
+        [Test]
+        public void SceneAudioLoop_UnassignedChannels_LeaveExistingMixUntouched()
+        {
+            var core = Core.CoreRuntime.Ensure();
+            _objects.Add(core.gameObject);
+            var audio = core.Audio;
+            var music = AudioClip.Create("keepMusic", 44100, 1, 44100, false);
+            _tempAssets.Add(music);
+            audio.PlayMusic(music);
+
+            var loop = New<Core.SceneAudioLoop>("EmptyLoop");
+            loop.Play(); // nothing assigned — must not kill the current track
+
+            Assert.AreSame(music, audio.CurrentMusic);
+            typeof(Core.SceneAudioLoop).GetMethod("OnDestroy",
+                System.Reflection.BindingFlags.Instance |
+                System.Reflection.BindingFlags.NonPublic).Invoke(loop, null);
+            Assert.AreSame(music, audio.CurrentMusic);
+        }
     }
 }

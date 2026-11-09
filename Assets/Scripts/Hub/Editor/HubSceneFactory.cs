@@ -1,4 +1,5 @@
 using System.IO;
+using Morsoul.Core;
 using Morsoul.Data;
 using Morsoul.Dialogue;
 using UnityEditor;
@@ -199,6 +200,7 @@ namespace Morsoul.Hub.Editor
             var context = contextGo.AddComponent<HubContext>();
             context.flags = contextGo.AddComponent<HubFlags>();
             context.journal = contextGo.AddComponent<HubJournal>();
+            contextGo.AddComponent<SceneAudioLoop>();
 
             var dialogueGo = new GameObject("DialoguePanel");
             var renderer = dialogueGo.AddComponent<PanelRenderer>();

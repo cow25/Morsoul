@@ -26,12 +26,18 @@ namespace Morsoul.Hub
         public float interactRadius = 1.5f;
         /// <summary>Layers searched by the interactable cast; defaults to everything.</summary>
         public LayerMask interactLayers = ~0;
+        [Header("Audio")]
+        [Tooltip("Footstep one-shots picked at random while moving; empty stays silent.")]
+        public AudioClip[] footstepClips;
+        /// <summary>Seconds between footstep clips while walking (sprint shortens it).</summary>
+        public float stepIntervalSeconds = 0.42f;
 
         Rigidbody2D _rb;
         readonly List<Interactable2D> _candidates = new List<Interactable2D>();
         readonly List<Vector2> _candidatePositions = new List<Vector2>();
         Interactable2D _prompted;
         PlayerFacing2D _facing = PlayerFacing2D.Down;
+        float _stepTimer;
 
         /// <summary>Current normalized move input (zero while dialogue plays).</summary>
         public Vector2 MoveInput { get; private set; }
@@ -76,6 +82,7 @@ namespace Morsoul.Hub
             SyncPlayerContext();
 
             UpdatePromptTarget();
+            TickFootsteps(keyboard);
 
             if (!dialoguePlaying && !cutsceneActive && keyboard.eKey.wasPressedThisFrame &&
                 CurrentTarget != null)
@@ -153,6 +160,22 @@ namespace Morsoul.Hub
                 if (_prompted != null) _prompted.SetPromptVisible(true);
             }
             CurrentTarget = nearest;
+        }
+
+        void TickFootsteps(Keyboard keyboard)
+        {
+            if (MoveInput.Equals(Vector2.zero) ||
+                footstepClips == null || footstepClips.Length == 0)
+            {
+                _stepTimer = 0f;
+                return;
+            }
+            _stepTimer -= Time.deltaTime;
+            if (_stepTimer > 0f) return;
+            bool sprint = keyboard.leftShiftKey.isPressed;
+            _stepTimer = stepIntervalSeconds / (sprint ? sprintMultiplier : 1f);
+            var clip = footstepClips[Random.Range(0, footstepClips.Length)];
+            if (clip != null) CoreRuntime.Instance?.Audio?.PlaySfx(clip, 0.8f);
         }
 
         void OnDisable()

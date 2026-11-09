@@ -25,6 +25,10 @@ namespace Morsoul.Core
         AudioSource _music;
         AudioSource _ambience;
         AudioSource _sfx;
+        AudioClip _musicTarget;
+        AudioClip _ambienceTarget;
+        bool _musicFading;
+        bool _ambienceFading;
         float _musicLevel = 1f;
         float _ambienceLevel = 1f;
         bool _ducked;
@@ -39,6 +43,12 @@ namespace Morsoul.Core
         public float SfxVolume { get; private set; } = 1f;
         /// <summary>True while cinematics hold music/ambience at duckLevel.</summary>
         public bool IsDucked => _ducked;
+        /// <summary>Clip bound for the music channel (target mid-crossfade).</summary>
+        public AudioClip CurrentMusic => _musicFading ? _musicTarget
+            : _music != null ? _music.clip : null;
+        /// <summary>Clip bound for the ambience channel (target mid-crossfade).</summary>
+        public AudioClip CurrentAmbience => _ambienceFading ? _ambienceTarget
+            : _ambience != null ? _ambience.clip : null;
 
         void Awake()
         {
@@ -80,6 +90,8 @@ namespace Morsoul.Core
         public void PlayMusic(AudioClip clip, bool loop = true)
         {
             EnsureSources();
+            _musicTarget = clip;
+            _musicFading = true;
             if (_musicFade != null) StopCoroutine(_musicFade);
             _musicFade = StartCoroutine(FadeSwap(_music, clip, loop, true));
         }
@@ -88,6 +100,8 @@ namespace Morsoul.Core
         public void PlayAmbience(AudioClip clip, bool loop = true)
         {
             EnsureSources();
+            _ambienceTarget = clip;
+            _ambienceFading = true;
             if (_ambienceFade != null) StopCoroutine(_ambienceFade);
             _ambienceFade = StartCoroutine(FadeSwap(_ambience, clip, loop, false));
         }
@@ -149,6 +163,7 @@ namespace Morsoul.Core
                 source.Stop();
                 source.clip = null;
                 SetLevel(source, 1f, isMusic);
+                if (isMusic) _musicFading = false; else _ambienceFading = false;
                 yield break;
             }
             source.clip = next;
@@ -160,6 +175,7 @@ namespace Morsoul.Core
                 SetLevel(source, level, isMusic);
                 yield return null;
             }
+            if (isMusic) _musicFading = false; else _ambienceFading = false;
         }
 
         void SetLevel(AudioSource source, float level, bool isMusic)

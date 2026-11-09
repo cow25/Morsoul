@@ -17,6 +17,8 @@ namespace Morsoul.Hub
 
         /// <summary>Optional overlay toggled while resting (e.g. a dim panel).</summary>
         public GameObject restingIndicator;
+        /// <summary>Optional one-shot played when the player sits down.</summary>
+        public AudioClip restCue;
 
         HubPlayerController _player;
         HubContext _context;
@@ -56,6 +58,7 @@ namespace Morsoul.Hub
             if (core == null || core.Focus.Percent >= core.Focus.Maximum) return;
             IsResting = true;
             _restStartFrame = Time.frameCount;
+            if (restCue != null) core.Audio?.PlaySfx(restCue);
             if (_player == null) _player = FindAnyObjectByType<HubPlayerController>();
             if (_player != null) _player.enabled = false;
             if (restingIndicator != null) restingIndicator.SetActive(true);

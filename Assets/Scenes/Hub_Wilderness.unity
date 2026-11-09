@@ -310,6 +310,7 @@ MonoBehaviour:
   promptText: '[E] Inspect'
   promptIndicator: {fileID: 379376329}
   clue: {fileID: 11400000, guid: 71d856f53652f414285e69d4b96d414f, type: 2}
+  inspectionDialogue: {fileID: 0}
 --- !u!61 &451843753
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -903,6 +904,7 @@ MonoBehaviour:
   journal: {fileID: 710692014}
   flags: {fileID: 710692015}
   travelMenu: {fileID: 1304615348}
+  boardPanel: {fileID: 0}
 --- !u!4 &710692017
 Transform:
   m_ObjectHideFlags: 0
@@ -1057,6 +1059,52 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1273788579}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &910123888
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 910123890}
+  - component: {fileID: 910123889}
+  m_Layer: 0
+  m_Name: SceneAudio
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &910123889
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 910123888}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc065444264e1434389ac6324fed4cf8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Morsoul.Core::Morsoul.Core.SceneAudioLoop
+  music: {fileID: 0}
+  ambience: {fileID: 0}
+--- !u!4 &910123890
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 910123888}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &927640903
 GameObject:
@@ -2381,6 +2429,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Morsoul.Journal::Morsoul.Journal.JournalController
   journal: {fileID: 710692014}
+  context: {fileID: 0}
   allLogs:
   - {fileID: 11400000, guid: 5705da5ac704c474d884e15a7df7482c, type: 2}
   dossiers: []
@@ -2577,6 +2626,8 @@ MonoBehaviour:
   interactLayers:
     serializedVersion: 2
     m_Bits: 4294967295
+  footstepClips: []
+  stepIntervalSeconds: 0.42
 --- !u!50 &1848514015
 Rigidbody2D:
   serializedVersion: 5
@@ -2711,6 +2762,7 @@ MonoBehaviour:
   promptText: '[E] Listen'
   promptIndicator: {fileID: 1380260183}
   dialogue: {fileID: 11400000, guid: bc1d5b8c08350e845bb287c9c01c83b9, type: 2}
+  interrogationCaseId: -1
 --- !u!61 &1856768244
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -3159,6 +3211,7 @@ MonoBehaviour:
   promptText: '[E] Talk'
   promptIndicator: {fileID: 371479687}
   dialogue: {fileID: 11400000, guid: 09c2719d0c045d84890f839e330e5507, type: 2}
+  interrogationCaseId: -1
 --- !u!61 &1915782819
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -3452,6 +3505,7 @@ MonoBehaviour:
   promptText: '[E] Rest'
   promptIndicator: {fileID: 1628340123}
   restingIndicator: {fileID: 0}
+  restCue: {fileID: 0}
 --- !u!61 &2099058545
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -3597,3 +3651,4 @@ SceneRoots:
   - {fileID: 451843756}
   - {fileID: 601129814}
   - {fileID: 1992305750}
+  - {fileID: 910123890}
