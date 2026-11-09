@@ -138,8 +138,11 @@ namespace Morsoul.Core
             EasternRouteUnlocked = false;
             PrologueExitLoaded = true;
             SetCutsceneContext("", "");
+            // Must stay west of the ElizaIntroTrigger's west edge (the
+            // controller keeps that edge at x<=3.6 via triggerMaxX) so the
+            // player can walk east and re-trigger the encounter.
             SetPlayerContext(SceneMode.Mode2D, PrologueWildernessSceneId,
-                new Vector3(6f, 0f, 0f), PlayerFacing2D.Right);
+                new Vector3(1.5f, 0f, 0f), PlayerFacing2D.Right);
             return true;
         }
 

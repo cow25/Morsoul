@@ -53,7 +53,7 @@ namespace Morsoul.Tests
                 var method = typeof(PrologueElizaIntroController).GetMethod("Line",
                     System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
                 var line = (System.Collections.IEnumerator)method.Invoke(intro,
-                    new object[] { "Golem", "Can you understand me?" });
+                    new object[] { "Golem", "Can you understand me?", null });
 
                 Assert.IsTrue(line.MoveNext());
                 Assert.IsNotNull(dialogue.Runner);
@@ -96,6 +96,7 @@ namespace Morsoul.Tests
                 bool deciphered = false;
                 bool finished = false;
                 bool plea = false, monster = false, noWeapons = false;
+                bool introduced = false;
                 while (!finished && sequence.MoveNext())
                 {
                     var line = sequence.Current as System.Collections.IEnumerator;
@@ -115,6 +116,16 @@ namespace Morsoul.Tests
                         Assert.IsFalse(node.text.Contains("do not remember"));
                         Assert.IsFalse(node.text.Contains("you can speak"));
                         Assert.AreNotEqual("System", node.speakerName);
+                        // Speaker identity follows narrative knowledge: her
+                        // name only appears after she introduces herself.
+                        if (node.text.Contains("Name's Eliza"))
+                        {
+                            Assert.AreEqual("???", node.speakerName);
+                            introduced = true;
+                        }
+                        if (node.speakerName == "Eliza")
+                            Assert.IsTrue(introduced,
+                                $"'Eliza' label shown before her introduction: '{node.text}'");
                         if (node.text.Contains("words in the notes")) deciphered = true;
                         if (node.text == "Wait. I mean no harm.") Assert.IsTrue(deciphered);
                         plea |= node.text == "Look, wait! Don't hurt me!" && !deciphered;
@@ -142,17 +153,54 @@ namespace Morsoul.Tests
             }
         }
 
+        [Test]
+        public void StageEncounter_KeepsPlayerAndCamera_StagesElizaSurveying()
+        {
+            var cameraGo = new GameObject("IntroCamera", typeof(Camera), typeof(CameraFollow2D));
+            var playerGo = new GameObject("Player");
+            var elizaGo = new GameObject("Eliza");
+            var survey = new GameObject("ElizaSurveySpot");
+            var trigger = new GameObject("IntroTrigger", typeof(BoxCollider2D));
+            try
+            {
+                elizaGo.SetActive(false);
+                survey.transform.position = new Vector3(14.1f, 0.4f, 0f);
+                playerGo.transform.position = new Vector3(2.8f, 0f, 0f);
+                var intro = trigger.AddComponent<PrologueElizaIntroController>();
+                intro.player = playerGo.AddComponent<HubPlayerController>();
+                intro.cameraFollow = cameraGo.GetComponent<CameraFollow2D>();
+                intro.eliza = elizaGo.transform;
+                intro.elizaSurveyMarker = survey.transform;
+
+                typeof(PrologueElizaIntroController).GetMethod("StageEncounter",
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                    .Invoke(intro, null);
+
+                // The protagonist is never teleported or hidden — the scripted
+                // walk continues from wherever the trigger caught him.
+                Assert.AreEqual(new Vector3(2.8f, 0f, 0f), playerGo.transform.position);
+                Assert.AreEqual(playerGo.transform, intro.cameraFollow.target);
+                Assert.AreEqual(playerGo.transform.position.x,
+                    cameraGo.transform.position.x, 0.001f);
+                // Eliza is already in-world surveying, off the right edge.
+                Assert.IsTrue(elizaGo.activeSelf);
+                Assert.AreEqual(survey.transform.position, elizaGo.transform.position);
+            }
+            finally
+            {
+                foreach (var go in new[] { trigger, playerGo, cameraGo, elizaGo, survey })
+                    Object.DestroyImmediate(go);
+            }
+        }
+
         [TestCase(1.333333f)]
         [TestCase(1.777778f)]
         [TestCase(2.333333f)]
-        public void Opening_StagesPlayerOutsideBothShots_WithoutHidingRenderer(float aspect)
+        public void Trigger_FiresJustBeforeBushEntersFrame(float aspect)
         {
             var cameraGo = new GameObject("IntroCamera", typeof(Camera), typeof(CameraFollow2D));
             var playerGo = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            var elizaGo = new GameObject("Eliza");
-            var shot = new GameObject("OpeningShot");
-            var entrance = new GameObject("EntranceShot");
-            var walkStart = new GameObject("ElizaWalkStart");
+            var bushGo = GameObject.CreatePrimitive(PrimitiveType.Quad);
             var trigger = new GameObject("IntroTrigger", typeof(BoxCollider2D));
             try
             {
@@ -160,32 +208,63 @@ namespace Morsoul.Tests
                 camera.orthographic = true;
                 camera.orthographicSize = 5f;
                 camera.aspect = aspect;
-                cameraGo.transform.position = new Vector3(0f, 0f, -10f);
-                shot.transform.position = new Vector3(12f, 0f, 0f);
-                entrance.transform.position = new Vector3(8.75f, 0f, 0f);
-                walkStart.transform.position = new Vector3(14f, 0f, 0f);
+                bushGo.transform.position = new Vector3(12.7f, 0.2f, 0f);
+                bushGo.transform.localScale = new Vector3(1.2f, 1.4f, 1f);
+                trigger.transform.position = new Vector3(8f, -0.5f, 0f);
                 var intro = trigger.AddComponent<PrologueElizaIntroController>();
                 intro.player = playerGo.AddComponent<HubPlayerController>();
                 intro.cameraFollow = cameraGo.GetComponent<CameraFollow2D>();
-                intro.elizaCameraTarget = shot.transform;
-                intro.cameraTarget = entrance.transform;
-                intro.eliza = elizaGo.transform;
-                intro.elizaWalkStart = walkStart.transform;
-                typeof(PrologueElizaIntroController).GetMethod("StageOpening",
-                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
-                    .Invoke(intro, null);
+                intro.bushProp = bushGo.transform;
 
-                var renderer = playerGo.GetComponent<Renderer>();
-                Assert.IsTrue(renderer.enabled);
-                Assert.AreEqual(shot.transform.position.x, cameraGo.transform.position.x);
-                Assert.AreEqual(walkStart.transform.position, elizaGo.transform.position);
-                Assert.Less(renderer.bounds.max.x, shot.transform.position.x - 5f * aspect);
-                Assert.Less(renderer.bounds.max.x, entrance.transform.position.x - 5f * aspect);
+                intro.PositionTriggerForReveal();
+
+                var col = trigger.GetComponent<Collider2D>();
+                float bushLeft = bushGo.GetComponent<Renderer>().bounds.min.x;
+                float playerHalf = playerGo.GetComponent<Renderer>().bounds.extents.x;
+                float contactX = col.bounds.min.x - playerHalf;
+                float rightEdgeAtContact = contactX + 5f * aspect;
+                Assert.LessOrEqual(trigger.transform.position.x, intro.triggerMaxX);
+                Assert.Less(rightEdgeAtContact, bushLeft,
+                    "Bush already on screen when the trigger fires");
+                Assert.Greater(rightEdgeAtContact, bushLeft - 2f,
+                    "Trigger sits implausibly far before the reveal");
             }
             finally
             {
-                foreach (var go in new[] { trigger, playerGo, cameraGo, elizaGo, shot, entrance, walkStart })
+                foreach (var go in new[] { trigger, playerGo, cameraGo, bushGo })
                     Object.DestroyImmediate(go);
+            }
+        }
+
+        [Test]
+        public void FadeTo_NeverRevealsDialogueBox()
+        {
+            var go = new GameObject("FadeTest");
+            try
+            {
+                var dialogue = go.AddComponent<Morsoul.Dialogue.DialogueController>();
+                dialogue.manageCursor = false;
+                var tree = UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.UIElements.VisualTreeAsset>(
+                    "Assets/Dialogue.uxml").CloneTree();
+                typeof(Morsoul.Dialogue.DialogueController).GetMethod("OnUIReload",
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                    .Invoke(dialogue, new object[] { null, tree, 1 });
+
+                var root = tree.Q<UnityEngine.UIElements.VisualElement>("Dialogue-Root");
+                var overlay = tree.Q<UnityEngine.UIElements.VisualElement>("FadeOverlay");
+                Assert.IsNotNull(overlay);
+                Assert.IsNull(root.Q("FadeOverlay"),
+                    "FadeOverlay must live outside Dialogue-Root so fades don't expose the box");
+
+                var fade = dialogue.FadeTo(1f, 0.1f);
+                fade.MoveNext();
+                Assert.AreEqual(UnityEngine.UIElements.DisplayStyle.None, root.style.display.value,
+                    "Fading must not reveal the dialogue box/template");
+                Assert.AreEqual(UnityEngine.UIElements.DisplayStyle.Flex, overlay.style.display.value);
+            }
+            finally
+            {
+                Object.DestroyImmediate(go);
             }
         }
 
@@ -249,7 +328,7 @@ namespace Morsoul.Tests
             Assert.AreEqual("", _session.PreCutsceneCheckpointId);
             Assert.AreEqual(SceneMode.Mode2D, _session.CurrentSceneMode);
             Assert.AreEqual(SessionState.PrologueWildernessSceneId, _session.CurrentSceneId);
-            Assert.AreEqual(new Vector3(6f, 0f, 0f), _session.PlayerPosition);
+            Assert.AreEqual(new Vector3(1.5f, 0f, 0f), _session.PlayerPosition);
             Assert.AreEqual(PlayerFacing2D.Right, _session.PlayerFacing2D);
             Assert.IsTrue(PrologueTransitionRules.CanTriggerElizaIntro(_session));
         }

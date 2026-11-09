@@ -8,7 +8,8 @@ namespace Morsoul.Hub
 {
     /// <summary>
     /// Top-down 2D player controller for hub scenes. WASD movement via the
-    /// Input System (Keyboard.current), LeftShift sprint, E to interact with
+    /// Input System (Keyboard.current), axis-locked to sharp 90° movement —
+    /// no diagonals. LeftShift sprint, E to interact with
     /// the nearest <see cref="Interactable2D"/> found by an OverlapCircleAll
     /// cast. While the shared dialogue panel is playing, movement and
     /// interaction are suspended (E then advances dialogue instead).
@@ -109,6 +110,16 @@ namespace Morsoul.Hub
             if (keyboard.dKey.isPressed) input.x += 1f;
             if (keyboard.sKey.isPressed) input.y -= 1f;
             if (keyboard.wKey.isPressed) input.y += 1f;
+            return AxisLock(input);
+        }
+
+        /// <summary>Sharp 90° movement (Undertale-style): only one axis may be
+        /// active at a time; horizontal wins ties so diagonal input slides
+        /// sideways rather than producing a 45° walk.</summary>
+        internal static Vector2 AxisLock(Vector2 input)
+        {
+            if (Mathf.Abs(input.x) >= Mathf.Abs(input.y)) input.y = 0f;
+            else input.x = 0f;
             return input;
         }
 

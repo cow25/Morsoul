@@ -1473,16 +1473,14 @@ MonoBehaviour:
   context: {fileID: 1356436595}
   player: {fileID: 1245832456}
   cameraFollow: {fileID: 1453822373}
-  cameraTarget: {fileID: 1784370456}
-  elizaCameraTarget: {fileID: 453197313}
+  elizaSurveyMarker: {fileID: 2099575025}
   eliza: {fileID: 1813914154}
-  elizaWalkStart: {fileID: 2099575025}
   bushProp: {fileID: 1447093924}
   eyeHighlight: {fileID: 1371684580}
   elizaEmote: {fileID: 1449007536}
   playerEmote: {fileID: 380307630}
   routeBlocker: {fileID: 2123307396}
-  safeResumePosition: {x: 6, y: 0, z: 0}
+  safeResumePosition: {x: 1.5, y: 0, z: 0}
   nextSceneName: Hub_LowerMarket
   nextCaseId: 1
   autoLoadNextScene: 1
@@ -1542,7 +1540,7 @@ Transform:
   m_GameObject: {fileID: 346327082}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 8, y: -0.5, z: 0}
+  m_LocalPosition: {x: 4.1, y: -0.5, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

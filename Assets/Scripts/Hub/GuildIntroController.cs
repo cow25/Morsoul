@@ -111,17 +111,26 @@ namespace Morsoul.Hub
             else yield return Wait(seconds);
         }
 
+        /// <summary>Axis-aligned only: diagonal destinations run as an L-path
+        /// (horizontal leg first) at constant speed — sharp 90° movement.</summary>
         IEnumerator MoveTo(Transform target, Vector3 destination, float duration)
+        {
+            yield return AxisMove.Move(target, destination,
+                Mathf.Max(0.01f, duration / timingScale),
+                (to, legDuration) => MoveLeg(target, to, legDuration));
+        }
+
+        IEnumerator MoveLeg(Transform target, Vector3 destination, float duration)
         {
             if (target == null) yield break;
             Vector3 start = target.position;
             float elapsed = 0f;
-            duration = Mathf.Max(0.01f, duration / timingScale);
+            duration = Mathf.Max(0.01f, duration);
             while (elapsed < duration)
             {
                 elapsed += Time.deltaTime;
                 MoveTarget(target, Vector3.Lerp(start, destination,
-                    Mathf.SmoothStep(0f, 1f, elapsed / duration)));
+                    Mathf.Clamp01(elapsed / duration)));
                 yield return null;
             }
             MoveTarget(target, destination);

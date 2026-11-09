@@ -275,5 +275,34 @@ namespace Morsoul.Tests
             Assert.That(TravelRules.CollectDestinations(null, null, null, 5, "x", null).Count,
                 Is.EqualTo(0));
         }
+
+        [Test]
+        public void AxisLock_DiagonalInput_CollapsesToHorizontal()
+        {
+            Assert.AreEqual(new Vector2(1f, 0f), HubPlayerController.AxisLock(new Vector2(1f, 1f)));
+            Assert.AreEqual(new Vector2(-1f, 0f), HubPlayerController.AxisLock(new Vector2(-1f, 0.4f)));
+            Assert.AreEqual(new Vector2(0f, 1f), HubPlayerController.AxisLock(new Vector2(0.3f, 1f)));
+            Assert.AreEqual(new Vector2(0f, -1f), HubPlayerController.AxisLock(new Vector2(0f, -1f)));
+            Assert.AreEqual(Vector2.zero, HubPlayerController.AxisLock(Vector2.zero));
+        }
+
+        [Test]
+        public void AxisMove_Diagonal_DecomposesIntoTwoAxisLegs()
+        {
+            var from = new Vector3(1f, 2f, 0f);
+            var to = new Vector3(4f, 6f, 0f);
+
+            var cornerH = AxisMove.Corner(from, to);
+            Assert.AreEqual(new Vector3(4f, 2f, 0f), cornerH, "horizontal leg first");
+
+            var cornerV = AxisMove.Corner(from, to, horizontalFirst: false);
+            Assert.AreEqual(new Vector3(1f, 6f, 0f), cornerV, "vertical leg first");
+
+            // Already axis-aligned: no corner inserted.
+            Assert.AreEqual(to, AxisMove.Corner(from, new Vector3(4f, 2f, 0f)));
+            Assert.AreEqual(to, AxisMove.Corner(from, new Vector3(1f, 6f, 0f)));
+
+            Assert.AreEqual(7f, AxisMove.PathLength(from, to));
+        }
     }
 }

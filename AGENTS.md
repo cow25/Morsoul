@@ -27,6 +27,10 @@ Run `git lfs install` on each checkout and `git lfs pull` before opening Unity. 
 
 Build Settings list only existing scenes, with Title first. Coordinate additions when investigation scenes arrive; do not add fake paths or guessed GUIDs. Active Build Profiles may override the shared scene list, so inspect the active profile during Play testing.
 
+## 2D movement rule
+
+All 2D movement — gameplay and in-world cutscenes — is sharp 90° axis-aligned, Undertale-style: never diagonal. `HubPlayerController.AxisLock` collapses input to one axis (horizontal wins ties); scripted movers route through `Morsoul.Hub.AxisMove`, which decomposes a diagonal destination into an L-path (horizontal leg first, `horizontalFirst: false` when the vertical leg must come first to clear obstacles). `AxisMove.Move` splits the duration budget by leg length so per-leg speed stays constant. New scripted movers must go through `AxisMove`, not raw `Vector3.Lerp` diagonals.
+
 ## 3D integration contract
 
 Do not add a second service locator or local copy of Focus. Assembly-CSharp can reference the auto-referenced Morsoul assemblies. If the 3D lane later adds an asmdef, explicitly reference `Morsoul.Core`, `Morsoul.Data`, and `Morsoul.Flow` only when used. Core must never reference that asmdef.
@@ -51,7 +55,7 @@ Core and panel engines are not equivalent to a complete playable campaign. The A
 ## Investigation restructuring groundwork
 
 - Saves now use version 4 with sealed presence flags for optional player/interrogation contexts; verify older seals against their original maps before migration. Do not bypass hash verification to handle Unity's null inline-object expansion.
-- `InvestigationEntryDriver` installs catalog-based opening/investigation dispatch and 2D suspect encounter entry. The Resources catalog defaults fallback off; F1 > Session enables it in Editor/Development runs. Normal access gates still apply. H/open/edit/submit are denied in hubs; old non-finale CaseDoors are inactive and the four suspects have explicit case IDs. Physical compatibility board objects remain, with full modal/encounter snapshot and production-content work still pending.
+- `InvestigationEntryDriver` installs catalog-based opening/investigation dispatch and 2D suspect encounter entry. The Resources catalog's `enableDevelopmentFallback` is enabled so unintegrated areas simulate in Editor/Development runs; F1 > Session toggles it per run. Normal access gates still apply. H/open/edit/submit are denied in hubs; old non-finale CaseDoors are inactive and the four suspects have explicit case IDs. Physical compatibility board objects remain, with full modal/encounter snapshot and production-content work still pending.
 - Keep readiness explicit: an Integrated area whose scene cannot load is an error, not permission to simulate. Simulation requires developer-only authorization, the global runtime opt-in and the catalog area's opt-in; the completion operation itself refuses release builds.
 - Preserve solved board state, prior mistakes/grades and once-only rewards. Record simulation source/clues through Session's provenance APIs, persisted in existing sealed flags; do not turn an unknown historical solve into a real or simulated solve merely on revisit.
 - L4 uses `ClueData.requiredFlag = Case4_BrokkFreed` as well as Aether Sight + Golem Eye; the Case 4 confession sets this flag. Preserve it when regenerating authored data.

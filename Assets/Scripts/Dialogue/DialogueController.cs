@@ -172,7 +172,7 @@ namespace Morsoul.Dialogue
             LastEndFrame = Time.frameCount;
             HideNamePrompt();
             StopRunner();
-            if (_root != null) _root.style.display = FadeActive ? DisplayStyle.Flex : DisplayStyle.None;
+            if (_root != null) _root.style.display = DisplayStyle.None;
             if (manageCursor)
             {
                 UnityEngine.Cursor.lockState = CursorLockMode.Locked;
@@ -266,16 +266,14 @@ namespace Morsoul.Dialogue
         }
 
         /// <summary>Lerps the full-screen fade overlay toward target opacity (1 = black).
-        /// The overlay lives inside the dialogue root, so fading in forces it visible.</summary>
+        /// The overlay sits outside the dialogue root so fading never reveals
+        /// the dialogue box or its placeholder content.</summary>
         public IEnumerator FadeTo(float targetOpacity, float seconds)
         {
             if (_fadeOverlay == null) yield break;
             targetOpacity = Mathf.Clamp01(targetOpacity);
             if (targetOpacity > 0f)
-            {
-                if (_root != null) _root.style.display = DisplayStyle.Flex;
                 _fadeOverlay.style.display = DisplayStyle.Flex;
-            }
             float start = _fadeOpacity;
             float elapsed = 0f;
             seconds = Mathf.Max(0.01f, seconds);
@@ -289,10 +287,7 @@ namespace Morsoul.Dialogue
             _fadeOpacity = targetOpacity;
             _fadeOverlay.style.opacity = targetOpacity;
             if (targetOpacity <= 0f)
-            {
                 _fadeOverlay.style.display = DisplayStyle.None;
-                if (_root != null) _root.style.display = _isPlaying ? DisplayStyle.Flex : DisplayStyle.None;
-            }
             FadeActive = targetOpacity > 0f;
         }
 
@@ -314,7 +309,7 @@ namespace Morsoul.Dialogue
         {
             _isPlaying = false;
             LastEndFrame = Time.frameCount;
-            if (_root != null) _root.style.display = FadeActive ? DisplayStyle.Flex : DisplayStyle.None;
+            if (_root != null) _root.style.display = DisplayStyle.None;
             if (manageCursor)
             {
                 UnityEngine.Cursor.lockState = CursorLockMode.Locked;
@@ -397,7 +392,11 @@ namespace Morsoul.Dialogue
             _fadeText = root.Q<Label>("FadeText");
             if (_nameInputConfirm != null)
                 _nameInputConfirm.RegisterCallback<ClickEvent>(_ => SubmitName());
-            if (_fadeOverlay != null) _fadeOverlay.style.opacity = _fadeOpacity;
+            if (_fadeOverlay != null)
+            {
+                _fadeOverlay.style.opacity = _fadeOpacity;
+                _fadeOverlay.style.display = _fadeOpacity > 0f ? DisplayStyle.Flex : DisplayStyle.None;
+            }
             for (int i = 0; i < _optionButtons.Length; i++)
             {
                 _optionButtons[i] = root.Q<Button>($"OptionButton{i}");

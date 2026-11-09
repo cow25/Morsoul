@@ -49,9 +49,10 @@ namespace Morsoul.Hub.Editor
                 var context = EnsureBaseScene(scene);
                 var player = FindComponent<HubPlayerController>(scene);
                 var camera = FindComponent<CameraFollow2D>(scene);
-                var cameraTarget = EnsureEmpty("ElizaIntroCameraTarget", new Vector3(8.75f, 0f, 0f));
-                var elizaCameraTarget = EnsureEmpty("ElizaCutawayCameraTarget", new Vector3(12f, 0f, 0f));
-                var elizaWalkStart = EnsureEmpty("ElizaWalkStart", new Vector3(14f, 0f, 0f));
+                RemoveRoot(scene, "ElizaIntroCameraTarget");
+                RemoveRoot(scene, "ElizaCutawayCameraTarget");
+                RemoveRoot(scene, "ElizaWalkStart");
+                var elizaSurvey = EnsureEmpty("ElizaSurveySpot", new Vector3(14.1f, 0.4f, 0f));
                 var eliza = EnsureQuad("Eliza", new Color(0.55f, 0.2f, 0.2f),
                     new Vector3(12f, 0f, 0f), active: false);
                 RemoveRoot(scene, "AncientChamberKey");
@@ -97,7 +98,9 @@ namespace Morsoul.Hub.Editor
                 playerEmote.transform.SetParent(player.transform, true);
                 playerEmote.gameObject.SetActive(false);
 
-                var trigger = EnsureEmpty("ElizaIntroTrigger", new Vector3(8f, -0.5f, 0f));
+                // The controller repositions the trigger at runtime from the
+                // camera's aspect; this authored X is just a sane fallback.
+                var trigger = EnsureEmpty("ElizaIntroTrigger", new Vector3(4.1f, -0.5f, 0f));
                 var triggerCollider = EnsureComponent<BoxCollider2D>(trigger);
                 triggerCollider.isTrigger = true;
                 triggerCollider.size = new Vector2(2f, 5f);
@@ -105,16 +108,14 @@ namespace Morsoul.Hub.Editor
                 intro.context = context;
                 intro.player = player;
                 intro.cameraFollow = camera;
-                intro.cameraTarget = cameraTarget.transform;
-                intro.elizaCameraTarget = elizaCameraTarget.transform;
+                intro.elizaSurveyMarker = elizaSurvey.transform;
                 intro.eliza = eliza.transform;
-                intro.elizaWalkStart = elizaWalkStart.transform;
                 intro.bushProp = bush.transform;
                 intro.eyeHighlight = beacon.transform;
                 intro.elizaEmote = elizaEmote;
                 intro.playerEmote = playerEmote;
                 intro.routeBlocker = blocker;
-                intro.safeResumePosition = new Vector3(6f, 0f, 0f);
+                intro.safeResumePosition = new Vector3(1.5f, 0f, 0f);
                 intro.nextSceneName = "Hub_LowerMarket";
                 intro.nextCaseId = 1;
                 intro.autoLoadNextScene = true;
