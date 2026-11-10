@@ -114,6 +114,7 @@ namespace Morsoul.Dialogue.Editor
                     "of Greater Restoration Draughts\u2014was breached three hours before " +
                     "dawn. Ten thousand gold ducats worth of inventory, dissolved into " +
                     "thin air! Ignatius claims dark cultists used forbidden volatile magic!",
+                    setsFlag: "C1_BriefingSeen",
                     next: "ovan_options"),
 
                 // Hub node. INVENTED prompt line (the doc gives no "anything else?"
@@ -177,16 +178,75 @@ namespace Morsoul.Dialogue.Editor
         }
 
         /// <summary>
-        /// Single-node testimony: Ignatius' formal claim (T2_01). The text is the
-        /// Case_01_Vault.md clue description delivered as spoken dialogue.
+        /// Master Alchemist Ignatius dialogue graph: haughty opening monologue,
+        /// formal claim registering T2_01, inquiry menu, and conditional access
+        /// responses based on C1_WarrantGranted. Subsequent interactions branch
+        /// directly into the menu via Ignatius_ClaimHeard.
         /// </summary>
         static void GenerateIgnatiusClaim(ClueData claim)
         {
-            Dialogue("D_Ignatius_Claim_01", "ignatius_claim",
+            Dialogue("D_Ignatius_Claim_01", "ignatius_repeat",
+                // Repeat interaction: if claim already registered, goes straight to options.
+                // If not yet registered, GoTo skips to nextNodeId ("ignatius_greeting").
+                Node("ignatius_repeat", "Master Alchemist Ignatius",
+                    "You again? Stop hovering around my parlor! Unless the City Council " +
+                    "has approved my emergency compensation, I have nothing to say to you.",
+                    requiresFlag: "Ignatius_ClaimHeard",
+                    options: new[]
+                    {
+                        Option("Inquire about the destroyed vault & dark magic", "ignatius_vault"),
+                        Option("Inquire about crime scene access", "ignatius_access"),
+                        Option("Conclude the inquiry", "ignatius_leave"),
+                    },
+                    next: "ignatius_greeting"),
+
+                // Initial greeting: haughty aristocratic monologue per Specs §2.2.
+                Node("ignatius_greeting", "Master Alchemist Ignatius",
+                    "You dare cross my threshold with mud on your treads, automaton? " +
+                    "An entire quarter-century of alchemical mastery reduced to vapor by dark magic, " +
+                    "and the Guild insults me with a mechanical scrap-collector?!",
+                    next: "ignatius_claim"),
+
+                // Formal claim: registers T2_01 (Ignatius' Initial Claim).
                 Node("ignatius_claim", "Master Alchemist Ignatius",
                     "A rogue infiltrator breached my inner sanctum using volatile dark " +
-                    "magic, destroying my entire life's work!",
-                    clue: claim));
+                    "magic, destroying my entire life\u2019s work! Ten thousand gold ducats " +
+                    "worth of inventory, dissolved into thin air! If the City Commercial " +
+                    "Treasury does not reimburse me before noon, Asterveil faces ruin!",
+                    clue: claim,
+                    setsFlag: "Ignatius_ClaimHeard",
+                    next: "ignatius_menu"),
+
+                // Central inquiry hub.
+                Node("ignatius_menu", "Master Alchemist Ignatius",
+                    "Well? What else does the Investigator's Guild want with me?",
+                    options: new[]
+                    {
+                        Option("Inquire about the destroyed vault & dark magic", "ignatius_vault"),
+                        Option("Inquire about crime scene access", "ignatius_access"),
+                        Option("Conclude the inquiry", "ignatius_leave"),
+                    }),
+
+                // Branch 1: Vault & dark magic details.
+                Node("ignatius_vault", "Master Alchemist Ignatius",
+                    "Two hundred sealed crates of Batch #408 Greater Restoration Draughts! " +
+                    "What else could melt through Dwarven cold-iron tumblers without tripping " +
+                    "the municipal ward-chimes? Forbidden volatile sorcery! Do not lecture me " +
+                    "on alchemy, construct\u2014go apprehend the dark cultists!",
+                    next: "ignatius_menu"),
+
+                // Branch 2: Access inquiry.
+                Node("ignatius_access", "Master Alchemist Ignatius",
+                    "The subterranean vault is sealed under strict quarantine! If you don't " +
+                    "have Guildmaster Ovan's signed forensic warrant, you will not set one " +
+                    "iron toe down those stairs. And if you DO have his parchment... mind your " +
+                    "clunky treads down there! If you shatter a single undamaged alembic, I " +
+                    "shall hold the Investigator's Guild personally liable for the damages!",
+                    next: "ignatius_menu"),
+
+                // Exit branch.
+                Node("ignatius_leave", "Master Alchemist Ignatius",
+                    "Hmph. Then go find the culprits and stop obstructing honest commerce!"));
         }
 
         /// <summary>

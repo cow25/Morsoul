@@ -55,6 +55,13 @@ namespace Morsoul.Hub.Editor
             // Bounds cover both floors: hall y[-4.5,5.5], office y[19.5,29.5].
             cameraFollow.boundsMin = new Vector2(-8f, -6f);
             cameraFollow.boundsMax = new Vector2(8f, 30f);
+            cameraFollow.useBounds = true;
+            var cam = cameraFollow.GetComponent<Camera>();
+            if (cam != null)
+            {
+                cam.clearFlags = CameraClearFlags.SolidColor;
+                cam.backgroundColor = new Color(0.06f, 0.05f, 0.07f, 1f);
+            }
             HubSceneFactory.CreateSpawnPoint();
             var spawn = GameObject.FindGameObjectWithTag("PlayerSpawn");
             if (spawn != null) spawn.transform.position = new Vector3(0f, -3f, 0f);
@@ -76,38 +83,45 @@ namespace Morsoul.Hub.Editor
             exit.entryId = "guild_door";
 
             // Stair pair between the two stacked floors.
-            var landingUp = Marker("StairLanding_Up", new Vector3(6.5f, 20.4f, 0f));
-            var landingDown = Marker("StairLanding_Down", new Vector3(6.5f, 2.5f, 0f));
+            var landingUp = Marker("StairLanding_Up", new Vector3(5.5f, 21.0f, 0f));
+            var landingDown = Marker("StairLanding_Down", new Vector3(5.5f, 2.8f, 0f));
             HubSceneFactory.CreateInteractable("StairsUp",
-                new Color(0.5f, 0.4f, 0.25f), new Vector3(6.5f, 2.9f, 0f),
+                new Color(0.5f, 0.4f, 0.25f), new Vector3(6.5f, 3.6f, 0f),
                 out StairInteractable stairsUp);
             stairsUp.promptText = "[E] Upstairs";
             stairsUp.destination = landingUp;
             HubSceneFactory.CreateInteractable("StairsDown",
-                new Color(0.5f, 0.4f, 0.25f), new Vector3(6.5f, 20.9f, 0f),
+                new Color(0.5f, 0.4f, 0.25f), new Vector3(6.5f, 21.0f, 0f),
                 out StairInteractable stairsDown);
             stairsDown.promptText = "[E] Downstairs";
             stairsDown.destination = landingDown;
 
-            // Front desk: clerk behind the counter, notice board beside it.
+            // Front desk: clerk right behind the counter, trigger reaching across to the customer side.
             HubSceneFactory.CreateInteractable("GuildClerk",
-                new Color(0.75f, 0.6f, 0.45f), new Vector3(0f, 3.2f, 0f),
+                new Color(0.75f, 0.6f, 0.45f), new Vector3(0f, 2.3f, 0f),
                 out NpcInteractable clerk);
             clerk.promptText = "[E] Talk";
             clerk.dialogue = LoadDialogue(GuildDialogueFolder + "/D_GuildClerk.asset");
+            var clerkCol = clerk.GetComponent<BoxCollider2D>();
+            if (clerkCol != null)
+            {
+                clerkCol.offset = new Vector2(0f, -0.8f);
+                clerkCol.size = new Vector2(3.2f, 2.4f);
+            }
 
+            // Notice board placed prominently to the left of the counter.
             HubSceneFactory.CreateInteractable("GuildBoard",
-                new Color(0.6f, 0.48f, 0.3f), new Vector3(-3f, 1.8f, 0f),
+                new Color(0.6f, 0.48f, 0.3f), new Vector3(-2.4f, 2.2f, 0f),
                 out InspectionInteractable board);
             board.promptText = "[E] Inspect";
             board.blocksMovement = true;
 
-            // Adventurers — the guild floor feels inhabited.
+            // Adventurers — positioned at tavern tables and side walls with clear walking paths.
             foreach (var (name, pos) in new (string, Vector3)[]
             {
-                ("Adventurer_Scarred", new Vector3(3.2f, -2.2f, 0f)),
-                ("Adventurer_Young", new Vector3(-4.2f, -2.6f, 0f)),
-                ("Adventurer_Ranger", new Vector3(5.4f, 1.3f, 0f)),
+                ("Adventurer_Young", new Vector3(-4.5f, -2.4f, 0f)),
+                ("Adventurer_Scarred", new Vector3(4.5f, -2.4f, 0f)),
+                ("Adventurer_Ranger", new Vector3(5.8f, 0.8f, 0f)),
             })
             {
                 HubSceneFactory.CreateInteractable(name,
@@ -116,12 +130,18 @@ namespace Morsoul.Hub.Editor
                 npc.dialogue = LoadDialogue(GuildDialogueFolder + "/D_GuildBarks.asset");
             }
 
-            // Ovan — upstairs office, mission interaction unchanged.
+            // Ovan — upstairs office behind his desk, with trigger reaching across to visitor side.
             HubSceneFactory.CreateInteractable("Ovan",
-                new Color(0.8f, 0.6f, 0.2f), new Vector3(0f, 26.4f, 0f),
+                new Color(0.8f, 0.6f, 0.2f), new Vector3(0f, 26.0f, 0f),
                 out NpcInteractable ovan);
             ovan.promptText = "[E] Talk";
             ovan.dialogue = LoadDialogue(OvanDialoguePath);
+            var ovanCol = ovan.GetComponent<BoxCollider2D>();
+            if (ovanCol != null)
+            {
+                ovanCol.offset = new Vector2(0f, -1.0f);
+                ovanCol.size = new Vector2(3.4f, 2.6f);
+            }
 
             // Eliza stand-in for the intro escort (activated by the controller).
             var eliza = HubSceneFactory.NewQuadObject("Eliza",

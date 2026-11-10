@@ -67,29 +67,81 @@ namespace Morsoul.Hub
 
         void OnInvestigationChanged(InvestigationStateChangedEvent _) => RefreshObjective();
 
+        /// <summary>The case text currently shown.</summary>
+        public string AppliedCaseText { get; private set; }
+
         /// <summary>The objective text currently shown (post-investigation aware).</summary>
         public string AppliedObjective { get; private set; }
 
         /// <summary>
-        /// Recomputes the objective from session truth: once the bound case's
-        /// interrogation is unlocked the post-investigation text replaces the
-        /// entry objective. Called on enable and after committed investigation
-        /// changes (including the development fallback).
+        /// Recomputes the objective from session truth: gates Case 1 behind
+        /// the Lower Market arrival and Guild first-visit sequence, and swaps in
+        /// the post-investigation objective once interrogation is unlocked.
         /// </summary>
         public void RefreshObjective()
         {
             var session = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session : null;
             int caseId = objectiveCaseId > 0 ? objectiveCaseId
                 : session != null ? session.CurrentCase : 0;
-            bool unlocked = session != null && session.CanStartInterrogation(caseId);
-            ApplyObjective(unlocked
-                ? (string.IsNullOrEmpty(postInvestigationObjective)
-                    ? DefaultPostInvestigationObjective : postInvestigationObjective)
-                : objectiveText);
+
+            string effectiveCaseText = caseText;
+            string effectiveObjective = objectiveText;
+
+            if (caseId == 1 && session != null && session.PrologueCompleted)
+            {
+                if (!session.HasFlag(GuildIntroRules.ArrivedFlag))
+                {
+                    effectiveCaseText = "";
+                    effectiveObjective = "Follow Eliza to the Investigator's Guild.";
+                }
+                else if (!session.HasFlag(GuildIntroRules.IntroSeenFlag))
+                {
+                    effectiveCaseText = "";
+                    effectiveObjective = "Follow Eliza to meet Guildmaster Ovan.";
+                }
+                else if (!GuildIntroRules.IsCaseOneActive(session))
+                {
+                    effectiveCaseText = "";
+                    effectiveObjective = "Speak with Guildmaster Ovan upstairs in the Guild hall.";
+                }
+                else
+                {
+                    effectiveCaseText = caseText;
+                    bool unlocked = session.CanStartInterrogation(caseId);
+                    if (unlocked)
+                    {
+                        effectiveObjective = string.IsNullOrEmpty(postInvestigationObjective)
+                            ? DefaultPostInvestigationObjective
+                            : postInvestigationObjective;
+                    }
+                    else if (session.HasFlag(GuildIntroRules.WarrantFlag))
+                    {
+                        effectiveObjective = "Investigate the poisoned vault via the cellar grate.";
+                    }
+                    else
+                    {
+                        effectiveObjective = string.IsNullOrEmpty(objectiveText)
+                            ? "Interview Merchant Guildmaster Ovan for storage clearance."
+                            : objectiveText;
+                    }
+                }
+            }
+            else
+            {
+                bool unlocked = session != null && session.CanStartInterrogation(caseId);
+                effectiveObjective = unlocked
+                    ? (string.IsNullOrEmpty(postInvestigationObjective)
+                        ? DefaultPostInvestigationObjective : postInvestigationObjective)
+                    : objectiveText;
+            }
+
+            ApplyObjective(effectiveCaseText, effectiveObjective);
         }
 
         void Update()
         {
+            RefreshObjective();
+
             var focus = CoreRuntime.Instance != null ? CoreRuntime.Instance.Focus : null;
             if (focus == null) return;
             if (!Mathf.Approximately(focus.Percent, _lastFocus)
@@ -108,13 +160,20 @@ namespace Morsoul.Hub
             RefreshObjective();
         }
 
-        void ApplyObjective(string text)
+        void ApplyObjective(string text) => ApplyObjective(caseText, text);
+
+        void ApplyObjective(string currentCaseText, string text)
         {
+            if (AppliedCaseText == currentCaseText && AppliedObjective == text &&
+                _caseLabel != null && _objectiveLabel != null)
+                return;
+
+            AppliedCaseText = currentCaseText;
             AppliedObjective = text;
             if (_caseLabel != null)
             {
-                _caseLabel.text = caseText ?? "";
-                _caseLabel.style.display = string.IsNullOrEmpty(caseText)
+                _caseLabel.text = currentCaseText ?? "";
+                _caseLabel.style.display = string.IsNullOrEmpty(currentCaseText)
                     ? DisplayStyle.None : DisplayStyle.Flex;
             }
             if (_objectiveLabel != null)

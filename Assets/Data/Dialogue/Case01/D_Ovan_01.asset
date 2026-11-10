@@ -46,7 +46,7 @@ MonoBehaviour:
     speakerPortrait: {fileID: 0}
     text: "It\u2019s financial ruin, that's what it is! Master Ignatius\u2019 subterranean storage vault\u2014the one holding the seasonal reserve of Greater Restoration Draughts\u2014was breached three hours before dawn. Ten thousand gold ducats worth of inventory, dissolved into thin air! Ignatius claims dark cultists used forbidden volatile magic!"
     registersClue: {fileID: 0}
-    setsFlag: 
+    setsFlag: C1_BriefingSeen
     requiresFlag: 
     options: []
     nextNodeId: ovan_options

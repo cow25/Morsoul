@@ -24,6 +24,7 @@ namespace Morsoul.Hub
         [FormerlySerializedAs("elizaWalkStart")]
         public Transform elizaSurveyMarker;
         public Transform eliza;
+        public VisualProfile elizaProfile;
         public Transform bushProp;
         [FormerlySerializedAs("diagnosticBeacon")]
         public Transform eyeHighlight;
@@ -80,9 +81,22 @@ namespace Morsoul.Hub
             if (cameraFollow == null) cameraFollow = FindAnyObjectByType<CameraFollow2D>();
             if (player != null) _playerBody = player.GetComponent<Rigidbody2D>();
             // Eliza moves during the sequence — she needs the same dynamic
-            // Y-sort the player and interactables carry.
-            if (eliza != null && eliza.GetComponent<YSort2D>() == null)
-                eliza.gameObject.AddComponent<YSort2D>();
+            // Y-sort the player and interactables carry, and her visual profile.
+            if (eliza != null)
+            {
+                if (eliza.GetComponent<YSort2D>() == null)
+                    eliza.gameObject.AddComponent<YSort2D>();
+                if (eliza.GetComponent<EntityVisual>() == null)
+                {
+                    var visual = eliza.gameObject.AddComponent<EntityVisual>();
+                    visual.profile = elizaProfile;
+#if UNITY_EDITOR
+                    if (visual.profile == null)
+                        visual.profile = UnityEditor.AssetDatabase.LoadAssetAtPath<VisualProfile>("Assets/Art/Profiles/Eliza.asset");
+#endif
+                    visual.Apply();
+                }
+            }
 
             PositionTriggerForReveal();
 

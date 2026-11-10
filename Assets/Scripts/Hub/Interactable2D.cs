@@ -9,6 +9,7 @@ namespace Morsoul.Hub
     /// while in range and calls Interact on the interact key. Subclasses must
     /// call base.Interact(ctx) so the Interacted event fires.
     /// </summary>
+    [ExecuteAlways]
     [RequireComponent(typeof(YSort2D))]
     public class Interactable2D : MonoBehaviour
     {
@@ -37,6 +38,11 @@ namespace Morsoul.Hub
             // sorter exists on objects serialized before the requirement.
             if (GetComponent<YSort2D>() == null)
                 gameObject.AddComponent<YSort2D>();
+            if (BlocksMovement) EnsureBlockCollider();
+        }
+
+        void OnEnable()
+        {
             if (BlocksMovement) EnsureBlockCollider();
         }
 

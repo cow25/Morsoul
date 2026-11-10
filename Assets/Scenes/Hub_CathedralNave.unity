@@ -2990,6 +2990,7 @@ MonoBehaviour:
   routeKey: caseloop
   checkpointReason: CaseDoor
   offerTravelMenu: 0
+  exitsInvestigation: 0
 --- !u!61 &1511586044
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -3463,6 +3464,7 @@ MonoBehaviour:
   routeKey: hub.1
   checkpointReason: Carrier
   offerTravelMenu: 1
+  exitsInvestigation: 0
 --- !u!61 &1981092136
 BoxCollider2D:
   m_ObjectHideFlags: 0

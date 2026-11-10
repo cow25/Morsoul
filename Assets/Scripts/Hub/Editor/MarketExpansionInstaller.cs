@@ -25,7 +25,10 @@ namespace Morsoul.Hub.Editor
         {
             GuildIntroContentGenerator.Generate();
 
-            var scene = EditorSceneManager.OpenScene(MarketPath, OpenSceneMode.Single);
+            var preExisting = SceneManager.GetSceneByPath(MarketPath);
+            bool wasOpen = preExisting.IsValid() && preExisting.isLoaded;
+            var scene = wasOpen ? preExisting : EditorSceneManager.OpenScene(MarketPath, OpenSceneMode.Single);
+            SceneManager.SetActiveScene(scene);
             try
             {
                 // Ovan's desk is upstairs inside the Guild now — keep the old
@@ -71,6 +74,65 @@ namespace Morsoul.Hub.Editor
                         new Color(0.6f, 0.5f, 0.4f), pos, out NpcInteractable npc);
                     npc.promptText = "[E] Talk";
                     npc.dialogue = AssetDatabase.LoadAssetAtPath<DialogueData>(BarksPath);
+                }
+
+                // Market crowd expansion: cluster of multiple distinct NPC sprites
+                // gathered around MarketCrowd at (-2.5, 1.5).
+                var centralCrowd = FindRoot(scene, "MarketCrowd");
+                if (centralCrowd != null)
+                {
+                    var crowdNpc = centralCrowd.GetComponent<NpcInteractable>();
+                    if (crowdNpc != null)
+                    {
+                        crowdNpc.promptText = "[E] Listen";
+                        crowdNpc.blocksMovement = true;
+                    }
+                }
+
+                foreach (var (name, profileName, pos, tint) in new (string, string, Vector3, Color)[]
+                {
+                    ("MarketCrowd_Vendor", "Vendor", new Vector3(-2.0f, 1.8f, 0f), new Color(0.6f, 0.5f, 0.4f)),
+                    ("MarketCrowd_Townsperson", "Townsperson", new Vector3(-3.1f, 1.5f, 0f), new Color(0.5f, 0.55f, 0.45f)),
+                    ("MarketCrowd_Adventurer", "Adventurer_Young", new Vector3(-2.4f, 0.9f, 0f), new Color(0.55f, 0.45f, 0.35f)),
+                })
+                {
+                    var existingMember = FindRoot(scene, name);
+                    if (existingMember == null)
+                    {
+                        HubSceneFactory.CreateInteractable(name, tint, pos, out NpcInteractable crowdNpc);
+                        crowdNpc.promptText = "[E] Listen";
+                        crowdNpc.dialogue = AssetDatabase.LoadAssetAtPath<DialogueData>(BarksPath);
+                        crowdNpc.blocksMovement = true;
+                        var visual = crowdNpc.GetComponent<EntityVisual>();
+                        if (visual != null)
+                        {
+                            visual.profile = AssetDatabase.LoadAssetAtPath<VisualProfile>(
+                                $"Assets/Art/Profiles/{profileName}.asset");
+                            visual.Apply(visual.profile);
+                        }
+                    }
+                }
+
+                // Rest Spot: relocated to the lower-right area of the market hub.
+                var restSpot = FindRoot(scene, "RestSpot");
+                if (restSpot != null)
+                {
+                    restSpot.transform.position = new Vector3(5.0f, -2.0f, 0f);
+                }
+
+                // Ignatius: ensure solid collider, dialogue reference, and Case 1 wiring.
+                var ignatius = FindRoot(scene, "Ignatius");
+                if (ignatius != null)
+                {
+                    var ignatiusNpc = ignatius.GetComponent<NpcInteractable>();
+                    if (ignatiusNpc != null)
+                    {
+                        ignatiusNpc.blocksMovement = true;
+                        ignatiusNpc.interrogationCaseId = 1;
+                        ignatiusNpc.promptText = "[E] Talk";
+                        ignatiusNpc.dialogue = AssetDatabase.LoadAssetAtPath<DialogueData>(
+                            "Assets/Data/Dialogue/Case01/D_Ignatius_Claim_01.asset");
+                    }
                 }
 
                 // Eliza stand-in for the arrival escort.
@@ -128,7 +190,7 @@ namespace Morsoul.Hub.Editor
             }
             finally
             {
-                if (scene.IsValid() && scene.isLoaded)
+                if (!wasOpen && scene.IsValid() && scene.isLoaded)
                     EditorSceneManager.CloseScene(scene, true);
             }
         }

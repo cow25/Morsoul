@@ -242,8 +242,11 @@ namespace Morsoul.Hub.Editor
         {
             foreach (var rest in UnityEngine.Object.FindObjectsByType<RestSpot>())
                 if (rest.gameObject.scene == scene) return;
+            Vector3 pos = scene.path == MarketPath
+                ? new Vector3(5f, -2f, 0f)
+                : new Vector3(-3f, 2.5f, 0f);
             HubSceneFactory.CreateInteractable("RestSpot",
-                new Color(0.4f, 0.55f, 0.35f), new Vector3(-3f, 2.5f, 0f),
+                new Color(0.4f, 0.55f, 0.35f), pos,
                 out RestSpot spot);
             spot.promptText = "[E] Rest";
         }
@@ -297,12 +300,18 @@ namespace Morsoul.Hub.Editor
 
         // --- Per-hub content -----------------------------------------------------
 
-        /// <summary>Lower Market already ships its Case 1 content; nothing extra.</summary>
+        /// <summary>Lower Market already ships its Case 1 content; ensure Ignatius settings.</summary>
         static void PopulateMarket()
         {
             var suspect = FindRoot(SceneManager.GetActiveScene(), "Ignatius");
             var npc = suspect != null ? suspect.GetComponent<NpcInteractable>() : null;
-            if (npc != null) npc.interrogationCaseId = 1;
+            if (npc != null)
+            {
+                npc.interrogationCaseId = 1;
+                npc.blocksMovement = true;
+                if (npc.dialogue == null)
+                    npc.dialogue = AssetDatabase.LoadAssetAtPath<DialogueData>("Assets/Data/Dialogue/Case01/D_Ignatius_Claim_01.asset");
+            }
         }
 
         static void PopulateCathedral()

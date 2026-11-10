@@ -59,7 +59,8 @@ namespace Morsoul.Hub.Editor
             ["GuildRoof"]   = new PropDef { Tint = new Color(0.50f, 0.20f, 0.18f), Size = new Vector2(3.8f, 1.2f) },
             ["Well"]        = new PropDef { Tint = new Color(0.42f, 0.40f, 0.44f), Size = new Vector2(1.2f, 0.9f), Blocks = true, ColSize = new Vector2(1.1f, 0.7f), ColOffset = new Vector2(0f, -0.1f) },
 
-            ["GroundGrass"] = new PropDef { Tint = new Color(0.17f, 0.31f, 0.17f), Size = new Vector2(17f, 12f), Ground = true },
+            ["GroundGrass"]     = new PropDef { Tint = new Color(0.24f, 0.44f, 0.24f), Size = new Vector2(17f, 12f), Ground = true },
+            ["GroundGrassWide"] = new PropDef { Tint = new Color(0.24f, 0.44f, 0.24f), Size = new Vector2(38f, 14f), Ground = true },
             ["GroundWood"]  = new PropDef { Tint = new Color(0.36f, 0.28f, 0.19f), Size = new Vector2(17f, 12f), Ground = true },
             ["GroundDirt"]  = new PropDef { Tint = new Color(0.30f, 0.26f, 0.19f), Size = new Vector2(17f, 12f), Ground = true },
             ["GroundStone"] = new PropDef { Tint = new Color(0.29f, 0.27f, 0.25f), Size = new Vector2(17f, 12f), Ground = true },
@@ -262,26 +263,35 @@ namespace Morsoul.Hub.Editor
 
         static List<P> PrologueWilderness()
         {
-            // Main scene already has treeline colliders, so decor here carries
-            // none — scatter sits inside the blocked bands, not the path.
-            var p = new List<P> { new P("GroundGrass", 7f, -0.3f) };
-            for (float x = -9f; x <= 23f; x += 1.6f)
+            // Full-width ground covering the entire approach from ruins to market.
+            var p = new List<P> { new P("GroundGrassWide", 7f, -0.3f) };
+
+            // Natural, clean dirt trail through the center (spacious, retro spacing).
+            for (float x = -9f; x <= 23f; x += 2.4f)
             {
-                p.Add(new P((Mathf.RoundToInt(x * 10f) & 2) == 0 ? "Tree" : "Pine", x, 2.7f));
-                p.Add(new P((Mathf.RoundToInt(x * 10f) & 2) == 0 ? "Pine" : "Tree", x, -3.5f));
+                p.Add(new P("PathDirt", x, -0.75f));
             }
+
+            // Clean, uncluttered northern and southern treelines (single row with breathing room).
+            for (float x = -9f; x <= 23f; x += 3.2f)
+            {
+                p.Add(new P((Mathf.RoundToInt(x * 10f) & 2) == 0 ? "Tree" : "Pine", x, 2.8f));
+                p.Add(new P((Mathf.RoundToInt(x * 10f) & 2) == 0 ? "Pine" : "Tree", x, -3.3f));
+            }
+
             // Ruins entrance framing at the west end.
             p.Add(new P("Ruin", -9.3f, 0.9f)); p.Add(new P("Ruin", -9.3f, -2.2f));
-            // Scatter decor along the walkable strip edges.
-            foreach (var (x, y) in new[] { (-6f, 1.3f), (2f, 1.4f), (9f, 1.2f), (16f, 1.3f), (-2f, -2.2f), (6f, -2.3f), (18f, -2.1f) })
+
+            // Minimalist scatter decor along the edges with plenty of open space.
+            foreach (var (x, y) in new[] { (-5f, 1.4f), (4f, 1.4f), (12f, 1.4f), (18f, 1.4f), (-2f, -2.0f), (8f, -2.0f), (16f, -2.0f) })
                 p.Add(new P("Bush", x, y));
-            foreach (var (x, y) in new[] { (-4f, 1.5f), (11f, -2.3f), (21f, 1.4f) })
+            foreach (var (x, y) in new[] { (-4f, 1.5f), (10f, -2.1f), (20f, 1.4f) })
                 p.Add(new P("Rock", x, y));
-            foreach (var (x, y) in new[] { (-5f, -1.8f), (3f, -2.4f), (14f, 1.5f), (20f, -1.9f) })
+            foreach (var (x, y) in new[] { (-6f, -1.8f), (2f, -2.2f), (14f, 1.5f), (21f, -1.9f) })
                 p.Add(new P("Flower", x, y));
-            foreach (var (x, y) in new[] { (-7f, 1.1f), (0f, 1.5f), (5f, -2.4f), (10f, 1.4f), (15f, -2.3f), (22f, -2.2f) })
+            foreach (var (x, y) in new[] { (-7f, 1.1f), (0f, 1.5f), (6f, -2.2f), (15f, -2.2f) })
                 p.Add(new P("Grass", x, y));
-            p.Add(new P("DeadTree", 4f, 1.6f)); p.Add(new P("DeadTree", 19f, 1.7f));
+            p.Add(new P("DeadTree", 6f, 2.9f));
             return p;
         }
 
@@ -332,9 +342,9 @@ namespace Morsoul.Hub.Editor
         {
             var def = Types[placement.Type];
             float z = def.Ground
-                ? 0.45f
+                ? 2.0f
                 : def.Floor
-                    ? 0.44f
+                    ? 1.9f
                     : placement.Y * YSort2D.DepthPerUnitY + PropDepthBias + index * 0.00001f;
             var go = HubSceneFactory.NewQuadObject(
                 $"Env_{placement.Type}_{index:D2}", def.Tint,
@@ -399,38 +409,51 @@ namespace Morsoul.Hub.Editor
                 p.Add(new P("WallWood", 7.5f, y));
             }
             // Ground floor: front counter with the clerk behind it, notice
-            // board beside it, tables/chairs, shelf row on the west wall,
-            // carpet approach, guild banner, stairs at the east side.
+            // board beside it, tavern tables/chairs on left & right, shelf row,
+            // continuous carpet approach, guild banners, stairs at the east side.
             p.Add(new P("Counter", 0f, 1.8f));
-            p.Add(new P("Bookshelf", -6.6f, 4.6f)); p.Add(new P("Bookshelf", -5.4f, 4.6f));
-            p.Add(new P("Bookshelf", -3.6f, 4.6f));
-            p.Add(new P("Table", -3.5f, -1.8f)); p.Add(new P("Chair", -3.5f, -0.9f));
-            p.Add(new P("Chair", -4.3f, -1.8f)); p.Add(new P("Chair", -2.7f, -1.8f));
-            p.Add(new P("Table", 3.5f, -1.2f)); p.Add(new P("Chair", 3.5f, -0.3f));
-            p.Add(new P("Chair", 2.8f, -1.9f));
-            p.Add(new P("Carpet", 0f, -1.2f)); p.Add(new P("Carpet", 0f, -2.2f));
+            p.Add(new P("Bookshelf", -6.4f, 4.6f)); p.Add(new P("Bookshelf", -5.2f, 4.6f));
+            p.Add(new P("Bookshelf", -4.0f, 4.6f)); p.Add(new P("Bookshelf", 4.0f, 4.6f));
+            // Symmetrical guild hall tables (west and east) leaving a wide, grand central hall.
+            p.Add(new P("Table", -4.5f, -1.5f));
+            p.Add(new P("Chair", -4.5f, -0.6f));
+            p.Add(new P("Chair", -5.4f, -1.5f));
+            p.Add(new P("Table", 4.5f, -1.5f));
+            p.Add(new P("Chair", 4.5f, -0.6f));
+            p.Add(new P("Chair", 5.4f, -1.5f));
+            // Grand central carpet runner straight from the entrance to the front counter.
+            p.Add(new P("Carpet", 0f, -3.2f));
+            p.Add(new P("Carpet", 0f, -2.2f));
+            p.Add(new P("Carpet", 0f, -1.2f));
             p.Add(new P("Carpet", 0f, -0.2f));
+            p.Add(new P("Carpet", 0f, 0.8f));
+            // Flanking guild banners behind the reception desk.
             p.Add(new P("Banner", -1.8f, 4.9f)); p.Add(new P("Banner", 1.8f, 4.9f));
-            p.Add(new P("Candle", -4f, 0.5f)); p.Add(new P("Candle", 4f, 0.5f));
+            p.Add(new P("Candle", -6.8f, 1.0f)); p.Add(new P("Candle", 6.8f, 1.0f));
             p.Add(new P("Stairs", 6.5f, 3.6f));
             p.Add(new P("Barrel", -6.5f, -3.6f)); p.Add(new P("Barrel", -5.8f, -3.9f));
-            p.Add(new P("Crate", 6.5f, -3.7f));
+            p.Add(new P("Crate", 6.5f, -3.7f)); p.Add(new P("Crate", 5.8f, -3.9f));
+
             // Upstairs office: desk, visitor chairs, library wall, window
             // light rug, stair landing at the east.
-            p.Add(new P("Counter", 0f, 24.8f));
-            p.Add(new P("Chair", -0.7f, 23.4f)); p.Add(new P("Chair", 0.7f, 23.4f));
-            p.Add(new P("Bookshelf", -5.8f, 28.6f)); p.Add(new P("Bookshelf", -4.6f, 28.6f));
-            p.Add(new P("Bookshelf", 4.6f, 28.6f)); p.Add(new P("Bookshelf", 5.8f, 28.6f));
-            p.Add(new P("Carpet", 0f, 23f)); p.Add(new P("Carpet", 0f, 22f));
-            p.Add(new P("Banner", -2f, 28.9f)); p.Add(new P("Banner", 2f, 28.9f));
-            p.Add(new P("Candle", -3f, 26.5f)); p.Add(new P("Candle", 3f, 26.5f));
-            p.Add(new P("Stairs", 6.5f, 21f));
+            p.Add(new P("Counter", 0f, 25.2f));
+            p.Add(new P("Chair", -1.0f, 24.2f)); p.Add(new P("Chair", 1.0f, 24.2f));
+            p.Add(new P("Bookshelf", -5.6f, 28.6f)); p.Add(new P("Bookshelf", -4.4f, 28.6f));
+            p.Add(new P("Bookshelf", -3.2f, 28.6f));
+            p.Add(new P("Bookshelf", 3.2f, 28.6f)); p.Add(new P("Bookshelf", 4.4f, 28.6f));
+            p.Add(new P("Bookshelf", 5.6f, 28.6f));
+            p.Add(new P("Carpet", 0f, 24.2f)); p.Add(new P("Carpet", 0f, 23.2f));
+            p.Add(new P("Carpet", 0f, 22.2f)); p.Add(new P("Carpet", 0f, 21.2f));
+            p.Add(new P("Banner", -1.8f, 28.9f)); p.Add(new P("Banner", 1.8f, 28.9f));
+            p.Add(new P("Candle", -4.5f, 25.5f)); p.Add(new P("Candle", 4.5f, 25.5f));
+            p.Add(new P("Stairs", 6.5f, 21.0f));
             return p;
         }
 
         /// <summary>One shared profile per prop type, named Prop_&lt;Type&gt;.</summary>
         static VisualProfile EnsurePropProfile(string type)
         {
+            if (type == "GroundGrassWide") type = "GroundGrass";
             HubSceneFactory.EnsureFolder(ProfilesFolder);
             string path = $"{ProfilesFolder}/Prop_{type}.asset";
             var profile = AssetDatabase.LoadAssetAtPath<VisualProfile>(path);

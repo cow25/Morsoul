@@ -15,6 +15,17 @@ namespace Morsoul.Hub
         public const string IntroPendingFlag = "Guild.IntroPending";
         /// <summary>Latched when the in-Guild introduction has completed.</summary>
         public const string IntroSeenFlag = "Guild.IntroSeen";
+        /// <summary>Latched when Ovan briefs the player on the vault incident.</summary>
+        public const string BriefingSeenFlag = "C1_BriefingSeen";
+        /// <summary>Latched when Ovan grants the vault entry warrant.</summary>
+        public const string WarrantFlag = "C1_WarrantGranted";
+
+        /// <summary>
+        /// True when Case 1 mission has formally been briefed or accepted.
+        /// Before this, Lower Market and Guild introduction beats are active.
+        /// </summary>
+        public static bool IsCaseOneActive(SessionState session) =>
+            session != null && (session.HasFlag(BriefingSeenFlag) || session.HasFlag(WarrantFlag));
 
         /// <summary>
         /// The guided arrival only fires straight out of the prologue. A save

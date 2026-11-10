@@ -27,14 +27,14 @@ namespace Morsoul.Hub
 
         [Header("Staging")]
         public Vector3 elizaEntry = new Vector3(0.8f, -3f, 0f);
-        public Vector3 elizaDesk = new Vector3(1.6f, 0.6f, 0f);
-        public Vector3 playerDesk = new Vector3(-0.4f, 0.2f, 0f);
-        public Vector3 elizaStairs = new Vector3(6.3f, 2.6f, 0f);
-        public Vector3 playerStairs = new Vector3(5.9f, 2.2f, 0f);
-        public Vector3 upstairsEliza = new Vector3(6.3f, 21.6f, 0f);
-        public Vector3 upstairsPlayer = new Vector3(5.7f, 21.2f, 0f);
-        public Vector3 officeEliza = new Vector3(0.9f, 23.6f, 0f);
-        public Vector3 officePlayer = new Vector3(-0.3f, 23.1f, 0f);
+        public Vector3 elizaDesk = new Vector3(1.2f, 0.7f, 0f);
+        public Vector3 playerDesk = new Vector3(-0.4f, 0.7f, 0f);
+        public Vector3 elizaStairs = new Vector3(5.8f, 2.8f, 0f);
+        public Vector3 playerStairs = new Vector3(5.4f, 2.4f, 0f);
+        public Vector3 upstairsEliza = new Vector3(5.8f, 21.6f, 0f);
+        public Vector3 upstairsPlayer = new Vector3(5.2f, 21.2f, 0f);
+        public Vector3 officeEliza = new Vector3(0.9f, 23.8f, 0f);
+        public Vector3 officePlayer = new Vector3(-0.3f, 23.6f, 0f);
 
         Rigidbody2D _playerBody;
 
