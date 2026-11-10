@@ -18,6 +18,7 @@ MonoBehaviour:
   caseId: 4
   acquisition: 0
   requiredTool: 0
+  requiredFlag: 
   description: A reinforced titanium-alloy blast door hidden behind blown-out rock strata. Its emergency lock was tampered with from outside to force stasis lockdown over the engineering bay.
   dissonanceKeyword: 
   isBacktrackingOnly: 0

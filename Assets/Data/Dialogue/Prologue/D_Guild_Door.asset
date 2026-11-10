@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad6b4272890c70c4eb3d3dfe4810ac24, type: 3}
+  m_Name: D_Guild_Door
+  m_EditorClassIdentifier: Morsoul.Dialogue::Morsoul.Dialogue.DialogueData
+  id: D_Guild_Door
+  nodes:
+  - id: door_1
+    speakerName: Eliza
+    speakerPortrait: {fileID: 0}
+    text: "\"There \u2014 the big hall with the banners. That's the Guild. Every contract and investigation in the city crosses their desk.\""
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: door_2
+  - id: door_2
+    speakerName: Eliza
+    speakerPortrait: {fileID: 0}
+    text: "\"Stay close. The Guildmaster can be gruff \u2014 let me do the talking.\""
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: 
+  startNodeId: door_1
+  portraits: []

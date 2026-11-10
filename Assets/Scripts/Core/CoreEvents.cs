@@ -1,5 +1,16 @@
 namespace Morsoul.Core
 {
+    public struct InvestigationEntryResult
+    {
+        public bool Success;
+        public string Message;
+    }
+
+    public struct InvestigationStateChangedEvent
+    {
+        public int CaseId;
+    }
+
     /// <summary>Published when the title screen requests a new game.</summary>
     public struct NewGameEvent
     {

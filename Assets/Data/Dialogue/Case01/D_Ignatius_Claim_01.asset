@@ -14,14 +14,86 @@ MonoBehaviour:
   m_EditorClassIdentifier: Morsoul.Dialogue::Morsoul.Dialogue.DialogueData
   id: D_Ignatius_Claim_01
   nodes:
+  - id: ignatius_repeat
+    speakerName: Master Alchemist Ignatius
+    speakerPortrait: {fileID: 0}
+    text: You again? Stop hovering around my parlor! Unless the City Council has approved my emergency compensation, I have nothing to say to you.
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: Ignatius_ClaimHeard
+    options:
+    - label: Inquire about the destroyed vault & dark magic
+      nextNodeId: ignatius_vault
+      requiresFlag: 
+    - label: Inquire about crime scene access
+      nextNodeId: ignatius_access
+      requiresFlag: 
+    - label: Conclude the inquiry
+      nextNodeId: ignatius_leave
+      requiresFlag: 
+    nextNodeId: ignatius_greeting
+  - id: ignatius_greeting
+    speakerName: Master Alchemist Ignatius
+    speakerPortrait: {fileID: 0}
+    text: You dare cross my threshold with mud on your treads, automaton? An entire quarter-century of alchemical mastery reduced to vapor by dark magic, and the Guild insults me with a mechanical scrap-collector?!
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: ignatius_claim
   - id: ignatius_claim
     speakerName: Master Alchemist Ignatius
     speakerPortrait: {fileID: 0}
-    text: A rogue infiltrator breached my inner sanctum using volatile dark magic, destroying my entire life's work!
+    text: "A rogue infiltrator breached my inner sanctum using volatile dark magic, destroying my entire life\u2019s work! Ten thousand gold ducats worth of inventory, dissolved into thin air! If the City Commercial Treasury does not reimburse me before noon, Asterveil faces ruin!"
     registersClue: {fileID: 11400000, guid: d817a027516c7b9429771ad19bc243d5, type: 2}
+    setsFlag: Ignatius_ClaimHeard
+    requiresFlag: 
+    options: []
+    nextNodeId: ignatius_menu
+  - id: ignatius_menu
+    speakerName: Master Alchemist Ignatius
+    speakerPortrait: {fileID: 0}
+    text: Well? What else does the Investigator's Guild want with me?
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options:
+    - label: Inquire about the destroyed vault & dark magic
+      nextNodeId: ignatius_vault
+      requiresFlag: 
+    - label: Inquire about crime scene access
+      nextNodeId: ignatius_access
+      requiresFlag: 
+    - label: Conclude the inquiry
+      nextNodeId: ignatius_leave
+      requiresFlag: 
+    nextNodeId: 
+  - id: ignatius_vault
+    speakerName: Master Alchemist Ignatius
+    speakerPortrait: {fileID: 0}
+    text: "Two hundred sealed crates of Batch #408 Greater Restoration Draughts! What else could melt through Dwarven cold-iron tumblers without tripping the municipal ward-chimes? Forbidden volatile sorcery! Do not lecture me on alchemy, construct\u2014go apprehend the dark cultists!"
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: ignatius_menu
+  - id: ignatius_access
+    speakerName: Master Alchemist Ignatius
+    speakerPortrait: {fileID: 0}
+    text: The subterranean vault is sealed under strict quarantine! If you don't have Guildmaster Ovan's signed forensic warrant, you will not set one iron toe down those stairs. And if you DO have his parchment... mind your clunky treads down there! If you shatter a single undamaged alembic, I shall hold the Investigator's Guild personally liable for the damages!
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: ignatius_menu
+  - id: ignatius_leave
+    speakerName: Master Alchemist Ignatius
+    speakerPortrait: {fileID: 0}
+    text: Hmph. Then go find the culprits and stop obstructing honest commerce!
+    registersClue: {fileID: 0}
     setsFlag: 
     requiresFlag: 
     options: []
     nextNodeId: 
-  startNodeId: ignatius_claim
+  startNodeId: ignatius_repeat
   portraits: []

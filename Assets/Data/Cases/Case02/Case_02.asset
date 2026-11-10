@@ -15,10 +15,8 @@ MonoBehaviour:
   caseId: 2
   title: The Muted Belfry of Saint Althea
   region: Cathedral Nave & Tower Belfry of Saint Althea, Asterveil
-  inquiryNodes:
-  - {fileID: 11400000, guid: d5c50cef8bed076428d4504b6e67ca1e, type: 2}
-  - {fileID: 11400000, guid: 7dd6d32bc19cfda4799028343086b417, type: 2}
-  hypothesis: {fileID: 11400000, guid: 66d27ac1b6cabae4899d828c1270f53c, type: 2}
+  inquiryNodes: []
+  hypothesis: {fileID: 0}
   interrogation: {fileID: 11400000, guid: e03e5bb1976315e4a9dfc671d8934333, type: 2}
   clues:
   - {fileID: 11400000, guid: 017b3743fbb65574c980ad380c2c8601, type: 2}

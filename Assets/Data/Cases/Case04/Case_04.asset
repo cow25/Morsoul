@@ -15,10 +15,8 @@ MonoBehaviour:
   caseId: 4
   title: The Sub-Surface Sabotage of Iron Hollow
   region: Iron Hollow Mining Settlement & Subterranean Excavation Facility
-  inquiryNodes:
-  - {fileID: 11400000, guid: 99eb6a411db10e24eaea03d26768856a, type: 2}
-  - {fileID: 11400000, guid: 09f0409f3b1cce241a5654cc54b597b0, type: 2}
-  hypothesis: {fileID: 11400000, guid: 3f5b191eb1d16e74b80bf9f719f858b2, type: 2}
+  inquiryNodes: []
+  hypothesis: {fileID: 0}
   interrogation: {fileID: 11400000, guid: 909d3ff8bea74c144b41cfe77bab400d, type: 2}
   clues:
   - {fileID: 11400000, guid: 674fe7020afc02f45af5ecfe57782c8b, type: 2}

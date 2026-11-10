@@ -35,6 +35,38 @@ namespace Morsoul.Core
         /// </summary>
         public SessionState Session { get; } = new SessionState();
 
+        /// <summary>
+        /// Shared audio coordinator — auto-attached in Awake alongside the
+        /// GSM; the accessor lazily attaches too because EditMode callers can
+        /// reach this before Awake runs.
+        /// </summary>
+        public AudioCoordinator Audio
+        {
+            get
+            {
+                var audio = GetComponent<AudioCoordinator>();
+                return audio != null ? audio : gameObject.AddComponent<AudioCoordinator>();
+            }
+        }
+
+        public bool DevelopmentInvestigationFallbackEnabled { get; set; }
+        public string InvestigationStatusMessage { get; set; } = "";
+        public System.Func<string, InvestigationEntryResult> InvestigationEntryHandler { get; set; }
+        public System.Func<int, bool> InterrogationEntryHandler { get; set; }
+
+        public bool EnterInterrogation(int caseId) => Session.CanStartInterrogation(caseId) &&
+            Session.CurrentSceneMode == SceneMode.Mode2D && InterrogationEntryHandler != null &&
+            InterrogationEntryHandler(caseId);
+
+        public InvestigationEntryResult EnterInvestigation(string routeKey)
+        {
+            var result = InvestigationEntryHandler != null
+                ? InvestigationEntryHandler(routeKey)
+                : new InvestigationEntryResult { Message = "Investigation entry adapter is unavailable." };
+            InvestigationStatusMessage = result.Message ?? "";
+            return result;
+        }
+
         Morsoul.Data.ClueRegistry _clueRegistry;
         bool _clueRegistryLoaded;
 
@@ -94,9 +126,11 @@ namespace Morsoul.Core
             DontDestroyOnLoad(gameObject);
             // Auto-attach the scene-flow driver so CoreRuntime.Ensure()
             // always yields the full stack (bus + save + focus + session +
-            // GSM) for any publisher that boots Core lazily.
+            // GSM + audio) for any publisher that boots Core lazily.
             if (GetComponent<GameStateManager>() == null)
                 gameObject.AddComponent<GameStateManager>();
+            if (GetComponent<AudioCoordinator>() == null)
+                gameObject.AddComponent<AudioCoordinator>();
         }
 
         void OnDestroy()

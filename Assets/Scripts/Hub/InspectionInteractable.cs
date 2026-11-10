@@ -11,6 +11,8 @@ namespace Morsoul.Hub
     {
         /// <summary>Clue granted on first inspection.</summary>
         public ClueData clue;
+        /// <summary>Optional feedback line/graph played after the clue registers.</summary>
+        public Morsoul.Dialogue.DialogueData inspectionDialogue;
 
         bool _inspected;
 
@@ -22,13 +24,27 @@ namespace Morsoul.Hub
         public override void Interact(HubContext ctx)
         {
             base.Interact(ctx);
-            if (_inspected || clue == null) return;
+            if (_inspected) return;
+            if (clue == null)
+            {
+                // Flavor-only inspection (notice boards and the like): no
+                // clue to register, just re-readable text.
+                if (inspectionDialogue != null)
+                {
+                    if (ctx == null)
+                        Debug.LogWarning($"InspectionInteractable '{name}': no HubContext supplied.", this);
+                    else ctx.PlayDialogue(inspectionDialogue);
+                }
+                return;
+            }
             if (ctx == null || ctx.journal == null)
             {
                 Debug.LogWarning($"InspectionInteractable '{name}': no HubContext.journal wired.", this);
                 return;
             }
-            if (ctx.journal.Register(clue)) _inspected = true;
+            if (!ctx.journal.Register(clue)) return;
+            _inspected = true;
+            if (inspectionDialogue != null) ctx.PlayDialogue(inspectionDialogue);
         }
     }
 }

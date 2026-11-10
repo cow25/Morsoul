@@ -18,7 +18,8 @@ MonoBehaviour:
   caseId: 0
   acquisition: 1
   requiredTool: 1
-  description: Torn pre-cataclysm technical manifests scattered across a workstation. Scanning with Golem Eye (Tab) initiates linguistic deciphering, teaching the Golem the modern tongue and identifying the site as an unauthorized governmental mana research installation.
+  requiredFlag: 
+  description: Torn modern-tongue notes scattered across a workstation, left by a human who studied these ruins long after the Cataclysm. Scanning with Golem Eye (Tab) initiates linguistic deciphering, teaching the Golem the modern tongue and identifying the site only as a sealed research installation.
   dissonanceKeyword: 
   isBacktrackingOnly: 0
   hasWorldPosition: 0

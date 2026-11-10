@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Morsoul.Core;
 using Morsoul.Data;
 using Morsoul.Hub;
 using UnityEngine;
@@ -32,6 +33,11 @@ namespace Morsoul.Journal
         [Header("Data sources")]
         /// <summary>Hub clue store; the Physical/Testimony tabs render its Collected list.</summary>
         public HubJournal journal;
+        /// <summary>
+        /// Optional scene context; when present the journal registers itself as
+        /// a UI blocker and refuses to open while another overlay owns the UI.
+        /// </summary>
+        public HubContext context;
         /// <summary>Every runic log that can appear in the scene (uncollected ones render locked).</summary>
         public RunicLogData[] allLogs;
         /// <summary>Suspect dossier entries; gated by <see cref="DossierEntry.requiresFlag"/>.</summary>
@@ -48,8 +54,11 @@ namespace Morsoul.Journal
         /// <summary>Location hint shown on the dissonance banner card.</summary>
         [TextArea] public string dissonanceLocationText;
 
-        /// <summary>Raised when the player marks a clue for the deduction board.</summary>
-        public event Action<EvidenceData> MarkedForBoard;
+        /// <summary>
+        /// Optional extra open gate wired by scene composers (e.g. GameFlow
+        /// denies opening over the board/interrogation/resolution/cutscene).
+        /// </summary>
+        public Func<bool> CanOpen;
 
         const string TabActiveClass = "journal-tab--active";
         const string LogLockedClass = "log--locked";
@@ -70,7 +79,6 @@ namespace Morsoul.Journal
         Label _detailTitle;
         Label _detailType;
         Label _detailDesc;
-        Button _markButton;
         readonly Button[] _tabButtons = new Button[4];
 
         // Interaction state.
@@ -79,6 +87,7 @@ namespace Morsoul.Journal
         ClueData _detailClue;
         float _previousTimeScale = 1f;
         int _uiVersion;
+        Func<bool> _openBlocker;
 
         public bool IsOpen => _isOpen;
         public JournalTab ActiveTab => _activeTab;
@@ -88,17 +97,43 @@ namespace Morsoul.Journal
             _panelRenderer = GetComponent<PanelRenderer>();
             if (_panelRenderer != null) _panelRenderer.RegisterUIReloadCallback(OnUIReload);
             if (journal != null) journal.ClueRegistered += OnClueRegistered;
+            if (context == null) context = FindAnyObjectByType<HubContext>();
+            if (context != null)
+            {
+                _openBlocker = () => _isOpen;
+                context.AddUiBlocker(_openBlocker);
+            }
+            SyncLogsFromSession();
         }
 
         void OnDisable()
         {
             if (_panelRenderer != null) _panelRenderer.UnregisterUIReloadCallback(OnUIReload);
             if (journal != null) journal.ClueRegistered -= OnClueRegistered;
+            if (context != null && _openBlocker != null)
+            {
+                context.RemoveUiBlocker(_openBlocker);
+                _openBlocker = null;
+            }
             if (_isOpen)
             {
                 Time.timeScale = _previousTimeScale;
                 _isOpen = false;
             }
+        }
+
+        /// <summary>
+        /// True when the journal may open: no blocking overlay owns the UI and
+        /// the scene composer's extra gate (if any) allows it. The journal's
+        /// own blocker only counts while open, so a closed journal never
+        /// deadlocks itself.
+        /// </summary>
+        public bool OpenAllowed()
+        {
+            if (context != null && context.UiBlocked) return false;
+            var session = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session : null;
+            if (session != null && !string.IsNullOrEmpty(session.ActiveCutsceneId)) return false;
+            return CanOpen == null || CanOpen();
         }
 
         void Update()
@@ -109,7 +144,7 @@ namespace Morsoul.Journal
             if (keyboard.gKey.wasPressedThisFrame)
             {
                 if (_isOpen) Close();
-                else Open();
+                else if (OpenAllowed()) Open();
                 return;
             }
 
@@ -151,10 +186,26 @@ namespace Morsoul.Journal
             return true;
         }
 
+        /// <summary>
+        /// Rehydrates collectedLogs from the persistent session so a fresh
+        /// Continue or scene entry shows the real log state; idempotent.
+        /// </summary>
+        public void SyncLogsFromSession()
+        {
+            var session = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session : null;
+            if (session == null || allLogs == null) return;
+            foreach (var log in allLogs)
+            {
+                if (log == null || log.id < 1 || log.id > session.RunicLogs.Count) continue;
+                if (session.RunicLogs[log.id - 1]) RegisterLog(log);
+            }
+        }
+
         public void Open()
         {
-            if (_isOpen) return;
+            if (_isOpen || !OpenAllowed()) return;
             _isOpen = true;
+            SyncLogsFromSession();
             _previousTimeScale = Time.timeScale;
             Time.timeScale = 0f; // journal pauses the sim per GDD
             RefreshTabButtons();
@@ -374,16 +425,14 @@ namespace Morsoul.Journal
                     ? clue.type.ToString()
                     : $"{clue.type} — {clue.id}";
             if (_detailDesc != null) _detailDesc.text = clue.description;
-            if (_markButton != null) _markButton.style.display = DisplayStyle.Flex;
         }
 
         void ShowTextDetail(string title, string subtitle, string body)
         {
-            _detailClue = null; // only clue entries can be marked for the board
+            _detailClue = null;
             if (_detailTitle != null) _detailTitle.text = title ?? "";
             if (_detailType != null) _detailType.text = subtitle ?? "";
             if (_detailDesc != null) _detailDesc.text = body ?? "";
-            if (_markButton != null) _markButton.style.display = DisplayStyle.None;
         }
 
         void ClearDetail()
@@ -392,12 +441,6 @@ namespace Morsoul.Journal
             if (_detailTitle != null) _detailTitle.text = "Clue Journal";
             if (_detailType != null) _detailType.text = "";
             if (_detailDesc != null) _detailDesc.text = "Select an entry.";
-            if (_markButton != null) _markButton.style.display = DisplayStyle.None;
-        }
-
-        void OnMarkClicked()
-        {
-            if (_detailClue != null) MarkedForBoard?.Invoke(_detailClue);
         }
 
         // --- Tabs ---------------------------------------------------------------
@@ -421,9 +464,6 @@ namespace Morsoul.Journal
             _detailTitle = root.Q<Label>("JournalTitle");
             _detailType = root.Q<Label>("JournalType");
             _detailDesc = root.Q<Label>("JournalDesc");
-            _markButton = root.Q<Button>("MarkForBoardButton");
-            if (_markButton != null)
-                _markButton.RegisterCallback<ClickEvent>(_ => OnMarkClicked());
 
             for (int i = 0; i < _tabButtons.Length; i++)
             {

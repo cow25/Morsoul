@@ -1,0 +1,390 @@
+using Morsoul.Core;
+using Morsoul.Hub;
+using NUnit.Framework;
+using UnityEngine;
+
+namespace Morsoul.Tests
+{
+    /// <summary>
+    /// Covers the prologue -> Lower Market -> Guild first-visit chain: the
+    /// gating flags, the dynamic Y-sort, and the world-space collider
+    /// footprint math that feeds the dressing colliders.
+    /// </summary>
+    public class GuildProgressionTests
+    {
+        SessionState _session;
+
+        [SetUp]
+        public void SetUp() => _session = new SessionState();
+
+        [Test]
+        public void MarketArrival_OnlyPlaysOnceStraightOutOfPrologue()
+        {
+            Assert.IsFalse(GuildIntroRules.CanPlayMarketArrival(_session));
+
+            _session.PrologueCompleted = true;
+            _session.CurrentCase = 1;
+            Assert.IsTrue(GuildIntroRules.CanPlayMarketArrival(_session));
+
+            // Veteran saves already past Case 1 never get the guided tour.
+            _session.CurrentCase = 2;
+            Assert.IsFalse(GuildIntroRules.CanPlayMarketArrival(_session));
+            _session.CurrentCase = 1;
+
+            // Once latched it never replays.
+            _session.SetFlag(GuildIntroRules.ArrivedFlag);
+            Assert.IsFalse(GuildIntroRules.CanPlayMarketArrival(_session));
+        }
+
+        [Test]
+        public void GuildIntro_RequiresArrivalHandoff_AndPlaysOnce()
+        {
+            Assert.IsFalse(GuildIntroRules.CanPlayGuildIntro(_session));
+
+            _session.SetFlag(GuildIntroRules.IntroPendingFlag);
+            Assert.IsTrue(GuildIntroRules.CanPlayGuildIntro(_session));
+
+            // Interrupt/resume replays until the seen flag latches.
+            _session.SetFlag(GuildIntroRules.IntroSeenFlag);
+            Assert.IsFalse(GuildIntroRules.CanPlayGuildIntro(_session));
+        }
+
+        [Test]
+        public void YSort_SortsDynamicActorsByY()
+        {
+            var go = new GameObject("Sortable", typeof(YSort2D));
+            try
+            {
+                var sort = go.GetComponent<YSort2D>();
+                var lateUpdate = typeof(YSort2D).GetMethod("LateUpdate",
+                    System.Reflection.BindingFlags.Instance |
+                    System.Reflection.BindingFlags.NonPublic);
+
+                // A southern actor draws in front of a northern one; bias
+                // shifts the whole curve without changing the order.
+                go.transform.position = new Vector3(0f, -3f, 0f);
+                lateUpdate.Invoke(sort, null);
+                Assert.AreEqual(-3f * YSort2D.DepthPerUnitY,
+                    go.transform.position.z, 1e-5f);
+
+                go.transform.position = new Vector3(0f, 4f, 0f);
+                lateUpdate.Invoke(sort, null);
+                Assert.AreEqual(4f * YSort2D.DepthPerUnitY,
+                    go.transform.position.z, 1e-5f);
+
+                sort.bias = -0.005f;
+                lateUpdate.Invoke(sort, null);
+                Assert.AreEqual(4f * YSort2D.DepthPerUnitY - 0.005f,
+                    go.transform.position.z, 1e-5f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(go);
+            }
+        }
+
+        [Test]
+        public void SceneEntryPoint_PendingEntry_UsesNamedMarker()
+        {
+            var core = CoreRuntime.Ensure();
+            var spawn = new GameObject("PlayerSpawn");
+            spawn.tag = "PlayerSpawn";
+            var marker = new GameObject("Spawn_GuildDoor");
+            marker.AddComponent<SceneSpawnMarker>().entryId = "guild_door";
+            marker.transform.position = new Vector3(3f, 2.4f, 0f);
+            var playerGo = new GameObject("Player");
+            playerGo.tag = "Player";
+            var entryGo = new GameObject("SceneEntryPoint");
+            var entry = entryGo.AddComponent<SceneEntryPoint>();
+            entry.player = playerGo.transform;
+            try
+            {
+                core.Session.PendingEntryPointId = "guild_door";
+                typeof(SceneEntryPoint).GetMethod("Start",
+                    System.Reflection.BindingFlags.Instance |
+                    System.Reflection.BindingFlags.NonPublic)
+                    .Invoke(entry, null);
+
+                // The door marker wins over the default spawn, then clears.
+                Assert.AreEqual(new Vector3(3f, 2.4f, 0f), playerGo.transform.position);
+                Assert.AreEqual("", core.Session.PendingEntryPointId);
+            }
+            finally
+            {
+                foreach (var go in new[] { entryGo, playerGo, marker, spawn, core.gameObject })
+                    Object.DestroyImmediate(go);
+            }
+        }
+
+        [Test]
+        public void SceneEntryPoint_PreservesInvestigationMode()
+        {
+            // EnterInvestigationRoute stamps Mode3D; the spawn-stamp must
+            // not downgrade it or the deduction board's CanUse gate closes.
+            var core = CoreRuntime.Ensure();
+            var spawn = new GameObject("PlayerSpawn");
+            spawn.tag = "PlayerSpawn";
+            var playerGo = new GameObject("Player");
+            playerGo.tag = "Player";
+            var entryGo = new GameObject("SceneEntryPoint");
+            entryGo.AddComponent<SceneEntryPoint>();
+            try
+            {
+                core.Session.SetSceneContext(SceneMode.Mode3D, "Investigation_01_Placeholder");
+                typeof(SceneEntryPoint).GetMethod("Start",
+                    System.Reflection.BindingFlags.Instance |
+                    System.Reflection.BindingFlags.NonPublic)
+                    .Invoke(entryGo.GetComponent<SceneEntryPoint>(), null);
+
+                Assert.AreEqual(SceneMode.Mode3D, core.Session.CurrentSceneMode,
+                    "Spawn stamping must preserve the investigation scene mode.");
+            }
+            finally
+            {
+                core.Session.SetSceneContext(SceneMode.Mode2D, "");
+                foreach (var go in new[] { entryGo, playerGo, spawn, core.gameObject })
+                    Object.DestroyImmediate(go);
+            }
+        }
+
+        [Test]
+        public void NpcInteractable_BlocksMovementWithSolidCollider()
+        {
+            // NPCs get a second, non-trigger collider so the player walks up
+            // to them instead of through them; the detection trigger stays.
+            var go = new GameObject("Npc", typeof(BoxCollider2D));
+            go.GetComponent<BoxCollider2D>().isTrigger = true;
+            go.AddComponent<NpcInteractable>();
+            try
+            {
+                var solids = 0;
+                foreach (var col in go.GetComponents<BoxCollider2D>())
+                    if (!col.isTrigger) solids++;
+                Assert.AreEqual(1, solids,
+                    "NPC should carry exactly one solid block collider.");
+            }
+            finally
+            {
+                Object.DestroyImmediate(go);
+            }
+        }
+
+        [Test]
+        public void Interactable2D_OptInBlockingOnly()
+        {
+            var go = new GameObject("Board", typeof(BoxCollider2D));
+            go.GetComponent<BoxCollider2D>().isTrigger = true;
+            go.AddComponent<InspectionInteractable>();
+            try
+            {
+                var inspection = go.GetComponent<InspectionInteractable>();
+                foreach (var col in go.GetComponents<BoxCollider2D>())
+                    Assert.IsTrue(col.isTrigger,
+                        "Non-blocking interactable should stay trigger-only.");
+
+                // Awake ran already with blocking off; add the collider the
+                // same way the scene's next load would.
+                inspection.blocksMovement = true;
+                typeof(Interactable2D).GetMethod("EnsureBlockCollider",
+                    System.Reflection.BindingFlags.Instance |
+                    System.Reflection.BindingFlags.NonPublic)
+                    .Invoke(inspection, null);
+                var solids = 0;
+                foreach (var col in go.GetComponents<BoxCollider2D>())
+                    if (!col.isTrigger) solids++;
+                Assert.AreEqual(1, solids);
+            }
+            finally
+            {
+                Object.DestroyImmediate(go);
+            }
+        }
+
+        [Test]
+        public void PropCollider_KeepsAuthoredWorldFootprintUnderScale()
+        {
+            // A 0.7x0.5 trunk at (0,-0.75) under a 1.8x2.2-scaled quad must
+            // land at exactly those world bounds after Unity multiplies the
+            // local values back by the scale.
+            var worldSize = new Vector2(0.7f, 0.5f);
+            var worldOffset = new Vector2(0f, -0.75f);
+            var scale = new Vector2(1.8f, 2.2f);
+
+            var localSize = PropFootprint.LocalSize(worldSize, scale);
+            var localOffset = PropFootprint.LocalOffset(worldOffset, scale);
+
+            Assert.AreEqual(worldSize.x, localSize.x * scale.x, 1e-5f);
+            Assert.AreEqual(worldSize.y, localSize.y * scale.y, 1e-5f);
+            Assert.AreEqual(worldOffset.x, localOffset.x * scale.x, 1e-5f);
+            Assert.AreEqual(worldOffset.y, localOffset.y * scale.y, 1e-5f);
+        }
+
+        [Test]
+        public void HubObjective_GatesCaseOneBehindArrivalAndGuildIntro()
+        {
+            var core = CoreRuntime.Ensure();
+            var hudGo = new GameObject("HudPanel");
+            var hud = hudGo.AddComponent<HubHudController>();
+            hud.caseText = "Case 1: The Poisoned Vault";
+            hud.objectiveText = "Interview Merchant Guildmaster Ovan for storage clearance.";
+            hud.objectiveCaseId = 1;
+            hud.postInvestigationObjective = "Confront Master Alchemist Ignatius.";
+
+            try
+            {
+                core.Session.Reset();
+                core.Session.CurrentCase = 1;
+                core.Session.PrologueCompleted = true;
+
+                // Step 1: Entering market, arrival not yet seen -> Case text hidden, arrival objective.
+                hud.RefreshObjective();
+                Assert.AreEqual("", hud.AppliedCaseText, "Case label should be hidden during market arrival.");
+                Assert.AreEqual("Follow Eliza to the Investigator's Guild.", hud.AppliedObjective);
+
+                // Step 2: Market arrival seen, guild intro not yet seen -> Guild entrance objective.
+                core.Session.SetFlag(GuildIntroRules.ArrivedFlag);
+                hud.RefreshObjective();
+                Assert.AreEqual("", hud.AppliedCaseText, "Case label should be hidden during guild intro.");
+                Assert.AreEqual("Follow Eliza to meet Guildmaster Ovan.", hud.AppliedObjective);
+
+                // Step 3: Guild intro seen, Case 1 briefing not yet played -> Meet Ovan objective.
+                core.Session.SetFlag(GuildIntroRules.IntroSeenFlag);
+                hud.RefreshObjective();
+                Assert.AreEqual("", hud.AppliedCaseText, "Case label should be hidden before Case 1 briefing.");
+                Assert.AreEqual("Speak with Guildmaster Ovan upstairs in the Guild hall.", hud.AppliedObjective);
+
+                // Step 4: Ovan delivers Case 1 briefing -> Case 1 unlocks!
+                core.Session.SetFlag(GuildIntroRules.BriefingSeenFlag);
+                hud.RefreshObjective();
+                Assert.AreEqual("Case 1: The Poisoned Vault", hud.AppliedCaseText);
+                Assert.AreEqual("Interview Merchant Guildmaster Ovan for storage clearance.", hud.AppliedObjective);
+
+                // Step 5: Warrant granted -> Cellar grate objective.
+                core.Session.SetFlag(GuildIntroRules.WarrantFlag);
+                hud.RefreshObjective();
+                Assert.AreEqual("Case 1: The Poisoned Vault", hud.AppliedCaseText);
+                Assert.AreEqual("Investigate the poisoned vault via the cellar grate.", hud.AppliedObjective);
+
+                // Step 6: Board solved -> Interrogation confront suspect objective.
+                core.Session.GetOrCreateBoardState(1).BoardSolved = true;
+                hud.RefreshObjective();
+                Assert.AreEqual("Case 1: The Poisoned Vault", hud.AppliedCaseText);
+                Assert.AreEqual("Confront Master Alchemist Ignatius.", hud.AppliedObjective);
+            }
+            finally
+            {
+                Object.DestroyImmediate(hudGo);
+                Object.DestroyImmediate(core.gameObject);
+            }
+        }
+
+        [Test]
+        public void IgnatiusDialogue_HasWorkingConversationAndClaim()
+        {
+            var data = UnityEditor.AssetDatabase.LoadAssetAtPath<Morsoul.Dialogue.DialogueData>(
+                "Assets/Data/Dialogue/Case01/D_Ignatius_Claim_01.asset");
+            Assert.IsNotNull(data, "D_Ignatius_Claim_01.asset must exist.");
+
+            var flags = new System.Collections.Generic.HashSet<string>();
+            var runner = new Morsoul.Dialogue.DialogueRunner(data, flags);
+
+            // First run: starts at ignatius_repeat, but since Ignatius_ClaimHeard is unset, skips to greeting.
+            Assert.AreEqual("ignatius_greeting", runner.Current.id);
+            Assert.IsTrue(runner.Current.text.Contains("quarter-century of alchemical mastery"));
+
+            // Advance to formal claim.
+            runner.Advance();
+            Assert.AreEqual("ignatius_claim", runner.Current.id);
+            Assert.IsNotNull(runner.Current.registersClue, "Claim node must register clue T2_01.");
+            Assert.AreEqual("T2_01", runner.Current.registersClue.id);
+            Assert.AreEqual("Ignatius_ClaimHeard", runner.Current.setsFlag);
+
+            // Advance to inquiry menu.
+            runner.Advance();
+            Assert.AreEqual("ignatius_menu", runner.Current.id);
+            Assert.IsTrue(runner.HasOptions);
+            Assert.AreEqual(3, runner.CurrentOptions.Count);
+
+            // Select Option 0: Destroyed vault details.
+            runner.Choose(0);
+            Assert.AreEqual("ignatius_vault", runner.Current.id);
+            runner.Advance();
+            Assert.AreEqual("ignatius_menu", runner.Current.id);
+
+            // Select Option 2: Conclude inquiry.
+            runner.Choose(2);
+            Assert.AreEqual("ignatius_leave", runner.Current.id);
+            runner.Advance();
+            Assert.IsTrue(runner.IsEnded);
+
+            // Second run: now that Ignatius_ClaimHeard is set, repeat greeting shows with options immediately.
+            var runnerRepeat = new Morsoul.Dialogue.DialogueRunner(data, flags);
+            Assert.AreEqual("ignatius_repeat", runnerRepeat.Current.id);
+            Assert.IsTrue(runnerRepeat.HasOptions);
+        }
+
+        [Test]
+        public void LowerMarket_RestSpot_RelocatedToLowerRight()
+        {
+            var scene = UnityEditor.SceneManagement.EditorSceneManager.OpenScene(
+                "Assets/Scenes/Hub_LowerMarket.unity",
+                UnityEditor.SceneManagement.OpenSceneMode.Single);
+            try
+            {
+                var restSpot = GameObject.Find("RestSpot");
+                Assert.IsNotNull(restSpot, "RestSpot must exist in Hub_LowerMarket.");
+                Assert.AreEqual(5.0f, restSpot.transform.position.x, 0.5f, "RestSpot X must be in lower-right.");
+                Assert.AreEqual(-2.0f, restSpot.transform.position.y, 0.5f, "RestSpot Y must be in lower-right.");
+            }
+            finally
+            {
+                // Leave scene open
+            }
+        }
+
+        [Test]
+        public void LowerMarket_MarketCrowd_HasMultipleIndividualNpcSprites()
+        {
+            var scene = UnityEditor.SceneManagement.EditorSceneManager.OpenScene(
+                "Assets/Scenes/Hub_LowerMarket.unity",
+                UnityEditor.SceneManagement.OpenSceneMode.Single);
+            try
+            {
+                var central = GameObject.Find("MarketCrowd");
+                Assert.IsNotNull(central, "Central MarketCrowd must exist.");
+
+                var member1 = GameObject.Find("MarketCrowd_Vendor");
+                var member2 = GameObject.Find("MarketCrowd_Townsperson");
+                var member3 = GameObject.Find("MarketCrowd_Adventurer");
+
+                Assert.IsNotNull(member1, "MarketCrowd_Vendor must exist.");
+                Assert.IsNotNull(member2, "MarketCrowd_Townsperson must exist.");
+                Assert.IsNotNull(member3, "MarketCrowd_Adventurer must exist.");
+
+                foreach (var npc in new[] { central, member1, member2, member3 })
+                {
+                    var interactable = npc.GetComponent<NpcInteractable>();
+                    Assert.IsNotNull(interactable, $"{npc.name} must have NpcInteractable.");
+                    Assert.AreEqual("[E] Listen", interactable.promptText);
+                    Assert.IsTrue(interactable.blocksMovement, $"{npc.name} must block movement.");
+                    Assert.IsNotNull(npc.GetComponent<YSort2D>(), $"{npc.name} must carry YSort2D.");
+                }
+
+                // Check positions are distinct and not overlapping.
+                var positions = new[] { central.transform.position, member1.transform.position, member2.transform.position, member3.transform.position };
+                for (int i = 0; i < positions.Length; i++)
+                {
+                    for (int j = i + 1; j < positions.Length; j++)
+                    {
+                        float dist = Vector3.Distance(positions[i], positions[j]);
+                        Assert.Greater(dist, 0.5f, $"Crowd NPCs {i} and {j} should not overlap (dist={dist:F2}).");
+                    }
+                }
+            }
+            finally
+            {
+                // Leave scene open
+            }
+        }
+    }
+}

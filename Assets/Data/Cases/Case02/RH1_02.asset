@@ -18,6 +18,7 @@ MonoBehaviour:
   caseId: 2
   acquisition: 3
   requiredTool: 0
+  requiredFlag: 
   description: An ornate platinum tuning fork belonging to Lyra, found vibrating faintly with holy mana. A standard devotional instrument used for pitch alignment, bearing zero dark resonance traces.
   dissonanceKeyword: 
   isBacktrackingOnly: 0

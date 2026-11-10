@@ -18,6 +18,7 @@ MonoBehaviour:
   caseId: 1
   acquisition: 3
   requiredTool: 0
+  requiredFlag: 
   description: Cheap warped tension wrench; cannot engage a Dwarven vault cylinder.
   dissonanceKeyword: 
   isBacktrackingOnly: 0

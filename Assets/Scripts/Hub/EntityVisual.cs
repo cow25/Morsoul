@@ -52,7 +52,10 @@ namespace Morsoul.Hub
             childGo.SetActive(true);
             childGo.transform.localPosition = profile.visualOffset;
             childGo.transform.localRotation = Quaternion.identity;
-            childGo.transform.localScale = new Vector3(profile.visualScale.x, profile.visualScale.y, 1f);
+            var parentScale = transform.localScale;
+            float sx = parentScale.x != 0 ? profile.visualScale.x / parentScale.x : profile.visualScale.x;
+            float sy = parentScale.y != 0 ? profile.visualScale.y / parentScale.y : profile.visualScale.y;
+            childGo.transform.localScale = new Vector3(sx, sy, 1f);
 
             Renderer = childGo.GetComponent<SpriteRenderer>();
             if (Renderer == null) Renderer = childGo.AddComponent<SpriteRenderer>();

@@ -8,6 +8,8 @@ namespace Morsoul.Core
     {
         public const string Title = "title";
         public const string Opening = "opening";
+        /// <summary>2D approach loaded by the ruins gate, before the Eliza trigger.</summary>
+        public const string PrologueWilderness = "prologue.wilderness";
         /// <summary>Shared case-loop scene; resolves the session's current case.</summary>
         public const string CaseLoop = "caseloop";
         /// <summary>Hub scene for a case: hub.0, hub.1, ...</summary>

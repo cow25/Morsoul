@@ -9,8 +9,8 @@ namespace Morsoul.Hub.Editor
     /// <summary>
     /// Adds the case-loop entry interactable ("CaseDoor" — an ungated
     /// CarrierInteractable targeting the CaseLoop scene) to existing saved hub
-    /// scenes without regenerating their layouts. Idempotent: a scene that
-    /// already has a CaseDoor is skipped.
+    /// scenes without regenerating their layouts. Idempotent: existing doors
+    /// are repaired to routeKey "caseloop" with "CaseLoop" as the fallback.
     /// </summary>
     public static class HubCaseLoopSetup
     {
@@ -54,8 +54,29 @@ namespace Morsoul.Hub.Editor
                 : EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Additive);
             try
             {
-                if (FindCaseDoor(scene) != null)
+                var existing = FindCaseDoor(scene);
+                if (scenePath != IronHollowScenePath)
                 {
+                    if (existing != null)
+                    {
+                        existing.SetActive(false);
+                        EditorSceneManager.MarkSceneDirty(scene);
+                        EditorSceneManager.SaveScene(scene);
+                    }
+                    return;
+                }
+                if (existing != null)
+                {
+                    var existingDoor = existing.GetComponent<CarrierInteractable>();
+                    if (existingDoor != null &&
+                        (existingDoor.routeKey != "caseloop" ||
+                         existingDoor.targetScene != "CaseLoop"))
+                    {
+                        existingDoor.routeKey = "caseloop";
+                        existingDoor.targetScene = "CaseLoop";
+                        EditorSceneManager.MarkSceneDirty(scene);
+                        EditorSceneManager.SaveScene(scene);
+                    }
                     Debug.Log($"HubCaseLoopSetup: '{scenePath}' already has a CaseDoor; skipped.");
                     return;
                 }
@@ -65,6 +86,7 @@ namespace Morsoul.Hub.Editor
                     out CarrierInteractable door);
                 door.promptText = "[E] Begin Case";
                 door.checkpointReason = "CaseDoor";
+                door.routeKey = "caseloop";
                 door.targetScene = "CaseLoop";
                 EditorSceneManager.MarkSceneDirty(scene);
                 if (EditorSceneManager.SaveScene(scene))

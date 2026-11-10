@@ -15,10 +15,8 @@ MonoBehaviour:
   caseId: 5
   title: The Sanctum Core Finale
   region: Sanctum Core / Central Planetary Mana Fissure
-  inquiryNodes:
-  - {fileID: 11400000, guid: 79e34df87db6e9545bde2d8f72753faa, type: 2}
-  - {fileID: 11400000, guid: 5a5a35a8d6ba6d5469979bf08f4af6a6, type: 2}
-  hypothesis: {fileID: 11400000, guid: 5dcf8f681068f8745b8e160ba64785d4, type: 2}
+  inquiryNodes: []
+  hypothesis: {fileID: 0}
   interrogation: {fileID: 0}
   clues:
   - {fileID: 11400000, guid: a302daa49e3884e4da7d5fcd7658b31e, type: 2}

@@ -37,8 +37,16 @@ MonoBehaviour:
       emotionAura: 0
     invalidMoves: []
   - suspectClaim: So someone jammed a valve. That proves nothing against me! I was contracted solely for upper-tier masonry and never touched the subterranean conduits!
-    keywords: []
+    keywords:
+    - never touched the subterranean conduits
     validMoves:
+    - verb: 0
+      evidence: {fileID: 0}
+      breaksComposureSegment: 0
+      strikeCost: 0
+      isCoreContradiction: 0
+      responseDialogue: My crew stays above the 400-meter mark! We don't touch hydraulic copper or acid baths! If chemical rot dissolved those lines, talk to the refinery alchemists!
+      emotionAura: 2
     - verb: 2
       evidence: {fileID: 11400000, guid: e1d83b61a93e2f5488f306d87a577953, type: 2}
       breaksComposureSegment: 1
@@ -52,11 +60,19 @@ MonoBehaviour:
       breaksComposureSegment: 0
       strikeCost: 1
       isCoreContradiction: 0
-      responseDialogue: A broken drill? Tools snap down here daily. Your logic circuits need a calibration overhaul.
+      responseDialogue: A broken drill? Tools snap down here daily. Your stone skull's wound too tight, machine.
       emotionAura: 0
   - suspectClaim: Why would anyone intentionally collapse a dead-end rock face?! What possible gain is there in blowing out useless granite?!
-    keywords: []
+    keywords:
+    - useless granite
     validMoves:
+    - verb: 0
+      evidence: {fileID: 0}
+      breaksComposureSegment: 0
+      strikeCost: 0
+      isCoreContradiction: 0
+      responseDialogue: The earth is dead rock! Shattering a few granite boulders doesn't threaten your precious city! The Grand Overseer will purify this blighted subterranean filth!
+      emotionAura: 2
     - verb: 1
       evidence: {fileID: 11400000, guid: c920740002f2f384cb72de51ed32491f, type: 2}
       breaksComposureSegment: 1

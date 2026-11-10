@@ -18,6 +18,7 @@ MonoBehaviour:
   caseId: 3
   acquisition: 4
   requiredTool: 2
+  requiredFlag: 
   description: Vane's discarded ritual cloak at the altar; read with the newly unlocked Emotion Echo, revealing lingering residue of fanatical zeal and deceit that ties him to the Veiled Circle's Sanctum Core ritual.
   dissonanceKeyword: 
   isBacktrackingOnly: 0

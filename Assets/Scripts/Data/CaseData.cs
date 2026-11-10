@@ -28,14 +28,19 @@ namespace Morsoul.Data
             var clueList = clues ?? new ClueData[0];
             var nodeList = inquiryNodes ?? new InquiryNodeData[0];
 
-            // Rule 1: hypothesis and exactly two non-null inquiry nodes.
-            if (hypothesis == null)
-                errors.Add("Case has no hypothesis.");
-            if (nodeList.Length != 2)
-                errors.Add($"Case requires exactly 2 inquiry nodes, found {nodeList.Length}.");
-            for (int i = 0; i < nodeList.Length; i++)
-                if (nodeList[i] == null)
-                    errors.Add($"Inquiry node at index {i} is null.");
+            // Rule 1: legacy slot-pair structure is required only for cases
+            // without a weighted evidence graph. Weighted cases carry no
+            // inquiry nodes or hypothesis.
+            if (evidenceGraph == null)
+            {
+                if (hypothesis == null)
+                    errors.Add("Case has no hypothesis.");
+                if (nodeList.Length != 2)
+                    errors.Add($"Case requires exactly 2 inquiry nodes, found {nodeList.Length}.");
+                for (int i = 0; i < nodeList.Length; i++)
+                    if (nodeList[i] == null)
+                        errors.Add($"Inquiry node at index {i} is null.");
+            }
 
             // Rule 2: clues are non-null, uniquely and non-emptily identified, belong to this case,
             // named, and backtracking-only clues are Latent.
@@ -208,7 +213,8 @@ namespace Morsoul.Data
                             errors.Add($"Phase {i} move uses Aura.Crimson, which is cinematic-only.");
                         if (caseId < 3 && move.emotionAura != Aura.None)
                             errors.Add($"Phase {i} move uses aura {move.emotionAura}; Emotion Echo auras are not available before caseId 3.");
-                        if (move.evidence != null && !allowedEvidence.Contains(move.evidence))
+                        if (move.evidence != null && !allowedEvidence.Contains(move.evidence)
+                            && !(evidenceGraph != null && move.evidence is PremiseData))
                             errors.Add($"Phase {i} move evidence '{move.evidence.id}' is not a clue of this case or a premise it produces.");
                     }
                 }

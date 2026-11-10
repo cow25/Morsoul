@@ -12,6 +12,7 @@ namespace Morsoul.Hub
     public class HubFlags : MonoBehaviour
     {
         readonly HashSet<string> _flags = new HashSet<string>(System.StringComparer.Ordinal);
+        IEventBus _bus;
 
         /// <summary>The backing flag set; hand to DialogueController.SetFlags.</summary>
         public ISet<string> Set => _flags;
@@ -27,6 +28,23 @@ namespace Morsoul.Hub
             if (session == null) return;
             foreach (var kv in session.Flags)
                 if (kv.Value) _flags.Add(kv.Key);
+            _bus = CoreRuntime.Instance.Bus;
+            _bus.Subscribe<InvestigationStateChangedEvent>(OnInvestigationChanged);
+        }
+
+        void OnDisable()
+        {
+            _bus?.Unsubscribe<InvestigationStateChangedEvent>(OnInvestigationChanged);
+            _bus = null;
+        }
+
+        void OnInvestigationChanged(InvestigationStateChangedEvent change)
+        {
+            var session = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session : null;
+            if (session == null) return;
+            _flags.Clear();
+            foreach (var flag in session.Flags)
+                if (flag.Value) _flags.Add(flag.Key);
         }
 
         /// <summary>Marks the flag as set; no-op for null/empty names.</summary>

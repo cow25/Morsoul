@@ -15,7 +15,9 @@ namespace Morsoul.Hub.Editor
     /// Builds the 2D demo stand-in scenes that let the campaign loop run while
     /// the 3D lane finishes the real environments:
     ///   - Prologue_2D: tutorial stand-in (five Case 0 clue inspections +
-    ///     weighted board + exit to the market hub).
+    ///     weighted board + exit to the wilderness approach).
+    ///   - Prologue_Wilderness: 2D first-contact approach owned by
+    ///     PrologueWildernessSceneBuilder.
     ///   - Investigation_01_Placeholder: vault stand-in (Case 1 physical clue
     ///     inspections + board + exit back to the market hub).
     /// Also patches Hub_LowerMarket: VaultGate targets the placeholder vault
@@ -27,6 +29,7 @@ namespace Morsoul.Hub.Editor
     public static class DemoStandInFactory
     {
         const string PrologueScenePath = "Assets/Scenes/Prologue_2D.unity";
+        const string PrologueWildernessScenePath = "Assets/Scenes/Prologue_Wilderness.unity";
         const string VaultScenePath = "Assets/Scenes/Investigation_01_Placeholder.unity";
         const string LowerMarketScenePath = "Assets/Scenes/Hub_LowerMarket.unity";
         const string PanelSettingsPath = "Assets/UI Toolkit/MainPanelSettings.asset";
@@ -37,9 +40,19 @@ namespace Morsoul.Hub.Editor
         public static void BuildAll()
         {
             CreatePrologue();
+            PrologueWildernessSceneBuilder.CreateOrUpdate();
             CreateVaultPlaceholder();
             PatchLowerMarket();
+            PatchVaultPlaceholder();
             RegisterBuildScenes();
+        }
+
+        /// <summary>Patches route keys in saved stand-in scenes without regenerating them.</summary>
+        [MenuItem("Morsoul/Setup/Patch Demo Route Wiring")]
+        public static void PatchRouteWiring()
+        {
+            PatchLowerMarket();
+            PatchVaultPlaceholder();
         }
 
         // --- Prologue stand-in ------------------------------------------------
@@ -68,16 +81,16 @@ namespace Morsoul.Hub.Editor
             Inspection("RustedPipe",  new Color(0.55f, 0.35f, 0.2f), new Vector3(4f, 1f, 0f),
                 "Assets/Data/Cases/Case00/RH1_00.asset");
 
-            // Exit to Asterveil: gated on the solved tutorial board, then
-            // advances CurrentCase to 1 so the market's CaseDoor begins the
-            // vault case.
+            // Exit to the wilderness approach: gated on the solved tutorial
+            // board. The separate first-contact sequence owns completion and
+            // the Case 1 advance.
             HubSceneFactory.CreateInteractable("RuinsExit",
                 new Color(0.35f, 0.6f, 0.4f), new Vector3(6f, 0f, 0f),
                 out PrologueExitInteractable exit);
             exit.promptText = "[E] Leave the ruins";
             exit.checkpointReason = "PrologueExit";
-            exit.targetScene = MarketSceneName;
-            exit.nextCaseId = 1;
+            exit.targetScene = "Prologue_Wilderness";
+            exit.routeKey = "prologue.wilderness";
             exit.boardCaseId = 0;
             exit.lockedDialogue = EnsurePrologueLockedDialogue();
 
@@ -112,7 +125,13 @@ namespace Morsoul.Hub.Editor
                 out CarrierInteractable exit);
             exit.promptText = "[E] Return to the market";
             exit.checkpointReason = "Investigation";
+            exit.routeKey = "hub.1";
             exit.targetScene = MarketSceneName;
+            // Runs the return contract: origin pose + Mode2D restored,
+            // InvestigationCaseId cleared — plain travel would strand
+            // Mode3D and the hub would look broken (board usable in the
+            // market, interrogation entry refused).
+            exit.exitsInvestigation = true;
 
             HubSceneFactory.SaveScene(scene, VaultScenePath);
         }
@@ -142,13 +161,30 @@ namespace Morsoul.Hub.Editor
                 SceneManager.SetActiveScene(scene);
                 bool dirty = false;
 
-                // VaultGate now targets the placeholder vault (was "C1_Vault").
+                // VaultGate follows the investigation.1 route; the placeholder
+                // scene remains only as the no-route fallback.
                 foreach (var gate in Object.FindObjectsByType<GateInteractable>())
                 {
                     if (gate.gameObject.scene != scene || gate.name != "VaultGate") continue;
-                    if (gate.targetScene != "Investigation_01_Placeholder")
+                    if (gate.routeKey != "investigation.1" ||
+                        gate.targetScene != "Investigation_01_Placeholder")
                     {
+                        gate.routeKey = "investigation.1";
                         gate.targetScene = "Investigation_01_Placeholder";
+                        dirty = true;
+                    }
+                }
+
+                // CaseDoor/carrier follow route keys instead of second
+                // hard-coded load paths; targetScene remains the fallback.
+                foreach (var carrier in Object.FindObjectsByType<CarrierInteractable>())
+                {
+                    if (carrier.gameObject.scene != scene) continue;
+                    string key = carrier.name == "CaseDoor" ? "caseloop"
+                        : carrier.name == "Carrier" ? "hub.3" : null;
+                    if (key != null && carrier.routeKey != key)
+                    {
+                        carrier.routeKey = key;
                         dirty = true;
                     }
                 }
@@ -171,6 +207,58 @@ namespace Morsoul.Hub.Editor
                     EditorSceneManager.MarkSceneDirty(scene);
                     EditorSceneManager.SaveScene(scene);
                     Debug.Log("DemoStandInFactory: patched VaultGate + RestSpot in Hub_LowerMarket.");
+                }
+            }
+            finally
+            {
+                if (previousActive.IsValid() && previousActive.isLoaded)
+                    SceneManager.SetActiveScene(previousActive);
+                if (!wasOpen && scene.IsValid() && scene.isLoaded)
+                    EditorSceneManager.CloseScene(scene, true);
+            }
+        }
+
+        static void PatchVaultPlaceholder()
+        {
+            if (!File.Exists(VaultScenePath))
+            {
+                Debug.LogWarning($"DemoStandInFactory: '{VaultScenePath}' not found; skipped.");
+                return;
+            }
+            var preExisting = SceneManager.GetSceneByPath(VaultScenePath);
+            bool wasOpen = preExisting.IsValid() && preExisting.isLoaded;
+            if (wasOpen && preExisting.isDirty)
+            {
+                Debug.LogError($"DemoStandInFactory: '{VaultScenePath}' is open with " +
+                               "unsaved changes; skipped. Save or revert it first.");
+                return;
+            }
+            var previousActive = SceneManager.GetActiveScene();
+            var scene = wasOpen ? preExisting
+                : EditorSceneManager.OpenScene(VaultScenePath, OpenSceneMode.Additive);
+            try
+            {
+                SceneManager.SetActiveScene(scene);
+                bool dirty = false;
+                foreach (var carrier in Object.FindObjectsByType<CarrierInteractable>())
+                {
+                    if (carrier.gameObject.scene != scene || carrier.name != "VaultExit") continue;
+                    if (carrier.routeKey != "hub.1" ||
+                        carrier.targetScene != MarketSceneName ||
+                        !carrier.exitsInvestigation)
+                    {
+                        carrier.routeKey = "hub.1";
+                        carrier.targetScene = MarketSceneName;
+                        carrier.exitsInvestigation = true;
+                        dirty = true;
+                    }
+                }
+
+                if (dirty)
+                {
+                    EditorSceneManager.MarkSceneDirty(scene);
+                    EditorSceneManager.SaveScene(scene);
+                    Debug.Log("DemoStandInFactory: patched VaultExit route in Investigation_01_Placeholder.");
                 }
             }
             finally
@@ -241,6 +329,7 @@ namespace Morsoul.Hub.Editor
                 list.Add(new EditorBuildSettingsScene(path, true));
             }
             Add(PrologueScenePath);
+            Add(PrologueWildernessScenePath);
             Add(VaultScenePath);
             EditorBuildSettings.scenes = list.ToArray();
         }

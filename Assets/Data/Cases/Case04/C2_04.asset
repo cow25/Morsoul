@@ -18,6 +18,7 @@ MonoBehaviour:
   caseId: 4
   acquisition: 1
   requiredTool: 1
+  requiredFlag: 
   description: Heavy copper-insulated control wiring corroded into slag. Spectral inspection confirms the same synthetic mana solvent identified in Ignatius' vault and Whisperwood.
   dissonanceKeyword: 
   isBacktrackingOnly: 0

@@ -18,6 +18,7 @@ MonoBehaviour:
   caseId: 5
   acquisition: 7
   requiredTool: 0
+  requiredFlag: 
   description: North and South industrial pylons route stolen mana from Cases 1 through 4 into the fissure barrier. Telemetry confirms inverted polarity designed to force a tectonic fracture.
   dissonanceKeyword: 
   isBacktrackingOnly: 0

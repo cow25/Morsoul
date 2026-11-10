@@ -104,7 +104,7 @@ namespace Morsoul.Dialogue.Editor
                     "(Scowls, looking down at the Golem's stone frame) \"An automaton " +
                     "and a street rogue? The culprit is already in irons, Astra. The " +
                     "Spirit-folk acolyte cast a foul hex from the nave floor during " +
-                    "vespers. We don't need mechanics tinkering with holy mysteries.\"",
+                    "vespers. We don't need a walking relic meddling in holy mysteries.\"",
                     next: "golem_scan"),
                 Node("golem_scan", "Golem",
                     "[OPTICAL SCAN: Subject 01 (Valerius) adrenaline standard, " +
@@ -389,7 +389,7 @@ namespace Morsoul.Dialogue.Editor
                     next: "harlan_smirk"),
                 Node("harlan_smirk", "Harlan",
                     "(Steps out from the shadows of the tool shed, wiping soot from " +
-                    "his leather vest with an indifferent smirk) \"Simple physics, " +
+                    "his leather vest with an indifferent smirk) \"Simple as a snapped pick, " +
                     "automaton. Old Brokk was pushing the drilling rigs past " +
                     "maximum tolerance to hit his safety bonuses. He ignored the " +
                     "safety valves and triggered a steam surge. It was " +
@@ -457,8 +457,8 @@ namespace Morsoul.Dialogue.Editor
                     "vanished before the week was out.\"",
                     next: "eliza_circle"),
                 Node("eliza_circle", "Eliza",
-                    "\"That's the Circle for you. The trail always runs cold " +
-                    "the same way theirs do.\"",
+                    "\"That's how these people work. The trail always runs cold " +
+                    "the same way.\"",
                     next: "ovan_vault"),
                 Node("ovan_vault", "Guildmaster Ovan",
                     "\"Well\u2014if there's anything left to learn, it's down " +

@@ -18,6 +18,7 @@ MonoBehaviour:
   caseId: 2
   acquisition: 2
   requiredTool: 0
+  requiredFlag: 
   description: I was tending the courtyard lanterns under Brother Kenneth's eye until the bell tolled. My spirits sing with nature, not with cursed muting dust!
   dissonanceKeyword: spirits sing with nature
   isBacktrackingOnly: 0

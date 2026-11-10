@@ -98,7 +98,7 @@ compile Morsoul.Board "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Engine.dll" --
 compile Morsoul.Interrogation "-r:$OUT/Morsoul.Data.dll" -- $(src Interrogation)
 compile Morsoul.Hub "-r:$OUT/Morsoul.Core.dll" "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Dialogue.dll" \
     "-r:$OUT/Morsoul.Board.dll" "-r:$OUT/Morsoul.Engine.dll" -- $(src Hub)
-compile Morsoul.Journal "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Hub.dll" -- $(src Journal)
+compile Morsoul.Journal "-r:$OUT/Morsoul.Core.dll" "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Hub.dll" -- $(src Journal)
 compile Morsoul.Cutscene "-r:$OUT/Morsoul.Core.dll" "-r:$OUT/Morsoul.Data.dll" -- $(src Cutscene)
 compile Morsoul.Title "-r:$OUT/Morsoul.Core.dll" "-r:$OUT/Morsoul.Data.dll" -- $(src Title)
 compile Morsoul.Resolution "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Gameplay.dll" -- $(src Resolution)
@@ -106,7 +106,7 @@ compile Morsoul.Flow \
     "-r:$OUT/Morsoul.Core.dll" "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Engine.dll" \
     "-r:$OUT/Morsoul.Board.dll" "-r:$OUT/Morsoul.Gameplay.dll" \
     "-r:$OUT/Morsoul.Interrogation.dll" "-r:$OUT/Morsoul.Dialogue.dll" "-r:$OUT/Morsoul.Cutscene.dll" \
-    "-r:$OUT/Morsoul.Resolution.dll" "-r:$OUT/Morsoul.Hub.dll" \
+    "-r:$OUT/Morsoul.Resolution.dll" "-r:$OUT/Morsoul.Hub.dll" "-r:$OUT/Morsoul.Journal.dll" \
     -- $(src Flow)
 compile Morsoul.Dev \
     "-r:$OUT/Morsoul.Core.dll" "-r:$OUT/Morsoul.Data.dll" \
@@ -119,7 +119,7 @@ compile Morsoul.Board.Editor "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Board.d
 compile Morsoul.Dialogue.Editor "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Dialogue.dll" -- $(src Dialogue/Editor)
 compile Morsoul.Interrogation.Editor "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Interrogation.dll" -- $(src Interrogation/Editor)
 compile Morsoul.Hub.Editor \
-    "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Dialogue.dll" "-r:$OUT/Morsoul.Hub.dll" \
+    "-r:$OUT/Morsoul.Core.dll" "-r:$OUT/Morsoul.Data.dll" "-r:$OUT/Morsoul.Dialogue.dll" "-r:$OUT/Morsoul.Hub.dll" \
     "-r:$OUT/Morsoul.Journal.dll" "-r:$OUT/Morsoul.Board.dll" "-r:$OUT/Morsoul.Dialogue.Editor.dll" \
     -- $(src Hub/Editor)
 compile Morsoul.Journal.Editor \

@@ -50,30 +50,26 @@ namespace Morsoul.Hub
             if (session.HasFlag(playedFlag)) return;
             if (!string.IsNullOrEmpty(requiredFlag) && !session.HasFlag(requiredFlag)) return;
 
-            session.SetFlag(playedFlag);
             var controller = _context != null ? _context.dialogue : null;
             if (controller == null)
             {
                 Debug.LogWarning($"HubArrivalTrigger '{name}': no HubContext.dialogue wired.", this);
                 return;
             }
-            // Forward dialogue side effects into the hub stores, same as
-            // NpcInteractable's wiring.
-            void OnClue(Morsoul.Data.ClueData clue) => _context.journal?.Register(clue);
-            void OnFlag(string flag) => _context.flags?.Add(flag);
+            // Latch the once-flag only after the beat actually completes so a
+            // failed or interrupted playback can still retry on the next load.
             void OnEnded()
             {
-                controller.ClueRegistered -= OnClue;
-                controller.FlagSet -= OnFlag;
                 controller.DialogueEnded -= OnEnded;
+                session.SetFlag(playedFlag);
             }
-            controller.ClueRegistered += OnClue;
-            controller.FlagSet += OnFlag;
             controller.DialogueEnded += OnEnded;
 
-            if (_context.flags != null) controller.SetFlags(_context.flags.Set);
-            controller.SetDialogue(dialogue);
-            controller.Play();
+            if (!_context.PlayDialogue(dialogue))
+            {
+                controller.DialogueEnded -= OnEnded;
+                Debug.LogWarning($"HubArrivalTrigger '{name}': arrival dialogue failed to start.", this);
+            }
         }
     }
 }

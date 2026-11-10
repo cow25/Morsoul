@@ -98,6 +98,7 @@ namespace Morsoul.Flow.Editor
             flow.cutscenePlayer = cutscene;
             flow.dialogue = dialogue;
             flow.hubJournal = hubJournal;
+            flow.journalPanel = journal;
             flow.flags = hubFlags;
             flow.caseDatabase = AssetDatabase.LoadAssetAtPath<CaseDatabase>(
                 "Assets/Resources/CaseDatabase.asset");
@@ -110,6 +111,59 @@ namespace Morsoul.Flow.Editor
                           "Assign GameFlow.activeCase and add the scene to Build Settings.", flow);
             else
                 Debug.LogError($"FlowSceneFactory: failed to save '{ScenePath}'.");
+        }
+
+        /// <summary>
+        /// Wires the generated Case 5 cinematics (entry + endings 1-3) onto the
+        /// CaseLoop GameFlow. Run after "Morsoul/Data/Generate Finale Cutscenes";
+        /// missing assets are reported, never invented.
+        /// </summary>
+        [MenuItem("Morsoul/Scene/Assign Finale Cutscenes To Case Loop")]
+        public static void AssignFinaleCutscenes()
+        {
+            const string folder = "Assets/Data/Cutscenes/Case05";
+            var entry = AssetDatabase.LoadAssetAtPath<CutsceneData>($"{folder}/D_EchoesOfThePast.asset");
+            var e1 = AssetDatabase.LoadAssetAtPath<CutsceneData>($"{folder}/D_CollapsedRift.asset");
+            var e2 = AssetDatabase.LoadAssetAtPath<CutsceneData>($"{folder}/D_SilentSentinel.asset");
+            var e3 = AssetDatabase.LoadAssetAtPath<CutsceneData>($"{folder}/D_Ending3_HologramInTheDust.asset");
+            if (entry == null || e1 == null || e2 == null || e3 == null)
+            {
+                Debug.LogError("FlowSceneFactory: finale cutscene assets missing " +
+                               $"(entry={entry != null}, e1={e1 != null}, e2={e2 != null}, " +
+                               $"e3={e3 != null}). Run Morsoul/Data/Generate Finale Cutscenes first.");
+                return;
+            }
+            if (!File.Exists(ScenePath))
+            {
+                Debug.LogError($"FlowSceneFactory: '{ScenePath}' does not exist.");
+                return;
+            }
+
+            var previousActive = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+            var scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            try
+            {
+                var flow = Object.FindAnyObjectByType<GameFlow>();
+                if (flow == null)
+                {
+                    Debug.LogError("FlowSceneFactory: no GameFlow in the case-loop scene.");
+                    return;
+                }
+                flow.entryCutscene = entry;
+                if (flow.endingCutscenes == null || flow.endingCutscenes.Length < 4)
+                    flow.endingCutscenes = new CutsceneData[4];
+                flow.endingCutscenes[1] = e1;
+                flow.endingCutscenes[2] = e2;
+                flow.endingCutscenes[3] = e3;
+                EditorSceneManager.MarkSceneDirty(scene);
+                EditorSceneManager.SaveScene(scene);
+                Debug.Log("FlowSceneFactory: assigned entry + ending cutscenes on GameFlow.", flow);
+            }
+            finally
+            {
+                if (previousActive.IsValid() && previousActive.isLoaded)
+                    UnityEngine.SceneManagement.SceneManager.SetActiveScene(previousActive);
+            }
         }
 
         static T CreatePanel<T>(string name, PanelSettings panelSettings, string uxmlPath)

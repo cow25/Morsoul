@@ -37,8 +37,16 @@ MonoBehaviour:
       emotionAura: 0
     invalidMoves: []
   - suspectClaim: "Then the creature must have snuck up while I wasn't looking! I saw them, I swear \u2014 they chanted from the tower base and bewitched the machinery!"
-    keywords: []
+    keywords:
+    - chanted from the tower base
     validMoves:
+    - verb: 0
+      evidence: {fileID: 0}
+      breaksComposureSegment: 0
+      strikeCost: 0
+      isCoreContradiction: 0
+      responseDialogue: I was busy oiling the rope pulleys! A cunning sorcerer could whisper upward through the floor flues without making a sound!
+      emotionAura: 0
     - verb: 2
       evidence: {fileID: 11400000, guid: c5d2410d6e80a1f48ab03dbdab423988, type: 2}
       breaksComposureSegment: 1
@@ -52,11 +60,19 @@ MonoBehaviour:
       breaksComposureSegment: 0
       strikeCost: 1
       isCoreContradiction: 0
-      responseDialogue: The High Priestess's holy fork? That proves her sanctity, not my guilt! Are your cognitive processors rusted?!
+      responseDialogue: The High Priestess's holy fork? That proves her sanctity, not my guilt! Are your wits as rusted as your plates?!
       emotionAura: 0
   - suspectClaim: I am a faithful servant of Saint Althea! I have dedicated twenty years to ringing these bells! What possible motive could I have to harm Mother Lyra?!
-    keywords: []
+    keywords:
+    - What possible motive could I have
     validMoves:
+    - verb: 0
+      evidence: {fileID: 0}
+      breaksComposureSegment: 0
+      strikeCost: 0
+      isCoreContradiction: 0
+      responseDialogue: I love this parish more than my own life! I would sever my own fingers before I willingly silenced the Lady! You cannot invent a reason for me to commit blasphemy!
+      emotionAura: 0
     - verb: 1
       evidence: {fileID: 11400000, guid: 9ff42a2b82e508549af87c936ebd1855, type: 2}
       breaksComposureSegment: 1

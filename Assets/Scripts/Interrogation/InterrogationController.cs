@@ -38,6 +38,12 @@ namespace Morsoul.Interrogation
         public event Action<int> StrikesChanged;
         /// <summary>Raised when the player forfeits with ESC.</summary>
         public event Action Forfeited;
+        /// <summary>
+        /// Raised whenever engine progress changes (phase advance, composure
+        /// segment break, strike, keyword press or restore). GameFlow subscribes
+        /// to keep the session encounter snapshot current.
+        /// </summary>
+        public event Action StateChanged;
 
         const string BannerErrorClass = "banner--error";
         const string BannerInfoClass = "banner--info";
@@ -89,6 +95,12 @@ namespace Morsoul.Interrogation
         int _uiVersion;
 
         public bool IsOpen => _isOpen;
+        /// <summary>Last frame the panel closed; lets callers suppress same-frame input leaks.</summary>
+        public int LastEndFrame { get; private set; }
+        /// <summary>Live engine state for snapshotting; safe defaults when idle.</summary>
+        public int EnginePhaseIndex => _engine != null ? _engine.PhaseIndex : 0;
+        public int EngineSegmentsRemaining => _engine != null ? _engine.SegmentsRemaining : 0;
+        public int EngineStrikesLost => _engine != null ? _engine.StrikesLost : 0;
 
         void OnEnable()
         {
@@ -188,6 +200,7 @@ namespace Morsoul.Interrogation
         public void Close()
         {
             _isOpen = false;
+            LastEndFrame = Time.frameCount;
             if (_root != null) _root.style.display = DisplayStyle.None;
             if (manageCursor)
             {
@@ -206,6 +219,22 @@ namespace Morsoul.Interrogation
             _engine.Reset();
             ResetDisplayState();
             if (_isOpen) RefreshAll();
+            StateChanged?.Invoke();
+        }
+
+        /// <summary>
+        /// Restores a persisted mid-encounter snapshot (phase, composure
+        /// segments, strikes) into the engine and repaints. Pressed keywords
+        /// resume unpressed inside the restored phase. Safe defaults when the
+        /// snapshot is null.
+        /// </summary>
+        public void RestoreState(int phaseIndex, int segmentsRemaining, int strikesLost)
+        {
+            if (_engine == null) return;
+            _engine.RestoreState(phaseIndex, segmentsRemaining, strikesLost);
+            ResetDisplayState();
+            if (_isOpen) RefreshAll();
+            StateChanged?.Invoke();
         }
 
         void BuildEngine()
@@ -298,6 +327,7 @@ namespace Morsoul.Interrogation
             ApplyPortrait();
             ApplyGuidedHint();
             ResolveStatus(result.Status);
+            StateChanged?.Invoke();
         }
 
         void OnEvidenceCardClicked(EvidenceData evidence)
@@ -358,6 +388,7 @@ namespace Morsoul.Interrogation
             ApplyPortrait();
             ApplyGuidedHint();
             ResolveStatus(result.Status);
+            StateChanged?.Invoke();
         }
 
         void ResolveStatus(InterrogationStatus status)

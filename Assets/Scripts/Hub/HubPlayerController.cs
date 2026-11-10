@@ -1,12 +1,15 @@
 using System.Collections.Generic;
+using Morsoul.Core;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 namespace Morsoul.Hub
 {
     /// <summary>
     /// Top-down 2D player controller for hub scenes. WASD movement via the
-    /// Input System (Keyboard.current), LeftShift sprint, E to interact with
+    /// Input System (Keyboard.current), axis-locked to sharp 90° movement —
+    /// no diagonals. LeftShift sprint, E to interact with
     /// the nearest <see cref="Interactable2D"/> found by an OverlapCircleAll
     /// cast. While the shared dialogue panel is playing, movement and
     /// interaction are suspended (E then advances dialogue instead).
@@ -14,6 +17,7 @@ namespace Morsoul.Hub
     /// or CameraFollow2D.
     /// </summary>
     [RequireComponent(typeof(Rigidbody2D))]
+    [RequireComponent(typeof(YSort2D))]
     public class HubPlayerController : MonoBehaviour
     {
         public float moveSpeed = 3.5f;
@@ -24,14 +28,23 @@ namespace Morsoul.Hub
         public float interactRadius = 1.5f;
         /// <summary>Layers searched by the interactable cast; defaults to everything.</summary>
         public LayerMask interactLayers = ~0;
+        [Header("Audio")]
+        [Tooltip("Footstep one-shots picked at random while moving; empty stays silent.")]
+        public AudioClip[] footstepClips;
+        /// <summary>Seconds between footstep clips while walking (sprint shortens it).</summary>
+        public float stepIntervalSeconds = 0.42f;
 
         Rigidbody2D _rb;
         readonly List<Interactable2D> _candidates = new List<Interactable2D>();
         readonly List<Vector2> _candidatePositions = new List<Vector2>();
         Interactable2D _prompted;
+        PlayerFacing2D _facing = PlayerFacing2D.Down;
+        float _stepTimer;
 
         /// <summary>Current normalized move input (zero while dialogue plays).</summary>
         public Vector2 MoveInput { get; private set; }
+        /// <summary>Last non-zero movement direction, persisted for save/restore.</summary>
+        public PlayerFacing2D CurrentFacing => _facing;
         /// <summary>Nearest interactable currently in range, if any.</summary>
         public Interactable2D CurrentTarget { get; private set; }
 
@@ -40,6 +53,16 @@ namespace Morsoul.Hub
             _rb = GetComponent<Rigidbody2D>();
             _rb.gravityScale = 0f;
             _rb.freezeRotation = true;
+            var body = GetComponent<BoxCollider2D>();
+            if (body == null)
+            {
+                body = gameObject.AddComponent<BoxCollider2D>();
+                body.size = new Vector2(0.8f, 0.8f);
+            }
+            if (GetComponent<YSort2D>() == null)
+                gameObject.AddComponent<YSort2D>();
+            var session = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session : null;
+            if (session != null) _facing = session.PlayerFacing2D;
         }
 
         void Update()
@@ -54,11 +77,19 @@ namespace Morsoul.Hub
                    && context.dialogue.LastEndFrame == Time.frameCount
                 || context != null && context.travelMenu != null
                    && context.travelMenu.LastCloseFrame == Time.frameCount;
-            MoveInput = dialoguePlaying ? Vector2.zero : ReadMoveInput(keyboard);
+            var session = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session : null;
+            bool cutsceneActive = session != null && !string.IsNullOrEmpty(session.ActiveCutsceneId);
+            MoveInput = dialoguePlaying || cutsceneActive
+                ? Vector2.zero
+                : ReadMoveInput(keyboard);
+            if (!MoveInput.Equals(Vector2.zero)) _facing = FacingFrom(MoveInput);
+            SyncPlayerContext();
 
             UpdatePromptTarget();
+            TickFootsteps(keyboard);
 
-            if (!dialoguePlaying && keyboard.eKey.wasPressedThisFrame && CurrentTarget != null)
+            if (!dialoguePlaying && !cutsceneActive && keyboard.eKey.wasPressedThisFrame &&
+                CurrentTarget != null)
                 CurrentTarget.Interact(context);
         }
 
@@ -79,7 +110,33 @@ namespace Morsoul.Hub
             if (keyboard.dKey.isPressed) input.x += 1f;
             if (keyboard.sKey.isPressed) input.y -= 1f;
             if (keyboard.wKey.isPressed) input.y += 1f;
+            return AxisLock(input);
+        }
+
+        /// <summary>Sharp 90° movement (Undertale-style): only one axis may be
+        /// active at a time; horizontal wins ties so diagonal input slides
+        /// sideways rather than producing a 45° walk.</summary>
+        internal static Vector2 AxisLock(Vector2 input)
+        {
+            if (Mathf.Abs(input.x) >= Mathf.Abs(input.y)) input.y = 0f;
+            else input.x = 0f;
             return input;
+        }
+
+        static PlayerFacing2D FacingFrom(Vector2 input)
+        {
+            return Mathf.Abs(input.x) > Mathf.Abs(input.y)
+                ? (input.x > 0f ? PlayerFacing2D.Right : PlayerFacing2D.Left)
+                : (input.y > 0f ? PlayerFacing2D.Up : PlayerFacing2D.Down);
+        }
+
+        void SyncPlayerContext()
+        {
+            var session = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session : null;
+            // Keep the mode the entry mechanism stamped — investigation
+            // stand-ins run as Mode3D and the board's CanUse gate reads it.
+            session?.SetPlayerContext(session.CurrentSceneMode,
+                SceneManager.GetActiveScene().name, transform.position, _facing);
         }
 
         void UpdatePromptTarget()
@@ -119,6 +176,22 @@ namespace Morsoul.Hub
                 if (_prompted != null) _prompted.SetPromptVisible(true);
             }
             CurrentTarget = nearest;
+        }
+
+        void TickFootsteps(Keyboard keyboard)
+        {
+            if (MoveInput.Equals(Vector2.zero) ||
+                footstepClips == null || footstepClips.Length == 0)
+            {
+                _stepTimer = 0f;
+                return;
+            }
+            _stepTimer -= Time.deltaTime;
+            if (_stepTimer > 0f) return;
+            bool sprint = keyboard.leftShiftKey.isPressed;
+            _stepTimer = stepIntervalSeconds / (sprint ? sprintMultiplier : 1f);
+            var clip = footstepClips[Random.Range(0, footstepClips.Length)];
+            if (clip != null) CoreRuntime.Instance?.Audio?.PlaySfx(clip, 0.8f);
         }
 
         void OnDisable()

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Morsoul.Core;
+using Morsoul.Data;
 using Morsoul.Hub;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -206,6 +207,15 @@ namespace Morsoul.Dev
             var s = core.Session;
             var gsm = GameStateManager.Instance;
 
+            Section("Investigation development fallback");
+            core.DevelopmentInvestigationFallbackEnabled = GUILayout.Toggle(
+                core.DevelopmentInvestigationFallbackEnabled,
+                "Simulate explicitly unintegrated investigation areas (development only)");
+            GUILayout.Label(core.InvestigationStatusMessage);
+            for (int caseId = 0; caseId <= 4; caseId++)
+                if (s.WasInvestigationSimulated(caseId))
+                    GUILayout.Label($"Case {caseId}: simulation used; deduction source {s.GetInvestigationSource(caseId)}");
+
             Section("Current case");
             GUILayout.BeginHorizontal();
             for (int i = 0; i <= 5; i++)
@@ -294,6 +304,7 @@ namespace Morsoul.Dev
             {
                 var clue = core.ResolveClue(_clueInput);
                 if (clue == null) Debug.LogWarning($"DevMenu: no clue '{_clueInput}'.");
+                else if (clue.type == ClueType.Latent) s.RegisterLatentClue(clue);
                 else s.RegisterClue(clue);
             }
             GUILayout.EndHorizontal();

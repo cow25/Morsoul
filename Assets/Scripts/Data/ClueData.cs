@@ -10,6 +10,7 @@ namespace Morsoul.Data
         public int caseId;
         public AcquisitionMethod acquisition;
         public Tool requiredTool;
+        public string requiredFlag;
         [TextArea] public string description;
         public string dissonanceKeyword;
         public bool isBacktrackingOnly;
