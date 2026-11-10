@@ -1,4 +1,5 @@
 using System.IO;
+using Morsoul.Core;
 using Morsoul.Data;
 using Morsoul.Dialogue;
 using UnityEditor;
@@ -55,7 +56,8 @@ namespace Morsoul.Hub.Editor
                 out GateInteractable gateInteractable);
             gateInteractable.promptText = "[E] Enter";
             gateInteractable.requiredFlag = "C1_WarrantGranted";
-            gateInteractable.targetScene = "C1_Vault";
+            gateInteractable.routeKey = "investigation.1";
+            gateInteractable.targetScene = "Investigation_01_Placeholder";
             gateInteractable.lockedDialogue =
                 LoadDialogue(Case01DialogueFolder + "/D_Gate_Locked_01.asset");
 
@@ -71,6 +73,7 @@ namespace Morsoul.Hub.Editor
                 new Color(0.6f, 0.25f, 0.25f), new Vector3(4f, 1.5f, 0f),
                 out NpcInteractable ignatius);
             ignatius.promptText = "[E] Talk";
+            ignatius.interrogationCaseId = 1;
             ignatius.dialogue =
                 LoadDialogue(Case01DialogueFolder + "/D_Ignatius_Claim_01.asset");
 
@@ -87,6 +90,7 @@ namespace Morsoul.Hub.Editor
                 new Color(0.3f, 0.6f, 0.4f), new Vector3(-6f, -1f, 0f),
                 out CarrierInteractable carrierInteractable);
             carrierInteractable.promptText = "[E] Travel";
+            carrierInteractable.routeKey = "hub.3";
             carrierInteractable.targetScene = "Hub_Wilderness";
 
             // Case door: ungated entry into the shared case loop; the loop
@@ -96,7 +100,9 @@ namespace Morsoul.Hub.Editor
                 out CarrierInteractable caseDoor);
             caseDoor.promptText = "[E] Begin Case";
             caseDoor.checkpointReason = "CaseDoor";
+            caseDoor.routeKey = "caseloop";
             caseDoor.targetScene = "CaseLoop";
+            caseDoor.gameObject.SetActive(false);
 
             SaveScene(scene, LowerMarketScenePath);
         }
@@ -120,6 +126,7 @@ namespace Morsoul.Hub.Editor
                 out GateInteractable exitGate);
             exitGate.promptText = "[E] Leave";
             exitGate.requiredFlag = ""; // ungated
+            exitGate.routeKey = "hub.1";
             exitGate.targetScene = "Hub_LowerMarket";
 
             // Case door: ungated entry into the shared case loop.
@@ -128,7 +135,9 @@ namespace Morsoul.Hub.Editor
                 out CarrierInteractable caseDoor);
             caseDoor.promptText = "[E] Begin Case";
             caseDoor.checkpointReason = "CaseDoor";
+            caseDoor.routeKey = "caseloop";
             caseDoor.targetScene = "CaseLoop";
+            caseDoor.gameObject.SetActive(false);
 
             SaveScene(scene, WildernessScenePath);
         }
@@ -152,6 +161,8 @@ namespace Morsoul.Hub.Editor
             var rb = player.AddComponent<Rigidbody2D>();
             rb.gravityScale = 0f;
             rb.freezeRotation = true;
+            var body = player.AddComponent<BoxCollider2D>();
+            body.size = new Vector2(0.8f, 0.8f);
             player.AddComponent<HubPlayerController>();
             ApplyVisualProfile(player);
             return player;
@@ -167,6 +178,11 @@ namespace Morsoul.Hub.Editor
             camera.orthographicSize = 5f;
             var follow = cameraGo.AddComponent<CameraFollow2D>();
             follow.target = target;
+            // Default bounds cover the authored hub layouts (~x [-7,7], y [-3,5]);
+            // designers tighten them per scene as levels grow.
+            follow.useBounds = true;
+            follow.boundsMin = new Vector2(-8f, -5f);
+            follow.boundsMax = new Vector2(8f, 6f);
             return follow;
         }
 
@@ -184,6 +200,7 @@ namespace Morsoul.Hub.Editor
             var context = contextGo.AddComponent<HubContext>();
             context.flags = contextGo.AddComponent<HubFlags>();
             context.journal = contextGo.AddComponent<HubJournal>();
+            contextGo.AddComponent<SceneAudioLoop>();
 
             var dialogueGo = new GameObject("DialoguePanel");
             var renderer = dialogueGo.AddComponent<PanelRenderer>();
@@ -204,6 +221,7 @@ namespace Morsoul.Hub.Editor
             else Debug.LogWarning($"HubSceneFactory: UXML not found at '{JournalUxmlPath}'.");
             var journal = journalGo.AddComponent<Journal.JournalController>();
             journal.journal = context.journal;
+            journal.context = context;
             journal.SetFlags(context.flags.Set);
             var runicLog = AssetDatabase.LoadAssetAtPath<RunicLogData>(Case01RunicLogPath);
             if (runicLog != null)
@@ -219,6 +237,10 @@ namespace Morsoul.Hub.Editor
         {
             var controller = player.GetComponent<HubPlayerController>();
             controller.context = context;
+            var body = player.GetComponent<BoxCollider2D>();
+            if (body == null) body = player.AddComponent<BoxCollider2D>();
+            body.size = new Vector2(0.8f, 0.8f);
+            body.isTrigger = false;
             if (cameraFollow != null) cameraFollow.target = player.transform;
         }
 

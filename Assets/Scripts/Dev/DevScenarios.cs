@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Morsoul.Core;
+using Morsoul.Data;
 
 namespace Morsoul.Dev
 {
@@ -30,6 +31,7 @@ namespace Morsoul.Dev
             public string description;
             public int? currentCase;
             public string routeKey;           // optional travel after apply
+            public bool collectCaseClues;
             public string[] setFlags;
             public string[] clearFlags;
             public bool resetSession;
@@ -52,23 +54,23 @@ namespace Morsoul.Dev
             },
             new Scenario
             {
-                name = "C2: belfry unlocked",
-                description = "Case 2, Belfry Key granted → nave gate opens.",
-                currentCase = 2, routeKey = "hub.2",
+                name = "C2: board ready",
+                description = "Case 2, hub clues collected and Belfry Key granted.",
+                currentCase = 2, routeKey = "hub.2", collectCaseClues = true,
                 setFlags = new[] { BelfryKeyFlag },
             },
             new Scenario
             {
-                name = "C3: seal granted",
-                description = "Case 3, Perimeter Seal granted → briar gate opens.",
-                currentCase = 3, routeKey = "hub.3",
+                name = "C3: board ready",
+                description = "Case 3, hub clues collected and Perimeter Seal granted.",
+                currentCase = 3, routeKey = "hub.3", collectCaseClues = true,
                 setFlags = new[] { PerimeterSealFlag },
             },
             new Scenario
             {
-                name = "C4: clearance granted",
-                description = "Case 4, Override Clearance granted → shaft lift opens.",
-                currentCase = 4, routeKey = "hub.4",
+                name = "C4: board ready",
+                description = "Case 4, hub clues collected and Override Clearance granted.",
+                currentCase = 4, routeKey = "hub.4", collectCaseClues = true,
                 setFlags = new[] { OverrideClearanceFlag },
             },
             new Scenario
@@ -108,6 +110,21 @@ namespace Morsoul.Dev
 
             if (s.resetSession) session.Reset();
             if (s.currentCase.HasValue) session.CurrentCase = s.currentCase.Value;
+            string clueStatus = "";
+            if (s.collectCaseClues && s.currentCase.HasValue)
+            {
+                var data = core.ResolveCase(s.currentCase.Value);
+                if (data == null) return $"{s.name}: case {s.currentCase.Value} unresolved.";
+                int collected = 0;
+                if (data.clues != null)
+                    foreach (var clue in data.clues)
+                    {
+                        if (clue == null || clue.type == ClueType.Latent ||
+                            clue.isBacktrackingOnly) continue;
+                        if (session.RegisterClue(clue)) collected++;
+                    }
+                clueStatus = $" {collected} case clues registered.";
+            }
             if (s.setFlags != null)
                 foreach (var f in s.setFlags) session.SetFlag(f);
             if (s.clearFlags != null)
@@ -119,7 +136,7 @@ namespace Morsoul.Dev
                 if (scene == null) return $"{s.name}: applied, route '{s.routeKey}' unregistered.";
                 DevTravel.Go(scene);
             }
-            return $"{s.name}: applied.";
+            return $"{s.name}: applied.{clueStatus}";
         }
     }
 }

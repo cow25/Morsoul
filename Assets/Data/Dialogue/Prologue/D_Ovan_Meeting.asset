@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad6b4272890c70c4eb3d3dfe4810ac24, type: 3}
+  m_Name: D_Ovan_Meeting
+  m_EditorClassIdentifier: Morsoul.Dialogue::Morsoul.Dialogue.DialogueData
+  id: D_Ovan_Meeting
+  nodes:
+  - id: ovan_look
+    speakerName: Guildmaster Ovan
+    speakerPortrait: {fileID: 0}
+    text: "\"(Looks up from a desk buried in ledgers) Eliza. Back from the ruins already \u2014 and you've brought company.\""
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: eliza_found
+  - id: eliza_found
+    speakerName: Eliza
+    speakerPortrait: {fileID: 0}
+    text: "\"Found them at the ruins, Ovan. They're no monster \u2014 give them a chance before you call the guard.\""
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: ovan_weigh
+  - id: ovan_weigh
+    speakerName: Guildmaster Ovan
+    speakerPortrait: {fileID: 0}
+    text: "\"Hrm. Never seen your like on any registry, friend \u2014 and I've signed every oddity this city's coughed up in twenty years. But Eliza's nose for trouble is sharper than my quill.\""
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: ovan_offer
+  - id: ovan_offer
+    speakerName: Guildmaster Ovan
+    speakerPortrait: {fileID: 0}
+    text: '"The Guild takes all kinds. When you''re ready for honest work, my door stays open."'
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: 
+    options: []
+    nextNodeId: 
+  startNodeId: ovan_look
+  portraits: []

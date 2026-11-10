@@ -19,6 +19,12 @@ namespace Morsoul.Hub
         /// <summary>Scene loaded when the gate is open.</summary>
         public string targetScene;
         /// <summary>
+        /// Optional named spawn in the destination scene (matches a
+        /// SceneSpawnMarker's entryId). Empty = the scene's default spawn.
+        /// Used so doors deposit the player at their own doorway.
+        /// </summary>
+        public string entryId;
+        /// <summary>
         /// Optional route-table key (e.g. "investigation.3") resolved through
         /// the GameStateManager before targetScene. Lets a Zone B seam point
         /// at a route whose scene is delivered by another lane — the seam
@@ -43,19 +49,24 @@ namespace Morsoul.Hub
             var flags = ctx != null && ctx.flags != null ? ctx.flags.Set : null;
             if (GateRule.CanPass(requiredFlag, flags))
             {
-                string scene = ResolveTargetScene();
-                CheckpointRequested?.Invoke("Seam");
-                CoreRuntime.Instance?.Bus.Publish(new CheckpointRequestedEvent
+                if (!string.IsNullOrEmpty(routeKey) && routeKey.StartsWith("investigation.", StringComparison.Ordinal))
                 {
-                    Reason = "Seam",
-                    NextSceneName = scene
-                });
+                    var entry = CoreRuntime.Ensure().EnterInvestigation(routeKey);
+                    Debug.Log(entry.Message, this);
+                    return;
+                }
+                string scene = ResolveTargetScene();
                 if (string.IsNullOrEmpty(scene))
                 {
                     Debug.LogWarning($"GateInteractable '{name}': open but no destination " +
                                      $"(routeKey '{routeKey}' unresolved, targetScene empty).", this);
                     return;
                 }
+                CheckpointRequested?.Invoke("Seam");
+                // Named-spawn handoff survives the travel checkpoint's pose
+                // clear and is consumed by SceneEntryPoint in the next scene.
+                if (CoreRuntime.Instance != null && !string.IsNullOrEmpty(entryId))
+                    CoreRuntime.Instance.Session.PendingEntryPointId = entryId;
                 // Single load authority: the GSM guards missing scenes and
                 // stamps the checkpoint; direct load only without Core.
                 if (CoreRuntime.Instance != null)
@@ -78,9 +89,7 @@ namespace Morsoul.Hub
                 Debug.LogWarning($"GateInteractable '{name}': locked but no HubContext.dialogue wired.", this);
                 return;
             }
-            if (ctx.flags != null) ctx.dialogue.SetFlags(ctx.flags.Set);
-            ctx.dialogue.SetDialogue(lockedDialogue);
-            ctx.dialogue.Play();
+            ctx.PlayDialogue(lockedDialogue);
         }
 
         /// <summary>
@@ -88,7 +97,7 @@ namespace Morsoul.Hub
         /// serialized targetScene as fallback. Null/empty when neither
         /// resolves.
         /// </summary>
-        string ResolveTargetScene()
+        public string ResolveTargetScene()
         {
             if (!string.IsNullOrEmpty(routeKey) && GameStateManager.Instance != null)
             {

@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b71d7f6f7d77720459e951f4d068c803, type: 3}
+  m_Name: D_SilentSentinel
+  m_EditorClassIdentifier: Morsoul.Cutscene::Morsoul.Cutscene.CutsceneData
+  id: D_SilentSentinel
+  shots:
+  - image: {fileID: 21300000, guid: 8c889eebdea7e514b99d349204bb85de, type: 3}
+    video: {fileID: 0}
+    durationSeconds: 6
+    waitForInput: 1
+    caption: "By decree of the High Council and the Investigator's Guild, the conspiracy that threatened our realm has been dismantled! Praise be to our keenest minds \u2014 hailed as Asterveil's finest investigators!"
+    captionSpeaker: Guildmaster
+  - image: {fileID: 21300000, guid: 8c889eebdea7e514b99d349204bb85de, type: 3}
+    video: {fileID: 0}
+    durationSeconds: 6
+    waitForInput: 1
+    caption: We saved them all, {PlayerName}. The mines are secure, the acolyte is free, and the Council is rewriting the trade laws. The gate holds... but the tremor hasn't stopped.
+    captionSpeaker: Eliza
+  - image: {fileID: 21300000, guid: 8c889eebdea7e514b99d349204bb85de, type: 3}
+    video: {fileID: 0}
+    durationSeconds: 6
+    waitForInput: 1
+    caption: (Gently) Still no memories, huh? Not a single clue about who made you... or who you used to be?
+    captionSpeaker: Eliza
+  - image: {fileID: 21300000, guid: 8c889eebdea7e514b99d349204bb85de, type: 3}
+    video: {fileID: 0}
+    durationSeconds: 6
+    waitForInput: 1
+    caption: Diagnostic check complete. Memory banks remain permanently unreadable. I am an automaton of the Investigator's Guild. That is sufficient.
+    captionSpeaker: Golem
+  - image: {fileID: 21300000, guid: 8c889eebdea7e514b99d349204bb85de, type: 3}
+    video: {fileID: 0}
+    durationSeconds: 6
+    waitForInput: 1
+    caption: Yeah. I guess it has to be. Come on, partner. Night patrol starts in an hour.
+    captionSpeaker: Eliza
+  - image: {fileID: 21300000, guid: 8c889eebdea7e514b99d349204bb85de, type: 3}
+    video: {fileID: 0}
+    durationSeconds: 6
+    waitForInput: 1
+    caption: "Justice was defended, and the realm endured.\nYet beneath the stone faceplate, the past remained an unread book\u2014a faithful sentinel guarding a world whose origins he would never know.\nAnd far below, the sealed Mana Gate slept: safe for now, but never truly still."
+    captionSpeaker: 
+  nextSceneName: 
+  skipToScene: 1

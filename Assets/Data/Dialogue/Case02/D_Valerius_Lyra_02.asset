@@ -35,7 +35,7 @@ MonoBehaviour:
   - id: valerius_scorn
     speakerName: Templar Captain Valerius
     speakerPortrait: {fileID: 0}
-    text: (Scowls, looking down at the Golem's stone frame) "An automaton and a street rogue? The culprit is already in irons, Astra. The Spirit-folk acolyte cast a foul hex from the nave floor during vespers. We don't need mechanics tinkering with holy mysteries."
+    text: (Scowls, looking down at the Golem's stone frame) "An automaton and a street rogue? The culprit is already in irons, Astra. The Spirit-folk acolyte cast a foul hex from the nave floor during vespers. We don't need a walking relic meddling in holy mysteries."
     registersClue: {fileID: 0}
     setsFlag: 
     requiresFlag: 

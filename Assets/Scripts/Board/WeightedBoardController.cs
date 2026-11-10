@@ -22,6 +22,9 @@ namespace Morsoul.Board
         public CaseData caseData;
         public bool manageCursor = true;
         public bool openOnStart = false;
+        public Func<bool> CanUse;
+
+        bool Authorized => CanUse == null || CanUse();
         /// <summary>Portrait shown in the hint popup (Eliza by default).</summary>
         public Sprite hintPortrait;
         public string hintSpeaker = "Eliza";
@@ -92,12 +95,17 @@ namespace Morsoul.Board
 
         void Start()
         {
-            if (caseData != null) SetCase(caseData);
+            if (caseData != null && _session == null) SetCase(caseData);
             if (openOnStart && _session != null) Open();
         }
 
         void Update()
         {
+            if (!Authorized)
+            {
+                if (_isOpen) Close();
+                return;
+            }
             var keyboard = Keyboard.current;
             if (keyboard == null) return;
 
@@ -224,6 +232,7 @@ namespace Morsoul.Board
 
         public void Open()
         {
+            if (!Authorized) return;
             // Re-run the lazy hook on every open so freshly collected clues
             // and focus state sync into a live session, not just the first.
             if (EnsureSession != null && !EnsureSession())
@@ -271,7 +280,7 @@ namespace Morsoul.Board
         /// </summary>
         public IReadOnlyList<ProgressionEvent> DrawLink(string sourceId, string targetId)
         {
-            if (_session == null)
+            if (_session == null || !Authorized)
                 return new List<ProgressionEvent>
                 {
                     new ProgressionEvent { Kind = ProgressionEventKind.InvalidInput },
@@ -286,7 +295,7 @@ namespace Morsoul.Board
         /// <summary>Severs a drawn link; free and non-destructive.</summary>
         public bool SeverLink(string sourceId, string targetId)
         {
-            if (_session == null) return false;
+            if (_session == null || !Authorized) return false;
             bool removed = _session.SeverLink(new DirectedEdge(sourceId, targetId));
             if (removed)
             {
@@ -299,7 +308,7 @@ namespace Morsoul.Board
 
         public bool SelectConclusion(string conclusionId)
         {
-            if (_session == null || !_session.SelectConclusion(conclusionId)) return false;
+            if (_session == null || !Authorized || !_session.SelectConclusion(conclusionId)) return false;
             RefreshConclusions();
             StateChanged?.Invoke();
             return true;
@@ -308,9 +317,11 @@ namespace Morsoul.Board
         /// <summary>Submits the selected conclusion (Space / submit button).</summary>
         public IReadOnlyList<ProgressionEvent> SubmitConclusion()
         {
-            if (_session == null) return new List<ProgressionEvent>();
+            if (_session == null || !Authorized) return new List<ProgressionEvent>();
             SyncFocusIn();
             var events = _session.Submit(out var cert);
+            SyncFocusOut();
+            bool solved = false;
             foreach (var e in events)
             {
                 switch (e.Kind)
@@ -318,7 +329,7 @@ namespace Morsoul.Board
                     case ProgressionEventKind.CaseComplete:
                         ShowBanner(BannerInfoClass, AuthoredSubmissionFeedback(
                             e.ConclusionId, "Conclusion supported — the case clicks into place."));
-                        BoardSolved?.Invoke(cert);
+                        solved = true;
                         break;
                     case ProgressionEventKind.BoardAlreadySolved:
                         ShowBanner(BannerInfoClass, "Conclusion already confirmed.");
@@ -342,8 +353,8 @@ namespace Morsoul.Board
                 }
             }
             RefreshAll();
-            SyncFocusOut();
             StateChanged?.Invoke();
+            if (solved) BoardSolved?.Invoke(cert);
             return events;
         }
 
@@ -381,6 +392,7 @@ namespace Morsoul.Board
 
         void ApplyLinkEvents(IReadOnlyList<ProgressionEvent> events, DirectedEdge attemptedLink)
         {
+            bool resolveEnding = false;
             foreach (var e in events)
             {
                 switch (e.Kind)
@@ -410,7 +422,7 @@ namespace Morsoul.Board
                             $"Focus can't absorb the error — the board is wiped and linking is locked until Focus reaches {ProgressionConstants.ErrorFocusCost:0}.");
                         break;
                     case ProgressionEventKind.ResolveEnding:
-                        EndingResolveRequested?.Invoke();
+                        resolveEnding = true;
                         break;
                     case ProgressionEventKind.HintTierFired:
                         ApplyHintTier(e);
@@ -422,6 +434,7 @@ namespace Morsoul.Board
             RefreshAll();
             LinkResolved?.Invoke(events);
             StateChanged?.Invoke();
+            if (resolveEnding) EndingResolveRequested?.Invoke();
         }
 
         void ApplyHintTier(ProgressionEvent e)

@@ -15,10 +15,8 @@ MonoBehaviour:
   caseId: 3
   title: The Sinking Wilds of Whisperwood
   region: Whisperwood Boundary Trail & Deep Grove Clearing
-  inquiryNodes:
-  - {fileID: 11400000, guid: d41733c96dca840459d16afe0e97da72, type: 2}
-  - {fileID: 11400000, guid: ef30548b6e364394b9a54744ffdfe520, type: 2}
-  hypothesis: {fileID: 11400000, guid: d101cca164366f0498d4dab1542fc29e, type: 2}
+  inquiryNodes: []
+  hypothesis: {fileID: 0}
   interrogation: {fileID: 11400000, guid: ea0b8146caba35b498b5bf2dcb967442, type: 2}
   clues:
   - {fileID: 11400000, guid: 2c97f266bd69ef24591b69f8b8a984c2, type: 2}

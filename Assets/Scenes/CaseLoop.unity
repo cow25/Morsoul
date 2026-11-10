@@ -318,14 +318,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Morsoul.Flow::Morsoul.Flow.GameFlow
   activeCase: {fileID: 0}
+  investigationScene: 0
   caseDatabase: {fileID: 11400000, guid: 0c7b3d2703c33f04abbeab1051185bdc, type: 2}
   runicLogsCollected: 0
   latentLogCollected: 0
   endingCutscenes:
   - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 11400000, guid: e9ce71a1c59be7c459635cbb93f1f862, type: 2}
+  - {fileID: 11400000, guid: 44f8bfb67fdd24a428627695bbce6a82, type: 2}
+  - {fileID: 11400000, guid: 55106e2fe1ca6474b9a18022eed8dfa4, type: 2}
+  entryCutscene: {fileID: 11400000, guid: a104844b785b582478d0ba97fa146396, type: 2}
   board: {fileID: 1568257894}
   weightedBoard: {fileID: 1975598218}
   interrogation: {fileID: 1832342458}
@@ -333,6 +335,7 @@ MonoBehaviour:
   cutscenePlayer: {fileID: 1605857244}
   dialogue: {fileID: 2021268802}
   hubJournal: {fileID: 98356658}
+  journalPanel: {fileID: 0}
   flags: {fileID: 98356657}
 --- !u!4 &497915801
 Transform:
@@ -718,6 +721,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Morsoul.Journal::Morsoul.Journal.JournalController
   journal: {fileID: 98356658}
+  context: {fileID: 0}
   allLogs: []
   dossiers: []
   collectedLogs: []

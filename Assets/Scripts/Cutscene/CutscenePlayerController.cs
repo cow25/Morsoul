@@ -113,6 +113,7 @@ namespace Morsoul.Cutscene
             }
             _isPlaying = true;
             _skipHold = 0f;
+            CoreRuntime.Instance?.Audio?.SetDucked(true);
             if (_root != null) _root.style.display = DisplayStyle.Flex;
             if (manageCursor)
             {
@@ -200,6 +201,7 @@ namespace Morsoul.Cutscene
             _isPlaying = false;
             _shotIndex = -1;
             _skipHold = 0f;
+            CoreRuntime.Instance?.Audio?.SetDucked(false);
             StopShotRoutine();
             StopVideo();
             HideCaption();
@@ -307,13 +309,23 @@ namespace Morsoul.Cutscene
             if (_videoSurface != null) _videoSurface.style.display = DisplayStyle.None;
         }
 
+        // Mirrors DialogueRunner.PlayerNameToken — kept local because the
+        // Cutscene assembly does not reference Morsoul.Dialogue.
+        const string PlayerNameToken = "{PlayerName}";
+
         void ShowCaption(CutsceneShotData shot)
         {
             bool hasCaption = CutscenePlanner.HasCaption(shot);
             if (_captionBox != null)
                 _captionBox.style.display = hasCaption ? DisplayStyle.Flex : DisplayStyle.None;
             if (!hasCaption) return;
-            if (_captionText != null) _captionText.text = shot.caption;
+            if (_captionText != null)
+            {
+                var session = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session : null;
+                var playerName = session != null && !string.IsNullOrEmpty(session.PlayerName)
+                    ? session.PlayerName : "Detective";
+                _captionText.text = shot.caption.Replace(PlayerNameToken, playerName);
+            }
             if (_captionSpeaker != null)
             {
                 bool hasSpeaker = !string.IsNullOrEmpty(shot.captionSpeaker);

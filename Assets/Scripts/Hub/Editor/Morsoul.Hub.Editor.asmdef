@@ -2,6 +2,7 @@
     "name": "Morsoul.Hub.Editor",
     "rootNamespace": "Morsoul.Hub.Editor",
     "references": [
+        "Morsoul.Core",
         "Morsoul.Hub",
         "Morsoul.Data",
         "Morsoul.Dialogue",

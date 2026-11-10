@@ -18,6 +18,7 @@ MonoBehaviour:
   caseId: 3
   acquisition: 5
   requiredTool: 3
+  requiredFlag: 
   description: Available only after Case 4, when Aether Sight is unlocked. Decrypted pre-cataclysm technical readout recording the catastrophic mana displacement event. Contains Elise Cochran's final transmission before the world reshaped, revealing the first tangible proof of her sacrifice.
   dissonanceKeyword: 
   isBacktrackingOnly: 1

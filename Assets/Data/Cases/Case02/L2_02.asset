@@ -18,6 +18,7 @@ MonoBehaviour:
   caseId: 2
   acquisition: 5
   requiredTool: 3
+  requiredFlag: 
   description: Pre-cataclysm architectural rune etched into the tower's rear load-bearing masonry beam. Documents harmonic acoustic dissipation used to stabilize runaway mana resonance. Required for Ending 3; unobtainable on initial run.
   dissonanceKeyword: 
   isBacktrackingOnly: 1

@@ -14,9 +14,10 @@ namespace Morsoul.Title.Editor
     /// <summary>
     /// Builds the dedicated uGUI title scene: a dark camera, an EventSystem
     /// with the project's InputSystem_Actions, and a 1920x1080-scaled Canvas
-    /// holding the MORSOUL title, detective-name field and the three menu
-    /// buttons wired into <see cref="TitleMenuController"/>. Idempotent:
-    /// an existing scene prompts an overwrite dialog.
+    /// holding the MORSOUL title and the three menu buttons wired into
+    /// <see cref="TitleMenuController"/>. The name prompt lives in the
+    /// first-contact dialogue, not here. Idempotent: an existing scene prompts
+    /// an overwrite dialog (skipped by the batch entry point).
     /// </summary>
     public static class TitleMenuSceneFactory
     {
@@ -39,7 +40,17 @@ namespace Morsoul.Title.Editor
                     $"'{ScenePath}' already exists. Overwrite it?", "Overwrite", "Cancel");
                 if (!overwrite) return;
             }
+            Build();
+        }
 
+        /// <summary>Batch-safe regeneration: skips the overwrite confirmation.</summary>
+        public static void CreateTitleSceneForce()
+        {
+            Build();
+        }
+
+        static void Build()
+        {
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
             CreateCamera();
@@ -108,56 +119,17 @@ namespace Morsoul.Title.Editor
             Place(subtitle.GetComponent<RectTransform>(), new Vector2(0.5f, 0.6f),
                 new Vector2(600f, 50f));
 
-            var nameField = CreateInputField("NameField", menu.transform,
-                new Vector2(0.5f, 0.47f));
-
             var newGame = CreateButton("NewGameButton", menu.transform,
-                "New Game", new Vector2(0.5f, 0.37f));
+                "New Game", new Vector2(0.5f, 0.45f));
             var cont = CreateButton("ContinueButton", menu.transform,
-                "Continue", new Vector2(0.5f, 0.3f));
+                "Continue", new Vector2(0.5f, 0.36f));
             var quit = CreateButton("QuitButton", menu.transform,
-                "Quit", new Vector2(0.5f, 0.23f));
+                "Quit", new Vector2(0.5f, 0.27f));
 
-            controller.nameField = nameField;
             controller.newGameButton = newGame;
             controller.continueButton = cont;
             controller.quitButton = quit;
             return controller;
-        }
-
-        static TMP_InputField CreateInputField(string name, Transform parent, Vector2 anchor)
-        {
-            var go = NewUIRect(name, parent, anchor, new Vector2(420f, 56f));
-            var image = go.AddComponent<Image>();
-            image.color = new Color(0.12f, 0.10f, 0.15f, 0.9f);
-
-            var input = go.AddComponent<TMP_InputField>();
-
-            var textArea = new GameObject("Text Area", typeof(RectTransform));
-            textArea.transform.SetParent(go.transform, false);
-            var areaRect = textArea.GetComponent<RectTransform>();
-            Stretch(areaRect);
-            areaRect.offsetMin = new Vector2(12f, 6f);
-            areaRect.offsetMax = new Vector2(-12f, -6f);
-            var mask = textArea.AddComponent<RectMask2D>();
-
-            var text = NewText("Text", textArea.transform, "", 24,
-                FontStyles.Normal, TextColor);
-            text.alignment = TextAlignmentOptions.MidlineLeft;
-            var textRect = text.GetComponent<RectTransform>();
-            Stretch(textRect);
-
-            var placeholder = NewText("Placeholder", textArea.transform,
-                "Detective name...", 24, FontStyles.Italic,
-                new Color(1f, 1f, 1f, 0.4f));
-            placeholder.alignment = TextAlignmentOptions.MidlineLeft;
-            Stretch(placeholder.GetComponent<RectTransform>());
-
-            input.textViewport = areaRect;
-            input.textComponent = text;
-            input.placeholder = placeholder;
-            input.pointSize = 24;
-            return input;
         }
 
         static Button CreateButton(string name, Transform parent, string label, Vector2 anchor)

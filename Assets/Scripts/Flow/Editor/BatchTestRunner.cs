@@ -52,7 +52,11 @@ namespace Morsoul.Flow.Editor
                 {
                     string dir = Path.GetDirectoryName(_path);
                     if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
-                    File.WriteAllText(_path, result.ToXml().OuterXml);
+                    var document = new System.Xml.XmlDocument();
+                    document.LoadXml(result.ToXml().OuterXml);
+                    using (var writer = System.Xml.XmlWriter.Create(_path,
+                               new System.Xml.XmlWriterSettings { Indent = true }))
+                        document.Save(writer);
                     Debug.Log($"BatchTestRunner: {result.PassCount} passed, " +
                               $"{result.FailCount} failed -> {_path}");
                     EditorApplication.Exit(result.FailCount == 0 ? 0 : 1);

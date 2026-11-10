@@ -18,6 +18,7 @@ MonoBehaviour:
   caseId: 3
   acquisition: 2
   requiredTool: 0
+  requiredFlag: 
   description: The rot began abruptly five nights ago, radiating from the altar clearing. No natural disease drains vital sap that fast without leaving fungal rot.
   dissonanceKeyword: natural forest blight
   isBacktrackingOnly: 0

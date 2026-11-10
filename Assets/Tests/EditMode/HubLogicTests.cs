@@ -1,7 +1,9 @@
 using System.Collections.Generic;
+using Morsoul.Board;
 using Morsoul.Data;
 using Morsoul.Hub;
 using NUnit.Framework;
+using UnityEditor;
 using UnityEngine;
 
 namespace Morsoul.Tests
@@ -53,6 +55,26 @@ namespace Morsoul.Tests
             context.flags = flags;
             context.journal = journal;
             return context;
+        }
+
+        // --- HubContext -------------------------------------------------------
+
+        [Test]
+        public void HubContext_OpenWeightedBoard_BlocksHubUi()
+        {
+            var context = NewContext(out _, out _);
+            var board = NewComponent<WeightedBoardController>("WeightedBoardPanel");
+            var data = AssetDatabase.LoadAssetAtPath<CaseData>(
+                "Assets/Data/Cases/Case01/Case_01.asset");
+            Assert.NotNull(data);
+            Assert.IsTrue(board.SetCase(data));
+            context.boardPanel = board;
+
+            Assert.IsFalse(context.UiBlocked);
+            board.Open();
+            Assert.IsTrue(context.UiBlocked);
+            board.Close();
+            Assert.IsFalse(context.UiBlocked);
         }
 
         // --- HubFlags ---------------------------------------------------------
@@ -252,6 +274,35 @@ namespace Morsoul.Tests
         {
             Assert.That(TravelRules.CollectDestinations(null, null, null, 5, "x", null).Count,
                 Is.EqualTo(0));
+        }
+
+        [Test]
+        public void AxisLock_DiagonalInput_CollapsesToHorizontal()
+        {
+            Assert.AreEqual(new Vector2(1f, 0f), HubPlayerController.AxisLock(new Vector2(1f, 1f)));
+            Assert.AreEqual(new Vector2(-1f, 0f), HubPlayerController.AxisLock(new Vector2(-1f, 0.4f)));
+            Assert.AreEqual(new Vector2(0f, 1f), HubPlayerController.AxisLock(new Vector2(0.3f, 1f)));
+            Assert.AreEqual(new Vector2(0f, -1f), HubPlayerController.AxisLock(new Vector2(0f, -1f)));
+            Assert.AreEqual(Vector2.zero, HubPlayerController.AxisLock(Vector2.zero));
+        }
+
+        [Test]
+        public void AxisMove_Diagonal_DecomposesIntoTwoAxisLegs()
+        {
+            var from = new Vector3(1f, 2f, 0f);
+            var to = new Vector3(4f, 6f, 0f);
+
+            var cornerH = AxisMove.Corner(from, to);
+            Assert.AreEqual(new Vector3(4f, 2f, 0f), cornerH, "horizontal leg first");
+
+            var cornerV = AxisMove.Corner(from, to, horizontalFirst: false);
+            Assert.AreEqual(new Vector3(1f, 6f, 0f), cornerV, "vertical leg first");
+
+            // Already axis-aligned: no corner inserted.
+            Assert.AreEqual(to, AxisMove.Corner(from, new Vector3(4f, 2f, 0f)));
+            Assert.AreEqual(to, AxisMove.Corner(from, new Vector3(1f, 6f, 0f)));
+
+            Assert.AreEqual(7f, AxisMove.PathLength(from, to));
         }
     }
 }

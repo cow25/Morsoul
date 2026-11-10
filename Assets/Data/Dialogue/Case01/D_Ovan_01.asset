@@ -26,7 +26,7 @@ MonoBehaviour:
   - id: ovan_challenge
     speakerName: Guildmaster Ovan
     speakerPortrait: {fileID: 0}
-    text: "(Wiping sweat from his brow with an embroidered handkerchief) \"Astra? The Council sent an apprentice surveyor? And what in Saint Althea\u2019s name is that... that walking boulder behind you?\""
+    text: "(Wiping sweat from his brow with an embroidered handkerchief) \"Astra? The Council sent their surveyor? And what in Saint Althea\u2019s name is that... that walking boulder behind you?\""
     registersClue: {fileID: 0}
     setsFlag: 
     requiresFlag: 
@@ -46,7 +46,7 @@ MonoBehaviour:
     speakerPortrait: {fileID: 0}
     text: "It\u2019s financial ruin, that's what it is! Master Ignatius\u2019 subterranean storage vault\u2014the one holding the seasonal reserve of Greater Restoration Draughts\u2014was breached three hours before dawn. Ten thousand gold ducats worth of inventory, dissolved into thin air! Ignatius claims dark cultists used forbidden volatile magic!"
     registersClue: {fileID: 0}
-    setsFlag: 
+    setsFlag: C1_BriefingSeen
     requiresFlag: 
     options: []
     nextNodeId: ovan_options

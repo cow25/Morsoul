@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b71d7f6f7d77720459e951f4d068c803, type: 3}
+  m_Name: D_EchoesOfThePast
+  m_EditorClassIdentifier: Morsoul.Cutscene::Morsoul.Cutscene.CutsceneData
+  id: D_EchoesOfThePast
+  shots:
+  - image: {fileID: 21300000, guid: 8c889eebdea7e514b99d349204bb85de, type: 3}
+    video: {fileID: 0}
+    durationSeconds: 6
+    waitForInput: 1
+    caption: "Below the bedrock of Asterveil lies the scar that never closed\u2014the point where modern history began, and ancient truth was drowned."
+    captionSpeaker: 
+  - image: {fileID: 21300000, guid: 8c889eebdea7e514b99d349204bb85de, type: 3}
+    video: {fileID: 0}
+    durationSeconds: 6
+    waitForInput: 1
+    caption: "{PlayerName}! Steady\u2014what's happening to your core?! The ambient mana down here is tearing you apart!"
+    captionSpeaker: Eliza
+  - image: {fileID: 21300000, guid: 8c889eebdea7e514b99d349204bb85de, type: 3}
+    video: {fileID: 0}
+    durationSeconds: 1.2
+    waitForInput: 0
+    caption: '>> CORE RE-INDEXING: ANOMALY DETECTED
+
+      >> SECTOR 44: [RESONANCE ECHO: "WE''LL CLOSE THIS CASE TOGETHER"]
+
+      >> INTEGRITY CHECK: FAILED (MEMORY PURGED)'
+    captionSpeaker: System
+  - image: {fileID: 21300000, guid: 8c889eebdea7e514b99d349204bb85de, type: 3}
+    video: {fileID: 0}
+    durationSeconds: 6
+    waitForInput: 1
+    caption: Core interference stabilized. The ambient frequency does not threaten my systems... it recognizes them. Proceeding to confrontation.
+    captionSpeaker: Golem
+  - image: {fileID: 21300000, guid: 8c889eebdea7e514b99d349204bb85de, type: 3}
+    video: {fileID: 0}
+    durationSeconds: 6
+    waitForInput: 1
+    caption: Good. Draw your breath, partner. The Overseer is right ahead.
+    captionSpeaker: Eliza
+  nextSceneName: 
+  skipToScene: 1

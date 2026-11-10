@@ -37,8 +37,16 @@ MonoBehaviour:
       emotionAura: 0
     invalidMoves: []
   - suspectClaim: Fine, I tapped the tree for alchemical commerce! But a lone merchant selling sap on the black market hardly concerns your guild's grand conspiracy theories!
-    keywords: []
+    keywords:
+    - lone merchant selling sap
     validMoves:
+    - verb: 0
+      evidence: {fileID: 0}
+      breaksComposureSegment: 0
+      strikeCost: 0
+      isCoreContradiction: 0
+      responseDialogue: Alchemical houses pay fortunes for raw spirit-resin! I am an opportunist, nothing more! Smuggling contraband is a municipal civil infraction, not a hanging offense!
+      emotionAura: 1
     - verb: 2
       evidence: {fileID: 11400000, guid: ea15b44cd77416a47b8f1f5ee72666b1, type: 2}
       breaksComposureSegment: 1
@@ -55,8 +63,16 @@ MonoBehaviour:
       responseDialogue: Rotten timber? Are you going to indict me for beetle droppings next, machine? Your cognitive core is failing you.
       emotionAura: 0
   - suspectClaim: You cannot stop what is coming! You have no proof this tree connects to anything beyond these miserable woods!
-    keywords: []
+    keywords:
+    - no proof this tree connects to anything
     validMoves:
+    - verb: 0
+      evidence: {fileID: 0}
+      breaksComposureSegment: 0
+      strikeCost: 0
+      isCoreContradiction: 0
+      responseDialogue: Nature dies to make way for the strong! This woodland decay is localized, irrelevant, and forgotten by tomorrow's sunrise!
+      emotionAura: 1
     - verb: 1
       evidence: {fileID: 11400000, guid: 8fe96e21dca72614abfb619ab90c3d83, type: 2}
       breaksComposureSegment: 1

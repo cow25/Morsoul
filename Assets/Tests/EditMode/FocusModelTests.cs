@@ -106,6 +106,31 @@ namespace Morsoul.Tests
         }
 
         [Test]
+        public void TrustedNow_BackwardsSystemClock_KeepsWatermark()
+        {
+            var t0 = new System.DateTime(2026, 11, 7, 10, 0, 0, System.DateTimeKind.Utc);
+            var trusted = _focus.StampTrustedNow(t0);
+            Assert.AreEqual(t0, trusted);
+            trusted = _focus.StampTrustedNow(t0.AddMinutes(-10));
+            Assert.AreEqual(t0, trusted);
+            trusted = _focus.StampTrustedNow(t0.AddMinutes(10));
+            Assert.AreEqual(t0.AddMinutes(10), trusted);
+        }
+
+        [Test]
+        public void OfflineRecovery_BackwardsClock_GrantsZero_AndConsumesClose()
+        {
+            var t0 = new System.DateTime(2026, 11, 7, 10, 0, 0, System.DateTimeKind.Utc);
+            _focus.Restore(50f, false, lastTrustedUtc: t0);
+            _focus.MarkClosed(t0);
+            float gain = _focus.ApplyOfflineRecovery(t0.AddMinutes(-30));
+            Assert.AreEqual(0f, gain);
+            Assert.AreEqual(50f, _focus.Percent);
+            Assert.IsNull(_focus.ClosedAtUtc);
+            Assert.AreEqual(t0, _focus.LastOfflineRecoveryAppliedAtUtc);
+        }
+
+        [Test]
         public void OfflineRecovery_CapsAtMaximum()
         {
             var t0 = new System.DateTime(2026, 11, 7, 10, 0, 0, System.DateTimeKind.Utc);
@@ -145,6 +170,18 @@ namespace Morsoul.Tests
             _focus.Restore(0f, false);
             _focus.ApplyWrongCausalCost();
             Assert.IsFalse(_focus.StrainedScanUsed);
+        }
+
+        [Test]
+        public void SetStrainedScanUsed_SwitchesPerCaseLatch()
+        {
+            _focus.Restore(0f, false);
+            _focus.TickScan(FocusTuning.FocusTickSeconds);
+            Assert.IsTrue(_focus.StrainedScanUsed);
+            _focus.SetStrainedScanUsed(false);
+            Assert.IsFalse(_focus.StrainedScanUsed);
+            _focus.SetStrainedScanUsed(true);
+            Assert.IsTrue(_focus.StrainedScanUsed);
         }
 
         [Test]

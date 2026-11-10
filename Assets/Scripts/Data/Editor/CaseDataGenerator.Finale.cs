@@ -61,28 +61,16 @@ namespace Morsoul.Data.Editor
                 AcquisitionMethod.AetherSightPlusGolemEye, Tool.AetherSight,
                 "After Brokk is freed, use Aether Sight and Golem Eye at the unsealed sub-lab terminal. The schematics contain operational formulas, fail-safe frequencies and manual core override commands for the ancient stabilizer.",
                 hasWorldPosition: true, worldPosition: new Vector2(0, 16));
-            var p1 = Premise(folder, "P1_04", "Coordinated Internal Sabotage",
-                "The pipeline burst was caused by intentional mechanical valve tampering, completely ruling out worker error or natural pressure spikes.");
-            var p2 = Premise(folder, "P2_04", "Veiled Circle Infiltration",
-                "The saboteur used cult-signature synthetic solvent to melt fail-safe conduits and blast open the concealed pre-cataclysm research facility.");
-            var in1 = Node(folder, "IN1_04", c1, t1,
-                Prompt("The valves were pinned shut, and Thrun confirms Brokk never skips depressurization. What caused the burst?",
-                    "Brokk forgot the normal depressurization sequence.",
-                    "Someone deliberately locked the valves to force a backpressure explosion.",
-                    "An ordinary pressure spike fractured a worn drill bit.", 1,
-                    "An experienced engineer can make mistakes, but hardened wedge pins do not install themselves."),
-                p1, new[] { rh1 },
-                "Physical Contradiction: Mechanical fatigue on drill steel does not account for targeted valve pin locks or chemical cable melting.");
-            var in2 = Node(folder, "IN2_04", c2, c3,
-                Prompt("Cult-signature solvent melted the bypass conduits beside a concealed ancient blast door. What was the objective?",
-                    "A coordinated breach of the hidden pre-cataclysm sub-lab.",
-                    "Routine replacement of naturally corroded wiring.",
-                    "A masonry survey confined to the upper tier.", 0,
-                    "The solvent matches earlier cult operations, and the exposed door reveals what lay behind the rock."),
-                p2, new ClueData[0], "");
+            l4.requiredFlag = "Case4_BrokkFreed";
             var press = Move(Verb.Press, null, false, 0, false,
                 "Brokk was rushing quota! He forgot the bypass sequence and the lines blew. Simple industrial accident!");
             press.emotionAura = Aura.Amber;
+            var press2 = Move(Verb.Press, null, false, 0, false,
+                "My crew stays above the 400-meter mark! We don't touch hydraulic copper or acid baths! If chemical rot dissolved those lines, talk to the refinery alchemists!");
+            press2.emotionAura = Aura.Violet;
+            var press3 = Move(Verb.Press, null, false, 0, false,
+                "The earth is dead rock! Shattering a few granite boulders doesn't threaten your precious city! The Grand Overseer will purify this blighted subterranean filth!");
+            press3.emotionAura = Aura.Violet;
             var solvent = Move(Verb.PresentEvidence, c2, true, 0, false,
                 "The bypass cables were melted with the same synthetic mana solvent found in Ignatius' vault and Vane's camp. This is a wider operation. Who supplied you?");
             solvent.emotionAura = Aura.Violet;
@@ -108,20 +96,21 @@ namespace Morsoul.Data.Editor
                 new InterrogationPhase
                 {
                     suspectClaim = "So someone jammed a valve. That proves nothing against me! I was contracted solely for upper-tier masonry and never touched the subterranean conduits!",
-                    keywords = new string[0],
-                    validMoves = new[] { solvent },
+                    keywords = new[] { "never touched the subterranean conduits" },
+                    validMoves = new[] { press2, solvent },
                     invalidMoves = new[]
                     {
                         Move(Verb.PresentEvidence, rh1, false, 1, false,
-                            "A broken drill? Tools snap down here daily. Your logic circuits need a calibration overhaul.")
+                            "A broken drill? Tools snap down here daily. Your stone skull's wound too tight, machine.")
                     }
                 },
                 new InterrogationPhase
                 {
                     suspectClaim = "Why would anyone intentionally collapse a dead-end rock face?! What possible gain is there in blowing out useless granite?!",
-                    keywords = new string[0],
+                    keywords = new[] { "useless granite" },
                     validMoves = new[]
                     {
+                        press3,
                         Move(Verb.Contradict, c3, true, 0, false,
                             "It wasn't a dead end. The rock concealed the blast doors of an ancient research facility. You caused the blowout to breach it for the Veiled Circle.")
                     },
@@ -129,13 +118,6 @@ namespace Morsoul.Data.Editor
                 }
             };
             EditorUtility.SetDirty(interrogation);
-            var h = LoadOrCreate<HypothesisData>($"{folder}/H_04.asset");
-            h.id = "H_04";
-            h.premise1 = p1;
-            h.premise2 = p2;
-            h.verdictProposition = "The contractor is a Veiled Circle infiltrator who engineered the mine explosion to access the ancient sub-lab containing planetary core blueprints.";
-            h.unlocksInterrogation = interrogation;
-            EditorUtility.SetDirty(h);
             var log = LoadOrCreate<RunicLogData>($"{folder}/RunicLog_04.asset");
             log.id = 4;
             log.caseId = 4;
@@ -148,8 +130,6 @@ namespace Morsoul.Data.Editor
             data.caseId = 4;
             data.title = "The Sub-Surface Sabotage of Iron Hollow";
             data.region = "Iron Hollow Mining Settlement & Subterranean Excavation Facility";
-            data.inquiryNodes = new[] { in1, in2 };
-            data.hypothesis = h;
             data.interrogation = interrogation;
             data.clues = new[] { c1, c2, c3, t1, t2, rh1, l4 };
             data.latentLog = log;
@@ -158,6 +138,8 @@ namespace Morsoul.Data.Editor
             data.hasInvestigationScene = true;
             data.hasInterrogation = true;
             data.preloadedClues = new ClueData[0];
+            data.evidenceGraph = LoadCanonicalGraph(
+                "Assets/Data/Cases/Case04/EVG_04.asset");
             EditorUtility.SetDirty(data);
         }
 
@@ -179,38 +161,10 @@ namespace Morsoul.Data.Editor
             var rh1 = Clue(folder, "RH1_05", "Arcing Discharge Grounding Rod", ClueType.RedHerring, 5,
                 AcquisitionMethod.Automatic, Tool.None,
                 "An improvised copper grounding cable that can ground minor sparks, but cannot divert raw terawatt-scale planetary mana discharges.");
-            var p1 = Premise(folder, "P1_05", "Forced Cataclysmic Overload",
-                "The Veiled Circle's ritual is intentionally overloading the planetary core through inverted siphons, recreating the exact pre-cataclysm containment failure.");
-            var p2 = Premise(folder, "P2_05", "Calculated Historical Purge",
-                "The Overseer is knowingly distorting ancient scientific history to justify the mass eradication of transformed races under the guise of holy restoration.");
-            var in1 = Node(folder, "IN1_05", c1, c2,
-                Prompt("Inverted siphons feed stolen mana into a fissure at critical pressure. What is the ritual doing?",
-                    "Safely grounding excess power through the ritual barrier.",
-                    "Restoring a naturally depleted planetary core.",
-                    "Forcing a cataclysmic overload that repeats the ancient containment failure.", 2,
-                    "The pylons feed power into the breach, not away from it. More power means more pressure."),
-                p1, new[] { rh1 },
-                "Forensic Contradiction: Passive grounding wire cannot halt pressurized multi-channel siphon resonance.");
-            var in2 = Node(folder, "IN2_05", c3, t1,
-                Prompt("The doctrine suppresses findings that mana is natural, while Eliza confirms a deliberate attack on the stabilizer locks. What follows?",
-                    "The Overseer misunderstood an otherwise harmless historical ritual.",
-                    "He distorts history to justify a calculated purge of transformed races.",
-                    "The stabilizer locks themselves are harvesting mana for the Guild.", 1,
-                    "His own treatise erases the evidence that disproves his doctrine; the ritual makes that lie lethal."),
-                p2, new ClueData[0], "");
-            var h = LoadOrCreate<HypothesisData>($"{folder}/H_05.asset");
-            h.id = "H_05";
-            h.premise1 = p1;
-            h.premise2 = p2;
-            h.verdictProposition = "The Grand Overseer is weaponizing forbidden dark extractions to force an extinction-level cataclysm, masking genocidal hypocrisy behind historical erasure.";
-            h.unlocksInterrogation = null;
-            EditorUtility.SetDirty(h);
             var data = LoadOrCreate<CaseData>($"{folder}/Case_05.asset");
             data.caseId = 5;
             data.title = "The Sanctum Core Finale";
             data.region = "Sanctum Core / Central Planetary Mana Fissure";
-            data.inquiryNodes = new[] { in1, in2 };
-            data.hypothesis = h;
             data.interrogation = null;
             data.clues = new[] { c1, c2, c3, t1, rh1 };
             data.latentLog = null;
@@ -219,6 +173,8 @@ namespace Morsoul.Data.Editor
             data.hasInvestigationScene = false;
             data.hasInterrogation = false;
             data.preloadedClues = data.clues;
+            data.evidenceGraph = LoadCanonicalGraph(
+                "Assets/Data/Cases/Case05/EVG_05.asset");
             EditorUtility.SetDirty(data);
         }
     }

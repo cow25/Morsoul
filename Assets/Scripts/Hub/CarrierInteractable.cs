@@ -16,8 +16,10 @@ namespace Morsoul.Hub
     /// </summary>
     public class CarrierInteractable : Interactable2D
     {
-        /// <summary>Fallback scene loaded when no travel menu is available.</summary>
+        /// <summary>Fallback scene loaded when no route/menu destination is available.</summary>
         public string targetScene;
+        /// <summary>Optional route-table key resolved before targetScene.</summary>
+        public string routeKey;
         /// <summary>Reason stamped on the travel checkpoint ("Carrier", "CaseDoor", ...).</summary>
         public string checkpointReason = "Carrier";
         /// <summary>
@@ -26,6 +28,13 @@ namespace Morsoul.Hub
         /// targetScene behaviour — used by CaseDoor and the prologue exit.
         /// </summary>
         public bool offerTravelMenu = false;
+        /// <summary>
+        /// When true, exiting goes through ReturnFromInvestigation: the
+        /// origin pose is restored, scene mode returns to Mode2D and the
+        /// investigation case handoff clears. Used by investigation-area
+        /// exits (e.g. the vault stand-in's VaultExit).
+        /// </summary>
+        public bool exitsInvestigation;
 
         /// <summary>Fired just before scene load; argument is the checkpoint reason.</summary>
         public event Action<string> CheckpointRequested;
@@ -38,6 +47,18 @@ namespace Morsoul.Hub
         public override void Interact(HubContext ctx)
         {
             base.Interact(ctx);
+            if (routeKey == RouteKeys.CaseLoop || checkpointReason == "CaseDoor")
+            {
+                var core = CoreRuntime.Instance;
+                string finaleHub = GameStateManager.Instance != null
+                    ? GameStateManager.Instance.routes.Resolve(RouteKeys.Hub(4)) : null;
+                if (core == null || core.Session.CurrentCase != 5 ||
+                    SceneManager.GetActiveScene().name != finaleHub)
+                {
+                    Debug.Log("Speak to the case's suspect after completing its investigation.", this);
+                    return;
+                }
+            }
 
             // Destination picker: unlocked hubs from the route table. Only
             // used when the scene wires a travel menu AND Core is live —
@@ -71,23 +92,40 @@ namespace Morsoul.Hub
                 return;
             }
 
-            TravelTo(targetScene);
+            // Investigation exits run the return contract — restores the
+            // captured origin pose/mode; falls back to the fixed target
+            // when there's no active investigation or the return fails.
+            if (exitsInvestigation && CoreRuntime.Instance != null)
+            {
+                int caseId = CoreRuntime.Instance.Session.InvestigationCaseId;
+                if (caseId >= 0 &&
+                    GameStateManager.Ensure().ReturnFromInvestigation(caseId))
+                    return;
+            }
+            TravelTo(ResolveTargetScene());
+        }
+
+        /// <summary>Route-table lookup first, serialized targetScene as fallback.</summary>
+        public string ResolveTargetScene()
+        {
+            if (!string.IsNullOrEmpty(routeKey) && GameStateManager.Instance != null)
+            {
+                string routed = GameStateManager.Instance.routes.Resolve(routeKey);
+                if (!string.IsNullOrEmpty(routed)) return routed;
+            }
+            return targetScene;
         }
 
         /// <summary>Checkpoints and loads <paramref name="scene"/> through the GSM.</summary>
         protected void TravelTo(string scene)
         {
-            CheckpointRequested?.Invoke(checkpointReason);
-            CoreRuntime.Instance?.Bus.Publish(new CheckpointRequestedEvent
-            {
-                Reason = checkpointReason,
-                NextSceneName = scene
-            });
             if (string.IsNullOrEmpty(scene))
             {
-                Debug.LogWarning($"CarrierInteractable '{name}': targetScene is empty.", this);
+                Debug.LogWarning($"CarrierInteractable '{name}': no destination " +
+                                 $"(routeKey '{routeKey}' unresolved, targetScene empty).", this);
                 return;
             }
+            CheckpointRequested?.Invoke(checkpointReason);
             // Single load authority: the GSM guards missing scenes and stamps
             // the checkpoint; direct load only without Core.
             if (CoreRuntime.Instance != null)

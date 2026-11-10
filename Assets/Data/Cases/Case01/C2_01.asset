@@ -18,6 +18,7 @@ MonoBehaviour:
   caseId: 1
   acquisition: 1
   requiredTool: 1
+  requiredFlag: 
   description: "Rapid-sublimating synthetic solvent residue releasing harmless purple vapor \u2014 not dark magic."
   dissonanceKeyword: 
   isBacktrackingOnly: 0

@@ -16,7 +16,7 @@ namespace Morsoul.Hub.Editor
         [MenuItem("Morsoul/Hub/Create Art Overlay Scene (Wilderness)")]
         public static void CreateWildernessArt() => CreateArtScene("Hub_Wilderness_Art");
 
-        static void CreateArtScene(string sceneName)
+        internal static void CreateArtScene(string sceneName)
         {
             string path = $"{ScenesFolder}/{sceneName}.unity";
             if (File.Exists(path) || AssetDatabase.LoadAssetAtPath<SceneAsset>(path) != null)

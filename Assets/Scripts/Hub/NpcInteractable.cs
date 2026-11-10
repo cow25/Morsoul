@@ -5,30 +5,33 @@ using UnityEngine;
 namespace Morsoul.Hub
 {
     /// <summary>
-    /// NPC talk point. On interact, hands this NPC's DialogueData to the shared
-    /// DialogueController, wires the hub flag set into the runner (so
-    /// requiresFlag gating sees story flags) and forwards clue/flag side
-    /// effects back into the HubJournal / HubFlags.
+    /// NPC talk point. When this NPC is the case's interrogation suspect and
+    /// the session marks the encounter unlocked, enters the 2D interrogation;
+    /// otherwise hands its DialogueData to HubContext.PlayDialogue — the
+    /// scene's single effects binder (clues -> HubJournal, flags -> HubFlags).
     /// </summary>
     public class NpcInteractable : Interactable2D
     {
         /// <summary>Dialogue graph played when this NPC is talked to.</summary>
         public DialogueData dialogue;
+        public int interrogationCaseId = -1;
 
-        DialogueController _wiredController;
-        HubContext _wiredContext;
-
-        void OnDestroy()
-        {
-            UnwireEvents();
-        }
+        /// <summary>NPCs are solid: the player walks up to them, not through.</summary>
+        protected override bool BlocksMovement => true;
 
         public override void Interact(HubContext ctx)
         {
             base.Interact(ctx);
-            if (ctx == null || ctx.dialogue == null)
+            var core = Morsoul.Core.CoreRuntime.Instance;
+            if (core != null && core.Session.CanStartInterrogation(interrogationCaseId))
             {
-                Debug.LogWarning($"NpcInteractable '{name}': no HubContext.dialogue wired.", this);
+                if (!core.EnterInterrogation(interrogationCaseId))
+                    Debug.LogWarning("NpcInteractable: the unlocked 2D interrogation could not be entered.", this);
+                return;
+            }
+            if (ctx == null)
+            {
+                Debug.LogWarning($"NpcInteractable '{name}': no HubContext supplied.", this);
                 return;
             }
             if (dialogue == null)
@@ -37,34 +40,7 @@ namespace Morsoul.Hub
                 return;
             }
 
-            WireEvents(ctx);
-            // Share the scene flag set so the runner's requiresFlag gating works.
-            if (ctx.flags != null) ctx.dialogue.SetFlags(ctx.flags.Set);
-            ctx.dialogue.SetDialogue(dialogue);
-            ctx.dialogue.Play();
+            ctx.PlayDialogue(dialogue);
         }
-
-        void WireEvents(HubContext ctx)
-        {
-            if (_wiredController == ctx.dialogue && _wiredContext == ctx) return;
-            UnwireEvents();
-            ctx.dialogue.ClueRegistered += OnDialogueClueRegistered;
-            ctx.dialogue.FlagSet += OnDialogueFlagSet;
-            _wiredController = ctx.dialogue;
-            _wiredContext = ctx;
-        }
-
-        void UnwireEvents()
-        {
-            if (_wiredController == null) return;
-            _wiredController.ClueRegistered -= OnDialogueClueRegistered;
-            _wiredController.FlagSet -= OnDialogueFlagSet;
-            _wiredController = null;
-            _wiredContext = null;
-        }
-
-        void OnDialogueClueRegistered(ClueData clue) => _wiredContext?.journal?.Register(clue);
-
-        void OnDialogueFlagSet(string flag) => _wiredContext?.flags?.Add(flag);
     }
 }

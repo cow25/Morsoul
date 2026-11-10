@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using Morsoul.Data;
 using UnityEngine;
@@ -28,6 +29,8 @@ namespace Morsoul.Dialogue
         public event Action<ClueData> ClueRegistered;
         /// <summary>Re-emitted when a shown node declares setsFlag.</summary>
         public event Action<string> FlagSet;
+        /// <summary>Raised when the player confirms a name in the name prompt.</summary>
+        public event Action<string> NameSubmitted;
 
         PanelRenderer _panelRenderer;
         DialogueRunner _runner;
@@ -40,13 +43,23 @@ namespace Morsoul.Dialogue
         Label _speakerLabel;
         Label _dialogueText;
         Label _continueHint;
+        VisualElement _nameInputContainer;
+        TextField _nameInputField;
+        Button _nameInputConfirm;
+        VisualElement _fadeOverlay;
+        Label _fadeText;
         readonly Button[] _optionButtons = new Button[3];
 
         // Interaction state.
         bool _isPlaying;
         int _uiVersion;
+        float _fadeOpacity;
 
         public bool IsPlaying => _isPlaying;
+        /// <summary>True while the name-entry prompt is visible.</summary>
+        public bool NamePromptActive { get; private set; }
+        /// <summary>True while the full-screen fade overlay is opaque.</summary>
+        public bool FadeActive { get; private set; }
         /// <summary>Frame the last dialogue ended/stopped on; -1 = never. Lets
         /// interact systems ignore the same keypress that closed the panel.</summary>
         public int LastEndFrame { get; private set; } = -1;
@@ -73,7 +86,16 @@ namespace Morsoul.Dialogue
         void Update()
         {
             var keyboard = Keyboard.current;
-            if (keyboard == null || !_isPlaying || _runner == null) return;
+            if (keyboard == null) return;
+
+            if (NamePromptActive)
+            {
+                if (keyboard.enterKey.wasPressedThisFrame
+                    || keyboard.numpadEnterKey.wasPressedThisFrame)
+                    SubmitName();
+                return;
+            }
+            if (!_isPlaying || _runner == null) return;
 
             if (_runner.HasOptions)
             {
@@ -148,6 +170,7 @@ namespace Morsoul.Dialogue
         {
             _isPlaying = false;
             LastEndFrame = Time.frameCount;
+            HideNamePrompt();
             StopRunner();
             if (_root != null) _root.style.display = DisplayStyle.None;
             if (manageCursor)
@@ -155,6 +178,28 @@ namespace Morsoul.Dialogue
                 UnityEngine.Cursor.lockState = CursorLockMode.Locked;
                 UnityEngine.Cursor.visible = false;
             }
+        }
+
+        /// <summary>
+        /// Shows one scripted line without a DialogueRunner. Timed in-world
+        /// sequences use this so the normal dialogue UI still blocks input but
+        /// no player advance is required. Hide it with <see cref="Stop"/>.
+        /// </summary>
+        public void ShowStandaloneLine(string speakerName, string text)
+        {
+            StopRunner();
+            _isPlaying = true;
+            if (_root != null) _root.style.display = DisplayStyle.Flex;
+            if (manageCursor)
+            {
+                UnityEngine.Cursor.lockState = CursorLockMode.None;
+                UnityEngine.Cursor.visible = true;
+            }
+            RenderNode(new DialogueNodeData
+            {
+                speakerName = speakerName,
+                text = text,
+            });
         }
 
         void StopRunner()
@@ -165,6 +210,85 @@ namespace Morsoul.Dialogue
             _runner.FlagSet -= OnRunnerFlagSet;
             _runner.DialogueEnded -= OnRunnerEnded;
             _runner = null;
+        }
+
+        // --- Name prompt ---------------------------------------------------------
+
+        /// <summary>
+        /// Shows the name-entry row inside the dialogue box (scripted sequences
+        /// show a prompt line first via <see cref="ShowStandaloneLine"/>).
+        /// Enter or the Confirm button submits; an empty entry falls back to
+        /// "Detective". The submitted value also updates <see cref="playerName"/>
+        /// so later {PlayerName} substitutions resolve. Returns false when the
+        /// panel lacks the name-input elements.
+        /// </summary>
+        public bool ShowNamePrompt()
+        {
+            if (_nameInputContainer == null || _nameInputField == null) return false;
+            NamePromptActive = true;
+            _isPlaying = true;
+            if (_root != null) _root.style.display = DisplayStyle.Flex;
+            if (manageCursor)
+            {
+                UnityEngine.Cursor.lockState = CursorLockMode.None;
+                UnityEngine.Cursor.visible = true;
+            }
+            _nameInputField.value = "";
+            _nameInputContainer.style.display = DisplayStyle.Flex;
+            if (_continueHint != null) _continueHint.style.display = DisplayStyle.None;
+            _nameInputField.Focus();
+            return true;
+        }
+
+        /// <summary>Hides the name-entry row without submitting.</summary>
+        public void HideNamePrompt()
+        {
+            NamePromptActive = false;
+            if (_nameInputContainer != null)
+                _nameInputContainer.style.display = DisplayStyle.None;
+        }
+
+        void SubmitName()
+        {
+            string entered = _nameInputField != null ? (_nameInputField.value ?? "").Trim() : "";
+            if (entered.Length == 0) entered = "Detective";
+            playerName = entered;
+            HideNamePrompt();
+            NameSubmitted?.Invoke(entered);
+        }
+
+        // --- Screen fade -----------------------------------------------------------
+
+        /// <summary>Sets the caption shown on top of the fade overlay.</summary>
+        public void SetFadeText(string text)
+        {
+            if (_fadeText != null) _fadeText.text = text ?? "";
+        }
+
+        /// <summary>Lerps the full-screen fade overlay toward target opacity (1 = black).
+        /// The overlay sits outside the dialogue root so fading never reveals
+        /// the dialogue box or its placeholder content.</summary>
+        public IEnumerator FadeTo(float targetOpacity, float seconds)
+        {
+            if (_fadeOverlay == null) yield break;
+            targetOpacity = Mathf.Clamp01(targetOpacity);
+            if (targetOpacity > 0f)
+                _fadeOverlay.style.display = DisplayStyle.Flex;
+            float start = _fadeOpacity;
+            float elapsed = 0f;
+            seconds = Mathf.Max(0.01f, seconds);
+            while (elapsed < seconds)
+            {
+                elapsed += Time.deltaTime;
+                _fadeOpacity = Mathf.Lerp(start, targetOpacity, Mathf.Clamp01(elapsed / seconds));
+                _fadeOverlay.style.opacity = _fadeOpacity;
+                yield return null;
+            }
+            _fadeOpacity = targetOpacity;
+            _fadeOverlay.style.opacity = targetOpacity;
+            if (targetOpacity <= 0f)
+                _fadeOverlay.style.display = DisplayStyle.None;
+            FadeActive = targetOpacity > 0f;
         }
 
         void TryChoose(int optionIndex)
@@ -198,12 +322,17 @@ namespace Morsoul.Dialogue
 
         void RenderNode(DialogueNodeData node)
         {
-            if (node == null || _runner == null) return;
+            if (node == null) return;
             if (_speakerLabel != null) _speakerLabel.text = node.speakerName ?? "";
-            if (_dialogueText != null) _dialogueText.text = _runner.SubstituteName(node.text);
+            if (_dialogueText != null)
+            {
+                _dialogueText.text = _runner != null
+                    ? _runner.SubstituteName(node.text)
+                    : (node.text ?? "").Replace(DialogueRunner.PlayerNameToken, playerName ?? "");
+            }
             RenderPortrait(node);
 
-            var options = _runner.CurrentOptions;
+            var options = _runner != null ? _runner.CurrentOptions : null;
             int count = options != null ? options.Count : 0;
             for (int i = 0; i < _optionButtons.Length; i++)
             {
@@ -216,7 +345,9 @@ namespace Morsoul.Dialogue
             if (_optionsContainer != null)
                 _optionsContainer.style.display = count > 0 ? DisplayStyle.Flex : DisplayStyle.None;
             if (_continueHint != null)
-                _continueHint.style.display = count > 0 ? DisplayStyle.None : DisplayStyle.Flex;
+                _continueHint.style.display = _runner != null && count == 0 && !NamePromptActive
+                    ? DisplayStyle.Flex
+                    : DisplayStyle.None;
         }
 
         void RenderPortrait(DialogueNodeData node)
@@ -254,6 +385,18 @@ namespace Morsoul.Dialogue
             _speakerLabel = root.Q<Label>("SpeakerLabel");
             _dialogueText = root.Q<Label>("DialogueText");
             _continueHint = root.Q<Label>("ContinueHint");
+            _nameInputContainer = root.Q<VisualElement>("NameInputContainer");
+            _nameInputField = root.Q<TextField>("NameInputField");
+            _nameInputConfirm = root.Q<Button>("NameInputConfirm");
+            _fadeOverlay = root.Q<VisualElement>("FadeOverlay");
+            _fadeText = root.Q<Label>("FadeText");
+            if (_nameInputConfirm != null)
+                _nameInputConfirm.RegisterCallback<ClickEvent>(_ => SubmitName());
+            if (_fadeOverlay != null)
+            {
+                _fadeOverlay.style.opacity = _fadeOpacity;
+                _fadeOverlay.style.display = _fadeOpacity > 0f ? DisplayStyle.Flex : DisplayStyle.None;
+            }
             for (int i = 0; i < _optionButtons.Length; i++)
             {
                 _optionButtons[i] = root.Q<Button>($"OptionButton{i}");

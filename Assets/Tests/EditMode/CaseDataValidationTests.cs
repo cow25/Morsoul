@@ -177,18 +177,12 @@ namespace Morsoul.Tests
                 Assert.That(case1.clues.Length, Is.EqualTo(7));
                 Assert.That(case1.interrogation.phases.Length, Is.EqualTo(3));
 
-                var in1_00 = AssetDatabase.LoadAssetAtPath<InquiryNodeData>($"{root}/Case00/IN1_00.asset");
-                var in2_00 = AssetDatabase.LoadAssetAtPath<InquiryNodeData>($"{root}/Case00/IN2_00.asset");
-                Assert.NotNull(in1_00, "IN1_00.asset was not generated.");
-                Assert.NotNull(in2_00, "IN2_00.asset was not generated.");
-                Assert.That(in1_00.prompt.correctIndex, Is.EqualTo(1));
-                Assert.That(in2_00.prompt.correctIndex, Is.EqualTo(2));
-                Assert.That(in1_00.prompt.options[1],
-                    Is.EqualTo("A catastrophic overload cut the power, leaving the security doors locked in an unpowered failsafe."));
-
-                var prompt = case1.inquiryNodes[0].prompt;
-                Assert.That(prompt.options[prompt.correctIndex],
-                    Is.EqualTo("The vault was opened with one of the two registered keys \u2014 no forced breach occurred."));
+                // Weighted canon: generated cases link the canonical evidence
+                // graph and carry no legacy inquiry nodes or hypothesis.
+                Assert.That(case0.evidenceGraph, Is.Not.Null);
+                Assert.That(case1.evidenceGraph, Is.Not.Null);
+                Assert.That(case0.inquiryNodes, Is.Null.Or.Empty);
+                Assert.That(case0.hypothesis, Is.Null);
             }
             finally
             {
@@ -214,9 +208,7 @@ namespace Morsoul.Tests
                 Assert.That(case2.clues.Any(c => c != null && c.type == ClueType.Latent), Is.True);
                 Assert.That(case2.latentLog, Is.Not.Null);
 
-                Assert.That(case2.inquiryNodes[0].prompt.correctIndex, Is.EqualTo(2));
-                Assert.That(case2.inquiryNodes[1].prompt.correctIndex, Is.EqualTo(1));
-                Assert.That(case2.inquiryNodes[0].rejectionMessage, Is.Not.Empty);
+                Assert.That(case2.evidenceGraph, Is.Not.Null);
 
                 var phases = case2.interrogation.phases;
                 Assert.That(phases.Length, Is.EqualTo(3));
@@ -248,17 +240,17 @@ namespace Morsoul.Tests
                 Assert.That(case4.latentLog.id, Is.EqualTo(4));
                 Assert.That(case4.latentLog.availableAfterCase, Is.EqualTo(4));
                 Assert.That(case4.clues.Single(c => c.type == ClueType.Latent).isBacktrackingOnly, Is.False);
-                Assert.That(case4.inquiryNodes[0].slotA.id, Is.EqualTo("C1_04"));
-                Assert.That(case4.inquiryNodes[0].slotB.id, Is.EqualTo("T1_04"));
-                Assert.That(case4.inquiryNodes[1].slotA.id, Is.EqualTo("C2_04"));
-                Assert.That(case4.inquiryNodes[1].slotB.id, Is.EqualTo("C3_04"));
+                Assert.That(case4.evidenceGraph, Is.Not.Null);
+                Assert.That(case4.inquiryNodes, Is.Null.Or.Empty);
+                Assert.That(case4.hypothesis, Is.Null);
                 Assert.That(case4.interrogation.phases[0].validMoves.Single(m => m.verb == Verb.Press).emotionAura,
                     Is.EqualTo(Aura.Amber));
                 Assert.That(case4.interrogation.phases[1].validMoves.Single().emotionAura, Is.EqualTo(Aura.Violet));
                 Assert.That(case5.hasInvestigationScene, Is.False);
                 Assert.That(case5.hasInterrogation, Is.False);
                 Assert.That(case5.interrogation, Is.Null);
-                Assert.That(case5.hypothesis.unlocksInterrogation, Is.Null);
+                Assert.That(case5.hypothesis, Is.Null);
+                Assert.That(case5.evidenceGraph, Is.Not.Null);
                 Assert.That(case5.latentLog, Is.Null);
                 Assert.That(case5.clues.Length, Is.EqualTo(5));
                 CollectionAssert.AreEquivalent(case5.clues, case5.preloadedClues);
@@ -296,9 +288,7 @@ namespace Morsoul.Tests
                 Assert.That(case3.latentLog.id, Is.EqualTo(3));
                 Assert.That(case3.toolUnlocked, Is.EqualTo(Morsoul.Data.Tool.EmotionEcho));
 
-                Assert.That(case3.inquiryNodes[0].prompt.correctIndex, Is.EqualTo(2));
-                Assert.That(case3.inquiryNodes[1].prompt.correctIndex, Is.EqualTo(1));
-                Assert.That(case3.inquiryNodes[0].rejectionMessage, Is.Not.Empty);
+                Assert.That(case3.evidenceGraph, Is.Not.Null);
 
                 var phases = case3.interrogation.phases;
                 Assert.That(phases.Length, Is.EqualTo(3));

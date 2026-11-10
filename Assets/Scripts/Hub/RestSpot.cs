@@ -17,8 +17,12 @@ namespace Morsoul.Hub
 
         /// <summary>Optional overlay toggled while resting (e.g. a dim panel).</summary>
         public GameObject restingIndicator;
+        /// <summary>Optional one-shot played when the player sits down.</summary>
+        public AudioClip restCue;
 
         HubPlayerController _player;
+        HubContext _context;
+        System.Func<bool> _restBlocker;
         int _restStartFrame = -1;
 
         void Reset()
@@ -34,6 +38,14 @@ namespace Morsoul.Hub
         public override void Interact(HubContext ctx)
         {
             base.Interact(ctx);
+            // Register once so UiBlocked (and the journal's open gate) covers
+            // the resting state — resting blocks interaction like an overlay.
+            if (ctx != null && _restBlocker == null)
+            {
+                _restBlocker = () => IsResting;
+                ctx.AddUiBlocker(_restBlocker);
+                _context = ctx;
+            }
             if (IsResting) StopResting();
             else StartResting();
         }
@@ -46,6 +58,7 @@ namespace Morsoul.Hub
             if (core == null || core.Focus.Percent >= core.Focus.Maximum) return;
             IsResting = true;
             _restStartFrame = Time.frameCount;
+            if (restCue != null) core.Audio?.PlaySfx(restCue);
             if (_player == null) _player = FindAnyObjectByType<HubPlayerController>();
             if (_player != null) _player.enabled = false;
             if (restingIndicator != null) restingIndicator.SetActive(true);
@@ -90,6 +103,11 @@ namespace Morsoul.Hub
         void OnDisable()
         {
             StopResting();
+            if (_context != null && _restBlocker != null)
+            {
+                _context.RemoveUiBlocker(_restBlocker);
+                _restBlocker = null;
+            }
         }
     }
 }

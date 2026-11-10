@@ -34,8 +34,14 @@ namespace Morsoul.Core
         /// <summary>0–1 fill fraction for bars that normalize.</summary>
         public float Normalized => Maximum > 0f ? Percent / Maximum : 0f;
 
-        /// <summary>True once a scan ran at 0 Focus — forfeits Clean.</summary>
+        /// <summary>True once a scan ran at 0 Focus — forfeits the current case's Clean.</summary>
         public bool StrainedScanUsed { get; private set; }
+
+        /// <summary>Selects the persisted strained-scan latch when switching cases.</summary>
+        public void SetStrainedScanUsed(bool used)
+        {
+            StrainedScanUsed = used;
+        }
 
         /// <summary>True when energy has hit zero.</summary>
         public bool IsDepleted => Percent <= 0f;
@@ -43,8 +49,11 @@ namespace Morsoul.Core
         /// <summary>Un-credited rest time carried toward the next Focus tick.</summary>
         public float RestRemainderSeconds => _restRemainderSeconds;
 
-        /// <summary>When the game last closed, for offline recovery. Null once consumed.</summary>
+        /// <summary>When the game last closed gracefully. Null outside a completed close.</summary>
         public DateTime? ClosedAtUtc { get; private set; }
+
+        /// <summary>Monotonic highest-seen UTC watermark.</summary>
+        public DateTime? LastTrustedUtc { get; private set; }
 
         /// <summary>Last time offline recovery was credited — double-credit guard.</summary>
         public DateTime? LastOfflineRecoveryAppliedAtUtc { get; private set; }
@@ -126,37 +135,57 @@ namespace Morsoul.Core
             Percent = Math.Clamp(energy, 0f, Maximum);
         }
 
-        /// <summary>Records the close timestamp used by offline recovery.</summary>
+        /// <summary>
+        /// Advances the monotonic UTC watermark to the later of the previous
+        /// trusted value and the supplied system UTC time.
+        /// </summary>
+        public DateTime StampTrustedNow(DateTime systemUtc)
+        {
+            DateTime utc = systemUtc.Kind == DateTimeKind.Utc
+                ? systemUtc
+                : systemUtc.ToUniversalTime();
+            LastTrustedUtc = LastTrustedUtc.HasValue && LastTrustedUtc.Value > utc
+                ? LastTrustedUtc.Value
+                : utc;
+            return LastTrustedUtc.Value;
+        }
+
+        /// <summary>Records the graceful-close timestamp used by offline recovery.</summary>
         public void MarkClosed(DateTime closedUtc)
         {
-            ClosedAtUtc = closedUtc;
+            ClosedAtUtc = StampTrustedNow(closedUtc);
         }
 
         /// <summary>
-        /// Closed-game recovery: +floor(whole minutes / 2), capped at max,
-        /// measured from the later of close time and the last credit so an
-        /// interval is never recovered twice. Returns the energy granted.
+        /// Closed-game recovery: +floor(whole trusted minutes / 2), capped at
+        /// max. The close marker is consumed on a validated reopen even when
+        /// no whole trusted minutes elapsed. Returns the energy granted.
         /// </summary>
-        public float ApplyOfflineRecovery(DateTime reopenedUtc)
+        public float ApplyOfflineRecovery(DateTime systemUtc)
         {
+            DateTime trustedNow = StampTrustedNow(systemUtc);
             if (ClosedAtUtc == null) return 0f;
+
             var from = LastOfflineRecoveryAppliedAtUtc.HasValue &&
                        LastOfflineRecoveryAppliedAtUtc.Value > ClosedAtUtc.Value
                 ? LastOfflineRecoveryAppliedAtUtc.Value
                 : ClosedAtUtc.Value;
-            int wholeMinutes = (int)Math.Floor((reopenedUtc - from).TotalMinutes);
-            if (wholeMinutes <= 0) return 0f;
-
-            float gain = wholeMinutes / ProgressionConstants.ClosedMinutesPerEnergy;
+            int wholeMinutes = (int)Math.Floor((trustedNow - from).TotalMinutes);
             float before = Percent;
-            Percent = Math.Min(Maximum, Percent + gain);
-            LastOfflineRecoveryAppliedAtUtc = reopenedUtc;
+            if (wholeMinutes > 0)
+            {
+                float gain = wholeMinutes / ProgressionConstants.ClosedMinutesPerEnergy;
+                Percent = Math.Min(Maximum, Percent + gain);
+            }
+            LastOfflineRecoveryAppliedAtUtc = trustedNow;
+            ClosedAtUtc = null;
             return Percent - before;
         }
 
         /// <summary>Restores state from a SaveState.</summary>
         public void Restore(float percent, bool strainedScanUsed, float? maximum = null,
             float restRemainderSeconds = 0f, DateTime? closedAtUtc = null,
+            DateTime? lastTrustedUtc = null,
             DateTime? lastOfflineRecoveryAppliedAtUtc = null)
         {
             Maximum = maximum ?? FocusTuning.FocusMax;
@@ -165,6 +194,7 @@ namespace Morsoul.Core
             _tickAccumulator = 0f;
             _restRemainderSeconds = Math.Max(0f, restRemainderSeconds);
             ClosedAtUtc = closedAtUtc;
+            LastTrustedUtc = lastTrustedUtc;
             LastOfflineRecoveryAppliedAtUtc = lastOfflineRecoveryAppliedAtUtc;
         }
     }

@@ -104,7 +104,7 @@ namespace Morsoul.Data.Editor
 
             var c1 = Clue(folder, "C1_00", "Torn Desk Logs", ClueType.Physical, 0,
                 AcquisitionMethod.GolemEyeScan, Tool.GolemEye,
-                "Torn pre-cataclysm technical manifests scattered across a workstation. Scanning with Golem Eye (Tab) initiates linguistic deciphering, teaching the Golem the modern tongue and identifying the site as an unauthorized governmental mana research installation.");
+                "Torn modern-tongue notes scattered across a workstation, left by a human who studied these ruins long after the Cataclysm. Scanning with Golem Eye (Tab) initiates linguistic deciphering, teaching the Golem the modern tongue and identifying the site only as a sealed research installation.");
             var c2 = Clue(folder, "C2_00", "Overloaded Capacitor Relay", ClueType.Physical, 0,
                 AcquisitionMethod.Raycast3D, Tool.None,
                 "Shattered glass vacuum tube surrounded by crystallized mana slag. Demonstrates that power to the primary hydraulic security blast door was severed during a forced emergency system overload.");
@@ -119,47 +119,10 @@ namespace Morsoul.Data.Editor
                 AcquisitionMethod.Raycast3D, Tool.None,
                 "A sheared section of cast-iron steam conduit. Heavily oxidized and structurally compromised; cannot be used as a lever to pry open the reinforced stone door.");
 
-            var p1 = Premise(folder, "P1_00", "Unpowered Facility Lockdown",
-                "The facility suffered a catastrophic system overload, locking the main security doors in an unpowered failsafe state.");
-            var p2 = Premise(folder, "P2_00", "Mechanical Bypass Available",
-                "The Golem's operational analytical sensors can calibrate the salvaged emergency key into the unpowered manual lock port.");
-
-            var in1 = Node(folder, "IN1_00", c1, c2,
-                Prompt(
-                    "The logs mark this place as a mana research installation, and the door's power relay burned out in an emergency overload. What does this establish?",
-                    "Someone sealed the doors from outside to trap whoever remained.",
-                    "A catastrophic overload cut the power, leaving the security doors locked in an unpowered failsafe.",
-                    "The doors are still powered and will open once the facility reboots.",
-                    1,
-                    "Diagnostic note: crystallized mana slag forms only during an overload. A door that has lost its power does not open. It holds in failsafe."),
-                p1,
-                new[] { rh1 },
-                "Tutorial Guidance: Brute force cannot overcome hydraulic stone locks. Seek an authentic manual override.");
-            var in2 = Node(folder, "IN2_00", c3, t1,
-                Prompt(
-                    "The key's magnetic frequency matches the door's manual bypass port, and your optical systems report online. What follows?",
-                    "The key can only work once power is restored to the facility.",
-                    "The key is a decoy, and the real exit lies elsewhere in the ruins.",
-                    "Your working sensors can calibrate the salvaged key into the unpowered manual port.",
-                    2,
-                    "Diagnostic note: manual bypass ports draw no power. They need only a matching key and a precise hand. Both are present."),
-                p2,
-                new ClueData[0], "");
-
-            var h = LoadOrCreate<HypothesisData>($"{folder}/H_00.asset");
-            h.id = "H_00";
-            h.premise1 = p1;
-            h.premise2 = p2;
-            h.verdictProposition = "The sealed stone exit can be manually unlocked by inserting the Ancient Chamber Key directly into the secondary hydraulic tumbler.";
-            h.unlocksInterrogation = null;
-            EditorUtility.SetDirty(h);
-
             var caseData = LoadOrCreate<CaseData>($"{folder}/Case_00.asset");
             caseData.caseId = 0;
-            caseData.title = "Awakening in the Ashes";
+            caseData.title = "Awakening Beneath the Ruins";
             caseData.region = "Subterranean Research Facility Ruins & Wilderness Threshold";
-            caseData.inquiryNodes = new[] { in1, in2 };
-            caseData.hypothesis = h;
             caseData.interrogation = null;
             caseData.clues = new[] { c1, c2, c3, t1, rh1 };
             caseData.latentLog = null;
@@ -168,6 +131,8 @@ namespace Morsoul.Data.Editor
             caseData.hasInvestigationScene = true;
             caseData.hasInterrogation = false;
             caseData.preloadedClues = new ClueData[0];
+            caseData.evidenceGraph = LoadCanonicalGraph(
+                "Assets/Data/Cases/Case00/EVG_00_PROVISIONAL.asset");
             EditorUtility.SetDirty(caseData);
         }
 
@@ -203,32 +168,9 @@ namespace Morsoul.Data.Editor
                 "Pre-cataclysm formula on synthetic mana solvent flash points and sublimation rates. Required for Ending 3.",
                 isBacktrackingOnly: true, hasWorldPosition: true, worldPosition: new Vector2(0, 8));
 
+            // INT_01 phase 2 presents this premise as evidence; keep the asset.
             var p1 = Premise(folder, "P1_01", "Absence of Forced Entry",
                 "The vault was accessed without picking or damage, requiring one of only two registered keys.");
-            var p2 = Premise(folder, "P2_01", "Fabricated Attack & Embezzlement",
-                "The incident was chemically faked to claim insurance compensation for goods that were never brewed.");
-
-            var in1 = Node(folder, "IN1_01", c1, t1,
-                Prompt(
-                    "The lock's pins are untouched, and only two registered keys exist. What does this establish?",
-                    "The vault was opened with one of the two registered keys \u2014 no forced breach occurred.",
-                    "A skilled thief picked the lock without leaving a single tool mark.",
-                    "Dark magic bypassed the lock mechanism entirely.",
-                    0,
-                    "Dwarven cylinders scar if you so much as breathe on them with a pick. Clean pins, two keys... so who's carrying one?"),
-                p1,
-                new[] { rh1 },
-                "Physical Contradiction: Tool profile does not match Dwarven tumbler specifications.");
-            var in2 = Node(folder, "IN2_01", c2, c3,
-                Prompt(
-                    "The 'dark magic' residue is a mundane solvent, and shipment #408 was never brewed. What follows?",
-                    "A rival alchemist sabotaged the vault to ruin Ignatius.",
-                    "The attack was staged with a mundane solvent to claim insurance on potions that never existed.",
-                    "The solvent leaked by accident and destroyed real stock.",
-                    1,
-                    "Funny thing about ghost cargo \u2014 you can't destroy what was never made. So who profits from a fake disaster?"),
-                p2,
-                new ClueData[0], "");
 
             var interrogation = LoadOrCreate<InterrogationData>($"{folder}/INT_01.asset");
             interrogation.id = "INT_01";
@@ -253,9 +195,11 @@ namespace Morsoul.Data.Editor
                 new InterrogationPhase
                 {
                     suspectClaim = "Even if mundane solvent was used, some skilled cat burglar must have jimmied the locks from the back alley while Asterveil slept!",
-                    keywords = new string[0],
+                    keywords = new[] { "jimmied the locks from the back alley" },
                     validMoves = new[]
                     {
+                        Move(Verb.Press, null, false, 0, false,
+                            "I lock up strictly at the eighth bell! Any thief with a standard pick-set could slip past the sleepy market watch and force the cylinder!"),
                         Move(Verb.PresentEvidence, p1, true, 0, false,
                             "The cylinder pins bear no scratches, and the Guild holds the only duplicate. That substantiates a single conclusion \u2014 the door was opened with a registered key, and only yours and the Guildmaster's exist. So whose key turned it?"),
                     },
@@ -268,9 +212,11 @@ namespace Morsoul.Data.Editor
                 new InterrogationPhase
                 {
                     suspectClaim = "This is absurd! Why would I destroy ten thousand gold ducats worth of inventory? I am financially ruined by this loss!",
-                    keywords = new string[0],
+                    keywords = new[] { "financially ruined by this loss" },
                     validMoves = new[]
                     {
+                        Move(Verb.Press, null, false, 0, false,
+                            "My entire life's work, my retirement, my family's trust fund was tied into Batch #408! If the City Treasury does not approve my emergency compensation by noon, I am bankrupt!"),
                         Move(Verb.Contradict, c3, true, 0, false,
                             "You destroyed nothing of value. Batch records confirm shipment #408 was never bottled. You staged an attack to collect guild insurance on phantom goods."),
                     },
@@ -278,14 +224,6 @@ namespace Morsoul.Data.Editor
                 },
             };
             EditorUtility.SetDirty(interrogation);
-
-            var h = LoadOrCreate<HypothesisData>($"{folder}/H_01.asset");
-            h.id = "H_01";
-            h.premise1 = p1;
-            h.premise2 = p2;
-            h.verdictProposition = "Master Alchemist Ignatius staged the break-in using his own key and mundane solvent to cover up inventory embezzlement.";
-            h.unlocksInterrogation = interrogation;
-            EditorUtility.SetDirty(h);
 
             var log = LoadOrCreate<RunicLogData>($"{folder}/RunicLog_01.asset");
             log.id = 1;
@@ -300,8 +238,6 @@ namespace Morsoul.Data.Editor
             caseData.caseId = 1;
             caseData.title = "The Poisoned Vault of Asterveil";
             caseData.region = "Guild Quarter & Lower Market District, Asterveil";
-            caseData.inquiryNodes = new[] { in1, in2 };
-            caseData.hypothesis = h;
             caseData.interrogation = interrogation;
             caseData.clues = new[] { c1, c2, c3, t1, t2, rh1, l1 };
             caseData.latentLog = log;
@@ -310,6 +246,8 @@ namespace Morsoul.Data.Editor
             caseData.hasInvestigationScene = true;
             caseData.hasInterrogation = true;
             caseData.preloadedClues = new ClueData[0];
+            caseData.evidenceGraph = LoadCanonicalGraph(
+                "Assets/Data/Cases/Case01/EVG_01_PROVISIONAL.asset");
             EditorUtility.SetDirty(caseData);
         }
 
@@ -345,32 +283,9 @@ namespace Morsoul.Data.Editor
                 "Pre-cataclysm architectural rune etched into the tower's rear load-bearing masonry beam. Documents harmonic acoustic dissipation used to stabilize runaway mana resonance. Required for Ending 3; unobtainable on initial run.",
                 isBacktrackingOnly: true, hasWorldPosition: true, worldPosition: new Vector2(0, 8));
 
+            // INT_02 phase 2 presents this premise as evidence; keep the asset.
             var p1 = Premise(folder, "P1_02", "Acoustic Resonance Sabotage",
                 "The silence hex was an acoustic trap delivered through the Great Bell's vibration, not an external spell cast from the ground.");
-            var p2 = Premise(folder, "P2_02", "Internal Extortion & Scapegoating",
-                "The bell-ringer acted under coercion from a third party, attempting to pin blame on the vulnerable spirit-folk outsider.");
-
-            var in1 = Node(folder, "IN1_02", c1, c2,
-                Prompt(
-                    "The crystal shattered from internal harmonic overload, and the clapper carries dust that turns kinetic strikes into a muting shockwave. What does this establish?",
-                    "An external impact cracked the crystal and the dust is unrelated residue.",
-                    "The tuning fork's holy resonance destabilized the crystal from within.",
-                    "Someone treated the clapper with a frequency-absorbing agent \u2014 sabotage meant to strangle the chime.",
-                    2,
-                    "Your scan reads absorption, not blunt force. Something was applied to that clapper to silence the chime \u2014 and the overload is what burst the crystal."),
-                p1,
-                new[] { rh1 },
-                "Physical Contradiction: Harmonic signature is holy resonance, incapable of producing dark frequency absorption.");
-            var in2 = Node(folder, "IN2_02", c3, t1,
-                Prompt(
-                    "A Veiled Circle note orders Accord to apply the 'damping powder' or lose his sister \u2014 while Sylvan's alibi holds under Brother Kenneth's watch. What follows?",
-                    "Sylvan's spirit-folk chanting sabotaged the bell from the tower base.",
-                    "Accord applied the powder under extortion \u2014 and pointed the blade at a convenient Acolyte.",
-                    "The Veiled Circle entered the belfry and dusted the clapper themselves.",
-                    1,
-                    "The note names no perpetrator \u2014 it names a debt and a deadline. Someone with access applied that powder. Sylvan has a witness. Accord has a motive."),
-                p2,
-                new ClueData[0], "");
 
             var interrogation = LoadOrCreate<InterrogationData>($"{folder}/INT_02.asset");
             interrogation.id = "INT_02";
@@ -395,24 +310,28 @@ namespace Morsoul.Data.Editor
                 new InterrogationPhase
                 {
                     suspectClaim = "Then the creature must have snuck up while I wasn't looking! I saw them, I swear \u2014 they chanted from the tower base and bewitched the machinery!",
-                    keywords = new string[0],
+                    keywords = new[] { "chanted from the tower base" },
                     validMoves = new[]
                     {
+                        Move(Verb.Press, null, false, 0, false,
+                            "I was busy oiling the rope pulleys! A cunning sorcerer could whisper upward through the floor flues without making a sound!"),
                         Move(Verb.PresentEvidence, p1, true, 0, false,
                             "The acoustics substantiate a redirect: a spell from the base cannot coat a clapper suspended eighty feet in the rafters. The damping agent was applied manually by whoever climbed the belfry before vespers."),
                     },
                     invalidMoves = new[]
                     {
                         Move(Verb.PresentEvidence, rh1, false, 1, false,
-                            "The High Priestess's holy fork? That proves her sanctity, not my guilt! Are your cognitive processors rusted?!"),
+                            "The High Priestess's holy fork? That proves her sanctity, not my guilt! Are your wits as rusted as your plates?!"),
                     },
                 },
                 new InterrogationPhase
                 {
                     suspectClaim = "I am a faithful servant of Saint Althea! I have dedicated twenty years to ringing these bells! What possible motive could I have to harm Mother Lyra?!",
-                    keywords = new string[0],
+                    keywords = new[] { "What possible motive could I have" },
                     validMoves = new[]
                     {
+                        Move(Verb.Press, null, false, 0, false,
+                            "I love this parish more than my own life! I would sever my own fingers before I willingly silenced the Lady! You cannot invent a reason for me to commit blasphemy!"),
                         Move(Verb.Contradict, c3, true, 0, false,
                             "You didn't want to harm her, Accord. You were cornered. The hooded stranger held your family's exile over your head."),
                     },
@@ -420,14 +339,6 @@ namespace Morsoul.Data.Editor
                 },
             };
             EditorUtility.SetDirty(interrogation);
-
-            var h = LoadOrCreate<HypothesisData>($"{folder}/H_02.asset");
-            h.id = "H_02";
-            h.premise1 = p1;
-            h.premise2 = p2;
-            h.verdictProposition = "Accord poisoned the clapper under blackmail from the Veiled Circle, falsely framing the Spirit-folk Acolyte Sylvan to shield his sister Marian.";
-            h.unlocksInterrogation = interrogation;
-            EditorUtility.SetDirty(h);
 
             var log = LoadOrCreate<RunicLogData>($"{folder}/RunicLog_02.asset");
             log.id = 2;
@@ -442,8 +353,6 @@ namespace Morsoul.Data.Editor
             caseData.caseId = 2;
             caseData.title = "The Muted Belfry of Saint Althea";
             caseData.region = "Cathedral Nave & Tower Belfry of Saint Althea, Asterveil";
-            caseData.inquiryNodes = new[] { in1, in2 };
-            caseData.hypothesis = h;
             caseData.interrogation = interrogation;
             caseData.clues = new[] { c1, c2, c3, t1, t2, rh1, l2 };
             caseData.latentLog = log;
@@ -452,6 +361,8 @@ namespace Morsoul.Data.Editor
             caseData.hasInvestigationScene = true;
             caseData.hasInterrogation = true;
             caseData.preloadedClues = new ClueData[0];
+            caseData.evidenceGraph = LoadCanonicalGraph(
+                "Assets/Data/Cases/Case02/EVG_02.asset");
             EditorUtility.SetDirty(caseData);
         }
 
@@ -487,36 +398,15 @@ namespace Morsoul.Data.Editor
                 "Available only after Case 4, when Aether Sight is unlocked. Decrypted pre-cataclysm technical readout recording the catastrophic mana displacement event. Contains Elise Cochran's final transmission before the world reshaped, revealing the first tangible proof of her sacrifice.",
                 isBacktrackingOnly: true, hasWorldPosition: true, worldPosition: new Vector2(0, 4));
 
-            var p1 = Premise(folder, "P1_03", "Forced Industrial Extraction",
-                "The Elder Tree is dying from mechanical high-pressure mana drainage, definitively disproving any claim of natural biological blight.");
-            var p2 = Premise(folder, "P2_03", "Cult Conspiracy Link",
-                "The drainage is orchestrated by the Veiled Circle; the emotional residue of fanatical zeal and deceit on Vane's cloak ties him to the cult's Sanctum Core ritual.");
-
-            var in1 = Node(folder, "IN1_03", c1, t1,
-                Prompt(
-                    "The tube driven into the Elder Tree's taproot is an industrial high-pressure siphon, and Kaelen reports the blight radiated from the altar clearing with no fungal rot. What does this establish?",
-                    "A natural forest blight is draining the tree \u2014 the brass device is unrelated research equipment.",
-                    "A territorial monster wounded the tree, and the siphon was installed by the rangers to treat it.",
-                    "Someone is mechanically draining the tree's mana through an industrial siphon \u2014 no natural blight works this fast or this clean.",
-                    2,
-                    "Kaelen said it himself: no disease drains vital sap that fast without leaving fungal rot. That tap isn't studying the tree \u2014 it's bleeding it."),
-                p1,
-                new[] { rh1 },
-                "Forensic Contradiction: Beetle infestation is a superficial byproduct; root sap pressures show active mechanical drainage.");
-            var in2 = Node(folder, "IN2_03", c2, c3,
-                Prompt(
-                    "The altar dagger bears the Veiled Circle's eclipsed eye, and the abandoned cloak still carries fanatical zeal and deceit under the Emotion Echo. What follows?",
-                    "The dagger and cloak are curios looted by a lone black-market merchant with no ties to the drainage.",
-                    "The drainage is a Veiled Circle operation \u2014 the zeal and deceit soaked into Vane's cloak tie him to their Sanctum Core ritual.",
-                    "A lone sap smuggler planted cult trappings at the altar to pin his siphoning on the Veiled Circle.",
-                    1,
-                    "Insignia and residue tell one story: the eclipsed eye marks the blade, and the Echo reads zeal and deceit on the cloak. This was no merchant's commerce \u2014 it was a cult operation."),
-                p2,
-                new ClueData[0], "");
-
             var pressMove = Move(Verb.Press, null, false, 0, false,
                 "The regional council granted me unrestricted access to sample fungal spread! My tools are delicate biological instruments, not weapons!");
             pressMove.emotionAura = Aura.Amber;
+            var press2Move = Move(Verb.Press, null, false, 0, false,
+                "Alchemical houses pay fortunes for raw spirit-resin! I am an opportunist, nothing more! Smuggling contraband is a municipal civil infraction, not a hanging offense!");
+            press2Move.emotionAura = Aura.Amber;
+            var press3Move = Move(Verb.Press, null, false, 0, false,
+                "Nature dies to make way for the strong! This woodland decay is localized, irrelevant, and forgotten by tomorrow's sunrise!");
+            press3Move.emotionAura = Aura.Amber;
 
             var interrogation = LoadOrCreate<InterrogationData>($"{folder}/INT_03.asset");
             interrogation.id = "INT_03";
@@ -540,9 +430,10 @@ namespace Morsoul.Data.Editor
                 new InterrogationPhase
                 {
                     suspectClaim = "Fine, I tapped the tree for alchemical commerce! But a lone merchant selling sap on the black market hardly concerns your guild's grand conspiracy theories!",
-                    keywords = new string[0],
+                    keywords = new[] { "lone merchant selling sap" },
                     validMoves = new[]
                     {
+                        press2Move,
                         Move(Verb.PresentEvidence, c2, true, 0, false,
                             "This redirects your 'lone merchant' story. Black-market traders do not carry daggers bearing the eclipsed eye of the Veiled Circle, treated with the exact same chemical solvent used in Asterveil's vault. Who do you actually work for?"),
                     },
@@ -555,9 +446,10 @@ namespace Morsoul.Data.Editor
                 new InterrogationPhase
                 {
                     suspectClaim = "You cannot stop what is coming! You have no proof this tree connects to anything beyond these miserable woods!",
-                    keywords = new string[0],
+                    keywords = new[] { "no proof this tree connects to anything" },
                     validMoves = new[]
                     {
+                        press3Move,
                         Move(Verb.Contradict, c3, true, 0, false,
                             "Your own cloak betrays you, Vane \u2014 the Emotion Echo reads the fanatical zeal and deceit soaked into it. You serve the Veiled Circle's Sanctum Core ritual, and this tree feeds it."),
                     },
@@ -565,14 +457,6 @@ namespace Morsoul.Data.Editor
                 },
             };
             EditorUtility.SetDirty(interrogation);
-
-            var h = LoadOrCreate<HypothesisData>($"{folder}/H_03.asset");
-            h.id = "H_03";
-            h.premise1 = p1;
-            h.premise2 = p2;
-            h.verdictProposition = "Vane is an undercover operative of the Veiled Circle actively draining the Elder Spirit Tree to power their catastrophic core ritual.";
-            h.unlocksInterrogation = interrogation;
-            EditorUtility.SetDirty(h);
 
             var log = LoadOrCreate<RunicLogData>($"{folder}/RunicLog_03.asset");
             log.id = 3;
@@ -587,8 +471,6 @@ namespace Morsoul.Data.Editor
             caseData.caseId = 3;
             caseData.title = "The Sinking Wilds of Whisperwood";
             caseData.region = "Whisperwood Boundary Trail & Deep Grove Clearing";
-            caseData.inquiryNodes = new[] { in1, in2 };
-            caseData.hypothesis = h;
             caseData.interrogation = interrogation;
             caseData.clues = new[] { c1, c2, c3, t1, t2, rh1, l3 };
             caseData.latentLog = log;
@@ -597,6 +479,8 @@ namespace Morsoul.Data.Editor
             caseData.hasInvestigationScene = true;
             caseData.hasInterrogation = true;
             caseData.preloadedClues = new ClueData[0];
+            caseData.evidenceGraph = LoadCanonicalGraph(
+                "Assets/Data/Cases/Case03/EVG_03.asset");
             EditorUtility.SetDirty(caseData);
         }
 
@@ -651,32 +535,17 @@ namespace Morsoul.Data.Editor
             return premise;
         }
 
-        static InquiryNodeData Node(string folder, string id, ClueData slotA, ClueData slotB,
-            CausalPromptData prompt, PremiseData producesPremise,
-            ClueData[] rejectedClues, string rejectionMessage)
+        /// <summary>
+        /// The weighted board is the canonical deduction path, so generated
+        /// cases link the authored EvidenceGraphData from the canonical
+        /// Assets/Data/Cases folder regardless of the generation root.
+        /// </summary>
+        static EvidenceGraphData LoadCanonicalGraph(string canonicalPath)
         {
-            var node = LoadOrCreate<InquiryNodeData>($"{folder}/{id}.asset");
-            node.id = id;
-            node.slotA = slotA;
-            node.slotB = slotB;
-            node.prompt = prompt;
-            node.producesPremise = producesPremise;
-            node.rejectedClues = rejectedClues;
-            node.rejectionMessage = rejectionMessage;
-            EditorUtility.SetDirty(node);
-            return node;
-        }
-
-        static CausalPromptData Prompt(string question, string option0, string option1, string option2,
-            int correctIndex, string hintText)
-        {
-            return new CausalPromptData
-            {
-                question = question,
-                options = new[] { option0, option1, option2 },
-                correctIndex = correctIndex,
-                hintText = hintText,
-            };
+            var graph = AssetDatabase.LoadAssetAtPath<EvidenceGraphData>(canonicalPath);
+            if (graph == null)
+                Debug.LogWarning($"CaseDataGenerator: canonical evidence graph not found at '{canonicalPath}'.");
+            return graph;
         }
 
         static MoveData Move(Verb verb, EvidenceData evidence, bool breaksComposureSegment,

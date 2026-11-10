@@ -18,6 +18,7 @@ MonoBehaviour:
   caseId: 4
   acquisition: 3
   requiredTool: 0
+  requiredFlag: 
   description: A snapped pneumatic drill head with heavy metal fatigue and abrasive wear. Ordinary wear, unrelated to chemically melted junction relays.
   dissonanceKeyword: 
   isBacktrackingOnly: 0

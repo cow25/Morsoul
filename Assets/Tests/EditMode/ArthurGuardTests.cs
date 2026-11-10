@@ -21,8 +21,8 @@ namespace Morsoul.Tests
     ///
     /// Legitimate exceptions, per the narrative doc:
     ///  - RunicLogData is skipped entirely (Rune-Cant logs are lore text).
-    ///  - CutsceneData whose asset filename or id contains "MindForgets" or
-    ///    "Opening" (pre-cataclysm flashback cutscenes).
+    ///  - CutsceneData whose asset filename or id contains "Opening"
+    ///    (pre-cataclysm flashback cutscenes, if any are added).
     ///  - CutsceneData whose asset filename or id contains "Ending" or
     ///    "Epilogue" (Ending 3 and the epilogue legitimately use the name).
     ///  - JournalData / epilogue strings are out of scope (not scanned).
@@ -52,7 +52,6 @@ namespace Morsoul.Tests
 
         static readonly string[] ExemptCutsceneTokens =
         {
-            "MindForgets",
             "Opening",
             "Ending",
             "Epilogue",
