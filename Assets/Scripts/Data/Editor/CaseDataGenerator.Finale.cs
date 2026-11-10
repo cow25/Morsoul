@@ -97,7 +97,7 @@ namespace Morsoul.Data.Editor
                 {
                     suspectClaim = "So someone jammed a valve. That proves nothing against me! I was contracted solely for upper-tier masonry and never touched the subterranean conduits!",
                     keywords = new[] { "never touched the subterranean conduits" },
-                    validMoves = new[] { press2, solvent },
+                    validMoves = new[] { solvent },
                     invalidMoves = new[]
                     {
                         Move(Verb.PresentEvidence, rh1, false, 1, false,

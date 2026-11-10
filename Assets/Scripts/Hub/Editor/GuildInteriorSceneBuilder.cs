@@ -66,6 +66,11 @@ namespace Morsoul.Hub.Editor
             var spawn = GameObject.FindGameObjectWithTag("PlayerSpawn");
             if (spawn != null) spawn.transform.position = new Vector3(0f, -3f, 0f);
             var context = HubSceneFactory.CreateHubContext();
+            if (context.hud != null)
+            {
+                context.hud.caseText = "";
+                context.hud.objectiveText = "Follow Eliza to meet Guildmaster Ovan.";
+            }
             HubSceneFactory.WirePlayer(player, cameraFollow, context);
 
             // Interior dressing lives in the main scene — no art overlay.

@@ -26,6 +26,7 @@ namespace Morsoul.Hub
         public DialogueController dialogue;
         public HubJournal journal;
         public HubFlags flags;
+        public HubHudController hud;
         /// <summary>Optional carrier travel menu; opened by CarrierInteractable.</summary>
         public TravelMenuController travelMenu;
         public WeightedBoardController boardPanel;

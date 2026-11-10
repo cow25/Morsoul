@@ -18,7 +18,11 @@ namespace Morsoul.Hub.Editor
         const string SceneName = "Prologue_Wilderness";
 
         [MenuItem("Morsoul/Hub/Create Prologue Wilderness Scene")]
-        public static void CreateOrUpdate()
+        public static void CreateOrUpdate() => BuildInternal(prompt: true);
+
+        public static void ForceUpdate() => BuildInternal(prompt: false);
+
+        static void BuildInternal(bool prompt)
         {
             var preExisting = SceneManager.GetSceneByPath(ScenePath);
             bool wasOpen = preExisting.IsValid() && preExisting.isLoaded;
@@ -30,7 +34,7 @@ namespace Morsoul.Hub.Editor
             }
 
             bool created = !File.Exists(ScenePath);
-            if (!created && !Application.isBatchMode &&
+            if (!created && prompt && !Application.isBatchMode &&
                 !EditorUtility.DisplayDialog("Prologue Wilderness Scene",
                     $"'{ScenePath}' already exists. Update its generated staging objects?",
                     "Update", "Cancel"))
@@ -49,6 +53,38 @@ namespace Morsoul.Hub.Editor
                 var context = EnsureBaseScene(scene);
                 var player = FindComponent<HubPlayerController>(scene);
                 var camera = FindComponent<CameraFollow2D>(scene);
+                if (camera != null)
+                {
+                    camera.useBounds = true;
+                    camera.boundsMin = new Vector2(-18f, -6f);
+                    camera.boundsMax = new Vector2(32f, 6f);
+                    if (player != null)
+                    {
+                        camera.transform.position = new Vector3(player.transform.position.x, player.transform.position.y, -10f);
+                        camera.SnapToTarget(player.transform);
+                    }
+                    var cam = camera.GetComponent<Camera>();
+                    if (cam != null)
+                    {
+                        cam.clearFlags = CameraClearFlags.SolidColor;
+                        cam.backgroundColor = new Color(0.08f, 0.12f, 0.08f, 1f);
+                    }
+                }
+
+                var hud = FindComponent<HubHudController>(scene);
+                if (hud == null)
+                {
+                    var hudGo = new GameObject("HubHudPanel");
+                    var renderer = hudGo.AddComponent<UnityEngine.UIElements.PanelRenderer>();
+                    var panelSettings = AssetDatabase.LoadAssetAtPath<UnityEngine.UIElements.PanelSettings>("Assets/UI Toolkit/MainPanelSettings.asset");
+                    if (panelSettings != null) renderer.panelSettings = panelSettings;
+                    var uxml = AssetDatabase.LoadAssetAtPath<UnityEngine.UIElements.VisualTreeAsset>("Assets/HubHud.uxml");
+                    if (uxml != null) renderer.visualTreeAsset = uxml;
+                    hud = hudGo.AddComponent<HubHudController>();
+                }
+                hud.caseText = "Prologue";
+                hud.objectiveText = "Investigate the wilderness path toward the settlement.";
+                if (context != null) context.hud = hud;
                 RemoveRoot(scene, "ElizaIntroCameraTarget");
                 RemoveRoot(scene, "ElizaCutawayCameraTarget");
                 RemoveRoot(scene, "ElizaWalkStart");

@@ -131,10 +131,10 @@ namespace Morsoul.Hub.Editor
             // Plaza well between the stalls — a landmark players steer by.
             // Offset west of the north-south path so it doesn't block it.
             p.Add(new P("Well", -1.7f, -2.4f));
-            // South fence line; east/west framed by trees. The west frame
-            // leaves a gap at the street entry (y -0.5) so the arrival walk
-            // reads as emerging from the treeline, not through a trunk.
-            for (float x = -7f; x <= 7f; x += 1f) p.Add(new P("Fence", x, -3.9f));
+            // South fence line; east/west framed by trees. Leaves a 3m gap at x=0
+            // so the south dirt path remains clear and unobstructed.
+            for (float x = -7f; x <= -1.5f; x += 1f) p.Add(new P("Fence", x, -3.9f));
+            for (float x = 1.5f; x <= 7f; x += 1f) p.Add(new P("Fence", x, -3.9f));
             foreach (float y in new[] { -2.5f, 0.4f, 1.5f, 3.4f })
                 p.Add(new P("Tree", -7.4f, y));
             foreach (float y in new[] { -2.5f, -0.5f, 1.5f, 3.4f })

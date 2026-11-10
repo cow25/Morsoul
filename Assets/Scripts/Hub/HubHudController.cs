@@ -47,6 +47,7 @@ namespace Morsoul.Hub
         {
             _panelRenderer = GetComponent<PanelRenderer>();
             if (_panelRenderer != null) _panelRenderer.RegisterUIReloadCallback(OnUIReload);
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
             RefreshObjective();
             if (CoreRuntime.Instance != null)
             {
@@ -58,11 +59,19 @@ namespace Morsoul.Hub
         void OnDisable()
         {
             if (_panelRenderer != null) _panelRenderer.UnregisterUIReloadCallback(OnUIReload);
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
             if (_bus != null)
             {
                 _bus.Unsubscribe<InvestigationStateChangedEvent>(OnInvestigationChanged);
                 _bus = null;
             }
+        }
+
+        void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
+        {
+            AppliedCaseText = null;
+            AppliedObjective = null;
+            RefreshObjective();
         }
 
         void OnInvestigationChanged(InvestigationStateChangedEvent _) => RefreshObjective();
@@ -81,20 +90,67 @@ namespace Morsoul.Hub
         public void RefreshObjective()
         {
             var session = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session : null;
+            var sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
             int caseId = objectiveCaseId > 0 ? objectiveCaseId
                 : session != null ? session.CurrentCase : 0;
 
-            string effectiveCaseText = caseText;
-            string effectiveObjective = objectiveText;
+            string effectiveCaseText = caseText ?? "";
+            string effectiveObjective = objectiveText ?? "";
 
-            if (caseId == 1 && session != null && session.PrologueCompleted)
+            // A. Prologue progression
+            if (sceneName.Contains("Prologue"))
             {
-                if (!session.HasFlag(GuildIntroRules.ArrivedFlag))
+                effectiveCaseText = "Prologue";
+                if (session != null && (session.ElizaIntroSeen || session.HasFlag("Prologue_Completed")))
+                {
+                    effectiveObjective = "Follow Eliza Astra toward Asterveil Lower Market.";
+                }
+                else
+                {
+                    effectiveObjective = "Investigate the wilderness path toward the settlement.";
+                }
+            }
+            // B. Guild Hall
+            else if (sceneName.Contains("Guild"))
+            {
+                if (session != null && GuildIntroRules.IsCaseOneActive(session))
+                {
+                    effectiveCaseText = !string.IsNullOrEmpty(caseText) ? caseText : "Case 1: The Poisoned Vault";
+                    bool unlocked = session.CanStartInterrogation(1);
+                    if (unlocked)
+                    {
+                        effectiveObjective = string.IsNullOrEmpty(postInvestigationObjective)
+                            ? DefaultPostInvestigationObjective
+                            : postInvestigationObjective;
+                    }
+                    else if (session.HasFlag(GuildIntroRules.WarrantFlag))
+                    {
+                        effectiveObjective = "Investigate the poisoned vault via the cellar grate.";
+                    }
+                    else
+                    {
+                        effectiveObjective = string.IsNullOrEmpty(objectiveText)
+                            ? "Interview Merchant Guildmaster Ovan for storage clearance."
+                            : objectiveText;
+                    }
+                }
+                else
+                {
+                    effectiveCaseText = "";
+                    effectiveObjective = (session != null && session.HasFlag(GuildIntroRules.IntroSeenFlag))
+                        ? "Speak with Guildmaster Ovan upstairs in the Guild hall."
+                        : "Follow Eliza to meet Guildmaster Ovan.";
+                }
+            }
+            // C. Case 1 or Lower Market / Guild exploration
+            else if (caseId == 1 && session != null && (session.PrologueCompleted || sceneName.Contains("LowerMarket")))
+            {
+                if (!session.HasFlag(GuildIntroRules.ArrivedFlag) && session.PrologueCompleted)
                 {
                     effectiveCaseText = "";
                     effectiveObjective = "Follow Eliza to the Investigator's Guild.";
                 }
-                else if (!session.HasFlag(GuildIntroRules.IntroSeenFlag))
+                else if (!session.HasFlag(GuildIntroRules.IntroSeenFlag) && session.PrologueCompleted)
                 {
                     effectiveCaseText = "";
                     effectiveObjective = "Follow Eliza to meet Guildmaster Ovan.";
@@ -106,7 +162,7 @@ namespace Morsoul.Hub
                 }
                 else
                 {
-                    effectiveCaseText = caseText;
+                    effectiveCaseText = !string.IsNullOrEmpty(caseText) ? caseText : "Case 1: The Poisoned Vault";
                     bool unlocked = session.CanStartInterrogation(caseId);
                     if (unlocked)
                     {
@@ -126,16 +182,46 @@ namespace Morsoul.Hub
                     }
                 }
             }
+            // C. Fallbacks for other cases, hubs, or standalone testing
             else
             {
                 bool unlocked = session != null && session.CanStartInterrogation(caseId);
                 effectiveObjective = unlocked
                     ? (string.IsNullOrEmpty(postInvestigationObjective)
                         ? DefaultPostInvestigationObjective : postInvestigationObjective)
-                    : objectiveText;
+                    : (string.IsNullOrEmpty(objectiveText) ? GetCaseFallbackObjective(caseId) : objectiveText);
+
+                if (string.IsNullOrEmpty(effectiveCaseText) && caseId > 0)
+                {
+                    effectiveCaseText = GetCaseFallbackTitle(caseId);
+                }
             }
 
             ApplyObjective(effectiveCaseText, effectiveObjective);
+        }
+
+        static string GetCaseFallbackTitle(int caseId)
+        {
+            switch (caseId)
+            {
+                case 1: return "Case 1: The Poisoned Vault";
+                case 2: return "Case 2: The Muted Belfry";
+                case 3: return "Case 3: The Dying Grove";
+                case 4: return "Case 4: The Shattered Seam";
+                default: return "";
+            }
+        }
+
+        static string GetCaseFallbackObjective(int caseId)
+        {
+            switch (caseId)
+            {
+                case 1: return "Interview Merchant Guildmaster Ovan for storage clearance.";
+                case 2: return "Examine Mother Lyra and secure the Belfry Key.";
+                case 3: return "Receive Kaelen's briefing and acquire the Elder Grove Perimeter Seal.";
+                case 4: return "Present Guild authority to Overseer Thrun and reach Drift 09.";
+                default: return "Explore the area.";
+            }
         }
 
         void Update()
@@ -164,21 +250,35 @@ namespace Morsoul.Hub
 
         void ApplyObjective(string currentCaseText, string text)
         {
-            if (AppliedCaseText == currentCaseText && AppliedObjective == text &&
-                _caseLabel != null && _objectiveLabel != null)
+            currentCaseText = currentCaseText ?? "";
+            text = text ?? "";
+
+            bool sameText = AppliedCaseText == currentCaseText && AppliedObjective == text;
+            bool labelsBoundAndMatching = _caseLabel != null && _objectiveLabel != null &&
+                _caseLabel.text == currentCaseText && _objectiveLabel.text == text;
+
+            if (sameText && labelsBoundAndMatching)
                 return;
 
             AppliedCaseText = currentCaseText;
             AppliedObjective = text;
+
+            var panel = _root != null ? _root.Q<VisualElement>("ObjectivePanel") : null;
+            bool hasContent = !string.IsNullOrEmpty(currentCaseText) || !string.IsNullOrEmpty(text);
+            if (panel != null)
+            {
+                panel.style.display = hasContent ? DisplayStyle.Flex : DisplayStyle.None;
+            }
+
             if (_caseLabel != null)
             {
-                _caseLabel.text = currentCaseText ?? "";
+                _caseLabel.text = currentCaseText;
                 _caseLabel.style.display = string.IsNullOrEmpty(currentCaseText)
                     ? DisplayStyle.None : DisplayStyle.Flex;
             }
             if (_objectiveLabel != null)
             {
-                _objectiveLabel.text = text ?? "";
+                _objectiveLabel.text = text;
                 _objectiveLabel.style.display = string.IsNullOrEmpty(text)
                     ? DisplayStyle.None : DisplayStyle.Flex;
             }
@@ -204,6 +304,8 @@ namespace Morsoul.Hub
             _focusFill = root.Q<VisualElement>("FocusBarFill");
             _footerLabel = root.Q<Label>("FooterLabel");
 
+            AppliedCaseText = null;
+            AppliedObjective = null;
             RefreshObjective();
             if (_footerLabel != null) _footerLabel.text = footerText ?? "";
 

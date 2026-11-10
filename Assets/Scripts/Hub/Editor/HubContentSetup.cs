@@ -48,6 +48,7 @@ namespace Morsoul.Hub.Editor
             public int journalCaseId;              // runic log + dissonance for JournalController
             public string interludeDialoguePath;   // null = no arrival interlude
             public string interludeFlag;
+            public Color cameraBgColor;
             public Action populate;                // per-hub content, name-guarded
         }
 
@@ -84,6 +85,7 @@ namespace Morsoul.Hub.Editor
                 journalCaseId = 1,
                 interludeDialoguePath = "Assets/Data/Dialogue/Interludes/D_Interlude_Market_01.asset",
                 interludeFlag = "Interlude.C1.Played",
+                cameraBgColor = new Color(0.08f, 0.10f, 0.08f, 1f),
                 populate = PopulateMarket,
             };
             yield return new HubSpec
@@ -96,6 +98,7 @@ namespace Morsoul.Hub.Editor
                 journalCaseId = 2,
                 interludeDialoguePath = "Assets/Data/Dialogue/Interludes/D_Interlude_Cathedral_02.asset",
                 interludeFlag = "Interlude.C2.Played",
+                cameraBgColor = new Color(0.08f, 0.08f, 0.10f, 1f),
                 populate = PopulateCathedral,
             };
             yield return new HubSpec
@@ -108,6 +111,7 @@ namespace Morsoul.Hub.Editor
                 journalCaseId = 3,
                 interludeDialoguePath = "Assets/Data/Dialogue/Interludes/D_Interlude_Whisperwood_03.asset",
                 interludeFlag = "Interlude.C3.Played",
+                cameraBgColor = new Color(0.08f, 0.12f, 0.08f, 1f),
                 populate = PopulateWhisperwood,
             };
             yield return new HubSpec
@@ -120,6 +124,7 @@ namespace Morsoul.Hub.Editor
                 journalCaseId = 4,
                 interludeDialoguePath = null,
                 interludeFlag = null,
+                cameraBgColor = new Color(0.09f, 0.07f, 0.06f, 1f),
                 populate = PopulateIronHollow,
             };
         }
@@ -158,6 +163,7 @@ namespace Morsoul.Hub.Editor
                 EnsureRestSpot(scene);
                 EnsureCarrier(scene);
                 ConfigureJournal(scene, spec.journalCaseId);
+                ConfigureCamera(scene, spec);
                 if (spec.interludeDialoguePath != null)
                     EnsureInterlude(scene, spec);
                 spec.populate?.Invoke();
@@ -238,17 +244,54 @@ namespace Morsoul.Hub.Editor
             door.targetScene = "CaseLoop";
         }
 
+        static void ConfigureCamera(Scene scene, HubSpec spec)
+        {
+            var camera = FindComponent<Camera>(scene);
+            if (camera != null)
+            {
+                camera.clearFlags = CameraClearFlags.SolidColor;
+                camera.backgroundColor = spec.cameraBgColor;
+            }
+            var cameraFollow = camera != null ? camera.GetComponent<CameraFollow2D>() : null;
+            if (cameraFollow != null)
+            {
+                cameraFollow.useBounds = true;
+                cameraFollow.boundsMin = new Vector2(-10f, -5.5f);
+                cameraFollow.boundsMax = new Vector2(10f, 6.5f);
+            }
+        }
+
         static void EnsureRestSpot(Scene scene)
         {
-            foreach (var rest in UnityEngine.Object.FindObjectsByType<RestSpot>())
-                if (rest.gameObject.scene == scene) return;
-            Vector3 pos = scene.path == MarketPath
+            Vector3 targetPos = scene.path == MarketPath
                 ? new Vector3(5f, -2f, 0f)
-                : new Vector3(-3f, 2.5f, 0f);
-            HubSceneFactory.CreateInteractable("RestSpot",
-                new Color(0.4f, 0.55f, 0.35f), pos,
-                out RestSpot spot);
-            spot.promptText = "[E] Rest";
+                : scene.path == CathedralPath
+                    ? new Vector3(-5.2f, 0.5f, 0f)
+                    : scene.path == WildernessPath
+                        ? new Vector3(-5f, -1.5f, 0f)
+                        : new Vector3(-5f, 0.5f, 0f);
+
+            RestSpot spot = null;
+            foreach (var rest in UnityEngine.Object.FindObjectsByType<RestSpot>(FindObjectsInactive.Include))
+            {
+                if (rest.gameObject.scene == scene)
+                {
+                    spot = rest;
+                    break;
+                }
+            }
+
+            if (spot == null)
+            {
+                HubSceneFactory.CreateInteractable("RestSpot",
+                    new Color(0.4f, 0.55f, 0.35f), targetPos,
+                    out spot);
+                spot.promptText = "[E] Rest";
+            }
+            else
+            {
+                spot.transform.position = targetPos;
+            }
         }
 
         /// <summary>The fast-travel carrier: becomes a destination picker.</summary>
@@ -403,6 +446,15 @@ namespace Morsoul.Hub.Editor
                         HubSceneFactory.NameFontSize, new Color(1f, 1f, 1f, 0.85f));
                     tag.transform.SetParent(t, true);
                 }
+
+                if (it.GetComponent<YSort2D>() == null)
+                    it.gameObject.AddComponent<YSort2D>();
+                var col = it.GetComponent<BoxCollider2D>();
+                if (col != null && col.size == Vector2.one && col.offset == Vector2.zero)
+                {
+                    col.size = new Vector2(1.2f, 1.2f);
+                    col.offset = new Vector2(0f, -0.2f);
+                }
             }
         }
 
@@ -425,6 +477,7 @@ namespace Morsoul.Hub.Editor
             {
                 SceneManager.SetActiveScene(scene);
                 EnsureInteractablePresentation(scene);
+                EnsurePanel<HubHudController>(scene, "HubHudPanel", HubHudUxmlPath, out var hud);
                 EditorSceneManager.MarkSceneDirty(scene);
                 if (EditorSceneManager.SaveScene(scene))
                     Debug.Log($"HubContentSetup: '{scenePath}' labels upgraded.");

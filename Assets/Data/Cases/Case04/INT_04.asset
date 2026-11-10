@@ -40,13 +40,6 @@ MonoBehaviour:
     keywords:
     - never touched the subterranean conduits
     validMoves:
-    - verb: 0
-      evidence: {fileID: 0}
-      breaksComposureSegment: 0
-      strikeCost: 0
-      isCoreContradiction: 0
-      responseDialogue: My crew stays above the 400-meter mark! We don't touch hydraulic copper or acid baths! If chemical rot dissolved those lines, talk to the refinery alchemists!
-      emotionAura: 2
     - verb: 2
       evidence: {fileID: 11400000, guid: e1d83b61a93e2f5488f306d87a577953, type: 2}
       breaksComposureSegment: 1
@@ -55,6 +48,13 @@ MonoBehaviour:
       responseDialogue: The bypass cables were melted with the same synthetic mana solvent found in Ignatius' vault and Vane's camp. This is a wider operation. Who supplied you?
       emotionAura: 2
     invalidMoves:
+    - verb: 0
+      evidence: {fileID: 0}
+      breaksComposureSegment: 0
+      strikeCost: 0
+      isCoreContradiction: 0
+      responseDialogue: My crew stays above the 400-meter mark! We don't touch hydraulic copper or acid baths! If chemical rot dissolved those lines, talk to the refinery alchemists!
+      emotionAura: 2
     - verb: 2
       evidence: {fileID: 11400000, guid: 33300352d0376ea418009a4251537502, type: 2}
       breaksComposureSegment: 0

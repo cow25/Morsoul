@@ -26,6 +26,7 @@ namespace Morsoul.Hub.Editor
         const string PanelSettingsPath = "Assets/UI Toolkit/MainPanelSettings.asset";
         const string DialogueUxmlPath = "Assets/Dialogue.uxml";
         const string JournalUxmlPath = "Assets/Journal.uxml";
+        const string HubHudUxmlPath = "Assets/HubHud.uxml";
         const string Case01DialogueFolder = "Assets/Data/Dialogue/Case01";
         const string VisualProfilesFolder = "Assets/Art/Profiles";
         const string Case01RunicLogPath = "Assets/Data/Cases/Case01/RunicLog_01.asset";
@@ -230,6 +231,17 @@ namespace Morsoul.Hub.Editor
                 journal.dissonanceLocationText = runicLog.location;
             }
             journal.dissonanceFlag = "Case1_UneaseActive";
+
+            // HUD overlay: active objective banner, Focus gauge, footer.
+            var hudGo = new GameObject("HubHudPanel");
+            var hudRenderer = hudGo.AddComponent<PanelRenderer>();
+            if (panelSettings != null) hudRenderer.panelSettings = panelSettings;
+            var hudUxml = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(HubHudUxmlPath);
+            if (hudUxml != null) hudRenderer.visualTreeAsset = hudUxml;
+            else Debug.LogWarning($"HubSceneFactory: UXML not found at '{HubHudUxmlPath}'.");
+            var hud = hudGo.AddComponent<HubHudController>();
+            context.hud = hud;
+
             return context;
         }
 

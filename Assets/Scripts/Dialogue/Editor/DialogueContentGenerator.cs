@@ -93,7 +93,28 @@ namespace Morsoul.Dialogue.Editor
         /// </summary>
         static void GenerateOvan(ClueData keyRegistry)
         {
-            Dialogue("D_Ovan_01", "ovan_greeting",
+            Dialogue("D_Ovan_01", "ovan_has_warrant",
+                // Repeat interaction after warrant is already granted:
+                // If warrant not yet granted, GoTo skips to nextNodeId ("ovan_repeat_briefed").
+                Node("ovan_has_warrant", "Guildmaster Ovan",
+                    "(Waves a hurried hand) \"You already have the storage clearance warrant, Astra! " +
+                    "The lower cellar grate in the Lower Market is unlocked. Go investigate the vault before Ignatius causes any more trouble!\"",
+                    requiresFlag: WarrantFlag,
+                    next: "ovan_repeat_briefed"),
+
+                // Repeat interaction after briefing seen but before warrant granted:
+                // If briefing not yet seen, GoTo skips to nextNodeId ("ovan_greeting").
+                Node("ovan_repeat_briefed", "Guildmaster Ovan",
+                    "\"Have you decided what you need from me, Astra? That subterranean storage vault won't inspect itself.\"",
+                    requiresFlag: "C1_BriefingSeen",
+                    options: new[]
+                    {
+                        Option("Inquire about the vault's security", "ovan_security"),
+                        Option("Ask about Master Ignatius", "ovan_ignatius"),
+                        Option("Demand storage clearance (Forensic Entry Warrant)", "ovan_warrant"),
+                    },
+                    next: "ovan_greeting"),
+
                 Node("ovan_greeting", "Eliza",
                     "Step aside, Ovan. The Investigator's Guild is taking jurisdiction over the vault incident.",
                     next: "ovan_challenge"),
@@ -125,7 +146,7 @@ namespace Morsoul.Dialogue.Editor
                     {
                         Option("Inquire about the vault's security", "ovan_security"),
                         Option("Ask about Master Ignatius", "ovan_ignatius"),
-                        Option("Demand crime scene access", "ovan_warrant"),
+                        Option("Demand storage clearance (Forensic Entry Warrant)", "ovan_warrant"),
                     }),
 
                 // Branch 1: vault security -> registers T1_01 (Guildmaster's Key

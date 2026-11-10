@@ -140,6 +140,7 @@ namespace Morsoul.Hub
             float centerX = contactX + triggerHalf + playerHalf;
             var position = transform.position;
             transform.position = new Vector3(Mathf.Min(centerX, triggerMaxX), position.y, position.z);
+            Physics2D.SyncTransforms();
         }
 
         void OnTriggerEnter2D(Collider2D other)
