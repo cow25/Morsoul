@@ -19,6 +19,12 @@ public class InteractionProbe : MonoBehaviour
 
     private void Update()
     {
+        if (Morsoul.Core.PauseMenuController.AnyModalOrPauseOpen ||
+            Morsoul.Dev.DevMenuOverlay.IsOpen)
+        {
+            HUDManager.Instance?.HideInteractionPrompt();
+            return;
+        }
         if (playerCamera == null) return;
 
         Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);

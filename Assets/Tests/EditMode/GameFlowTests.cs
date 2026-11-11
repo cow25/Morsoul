@@ -1268,5 +1268,26 @@ namespace Morsoul.Tests
                 System.Reflection.BindingFlags.NonPublic).Invoke(loop, null);
             Assert.AreSame(music, audio.CurrentMusic);
         }
+
+        [Test]
+        public void CaseZero_InCaseLoop_OpensWeightedBoardDirectly()
+        {
+            var data = LoadCase(0);
+            Assert.NotNull(data);
+            Assert.NotNull(data.evidenceGraph);
+            var core = Core.CoreRuntime.Ensure();
+            _objects.Add(core.gameObject);
+            core.Session.Reset();
+            core.Session.CurrentCase = 0;
+
+            var board = New<WeightedBoardController>("WeightedBoard");
+            _flow.weightedBoard = board;
+            _flow.investigationScene = false;
+            _flow.BeginCase(data);
+
+            Assert.IsNotNull(board.CanUse);
+            Assert.IsTrue(board.CanUse());
+            Assert.IsTrue(board.IsOpen);
+        }
     }
 }

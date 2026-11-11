@@ -65,7 +65,11 @@ namespace Morsoul.Hub
         void OnEnable()
         {
             _panelRenderer = GetComponent<PanelRenderer>();
-            if (_panelRenderer != null) _panelRenderer.RegisterUIReloadCallback(OnUIReload);
+            if (_panelRenderer != null)
+            {
+                _panelRenderer.sortingOrder = 60;
+                _panelRenderer.RegisterUIReloadCallback(OnUIReload);
+            }
         }
 
         void OnDisable()
@@ -136,6 +140,7 @@ namespace Morsoul.Hub
         {
             _isOpen = false;
             LastCloseFrame = Time.frameCount;
+            PauseMenuController.NotifyExternalModalClosed();
             _destinations.Clear();
             if (_root != null) _root.style.display = DisplayStyle.None;
         }

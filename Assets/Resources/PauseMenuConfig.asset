@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 50e05e76a95493148a732d63612eb5d6, type: 3}
+  m_Name: PauseMenuConfig
+  m_EditorClassIdentifier: Morsoul.Core::Morsoul.Core.PauseMenuAssets
+  panelSettings: {fileID: 11400000, guid: 50b0a700fb7fda64abced48bc2d03124, type: 2}
+  pauseMenuUxml: {fileID: 9197481963319205126, guid: 8f0217275d5c77b419a1030594fd3b61, type: 3}
+  journalUxml: {fileID: 9197481963319205126, guid: 78add96e878e51f4ea19fb88da163f02, type: 3}
+  weightedBoardUxml: {fileID: 9197481963319205126, guid: 1329e03a360b773429bddd25339ccd2c, type: 3}
+  boardUxml: {fileID: 9197481963319205126, guid: a28fc3fdf762bb141b9f45b9c5452914, type: 3}
+  interrogationUxml: {fileID: 9197481963319205126, guid: b780d0feeeff1cd44aa18cb338f3d728, type: 3}
+  resolutionUxml: {fileID: 9197481963319205126, guid: a1d824de0ff77ed4e8c7b2f61601346b, type: 3}

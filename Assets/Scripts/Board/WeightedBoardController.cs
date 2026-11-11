@@ -79,13 +79,19 @@ namespace Morsoul.Board
         int _uiVersion;
 
         public bool IsOpen => _isOpen;
+        /// <summary>Last frame the panel closed; lets callers avoid same-frame ESC overlap.</summary>
+        public int LastCloseFrame { get; private set; } = -1;
         /// <summary>The headless session (null until SetCase builds one). Exposed for GameFlow/tests.</summary>
         public WeightedBoardSession Session => _session;
 
         void OnEnable()
         {
             _panelRenderer = GetComponent<PanelRenderer>();
-            if (_panelRenderer != null) _panelRenderer.RegisterUIReloadCallback(OnUIReload);
+            if (_panelRenderer != null)
+            {
+                _panelRenderer.sortingOrder = 50;
+                _panelRenderer.RegisterUIReloadCallback(OnUIReload);
+            }
         }
 
         void OnDisable()
@@ -261,6 +267,7 @@ namespace Morsoul.Board
 
         public void Close()
         {
+            if (_isOpen) LastCloseFrame = Time.frameCount;
             _isOpen = false;
             _pendingSource = null;
             if (_root != null) _root.style.display = DisplayStyle.None;
@@ -510,8 +517,8 @@ namespace Morsoul.Board
                 }
                 else
                 {
-                    node.style.left = 20 + (i % 4) * 170;
-                    node.style.top = 20 + (i / 4) * 90;
+                    node.style.left = 18 + (i % 3) * 185;
+                    node.style.top = 20 + (i / 3) * 92;
                 }
                 i++;
 
@@ -764,6 +771,9 @@ namespace Morsoul.Board
             _hintClose = root.Q<Button>("HintClose");
             if (_hintClose != null)
                 _hintClose.RegisterCallback<ClickEvent>(_ => HideHintPopup());
+            var closeBoardButton = root.Q<Button>("CloseBoardButton");
+            if (closeBoardButton != null)
+                closeBoardButton.RegisterCallback<ClickEvent>(_ => Close());
 
             if (_root != null)
                 _root.style.display = _isOpen ? DisplayStyle.Flex : DisplayStyle.None;

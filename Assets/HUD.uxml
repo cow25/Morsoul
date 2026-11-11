@@ -1,63 +1,92 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
     <Style src="project://database/Assets/HUD.uss?fileID=7433441132597879392&amp;guid=05eccd6dbf30c0f40a158796a198cda4&amp;type=3#HUD"/>
-    <ui:VisualElement name="HUD-Root" style="position: absolute; width: 100%; height: 100%;" picking-mode="Ignore">
-        <ui:VisualElement name="TopLeftPanel" class="hud-panel" style="position: absolute; top: 20px; left: 20px; flex-direction: row;">
-            <ui:VisualElement style="align-items: center; margin-right: 15px;">
-                <ui:VisualElement name="UserIcon" class="icon-box" style="width: 50px; height: 50px; margin-bottom: 5px;"/>
-                <ui:Label text="Golem" name="UserNameLabel" class="hud-text" style="font-size: 13px; margin-bottom: 2px;"/>
-                <ui:Label text="Q" class="keycap"/>
-            </ui:VisualElement>
-            <ui:VisualElement style="justify-content: flex-start; margin-top: 5px;">
-                <ui:VisualElement style="flex-direction: row; align-items: center; margin-bottom: 4px;">
-                    <ui:Label text="Focus Energy:" class="hud-text" style="margin-right: 5px;"/>
-                    <ui:Label text="120/120" name="FocusValueLabel" class="hud-text" style="color: rgb(200, 200, 200);"/>
+    <ui:VisualElement name="HUD-Root" class="hud-root" picking-mode="Ignore">
+        <!-- Top-Left: Portrait + Name + ESC + Focus Energy -->
+        <ui:VisualElement name="TopLeftPanel" class="hud-panel hud-top-left" picking-mode="Ignore">
+            <ui:VisualElement class="hud-user-col" picking-mode="Ignore">
+                <ui:VisualElement class="hud-portrait-frame" picking-mode="Ignore">
+                    <ui:VisualElement name="UserIcon" class="hud-portrait-img" picking-mode="Ignore"/>
                 </ui:VisualElement>
-                <ui:VisualElement name="FocusBarBackground" style="width: 200px; height: 12px; background-color: rgba(255, 255, 255, 0.3); border-radius: 6px;">
-                    <ui:VisualElement name="FocusBarFill" style="width: 100%; height: 100%; background-color: rgb(130, 80, 160); border-radius: 6px;"/>
-                </ui:VisualElement>
+                <ui:Label text="User" name="UserNameLabel" class="hud-user-name" picking-mode="Ignore"/>
+                <ui:Button text="ESC" name="EscKeyButton" class="keycap-button keycap-esc"/>
             </ui:VisualElement>
-        </ui:VisualElement>
-        <ui:VisualElement name="BottomLeftPanel" class="hud-panel" style="position: absolute; bottom: 20px; left: 20px;">
-            <ui:VisualElement style="flex-direction: row; align-items: center; margin-bottom: 15px;">
-                <ui:Label text="Tab" class="keycap" style="margin-right: 10px;"/>
-                <ui:VisualElement name="GolemEyeIcon" class="icon-box" style="width: 30px; height: 30px; margin-right: 10px;"/>
-                <ui:VisualElement style="flex-direction: column;">
-                    <ui:Label text="Golem Eye" class="hud-text-large"/>
-                    <ui:Label name="FocusCostText" text="Focus Energy Cost: 30" class="hud-text-small" style="color: rgb(200,200,200);"/>
+            <ui:VisualElement class="hud-focus-col" picking-mode="Ignore">
+                <ui:VisualElement class="hud-focus-header" picking-mode="Ignore">
+                    <ui:Label text="Focus Energy:" class="hud-text" style="margin-right: 6px;" picking-mode="Ignore"/>
+                    <ui:Label text="120/120" name="FocusValueLabel" class="hud-text" picking-mode="Ignore"/>
                 </ui:VisualElement>
-            </ui:VisualElement>
-            <ui:VisualElement name="AetherSightRow" style="flex-direction: row; align-items: center; display: none;">
-                <ui:Label text="1" class="keycap" style="margin-right: 10px;"/>
-                <ui:VisualElement name="AetherSightIcon" class="icon-box" style="width: 30px; height: 30px; margin-right: 10px;"/>
-                <ui:VisualElement style="flex-direction: column;">
-                    <ui:Label text="Aether Sight" class="hud-text-large"/>
-                    <ui:Label name="FocusCostText" text="Focus Energy Cost: 30" class="hud-text-small" style="color: rgb(200,200,200);"/>
+                <ui:VisualElement name="FocusBarBackground" class="hud-focus-track" picking-mode="Ignore">
+                    <ui:VisualElement name="FocusBarFill" class="hud-focus-fill" picking-mode="Ignore"/>
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
-        <ui:VisualElement name="BottomRightPanel" class="hud-panel" style="position: absolute; bottom: 20px; right: 20px; align-items: flex-end;">
-            <ui:VisualElement style="flex-direction: row; align-items: center; margin-bottom: 5px;">
-                <ui:Label text="Desk" class="hud-text" style="margin-right: 10px;"/>
-                <ui:Label text="G" class="keycap"/>
-            </ui:VisualElement>
-            <ui:VisualElement style="flex-direction: row; align-items: center;">
-                <ui:Label text="Board" class="hud-text" style="margin-right: 10px;"/>
-                <ui:Label text="H" class="keycap"/>
-            </ui:VisualElement>
-        </ui:VisualElement>
-        <ui:VisualElement name="CenterPanel" style="position: absolute; top: 50%; left: 50%; translate: -50% -50%; align-items: center; justify-content: center;">
-            
-            <!-- Reticle (Absolute position so it never moves) -->
-            <ui:VisualElement style="position: absolute; width: 6px; height: 6px; background-color: black; border-radius: 3px; align-items: center; justify-content: center;">
-                <ui:VisualElement style="width: 4px; height: 4px; background-color: white; border-radius: 2px;"/>
-            </ui:VisualElement>
-            
-            <!-- Interaction Prompt Container (Absolute, hidden by default) -->
-            <ui:VisualElement name="InteractionContainer" style="position: absolute; top: 20px; align-items: center; display: none;">
-                <ui:Label name="InteractionText" text="[L-Click] Inspect" style="font-size: 15px; color: white; -unity-text-outline-width: 1px; -unity-text-outline-color: black; margin-bottom: 5px;"/>
-                <ui:Label name="ItemDescriptionText" text="Item Description" style="font-size: 13px; color: rgb(200, 200, 200); -unity-text-outline-width: 1px; -unity-text-outline-color: black; max-width: 400px; white-space: normal; -unity-text-align: middle-center;"/>
-            </ui:VisualElement>
 
+        <!-- Top-Center: Active Goal -->
+        <ui:VisualElement name="ObjectivePanel" class="hud-top-center" picking-mode="Ignore">
+            <ui:Label name="ActiveGoalTitle" text="Active Goal" class="hud-goal-title" picking-mode="Ignore"/>
+            <ui:Label name="ObjectiveLabel" text="Examine the ancient runes and locate clues." class="hud-goal-desc" picking-mode="Ignore"/>
+        </ui:VisualElement>
+
+        <!-- Top-Right: Case -->
+        <ui:VisualElement name="TopRightPanel" class="hud-top-right" picking-mode="Ignore">
+            <ui:Label name="CaseLabel" text="Prologue" class="hud-case-label" picking-mode="Ignore"/>
+        </ui:VisualElement>
+
+        <!-- Bottom-Left: Abilities -->
+        <ui:VisualElement name="BottomLeftPanel" class="hud-panel hud-bottom-left" picking-mode="Ignore">
+            <ui:VisualElement name="GolemEyeRow" class="hud-ability-row" picking-mode="Ignore">
+                <ui:Label text="Tab" class="keycap hud-ability-key" picking-mode="Ignore"/>
+                <ui:VisualElement class="hud-ability-frame" picking-mode="Ignore">
+                    <ui:VisualElement name="GolemEyeIcon" class="icon-box icon-golem-eye" picking-mode="Ignore"/>
+                </ui:VisualElement>
+                <ui:VisualElement style="flex-direction: column;" picking-mode="Ignore">
+                    <ui:Label text="Golem Eye" class="hud-text-large" picking-mode="Ignore"/>
+                    <ui:Label name="FocusCostText" text="Focus Energy Cost: 15" class="hud-text-small" picking-mode="Ignore"/>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="AetherSightRow" class="hud-ability-row" style="display: none;" picking-mode="Ignore">
+                <ui:Label text="1" class="keycap hud-ability-key" picking-mode="Ignore"/>
+                <ui:VisualElement class="hud-ability-frame" picking-mode="Ignore">
+                    <ui:VisualElement name="AetherSightIcon" class="icon-box icon-aether-sight" picking-mode="Ignore"/>
+                </ui:VisualElement>
+                <ui:VisualElement style="flex-direction: column;" picking-mode="Ignore">
+                    <ui:Label text="Aether Sight" class="hud-text-large" picking-mode="Ignore"/>
+                    <ui:Label name="AetherFocusCostText" text="Focus Energy Cost: 30" class="hud-text-small" picking-mode="Ignore"/>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="EmotionEchoRow" class="hud-ability-row" style="display: none;" picking-mode="Ignore">
+                <ui:Label text="2" class="keycap hud-ability-key" picking-mode="Ignore"/>
+                <ui:VisualElement class="hud-ability-frame" picking-mode="Ignore">
+                    <ui:VisualElement name="EmotionEchoIcon" class="icon-box icon-emotion-echo" picking-mode="Ignore"/>
+                </ui:VisualElement>
+                <ui:VisualElement style="flex-direction: column;" picking-mode="Ignore">
+                    <ui:Label text="Emotion Echo" class="hud-text-large" picking-mode="Ignore"/>
+                    <ui:Label name="EmotionFocusCostText" text="Focus Energy Cost: 0" class="hud-text-small" picking-mode="Ignore"/>
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- Bottom-Right: Desk / Board -->
+        <ui:VisualElement name="BottomRightPanel" class="hud-panel hud-bottom-right" picking-mode="Ignore">
+            <ui:VisualElement class="hud-shortcut-row" picking-mode="Ignore">
+                <ui:Label text="Desk" class="hud-shortcut-label" picking-mode="Ignore"/>
+                <ui:Button name="DeskKeyButton" text="G" class="keycap-button"/>
+            </ui:VisualElement>
+            <ui:VisualElement class="hud-shortcut-row" picking-mode="Ignore">
+                <ui:Label text="Board" class="hud-shortcut-label" picking-mode="Ignore"/>
+                <ui:Button name="BoardKeyButton" text="H" class="keycap-button"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- Center Reticle & 3D Interaction Prompt -->
+        <ui:VisualElement name="CenterPanel" style="position: absolute; top: 50%; left: 50%; translate: -50% -50%; align-items: center; justify-content: center;" picking-mode="Ignore">
+            <ui:VisualElement style="position: absolute; width: 6px; height: 6px; background-color: black; border-radius: 3px; align-items: center; justify-content: center;" picking-mode="Ignore">
+                <ui:VisualElement style="width: 4px; height: 4px; background-color: white; border-radius: 2px;" picking-mode="Ignore"/>
+            </ui:VisualElement>
+            <ui:VisualElement name="InteractionContainer" style="position: absolute; top: 20px; align-items: center; display: none;" picking-mode="Ignore">
+                <ui:Label name="InteractionText" text="[L-Click] Inspect" style="font-size: 15px; color: white; -unity-text-outline-width: 1px; -unity-text-outline-color: black; margin-bottom: 5px;" picking-mode="Ignore"/>
+                <ui:Label name="ItemDescriptionText" text="Item Description" style="font-size: 13px; color: rgb(200, 200, 200); -unity-text-outline-width: 1px; -unity-text-outline-color: black; max-width: 400px; white-space: normal; -unity-text-align: middle-center;" picking-mode="Ignore"/>
+            </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

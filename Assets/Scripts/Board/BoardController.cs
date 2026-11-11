@@ -95,6 +95,8 @@ namespace Morsoul.Board
         int _uiVersion;
 
         public bool IsOpen => _isOpen;
+        /// <summary>Last frame the panel closed; lets callers avoid same-frame ESC overlap.</summary>
+        public int LastCloseFrame { get; private set; } = -1;
         /// <summary>Premises verified so far (null until a board is built). Exposed for GameFlow evidence wiring.</summary>
         public IReadOnlyList<PremiseData> Premises => _board?.Premises;
 
@@ -118,7 +120,11 @@ namespace Morsoul.Board
         void OnEnable()
         {
             _panelRenderer = GetComponent<PanelRenderer>();
-            if (_panelRenderer != null) _panelRenderer.RegisterUIReloadCallback(OnUIReload);
+            if (_panelRenderer != null)
+            {
+                _panelRenderer.sortingOrder = 50;
+                _panelRenderer.RegisterUIReloadCallback(OnUIReload);
+            }
         }
 
         void OnDisable()
@@ -218,6 +224,7 @@ namespace Morsoul.Board
 
         public void Close()
         {
+            if (_isOpen) LastCloseFrame = Time.frameCount;
             _isOpen = false;
             if (_root != null) _root.style.display = DisplayStyle.None;
             if (manageCursor)
@@ -682,6 +689,9 @@ namespace Morsoul.Board
             _hintClose = root.Q<Button>("HintClose");
             if (_hintClose != null)
                 _hintClose.RegisterCallback<ClickEvent>(_ => HideHintPopup());
+            var closeBoardButton = root.Q<Button>("CloseBoardButton");
+            if (closeBoardButton != null)
+                closeBoardButton.RegisterCallback<ClickEvent>(_ => Close());
             for (int i = 0; i < _optionButtons.Length; i++)
             {
                 _optionButtons[i] = root.Q<Button>($"OptionButton{i}");

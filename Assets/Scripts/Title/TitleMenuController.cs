@@ -1,71 +1,697 @@
 using System;
+using System.Collections.Generic;
 using Morsoul.Core;
+using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using UnityEngine.UIElements;
+using Cursor = UnityEngine.Cursor;
+using Image = UnityEngine.UI.Image;
+using UguiButton = UnityEngine.UI.Button;
+using UitButton = UnityEngine.UIElements.Button;
+using UitLabel = UnityEngine.UIElements.Label;
 
 namespace Morsoul.Title
 {
     /// <summary>
-    /// uGUI title menu: New Game / Continue / Quit buttons. Lives on the Canvas
-    /// in the dedicated Title scene; events carry the decisions so a flow
-    /// controller can load scenes once Bootstrap exists. The detective's name
-    /// is collected later, inside the first-contact dialogue with Eliza — the
-    /// title screen intentionally has no name field.
+    /// Controller for the Morsoul title screen matching the Figma candlelit study layout,
+    /// Save Slot tarot modal (Load / New Game + Overwrite prompt), and Settings modal.
+    /// Drives the UI Toolkit panel when attached to a PanelRenderer and preserves the
+    /// legacy uGUI button contract for EditMode compatibility tests.
     /// </summary>
     public class TitleMenuController : MonoBehaviour
     {
-        public Button newGameButton;
-        public Button continueButton;
-        public Button quitButton;
-
-        /// <summary>Whether a save exists; gates the Continue button.</summary>
+        [Header("Legacy uGUI Refs (EditMode tests & fallback)")]
+        public UguiButton startGameButton;
+        public UguiButton loadGameButton;
+        public UguiButton newGameButton;
+        public UguiButton continueButton;
+        public UguiButton settingsButton;
+        public UguiButton quitButton;
         public bool saveExists;
 
-        /// <summary>Raised when New Game is clicked (name is collected in-game, so always empty).</summary>
-        public event Action<string> NewGameRequested;
-        /// <summary>Raised when Continue is clicked with a save present.</summary>
+        [Header("Selection Indicator (Legacy uGUI)")]
+        public RectTransform selectionDiamond;
+        public RectTransform selectionUnderline;
+
+        [Header("Save Slot Modal (Legacy uGUI)")]
+        public GameObject saveSlotModal;
+        public TMP_Text saveSlotHeader;
+        public UguiButton slot1Button;
+        public UguiButton slot2Button;
+        public UguiButton slot3Button;
+        public Image slot1CardImage;
+        public GameObject slot1PortraitRoot;
+        public TMP_Text slot1TitleLabel;
+        public TMP_Text slot1SubtitleLabel;
+        public TMP_Text saveStatusLabel;
+        public UguiButton saveModalBackButton;
+
+        [Header("Overwrite Prompt (Legacy uGUI)")]
+        public GameObject overwritePrompt;
+        public UguiButton overwriteYesButton;
+        public UguiButton overwriteNoButton;
+
+        [Header("Settings Modal (Legacy uGUI)")]
+        public GameObject settingsModal;
+        public TMP_Text masterValueLabel;
+        public TMP_Text musicValueLabel;
+        public TMP_Text sfxValueLabel;
+        public UguiButton masterDownButton;
+        public UguiButton masterUpButton;
+        public UguiButton musicDownButton;
+        public UguiButton musicUpButton;
+        public UguiButton sfxDownButton;
+        public UguiButton sfxUpButton;
+        public UguiButton fullscreenButton;
+        public UguiButton settingsBackButton;
+
+        public event Action NewGameRequested;
         public event Action ContinueRequested;
-        /// <summary>Raised when Quit is clicked.</summary>
         public event Action QuitRequested;
+
+        bool _saveModalIsNewGameMode;
+
+        // UI Toolkit state
+        PanelRenderer _panelRenderer;
+        int _uiVersion;
+        VisualElement _uitRoot;
+        readonly List<(VisualElement row, UitButton btn, Action onActivate)> _menuEntries = new();
+        int _selectedMenuIndex;
+
+        UitButton _uitStartBtn;
+        UitButton _uitLoadBtn;
+        UitButton _uitNewBtn;
+        UitButton _uitSettingsBtn;
+        UitButton _uitExitBtn;
+
+        VisualElement _uitSaveModal;
+        UitLabel _uitSaveHeader;
+        UitButton _uitSlot1Btn;
+        UitButton _uitSlot2Btn;
+        UitButton _uitSlot3Btn;
+        UitLabel _uitSlot1Title;
+        VisualElement _uitSlot1Portrait;
+        UitLabel _uitSlot1Subtitle;
+        UitLabel _uitSaveStatus;
+        UitButton _uitSaveBackBtn;
+
+        VisualElement _uitOverwritePrompt;
+        UitButton _uitOverwriteYesBtn;
+        UitButton _uitOverwriteNoBtn;
+
+        VisualElement _uitSettingsModal;
+        VisualElement _uitMasterFill;
+        VisualElement _uitMusicFill;
+        VisualElement _uitSfxFill;
+        UitLabel _uitMasterVal;
+        UitLabel _uitMusicVal;
+        UitLabel _uitSfxVal;
+        UitButton _uitFullscreenBtn;
+        UitButton _uitSettingsBackBtn;
+
+        public bool IsUiToolkitBound => _uitRoot != null;
+        public bool IsSaveModalOpen => (_uitSaveModal != null && _uitSaveModal.style.display == DisplayStyle.Flex)
+                                       || (saveSlotModal != null && saveSlotModal.activeSelf);
+        public bool IsSettingsModalOpen => (_uitSettingsModal != null && _uitSettingsModal.style.display == DisplayStyle.Flex)
+                                           || (settingsModal != null && settingsModal.activeSelf);
 
         void Awake()
         {
-            if (newGameButton != null)
-                newGameButton.onClick.AddListener(OnNewGameClicked);
-            if (continueButton != null)
-                continueButton.onClick.AddListener(OnContinueClicked);
-            if (quitButton != null)
-                quitButton.onClick.AddListener(OnQuitClicked);
+            EnsureMenuCursorReady();
+            BindUguiButtons();
+            RefreshUguiMenuIndicators();
+        }
+
+        void OnEnable()
+        {
+            EnsureMenuCursorReady();
+            _panelRenderer = GetComponent<PanelRenderer>();
+            if (_panelRenderer != null)
+                _panelRenderer.RegisterUIReloadCallback(OnUIReload);
+        }
+
+        void OnDisable()
+        {
+            if (_panelRenderer != null)
+                _panelRenderer.UnregisterUIReloadCallback(OnUIReload);
         }
 
         void Start()
         {
-            // Inspector flag stays as a debug override; a real checkpoint on
-            // disk also enables Continue.
-            SetSaveExists(saveExists || SaveService.Persistent.HasSave);
+            EnsureMenuCursorReady();
+            RefreshSaveState();
+            if (startGameButton != null || newGameButton != null)
+                StartCoroutine(PositionInitialCursorNextFrame());
+        }
+
+        static void EnsureMenuCursorReady()
+        {
+            Time.timeScale = 1f;
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+
+        System.Collections.IEnumerator PositionInitialCursorNextFrame()
+        {
+            Canvas.ForceUpdateCanvases();
+            yield return null;
+            Canvas.ForceUpdateCanvases();
+            if (startGameButton != null)
+                MoveSelectionIndicator(startGameButton.GetComponent<RectTransform>());
+            else if (newGameButton != null)
+                MoveSelectionIndicator(newGameButton.GetComponent<RectTransform>());
+        }
+
+        void Update()
+        {
+            var kb = Keyboard.current;
+            if (kb == null) return;
+
+            if (kb.escapeKey.wasPressedThisFrame)
+            {
+                if (HandleEscapePressed()) return;
+            }
+
+            if (_uitRoot == null || IsSaveModalOpen || IsSettingsModalOpen || _menuEntries.Count == 0)
+                return;
+
+            int dir = 0;
+            if (kb.downArrowKey.wasPressedThisFrame || kb.sKey.wasPressedThisFrame) dir = 1;
+            else if (kb.upArrowKey.wasPressedThisFrame || kb.wKey.wasPressedThisFrame) dir = -1;
+
+            if (dir != 0)
+            {
+                MoveKeyboardMenuSelection(dir);
+            }
+            else if (kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame)
+            {
+                if (_selectedMenuIndex >= 0 && _selectedMenuIndex < _menuEntries.Count)
+                {
+                    var entry = _menuEntries[_selectedMenuIndex];
+                    if (entry.btn != null && entry.btn.enabledSelf)
+                        entry.onActivate?.Invoke();
+                }
+            }
+        }
+
+        bool HandleEscapePressed()
+        {
+            if (_uitOverwritePrompt != null && _uitOverwritePrompt.style.display == DisplayStyle.Flex)
+            {
+                _uitOverwritePrompt.style.display = DisplayStyle.None;
+                return true;
+            }
+            if (_uitSaveModal != null && _uitSaveModal.style.display == DisplayStyle.Flex)
+            {
+                CloseSaveSlotModal();
+                return true;
+            }
+            if (_uitSettingsModal != null && _uitSettingsModal.style.display == DisplayStyle.Flex)
+            {
+                CloseSettingsModal();
+                return true;
+            }
+            if (overwritePrompt != null && overwritePrompt.activeSelf)
+            {
+                overwritePrompt.SetActive(false);
+                return true;
+            }
+            if (saveSlotModal != null && saveSlotModal.activeSelf)
+            {
+                CloseSaveSlotModal();
+                return true;
+            }
+            if (settingsModal != null && settingsModal.activeSelf)
+            {
+                CloseSettingsModal();
+                return true;
+            }
+            return false;
+        }
+
+        void MoveKeyboardMenuSelection(int delta)
+        {
+            if (_menuEntries.Count == 0) return;
+            int idx = _selectedMenuIndex;
+            for (int step = 0; step < _menuEntries.Count; step++)
+            {
+                idx = (idx + delta + _menuEntries.Count) % _menuEntries.Count;
+                var btn = _menuEntries[idx].btn;
+                if (btn != null && btn.enabledSelf)
+                {
+                    SetActiveMenuIndex(idx);
+                    btn.Focus();
+                    return;
+                }
+            }
+        }
+
+        void SetActiveMenuIndex(int index)
+        {
+            _selectedMenuIndex = Mathf.Clamp(index, 0, Mathf.Max(0, _menuEntries.Count - 1));
+            for (int i = 0; i < _menuEntries.Count; i++)
+            {
+                var row = _menuEntries[i].row;
+                if (row == null) continue;
+                if (i == _selectedMenuIndex) row.AddToClassList("title-menu-row--active");
+                else row.RemoveFromClassList("title-menu-row--active");
+            }
+        }
+
+        void OnUIReload(PanelRenderer renderer, VisualElement root, int version)
+        {
+            if (_uiVersion == version && _uitRoot != null) return;
+            _uiVersion = version;
+            _uitRoot = root.Q<VisualElement>("Title-Root") ?? root;
+
+            _menuEntries.Clear();
+            _uitStartBtn = BindUitMenuRow("StartGameRow", "StartGameButton", 0, OnStartGameClicked);
+            _uitLoadBtn = BindUitMenuRow("LoadGameRow", "LoadGameButton", 1, () => OpenSaveSlotModal(isNewGame: false));
+            _uitNewBtn = BindUitMenuRow("NewGameRow", "NewGameButton", 2, OnNewGameClicked);
+            _uitSettingsBtn = BindUitMenuRow("SettingsRow", "SettingsButton", 3, OpenSettingsModal);
+            _uitExitBtn = BindUitMenuRow("ExitRow", "ExitButton", 4, RequestQuit);
+
+            _uitSaveModal = root.Q<VisualElement>("SaveSlotModal");
+            _uitSaveHeader = root.Q<UitLabel>("SaveSlotHeader");
+            _uitSlot1Btn = root.Q<UitButton>("Slot1Card");
+            _uitSlot2Btn = root.Q<UitButton>("Slot2Card");
+            _uitSlot3Btn = root.Q<UitButton>("Slot3Card");
+            _uitSlot1Title = root.Q<UitLabel>("Slot1Title");
+            _uitSlot1Portrait = root.Q<VisualElement>("Slot1Portrait");
+            _uitSlot1Subtitle = root.Q<UitLabel>("Slot1Subtitle");
+            _uitSaveStatus = root.Q<UitLabel>("SaveStatusLabel");
+            _uitSaveBackBtn = root.Q<UitButton>("SaveModalBackButton");
+
+            if (_uitSlot1Btn != null) _uitSlot1Btn.clicked += OnSlot1Clicked;
+            if (_uitSlot2Btn != null) _uitSlot2Btn.clicked += () => OnEmptySlotClicked(2);
+            if (_uitSlot3Btn != null) _uitSlot3Btn.clicked += () => OnEmptySlotClicked(3);
+            if (_uitSaveBackBtn != null) _uitSaveBackBtn.clicked += CloseSaveSlotModal;
+
+            _uitOverwritePrompt = root.Q<VisualElement>("OverwritePrompt");
+            _uitOverwriteYesBtn = root.Q<UitButton>("OverwriteYes");
+            _uitOverwriteNoBtn = root.Q<UitButton>("OverwriteNo");
+
+            if (_uitOverwriteYesBtn != null)
+            {
+                _uitOverwriteYesBtn.clicked += () =>
+                {
+                    if (_uitOverwritePrompt != null) _uitOverwritePrompt.style.display = DisplayStyle.None;
+                    CloseSaveSlotModal();
+                    RequestNewGame();
+                };
+            }
+            if (_uitOverwriteNoBtn != null)
+            {
+                _uitOverwriteNoBtn.clicked += () =>
+                {
+                    if (_uitOverwritePrompt != null) _uitOverwritePrompt.style.display = DisplayStyle.None;
+                };
+            }
+
+            _uitSettingsModal = root.Q<VisualElement>("SettingsModal");
+            _uitMasterFill = root.Q<VisualElement>("MasterFill");
+            _uitMusicFill = root.Q<VisualElement>("MusicFill");
+            _uitSfxFill = root.Q<VisualElement>("SfxFill");
+            _uitMasterVal = root.Q<UitLabel>("MasterValueLabel");
+            _uitMusicVal = root.Q<UitLabel>("MusicValueLabel");
+            _uitSfxVal = root.Q<UitLabel>("SfxValueLabel");
+            _uitFullscreenBtn = root.Q<UitButton>("FullscreenButton");
+            _uitSettingsBackBtn = root.Q<UitButton>("SettingsBackButton");
+
+            WireUitVolumeButtons(root, "Master", "master");
+            WireUitVolumeButtons(root, "Music", "music");
+            WireUitVolumeButtons(root, "Sfx", "sfx");
+            if (_uitFullscreenBtn != null) _uitFullscreenBtn.clicked += ToggleFullscreen;
+            if (_uitSettingsBackBtn != null) _uitSettingsBackBtn.clicked += CloseSettingsModal;
+
+            SetActiveMenuIndex(0);
+            RefreshSaveState();
+            RefreshSettingsLabels();
+        }
+
+        UitButton BindUitMenuRow(string rowName, string btnName, int index, Action onClick)
+        {
+            var row = _uitRoot.Q<VisualElement>(rowName);
+            var btn = _uitRoot.Q<UitButton>(btnName);
+            _menuEntries.Add((row, btn, onClick));
+            if (btn != null)
+            {
+                btn.clicked += onClick;
+                btn.RegisterCallback<PointerEnterEvent>(_ =>
+                {
+                    if (btn.enabledSelf) SetActiveMenuIndex(index);
+                });
+                btn.RegisterCallback<FocusInEvent>(_ =>
+                {
+                    if (btn.enabledSelf) SetActiveMenuIndex(index);
+                });
+            }
+            return btn;
+        }
+
+        void WireUitVolumeButtons(VisualElement root, string prefix, string channel)
+        {
+            var minus = root.Q<UitButton>($"{prefix}MinusButton");
+            var plus = root.Q<UitButton>($"{prefix}PlusButton");
+            if (minus != null) minus.clicked += () => AdjustVolume(channel, -0.1f);
+            if (plus != null) plus.clicked += () => AdjustVolume(channel, 0.1f);
         }
 
         public void SetSaveExists(bool exists)
         {
             saveExists = exists;
-            if (continueButton != null) continueButton.interactable = exists;
+            if (continueButton != null)
+                continueButton.interactable = exists;
+            if (loadGameButton != null)
+                loadGameButton.interactable = exists;
+            if (_uitLoadBtn != null)
+                _uitLoadBtn.SetEnabled(exists);
+            RefreshSaveSlotCardPreview();
         }
 
-        void OnNewGameClicked()
+        void RefreshSaveState()
+        {
+            SetSaveExists(saveExists || SaveService.Persistent.HasSave);
+        }
+
+        void BindUguiButtons()
+        {
+            if (startGameButton != null)
+            {
+                startGameButton.onClick.AddListener(OnStartGameClicked);
+                RegisterHoverMove(startGameButton);
+            }
+            if (loadGameButton != null)
+            {
+                loadGameButton.onClick.AddListener(() => OpenSaveSlotModal(isNewGame: false));
+                RegisterHoverMove(loadGameButton);
+            }
+            if (newGameButton != null)
+            {
+                newGameButton.onClick.AddListener(OnNewGameClicked);
+                RegisterHoverMove(newGameButton);
+            }
+            if (continueButton != null && continueButton != loadGameButton && continueButton != startGameButton)
+            {
+                continueButton.onClick.AddListener(RequestContinue);
+                RegisterHoverMove(continueButton);
+            }
+            if (settingsButton != null)
+            {
+                settingsButton.onClick.AddListener(OpenSettingsModal);
+                RegisterHoverMove(settingsButton);
+            }
+            if (quitButton != null)
+            {
+                quitButton.onClick.AddListener(RequestQuit);
+                RegisterHoverMove(quitButton);
+            }
+
+            if (slot1Button != null) slot1Button.onClick.AddListener(OnSlot1Clicked);
+            if (slot2Button != null) slot2Button.onClick.AddListener(() => OnEmptySlotClicked(2));
+            if (slot3Button != null) slot3Button.onClick.AddListener(() => OnEmptySlotClicked(3));
+            if (saveModalBackButton != null) saveModalBackButton.onClick.AddListener(CloseSaveSlotModal);
+
+            if (overwriteYesButton != null)
+            {
+                overwriteYesButton.onClick.AddListener(() =>
+                {
+                    if (overwritePrompt != null) overwritePrompt.SetActive(false);
+                    CloseSaveSlotModal();
+                    RequestNewGame();
+                });
+            }
+            if (overwriteNoButton != null)
+            {
+                overwriteNoButton.onClick.AddListener(() =>
+                {
+                    if (overwritePrompt != null) overwritePrompt.SetActive(false);
+                });
+            }
+
+            if (masterDownButton != null) masterDownButton.onClick.AddListener(() => AdjustVolume("master", -0.1f));
+            if (masterUpButton != null) masterUpButton.onClick.AddListener(() => AdjustVolume("master", 0.1f));
+            if (musicDownButton != null) musicDownButton.onClick.AddListener(() => AdjustVolume("music", -0.1f));
+            if (musicUpButton != null) musicUpButton.onClick.AddListener(() => AdjustVolume("music", 0.1f));
+            if (sfxDownButton != null) sfxDownButton.onClick.AddListener(() => AdjustVolume("sfx", -0.1f));
+            if (sfxUpButton != null) sfxUpButton.onClick.AddListener(() => AdjustVolume("sfx", 0.1f));
+            if (fullscreenButton != null) fullscreenButton.onClick.AddListener(ToggleFullscreen);
+            if (settingsBackButton != null) settingsBackButton.onClick.AddListener(CloseSettingsModal);
+        }
+
+        public void OnStartGameClicked()
+        {
+            RefreshSaveState();
+            if (saveExists) RequestContinue();
+            else RequestNewGame();
+        }
+
+        public void OnNewGameClicked()
+        {
+            RefreshSaveState();
+            if (_uitSaveModal != null || saveSlotModal != null)
+                OpenSaveSlotModal(isNewGame: true);
+            else
+                RequestNewGame();
+        }
+
+        public void OpenSaveSlotModal(bool isNewGame)
+        {
+            _saveModalIsNewGameMode = isNewGame;
+            RefreshSaveState();
+            string header = isNewGame ? "Create New Game Save" : "Load Existing Game Save";
+
+            if (_uitSaveHeader != null) _uitSaveHeader.text = header;
+            if (_uitSaveStatus != null) _uitSaveStatus.text = "";
+            if (_uitOverwritePrompt != null) _uitOverwritePrompt.style.display = DisplayStyle.None;
+            if (_uitSettingsModal != null) _uitSettingsModal.style.display = DisplayStyle.None;
+            if (_uitSaveModal != null) _uitSaveModal.style.display = DisplayStyle.Flex;
+
+            if (saveSlotHeader != null) saveSlotHeader.text = header;
+            if (saveStatusLabel != null) saveStatusLabel.text = "";
+            if (overwritePrompt != null) overwritePrompt.SetActive(false);
+            if (settingsModal != null) settingsModal.SetActive(false);
+            if (saveSlotModal != null) saveSlotModal.SetActive(true);
+        }
+
+        public void CloseSaveSlotModal()
+        {
+            if (_uitOverwritePrompt != null) _uitOverwritePrompt.style.display = DisplayStyle.None;
+            if (_uitSaveModal != null) _uitSaveModal.style.display = DisplayStyle.None;
+            if (overwritePrompt != null) overwritePrompt.SetActive(false);
+            if (saveSlotModal != null) saveSlotModal.SetActive(false);
+        }
+
+        public void OnSlot1Clicked()
+        {
+            RefreshSaveState();
+            if (_saveModalIsNewGameMode)
+            {
+                if (saveExists && (_uitOverwritePrompt != null || overwritePrompt != null))
+                {
+                    if (_uitOverwritePrompt != null) _uitOverwritePrompt.style.display = DisplayStyle.Flex;
+                    if (overwritePrompt != null) overwritePrompt.SetActive(true);
+                }
+                else
+                {
+                    CloseSaveSlotModal();
+                    RequestNewGame();
+                }
+            }
+            else
+            {
+                if (saveExists)
+                {
+                    CloseSaveSlotModal();
+                    RequestContinue();
+                }
+                else
+                {
+                    if (_uitSaveStatus != null) _uitSaveStatus.text = "No save file found in Slot 1.";
+                    if (saveStatusLabel != null) saveStatusLabel.text = "No save file found in Slot 1.";
+                }
+            }
+        }
+
+        void OnEmptySlotClicked(int slotNumber)
+        {
+            if (_saveModalIsNewGameMode && !saveExists)
+            {
+                CloseSaveSlotModal();
+                RequestNewGame();
+                return;
+            }
+            string msg = $"Slot {slotNumber} is currently empty — active profile uses Save 1.";
+            if (_uitSaveStatus != null) _uitSaveStatus.text = msg;
+            if (saveStatusLabel != null) saveStatusLabel.text = msg;
+        }
+
+        void RefreshSaveSlotCardPreview()
+        {
+            string title = saveExists ? "Save 1" : "Empty Slot";
+            string sub = "";
+            if (saveExists)
+            {
+                if (SaveService.Persistent.TryLoad(out SaveState saved, out _) && saved != null)
+                {
+                    string name = string.IsNullOrWhiteSpace(saved.playerName) ? "Detective" : saved.playerName.Trim();
+                    string caseName = saved.currentCase <= 0 ? "Prologue" : $"Case {saved.currentCase}";
+                    sub = $"{caseName}\n{name}";
+                }
+                else
+                {
+                    sub = "Saved Run";
+                }
+            }
+
+            // UI Toolkit
+            if (_uitSlot1Btn != null)
+            {
+                if (saveExists) _uitSlot1Btn.AddToClassList("tarot-card--populated");
+                else _uitSlot1Btn.RemoveFromClassList("tarot-card--populated");
+            }
+            if (_uitSlot1Portrait != null)
+                _uitSlot1Portrait.style.display = saveExists ? DisplayStyle.Flex : DisplayStyle.None;
+            if (_uitSlot1Title != null) _uitSlot1Title.text = title;
+            if (_uitSlot1Subtitle != null) _uitSlot1Subtitle.text = sub;
+
+            // Legacy uGUI
+            if (slot1CardImage != null)
+                slot1CardImage.color = saveExists ? new Color(0.76f, 0.64f, 0.24f, 1f) : new Color(0.08f, 0.08f, 0.09f, 0.96f);
+            if (slot1PortraitRoot != null)
+                slot1PortraitRoot.SetActive(saveExists);
+            if (slot1TitleLabel != null)
+                slot1TitleLabel.text = title;
+            if (slot1SubtitleLabel != null)
+                slot1SubtitleLabel.text = sub;
+        }
+
+        public void OpenSettingsModal()
+        {
+            if (_uitSaveModal != null) _uitSaveModal.style.display = DisplayStyle.None;
+            if (_uitSettingsModal != null) _uitSettingsModal.style.display = DisplayStyle.Flex;
+            if (saveSlotModal != null) saveSlotModal.SetActive(false);
+            if (settingsModal != null) settingsModal.SetActive(true);
+            RefreshSettingsLabels();
+        }
+
+        public void CloseSettingsModal()
+        {
+            if (_uitSettingsModal != null) _uitSettingsModal.style.display = DisplayStyle.None;
+            if (settingsModal != null) settingsModal.SetActive(false);
+        }
+
+        void AdjustVolume(string channel, float delta)
+        {
+            var audio = CoreRuntime.Ensure().Audio;
+            switch (channel)
+            {
+                case "master": audio.SetMasterVolume(audio.MasterVolume + delta); break;
+                case "music": audio.SetMusicVolume(audio.MusicVolume + delta); break;
+                case "sfx": audio.SetSfxVolume(audio.SfxVolume + delta); break;
+            }
+            RefreshSettingsLabels();
+        }
+
+        void ToggleFullscreen()
+        {
+            Screen.fullScreen = !Screen.fullScreen;
+            RefreshSettingsLabels();
+        }
+
+        void RefreshSettingsLabels()
+        {
+            var audio = CoreRuntime.Ensure().Audio;
+            int masterPct = Mathf.RoundToInt(audio.MasterVolume * 100f);
+            int musicPct = Mathf.RoundToInt(audio.MusicVolume * 100f);
+            int sfxPct = Mathf.RoundToInt(audio.SfxVolume * 100f);
+            string fsText = Screen.fullScreen ? "Fullscreen: ON" : "Fullscreen: OFF";
+
+            if (_uitMasterFill != null) _uitMasterFill.style.width = Length.Percent(masterPct);
+            if (_uitMusicFill != null) _uitMusicFill.style.width = Length.Percent(musicPct);
+            if (_uitSfxFill != null) _uitSfxFill.style.width = Length.Percent(sfxPct);
+            if (_uitMasterVal != null) _uitMasterVal.text = $"{masterPct}%";
+            if (_uitMusicVal != null) _uitMusicVal.text = $"{musicPct}%";
+            if (_uitSfxVal != null) _uitSfxVal.text = $"{sfxPct}%";
+            if (_uitFullscreenBtn != null) _uitFullscreenBtn.text = fsText;
+
+            if (masterValueLabel != null) masterValueLabel.text = $"{masterPct}%";
+            if (musicValueLabel != null) musicValueLabel.text = $"{musicPct}%";
+            if (sfxValueLabel != null) sfxValueLabel.text = $"{sfxPct}%";
+            if (fullscreenButton != null)
+            {
+                var lbl = fullscreenButton.GetComponentInChildren<TMP_Text>();
+                if (lbl != null) lbl.text = fsText;
+            }
+        }
+
+        void RegisterHoverMove(UguiButton btn)
+        {
+            if (btn == null) return;
+            var trigger = btn.gameObject.GetComponent<EventTrigger>() ?? btn.gameObject.AddComponent<EventTrigger>();
+            var entry = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
+            var targetRect = btn.GetComponent<RectTransform>();
+            entry.callback.AddListener(_ =>
+            {
+                if (btn.interactable) MoveSelectionIndicator(targetRect);
+            });
+            trigger.triggers.Add(entry);
+        }
+
+        void RefreshUguiMenuIndicators()
+        {
+            if (selectionDiamond != null) selectionDiamond.gameObject.SetActive(false);
+            if (selectionUnderline != null) selectionUnderline.gameObject.SetActive(false);
+        }
+
+        void MoveSelectionIndicator(RectTransform target)
+        {
+            if (target == null) return;
+            var tmp = target.GetComponentInChildren<TMP_Text>();
+            float textWidth = tmp != null ? tmp.preferredWidth : 180f;
+            float leftEdge = target.position.x - target.rect.width * target.pivot.x * target.lossyScale.x;
+            float bottomEdge = target.position.y - target.rect.height * target.pivot.y * target.lossyScale.y;
+            float scaleX = target.lossyScale.x;
+
+            if (selectionDiamond != null)
+            {
+                selectionDiamond.gameObject.SetActive(true);
+                selectionDiamond.position = new Vector3(
+                    leftEdge + (textWidth + 22f) * scaleX,
+                    target.position.y,
+                    target.position.z);
+            }
+            if (selectionUnderline != null)
+            {
+                selectionUnderline.gameObject.SetActive(true);
+                selectionUnderline.sizeDelta = new Vector2(Mathf.Max(140f, textWidth + 32f), 2f);
+                selectionUnderline.position = new Vector3(
+                    leftEdge + (textWidth + 16f) * 0.5f * scaleX,
+                    bottomEdge + 2f * scaleX,
+                    target.position.z);
+            }
+        }
+
+        public void RequestNewGame()
         {
             Debug.Log("TitleMenuController: New Game requested.", this);
-            NewGameRequested?.Invoke("");
-            CoreRuntime.Ensure().Bus.Publish(new NewGameEvent { PlayerName = "" });
+            NewGameRequested?.Invoke();
+            if (CoreRuntime.Instance != null)
+                CoreRuntime.Instance.Bus.Publish(new NewGameEvent());
         }
 
-        void OnContinueClicked()
+        public void RequestContinue()
         {
             Debug.Log("TitleMenuController: Continue requested.", this);
             ContinueRequested?.Invoke();
-            CoreRuntime.Ensure().Bus.Publish(new ContinueGameEvent());
+            if (CoreRuntime.Instance != null)
+                CoreRuntime.Instance.Bus.Publish(new ContinueGameEvent());
         }
 
-        void OnQuitClicked()
+        public void RequestQuit()
         {
             Debug.Log("TitleMenuController: Quit requested.", this);
             QuitRequested?.Invoke();

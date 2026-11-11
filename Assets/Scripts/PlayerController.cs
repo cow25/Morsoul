@@ -27,6 +27,7 @@ public class PlayerController : MonoBehaviour
     private float currentMoveSpeed = 0.0f;
     private Vector3 moveDirection = Vector3.zero;
     private float lookAngle = 0.0f;
+    private bool _wasUiBlocked;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -51,6 +52,25 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        bool uiBlocked = Morsoul.Core.PauseMenuController.AnyModalOrPauseOpen ||
+                         Morsoul.Dev.DevMenuOverlay.IsOpen;
+        if (uiBlocked)
+        {
+            if (Cursor.lockState != CursorLockMode.None || !Cursor.visible)
+            {
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
+            }
+            _wasUiBlocked = true;
+            return;
+        }
+        if (_wasUiBlocked)
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+            _wasUiBlocked = false;
+        }
+
         Vector2 moveVector = moveInput.ReadValue<Vector2>();
         Vector2 mouseDelta = new Vector2(Mouse.current.delta.x.ReadValue(), Mouse.current.delta.y.ReadValue());
 

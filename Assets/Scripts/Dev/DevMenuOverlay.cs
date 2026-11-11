@@ -1,10 +1,16 @@
 using System.Collections.Generic;
+using Morsoul.Board;
 using Morsoul.Core;
 using Morsoul.Data;
+using Morsoul.Flow;
 using Morsoul.Hub;
+using Morsoul.Interrogation;
+using Morsoul.Journal;
+using Morsoul.Resolution;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
+using UnityEngine.UIElements;
 
 namespace Morsoul.Dev
 {
@@ -18,6 +24,7 @@ namespace Morsoul.Dev
     {
         static DevMenuOverlay _instance;
         bool _visible;
+        public static bool IsOpen => _instance != null && _instance._visible;
         Vector2 _scroll;
         int _tab;
         Rect _window = new Rect(20, 20, 660, 560);
@@ -35,12 +42,21 @@ namespace Morsoul.Dev
         DevSmokeSequences.DevReport _report;
         System.Collections.IEnumerator _running;
 
+        // UI preview state
+        int _previewCaseId = 1;
+        bool _previewAutoHide = true;
+        bool _previewEmotionEcho = true;
+        bool _previewUnease;
+        string _previewStatus = "";
+        readonly List<ScriptableObject> _previewTempAssets = new();
+        readonly List<System.Func<bool>> _previewModalPredicates = new();
+
         // panels we suspended while the menu is open (restored on close)
         readonly List<System.ValueTuple<UnityEngine.UIElements.VisualElement,
             UnityEngine.UIElements.PickingMode>> _suspended = new();
 
         static readonly string[] Tabs =
-            { "Scenes", "Session", "Flags", "Clues", "Focus", "Hub", "Scenarios", "Sequences" };
+            { "Scenes", "Session", "Flags", "Clues", "Focus", "Hub", "UI Preview", "Scenarios", "Sequences" };
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -60,21 +76,39 @@ namespace Morsoul.Dev
         {
             var keyboard = Keyboard.current;
             if (keyboard != null && keyboard.f1Key.wasPressedThisFrame)
+                SetMenuVisible(!_visible);
+        }
+
+        void SetMenuVisible(bool visible)
+        {
+            if (_visible == visible) return;
+            _visible = visible;
+            if (_visible)
             {
-                _visible = !_visible;
-                if (_visible)
+                _prevLock = UnityEngine.Cursor.lockState;
+                _prevCursorVisible = UnityEngine.Cursor.visible;
+                SuspendPanelInput();
+            }
+            else
+            {
+                RestorePanelInput();
+                if (!PauseMenuController.AnyModalOrPauseOpen)
                 {
-                    _prevLock = Cursor.lockState;
-                    _prevCursorVisible = Cursor.visible;
-                    SuspendPanelInput();
-                }
-                else
-                {
-                    RestorePanelInput();
-                    Cursor.lockState = _prevLock;
-                    Cursor.visible = _prevCursorVisible;
+                    UnityEngine.Cursor.lockState = _prevLock;
+                    UnityEngine.Cursor.visible = _prevCursorVisible;
                 }
             }
+        }
+
+        void OnDestroy()
+        {
+            foreach (var pred in _previewModalPredicates)
+                PauseMenuController.UnregisterExternalModal(pred);
+            _previewModalPredicates.Clear();
+            foreach (var asset in _previewTempAssets)
+                if (asset != null) Destroy(asset);
+            _previewTempAssets.Clear();
+            if (_instance == this) _instance = null;
         }
 
         CursorLockMode _prevLock;
@@ -85,8 +119,10 @@ namespace Morsoul.Dev
         void LateUpdate()
         {
             if (!_visible) return;
-            if (Cursor.lockState != CursorLockMode.None) Cursor.lockState = CursorLockMode.None;
-            if (!Cursor.visible) Cursor.visible = true;
+            if (UnityEngine.Cursor.lockState != CursorLockMode.None)
+                UnityEngine.Cursor.lockState = CursorLockMode.None;
+            if (!UnityEngine.Cursor.visible)
+                UnityEngine.Cursor.visible = true;
         }
 
         /// <summary>
@@ -161,8 +197,9 @@ namespace Morsoul.Dev
                 case 3: DrawClues(core); break;
                 case 4: DrawFocus(core); break;
                 case 5: DrawHub(); break;
-                case 6: DrawScenarios(); break;
-                case 7: DrawSequences(); break;
+                case 6: DrawUiPreview(core); break;
+                case 7: DrawScenarios(); break;
+                case 8: DrawSequences(); break;
             }
             GUILayout.EndScrollView();
             GUI.DragWindow(new Rect(0, 0, _window.width, 20));
@@ -408,6 +445,377 @@ namespace Morsoul.Dev
                 player.transform.position = _teleport;
             GUI.enabled = true;
             GUILayout.EndHorizontal();
+        }
+
+        // --- UI Preview ---------------------------------------------------------
+
+        void DrawUiPreview(CoreRuntime core)
+        {
+            if (core == null) core = CoreRuntime.Ensure();
+            Section("Preview case data");
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Case ID:", GUILayout.Width(64));
+            for (int i = 0; i <= 5; i++)
+            {
+                GUI.enabled = _previewCaseId != i;
+                if (GUILayout.Button(i.ToString(), GUILayout.Width(38)))
+                    _previewCaseId = i;
+            }
+            GUI.enabled = true;
+            GUILayout.EndHorizontal();
+
+            var selectedCase = core != null ? core.ResolveCase(_previewCaseId) : null;
+            GUILayout.Label(selectedCase != null
+                ? $"Selected: Case {selectedCase.caseId} — {selectedCase.title}"
+                : $"Case {_previewCaseId} not found in CaseDatabase.");
+
+            _previewAutoHide = GUILayout.Toggle(_previewAutoHide,
+                "Auto-hide Dev Menu when opening a panel (press F1 to reopen)");
+            _previewEmotionEcho = GUILayout.Toggle(_previewEmotionEcho,
+                "Unlock Emotion Echo for Interrogation preview");
+            _previewUnease = GUILayout.Toggle(_previewUnease,
+                "Show Lingering Unease banner on Resolution preview");
+
+            Section("Open UI panels");
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Weighted Board", GUILayout.Width(190)))
+                PreviewWeightedBoard(core, selectedCase);
+            if (GUILayout.Button("Interrogation", GUILayout.Width(190)))
+                PreviewInterrogation(core, selectedCase);
+            if (GUILayout.Button("Journal (Desk)", GUILayout.Width(190)))
+                PreviewJournal(core, selectedCase);
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Legacy Board (Slots)", GUILayout.Width(190)))
+                PreviewLegacyBoard(core, selectedCase);
+            if (GUILayout.Button("Resolution (Clean)", GUILayout.Width(190)))
+                PreviewResolution(selectedCase, Grade.Clean);
+            if (GUILayout.Button("Resolution (Flawed)", GUILayout.Width(190)))
+                PreviewResolution(selectedCase, Grade.Flawed);
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Pause Menu", GUILayout.Width(190)))
+            {
+                CloseAllPreviewOverlays();
+                PauseMenuController.TogglePause();
+                FinishPreviewLaunch("Opened Pause Menu.");
+            }
+            if (GUILayout.Button("Close All UI Panels", GUILayout.Width(190)))
+            {
+                CloseAllPreviewOverlays();
+                _previewStatus = "Closed all UI panels.";
+            }
+            GUILayout.EndHorizontal();
+
+            Section("CaseLoop shortcuts");
+            if (GUILayout.Button("Enter CaseLoop ready for Interrogation (Case " +
+                                 Mathf.Clamp(_previewCaseId, 1, 4) + ")", GUILayout.Width(390)))
+            {
+                LaunchCaseLoopInterrogation(core, Mathf.Clamp(_previewCaseId, 1, 4));
+            }
+
+            if (!string.IsNullOrEmpty(_previewStatus))
+            {
+                Section("Status");
+                GUILayout.Label(_previewStatus);
+            }
+        }
+
+        T GetOrCreatePreviewController<T>(string name, VisualTreeAsset uxml, int sortingOrder)
+            where T : Component
+        {
+            var existing = Object.FindAnyObjectByType<T>(FindObjectsInactive.Include);
+            if (existing != null) return existing;
+
+            var config = Resources.Load<PauseMenuAssets>("PauseMenuConfig");
+            if (config == null || config.panelSettings == null || uxml == null)
+            {
+                _previewStatus = $"Missing PauseMenuConfig UXML/PanelSettings for {name}.";
+                return null;
+            }
+
+            var go = new GameObject($"[DevUIPreview] {name}");
+            go.SetActive(false);
+            var pr = go.AddComponent<PanelRenderer>();
+            pr.panelSettings = config.panelSettings;
+            pr.visualTreeAsset = uxml;
+            pr.sortingOrder = sortingOrder;
+            var ctrl = go.AddComponent<T>();
+            go.SetActive(true);
+            return ctrl;
+        }
+
+        void RegisterPreviewModal(System.Func<bool> predicate)
+        {
+            if (predicate == null || _previewModalPredicates.Contains(predicate)) return;
+            _previewModalPredicates.Add(predicate);
+            PauseMenuController.RegisterExternalModal(predicate);
+        }
+
+        static bool HasFirstPersonLookController()
+        {
+            foreach (var mb in Object.FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Exclude))
+                if (mb != null && mb.GetType().Name == "PlayerController")
+                    return true;
+            return false;
+        }
+
+        void CloseAllPreviewOverlays()
+        {
+            if (PauseMenuController.IsPaused && PauseMenuController.Instance != null)
+                PauseMenuController.Instance.Close();
+            foreach (var b in Object.FindObjectsByType<WeightedBoardController>(FindObjectsInactive.Include))
+                if (b != null && b.IsOpen) b.Close();
+            foreach (var b in Object.FindObjectsByType<BoardController>(FindObjectsInactive.Include))
+                if (b != null && b.IsOpen) b.Close();
+            foreach (var i in Object.FindObjectsByType<InterrogationController>(FindObjectsInactive.Include))
+                if (i != null && i.IsOpen) i.Close();
+            foreach (var j in Object.FindObjectsByType<JournalController>(FindObjectsInactive.Include))
+                if (j != null && j.IsOpen) j.Close();
+            foreach (var r in Object.FindObjectsByType<ResolutionController>(FindObjectsInactive.Include))
+                if (r != null && r.IsVisible) r.Hide();
+        }
+
+        void FinishPreviewLaunch(string status)
+        {
+            _previewStatus = status;
+            UnityEngine.Cursor.lockState = CursorLockMode.None;
+            UnityEngine.Cursor.visible = true;
+            if (_previewAutoHide) SetMenuVisible(false);
+        }
+
+        static CaseData ResolveCaseWithFallback(CoreRuntime core, int preferredId,
+            System.Func<CaseData, bool> predicate)
+        {
+            if (core == null) return null;
+            var direct = core.ResolveCase(preferredId);
+            if (direct != null && predicate(direct)) return direct;
+            for (int id = 0; id <= 5; id++)
+            {
+                var c = core.ResolveCase(id);
+                if (c != null && predicate(c)) return c;
+            }
+            return null;
+        }
+
+        static List<ClueData> GatherCaseClues(CaseData data)
+        {
+            var clues = new List<ClueData>();
+            if (data == null) return clues;
+            if (data.preloadedClues != null && data.preloadedClues.Length > 0)
+            {
+                foreach (var c in data.preloadedClues)
+                    if (c != null) clues.Add(c);
+            }
+            else if (data.clues != null)
+            {
+                foreach (var c in data.clues)
+                    if (c != null) clues.Add(c);
+            }
+            return clues;
+        }
+
+        void PreviewWeightedBoard(CoreRuntime core, CaseData preferred)
+        {
+            var data = preferred != null && preferred.evidenceGraph != null
+                ? preferred
+                : ResolveCaseWithFallback(core, _previewCaseId, c => c.evidenceGraph != null);
+            if (data == null)
+            {
+                _previewStatus = "No CaseData with an EvidenceGraph found.";
+                return;
+            }
+
+            CloseAllPreviewOverlays();
+            var config = Resources.Load<PauseMenuAssets>("PauseMenuConfig");
+            var wb = GetOrCreatePreviewController<WeightedBoardController>(
+                "WeightedBoard", config != null ? config.weightedBoardUxml : null, 50);
+            if (wb == null) return;
+
+            wb.manageCursor = HasFirstPersonLookController();
+            wb.CanUse = () => true;
+            var prevEnsure = wb.EnsureSession;
+            wb.EnsureSession = null;
+            if (!wb.SetCase(data))
+            {
+                wb.EnsureSession = prevEnsure;
+                _previewStatus = $"WeightedBoard failed SetCase for '{data.title}'.";
+                return;
+            }
+            wb.SetClues(GatherCaseClues(data));
+            RegisterPreviewModal(() => wb != null && (wb.IsOpen || wb.LastCloseFrame == Time.frameCount));
+            wb.Open();
+            wb.EnsureSession = prevEnsure;
+            FinishPreviewLaunch($"Opened Weighted Board for Case {data.caseId} ({data.title}).");
+        }
+
+        void PreviewInterrogation(CoreRuntime core, CaseData preferred)
+        {
+            var data = preferred != null && preferred.interrogation != null
+                ? preferred
+                : ResolveCaseWithFallback(core, _previewCaseId, c => c.interrogation != null);
+            if (data == null || data.interrogation == null)
+            {
+                _previewStatus = "No CaseData with InterrogationData found.";
+                return;
+            }
+
+            CloseAllPreviewOverlays();
+            var config = Resources.Load<PauseMenuAssets>("PauseMenuConfig");
+            var ic = GetOrCreatePreviewController<InterrogationController>(
+                "Interrogation", config != null ? config.interrogationUxml : null, 70);
+            if (ic == null) return;
+
+            ic.manageCursor = HasFirstPersonLookController();
+            ic.SetInterrogation(data.interrogation, GatherCaseClues(data),
+                data.caseId == 1, _previewEmotionEcho);
+            RegisterPreviewModal(() => ic != null && (ic.IsOpen || ic.LastEndFrame == Time.frameCount));
+            ic.Open();
+            FinishPreviewLaunch($"Opened Interrogation for Case {data.caseId} ({data.title}).");
+        }
+
+        void PreviewJournal(CoreRuntime core, CaseData preferred)
+        {
+            var data = preferred ?? ResolveCaseWithFallback(core, _previewCaseId, c => c.clues != null && c.clues.Length > 0);
+            CloseAllPreviewOverlays();
+            var config = Resources.Load<PauseMenuAssets>("PauseMenuConfig");
+            var jc = GetOrCreatePreviewController<JournalController>(
+                "Journal", config != null ? config.journalUxml : null, 40);
+            if (jc == null) return;
+
+            jc.manageCursor = HasFirstPersonLookController();
+            var prevCanOpen = jc.CanOpen;
+            jc.CanOpen = () => true;
+            if (jc.journal == null)
+            {
+                var hubJournal = jc.GetComponent<HubJournal>() ?? Object.FindAnyObjectByType<HubJournal>(FindObjectsInactive.Include)
+                    ?? jc.gameObject.AddComponent<HubJournal>();
+                jc.SetJournal(hubJournal);
+            }
+            if (jc.journal != null && data != null)
+            {
+                foreach (var c in GatherCaseClues(data))
+                    if (c != null) jc.journal.Register(c);
+            }
+            if (!jc.IsOpen) jc.Open();
+            jc.CanOpen = prevCanOpen;
+            FinishPreviewLaunch($"Opened Journal{(data != null ? $" (seeded Case {data.caseId} clues)" : "")}.");
+        }
+
+        void PreviewLegacyBoard(CoreRuntime core, CaseData preferred)
+        {
+            var data = preferred != null && preferred.inquiryNodes != null && preferred.inquiryNodes.Length == 2
+                ? preferred
+                : BuildSampleLegacyCase(preferred);
+
+            CloseAllPreviewOverlays();
+            var config = Resources.Load<PauseMenuAssets>("PauseMenuConfig");
+            var bc = GetOrCreatePreviewController<BoardController>(
+                "Board", config != null ? config.boardUxml : null, 50);
+            if (bc == null) return;
+
+            bc.manageCursor = HasFirstPersonLookController();
+            bc.SetCase(data);
+            bc.SetClues(GatherCaseClues(data));
+            RegisterPreviewModal(() => bc != null && (bc.IsOpen || bc.LastCloseFrame == Time.frameCount));
+            bc.Open();
+            FinishPreviewLaunch($"Opened Legacy Board ({data.title}).");
+        }
+
+        void PreviewResolution(CaseData preferred, Grade grade)
+        {
+            CloseAllPreviewOverlays();
+            var config = Resources.Load<PauseMenuAssets>("PauseMenuConfig");
+            var rc = GetOrCreatePreviewController<ResolutionController>(
+                "Resolution", config != null ? config.resolutionUxml : null, 80);
+            if (rc == null) return;
+
+            rc.manageCursor = HasFirstPersonLookController();
+            string title = preferred != null && !string.IsNullOrEmpty(preferred.title)
+                ? preferred.title : "Sample Case Resolution";
+            RegisterPreviewModal(() => rc != null && rc.IsVisible);
+            rc.Show(title, grade, _previewUnease, "Lower Vault Alcove",
+                "Inspect behind the cracked keystone with Emotion Echo.");
+            FinishPreviewLaunch($"Opened Resolution screen ({title} — {grade}).");
+        }
+
+        void LaunchCaseLoopInterrogation(CoreRuntime core, int caseId)
+        {
+            if (core == null) core = CoreRuntime.Ensure();
+            var data = core.ResolveCase(caseId);
+            core.Session.CurrentCase = caseId;
+            core.Session.SetGrade(caseId, Grade.Ungraded);
+            if (data != null && data.clues != null)
+                foreach (var c in data.clues)
+                    if (c != null) core.Session.RegisterClue(c);
+            var boardState = core.Session.GetOrCreateBoardState(caseId);
+            boardState.BoardSolved = true;
+            FinishPreviewLaunch($"Prepared Case {caseId} Interrogation; loading CaseLoop...");
+            DevTravel.Go("CaseLoop");
+        }
+
+        CaseData BuildSampleLegacyCase(CaseData seed)
+        {
+            T Track<T>() where T : ScriptableObject
+            {
+                var inst = ScriptableObject.CreateInstance<T>();
+                inst.hideFlags = HideFlags.DontSave;
+                _previewTempAssets.Add(inst);
+                return inst;
+            }
+
+            var sample = Track<CaseData>();
+            sample.caseId = 99;
+            sample.hasInvestigationScene = true;
+            sample.title = seed != null ? $"{seed.title} (Slot Preview)" : "Sample Deduction Board";
+
+            var c1 = Track<ClueData>();
+            c1.id = "PREVIEW_C1"; c1.caseId = 99; c1.displayName = "Shattered Seal";
+            c1.type = ClueType.Physical; c1.description = "Broken wax bearing the guildmaster's signet.";
+            var c2 = Track<ClueData>();
+            c2.id = "PREVIEW_C2"; c2.caseId = 99; c2.displayName = "Ledger Entry";
+            c2.type = ClueType.Testimony; c2.description = "Mentions a midnight vault transfer.";
+            var c3 = Track<ClueData>();
+            c3.id = "PREVIEW_C3"; c3.caseId = 99; c3.displayName = "Trace Dust";
+            c3.type = ClueType.Physical; c3.description = "Fine silver shavings beside the lock.";
+            var c4 = Track<ClueData>();
+            c4.id = "PREVIEW_C4"; c4.caseId = 99; c4.displayName = "Guard Shift Log";
+            c4.type = ClueType.Testimony; c4.description = "Confirms no patrol passed after midnight.";
+
+            var p1 = Track<PremiseData>();
+            p1.id = "PREVIEW_P1"; p1.title = "Unscheduled Access"; p1.proposition = "The vault was opened using a duplicate seal.";
+            var p2 = Track<PremiseData>();
+            p2.id = "PREVIEW_P2"; p2.title = "Unmonitored Window"; p2.proposition = "No guard witnessed the midnight transfer.";
+
+            var n1 = Track<InquiryNodeData>();
+            n1.id = "PREVIEW_N1"; n1.slotA = c1; n1.slotB = c2; n1.producesPremise = p1;
+            n1.prompt = new CausalPromptData
+            {
+                question = "Why was the guild seal broken alongside the ledger entry?",
+                options = new[] { "A duplicate key forced the seal.", "Wear from normal daily use.", "Humidity warped the wax." },
+                correctIndex = 0,
+                hintText = "Match the signet seal to the midnight entry."
+            };
+            var n2 = Track<InquiryNodeData>();
+            n2.id = "PREVIEW_N2"; n2.slotA = c3; n2.slotB = c4; n2.producesPremise = p2;
+            n2.prompt = new CausalPromptData
+            {
+                question = "How did the intruder file the lock unnoticed?",
+                options = new[] { "During the unguarded midnight window.", "At noon during market rush.", "Before the vault existed." },
+                correctIndex = 0,
+                hintText = "Check when the patrols paused."
+            };
+
+            var hyp = Track<HypothesisData>();
+            hyp.id = "PREVIEW_HYP"; hyp.premise1 = p1; hyp.premise2 = p2;
+            hyp.verdictProposition = "An insider used a filed key during the unguarded midnight hour.";
+
+            sample.clues = new[] { c1, c2, c3, c4 };
+            sample.inquiryNodes = new[] { n1, n2 };
+            sample.hypothesis = hyp;
+            return sample;
         }
 
         // --- Scenarios ----------------------------------------------------------

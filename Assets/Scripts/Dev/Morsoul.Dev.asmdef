@@ -4,8 +4,14 @@
     "references": [
         "Morsoul.Core",
         "Morsoul.Data",
+        "Morsoul.Engine",
         "Morsoul.Hub",
         "Morsoul.Dialogue",
+        "Morsoul.Board",
+        "Morsoul.Journal",
+        "Morsoul.Interrogation",
+        "Morsoul.Resolution",
+        "Morsoul.Flow",
         "Unity.InputSystem"
     ],
     "includePlatforms": [],

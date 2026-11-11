@@ -1,0 +1,271 @@
+.pause-root {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    align-items: center;
+    justify-content: center;
+    -unity-font-definition: url("project://database/Assets/Fonts/Middleearth.ttf");
+}
+
+.pause-backdrop {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(8, 6, 10, 0.70);
+}
+
+.pause-stack {
+    width: 640px;
+    max-width: 92%;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.pause-card {
+    background-image: url("project://database/Assets/Art/UI/Ornate_Runic_Card.png");
+    -unity-background-scale-mode: stretch-to-fill;
+    padding: 36px 76px 28px 82px;
+    margin-bottom: 6px;
+    flex-shrink: 0;
+}
+
+.pause-card-bottom {
+    margin-bottom: 0;
+    padding: 34px 76px 28px 82px;
+}
+
+.pause-header-row {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.pause-card-title {
+    font-size: 16px;
+    color: rgb(32, 24, 18);
+    -unity-font-style: bold;
+}
+
+.pause-card-subtitle {
+    font-size: 13px;
+    color: rgb(62, 48, 36);
+}
+
+/* Dossier layout */
+.dossier-body {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.dossier-fields {
+    flex-grow: 1;
+    flex-direction: row;
+    margin-right: 10px;
+}
+
+.dossier-col {
+    flex-direction: column;
+    margin-right: 16px;
+}
+
+.dossier-field {
+    margin-bottom: 1px;
+}
+
+.dossier-label {
+    font-size: 10px;
+    color: rgb(88, 72, 54);
+    margin-bottom: -2px;
+}
+
+.dossier-value {
+    font-size: 13px;
+    color: rgb(26, 20, 14);
+}
+
+.dossier-row-inline {
+    flex-direction: row;
+    justify-content: flex-start;
+}
+
+.rep-track {
+    width: 148px;
+    height: 12px;
+    margin-top: 2px;
+    padding: 2px;
+    background-color: rgb(236, 232, 224);
+    border-color: rgb(62, 50, 38);
+    border-width: 1px;
+    border-radius: 2px;
+}
+
+.rep-fill {
+    height: 100%;
+    background-color: rgb(88, 152, 72);
+    border-radius: 1px;
+}
+
+.rep-points {
+    width: 148px;
+    font-size: 10px;
+    color: rgb(64, 52, 38);
+    -unity-text-align: middle-right;
+    margin-top: 1px;
+}
+
+.dossier-portrait-col {
+    width: 116px;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.dossier-portrait-frame {
+    width: 98px;
+    height: 114px;
+    padding: 4px;
+    background-image: url("project://database/Assets/Art/UI/Flat/UI_Flat_FrameSlot03a.png");
+    -unity-background-image-tint-color: rgb(95, 76, 52);
+    -unity-background-scale-mode: stretch-to-fill;
+}
+
+.dossier-portrait-img {
+    width: 100%;
+    height: 100%;
+    background-image: url("project://database/Assets/Art/UI/Golem_Portrait.png");
+    -unity-background-scale-mode: scale-and-crop;
+}
+
+.dossier-motto {
+    font-size: 10px;
+    color: rgb(42, 34, 24);
+    -unity-text-align: middle-center;
+    margin-top: 4px;
+}
+
+/* Actions Grid */
+.pause-actions-grid {
+    flex-direction: row;
+    justify-content: space-between;
+    margin-top: 6px;
+}
+
+.pause-action-col {
+    flex-direction: column;
+    width: 48%;
+}
+
+.pause-action-btn {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    min-height: 32px;
+    margin-bottom: 6px;
+    padding: 4px 12px;
+    background-image: url("project://database/Assets/Art/UI/Flat/UI_Flat_Button01a_1.png");
+    -unity-background-image-tint-color: rgb(238, 226, 200);
+    background-color: transparent;
+    border-width: 0;
+    color: rgb(28, 22, 16);
+    font-size: 14px;
+    -unity-text-align: middle-center;
+}
+
+.pause-action-btn:hover {
+    -unity-background-image-tint-color: rgb(252, 240, 212);
+    color: rgb(16, 12, 8);
+}
+
+.pause-action-btn-secondary {
+    min-height: 28px;
+    padding: 3px 12px;
+    margin-right: 8px;
+    background-image: url("project://database/Assets/Art/UI/Flat/UI_Flat_Button01a_1.png");
+    -unity-background-image-tint-color: rgb(222, 206, 174);
+    background-color: transparent;
+    border-width: 0;
+    color: rgb(32, 24, 18);
+    font-size: 13px;
+    -unity-text-align: middle-center;
+}
+
+.pause-action-btn-secondary:hover {
+    -unity-background-image-tint-color: rgb(248, 234, 202);
+}
+
+.pause-status {
+    font-size: 12px;
+    color: rgb(52, 108, 48);
+    -unity-text-align: middle-center;
+    margin-top: 2px;
+}
+
+/* Settings page */
+.settings-row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+.settings-label {
+    width: 125px;
+    font-size: 13px;
+    color: rgb(32, 24, 18);
+}
+
+.settings-bar-wrap {
+    flex-direction: row;
+    align-items: center;
+    flex-grow: 1;
+}
+
+.settings-step-btn {
+    width: 24px;
+    height: 22px;
+    padding: 0;
+    margin: 0 4px;
+    background-image: url("project://database/Assets/Art/UI/Flat/UI_Flat_Frame01a.png");
+    -unity-background-image-tint-color: rgb(218, 202, 172);
+    -unity-background-scale-mode: stretch-to-fill;
+    background-color: transparent;
+    border-width: 0;
+    color: rgb(28, 22, 16);
+    font-size: 14px;
+    -unity-text-align: middle-center;
+}
+
+.settings-track {
+    flex-grow: 1;
+    height: 14px;
+    padding: 2px;
+    background-color: rgba(226, 218, 202, 0.92);
+    border-color: rgb(88, 70, 50);
+    border-width: 1px;
+    border-radius: 3px;
+}
+
+.settings-fill {
+    height: 100%;
+    background-color: rgb(130, 80, 160);
+    border-radius: 2px;
+}
+
+.settings-val {
+    width: 46px;
+    font-size: 13px;
+    color: rgb(44, 34, 24);
+    -unity-text-align: middle-right;
+}
+
+.quit-confirm-row {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    margin-top: 6px;
+}
