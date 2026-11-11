@@ -18,5 +18,5 @@ MonoBehaviour:
   material: {fileID: 0}
   visualOffset: {x: 0, y: -0.35}
   visualScale: {x: 1, y: 1}
-  flipX: 0
+  flipX: 1
   sortingOrder: 0

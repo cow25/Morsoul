@@ -1018,8 +1018,8 @@ MonoBehaviour:
   target: {fileID: 1848514012}
   smoothTime: 0.25
   useBounds: 1
-  boundsMin: {x: -8, y: -4.5}
-  boundsMax: {x: 8, y: 4.8}
+  boundsMin: {x: -10, y: -5.5}
+  boundsMax: {x: 10, y: 6.5}
   insetByView: 1
 --- !u!20 &652151947
 Camera:
@@ -1031,7 +1031,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
-  m_BackGroundColor: {r: 0.06, g: 0.11, b: 0.06, a: 1}
+  m_BackGroundColor: {r: 0.08, g: 0.12, b: 0.08, a: 1}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -4816,7 +4816,7 @@ Transform:
   m_GameObject: {fileID: 2099058542}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -4.8, y: -1.7, z: -0.034}
+  m_LocalPosition: {x: -5, y: -1.5, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
