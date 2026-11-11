@@ -401,8 +401,8 @@ MonoBehaviour:
   target: {fileID: 1739657309}
   smoothTime: 0.25
   useBounds: 1
-  boundsMin: {x: -8, y: -5}
-  boundsMax: {x: 8, y: 6}
+  boundsMin: {x: -8, y: -4.5}
+  boundsMax: {x: 8, y: 4.8}
   insetByView: 1
 --- !u!20 &1056066658
 Camera:
@@ -414,7 +414,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 1
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_BackGroundColor: {r: 0.06, g: 0.11, b: 0.06, a: 1}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -439,7 +439,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 5
+  orthographic size: 5.2
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
@@ -707,7 +707,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 78cb930b8d624950a82508dfb8dc5bb2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.EntityVisual
-  profile: {fileID: 11400000, guid: f925d32c6a8c1ca408591afcbfea2d4a, type: 2}
+  profile: {fileID: 0}
   _defaultMaterial: {fileID: 0}
 --- !u!114 &1286943003
 MonoBehaviour:
@@ -796,7 +796,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1286943001}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -897,7 +897,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 78cb930b8d624950a82508dfb8dc5bb2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.EntityVisual
-  profile: {fileID: 11400000, guid: 69195846aa5c91a408ac3f8ce26078e9, type: 2}
+  profile: {fileID: 0}
   _defaultMaterial: {fileID: 0}
 --- !u!114 &1358151224
 MonoBehaviour:
@@ -986,7 +986,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1358151222}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1

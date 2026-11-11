@@ -13,6 +13,7 @@ namespace Morsoul.Hub
         public bool externalDrive;
 
         HubPlayerController _controller;
+        EntityVisual _visual;
         Animator _animator;
         SpriteRenderer _renderer;
         bool _hasMoving;
@@ -24,8 +25,8 @@ namespace Morsoul.Hub
         void Awake()
         {
             _controller = GetComponentInParent<HubPlayerController>();
-            var visual = GetComponent<EntityVisual>();
-            if (visual != null) Bind(visual.Animator, visual.Renderer);
+            _visual = GetComponent<EntityVisual>();
+            if (_visual != null) Bind(_visual.Animator, _visual.Renderer);
         }
 
         public void Bind(Animator animator, SpriteRenderer renderer)
@@ -65,7 +66,10 @@ namespace Morsoul.Hub
             if (_hasMoveY) _animator.SetFloat(moveYParam, _facing.y);
 
             if (flipByMoveX && _renderer != null && moving && Mathf.Abs(move.x) > 0.01f)
+            {
                 _renderer.flipX = move.x < 0f;
+                if (_visual != null) _visual.SyncFlip(_renderer.flipX);
+            }
         }
     }
 }

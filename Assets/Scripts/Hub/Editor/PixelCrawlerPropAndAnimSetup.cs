@@ -49,6 +49,9 @@ namespace Morsoul.Hub.Editor
             "Assets/Art/Environments/Props/Trees/Model_03/Size_03.png",
             "Assets/Art/Environments/Props/Trees/Model_03/Size_04.png",
             "Assets/Art/Environments/Props/Trees/Model_03/Size_05.png",
+            "Assets/Art/Characters/Weapons/Hands.png",
+            "Assets/Art/Characters/Weapons/Wood.png",
+            "Assets/Art/Characters/Weapons/Bone.png",
         };
 
         struct NpcAnimSpec
@@ -165,25 +168,32 @@ namespace Morsoul.Hub.Editor
             bool isRocks = assetPath.EndsWith("/Rocks.png", StringComparison.OrdinalIgnoreCase);
             bool isTreeM1S3 = assetPath.EndsWith("/Model_01/Size_03.png", StringComparison.OrdinalIgnoreCase);
             bool isBonfire = assetPath.EndsWith("/Bonfire/Bonfire.png", StringComparison.OrdinalIgnoreCase);
+            bool isHands = assetPath.EndsWith("/Weapons/Hands.png", StringComparison.OrdinalIgnoreCase);
+            bool isWeaponSheet = assetPath.Contains("/Characters/Weapons/");
             var boxes = isTreeM1S3
                 ? ExtractGridAndRightTail(pixels, w, h, cellW: 48, cellH: 96, tailStartX: 192, minExtent: 5)
                 : isBonfire
                     ? ExtractGridAndRightTail(pixels, w, h, cellW: 32, cellH: 48, tailStartX: w, minExtent: 5)
-                    : ExtractAlphaIslands(pixels, w, h, minExtent: 5,
-                        skipTopLeftHeader: isRocks, headerWidth: 56, headerHeight: 14);
+                    : isHands
+                        ? ExtractGridAndRightTail(pixels, w, h, cellW: 16, cellH: 16, tailStartX: w, minExtent: 3)
+                        : ExtractAlphaIslands(pixels, w, h, minExtent: 5,
+                            skipTopLeftHeader: isRocks, headerWidth: 56, headerHeight: 14);
             if (boxes.Count == 0) return 0;
 
             if (assetPath.EndsWith("/Buildings/Exterior/Roofs.png", StringComparison.OrdinalIgnoreCase))
                 SplitWideTopRoofs(boxes, h);
 
-            // Sort top-to-bottom by rough 16px row band, then left-to-right.
-            boxes.Sort((a, b) =>
+            if (!isHands)
             {
-                int bandA = (h - a.yMax) / 16;
-                int bandB = (h - b.yMax) / 16;
-                int cmp = bandA.CompareTo(bandB);
-                return cmp != 0 ? cmp : a.xMin.CompareTo(b.xMin);
-            });
+                // Sort top-to-bottom by rough 16px row band, then left-to-right.
+                boxes.Sort((a, b) =>
+                {
+                    int bandA = (h - a.yMax) / 16;
+                    int bandB = (h - b.yMax) / 16;
+                    int cmp = bandA.CompareTo(bandB);
+                    return cmp != 0 ? cmp : a.xMin.CompareTo(b.xMin);
+                });
+            }
 
             string prefix = MakeSpritePrefix(assetPath);
 
@@ -208,8 +218,8 @@ namespace Morsoul.Hub.Editor
                     name = $"{prefix}_{i:D2}",
                     spriteID = GUID.Generate(),
                     rect = new Rect(r.xMin, r.yMin, r.width, r.height),
-                    alignment = SpriteAlignment.BottomCenter,
-                    pivot = new Vector2(0.5f, 0f),
+                    alignment = isWeaponSheet ? SpriteAlignment.Center : SpriteAlignment.BottomCenter,
+                    pivot = isWeaponSheet ? new Vector2(0.5f, 0.5f) : new Vector2(0.5f, 0f),
                 };
             }
 

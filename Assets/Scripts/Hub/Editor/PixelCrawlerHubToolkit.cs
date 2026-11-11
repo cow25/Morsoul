@@ -159,9 +159,13 @@ namespace Morsoul.Hub.Editor
             return go;
         }
 
+        const string HandsSheetPath = "Assets/Art/Characters/Weapons/Hands.png";
+        const string WoodWeaponsSheetPath = "Assets/Art/Characters/Weapons/Wood.png";
+
         public static VisualProfile EnsureCharacterProfile(
             string profileName, string sheetPath, string idleSpriteName,
-            string controllerPath, Vector2 visualOffset, bool flipX = false)
+            string controllerPath, Vector2 visualOffset, bool flipX = false,
+            VisualAttachment[] attachments = null)
         {
             EnsureFolder(ProfilesRoot);
             string assetPath = $"{ProfilesRoot}/{profileName}.asset";
@@ -181,9 +185,111 @@ namespace Morsoul.Hub.Editor
             profile.visualScale = Vector2.one;
             profile.flipX = flipX;
             profile.sortingOrder = 0;
+            profile.attachments = attachments ?? BuildDefaultAttachments(sheetPath);
 
             EditorUtility.SetDirty(profile);
             return profile;
+        }
+
+        static VisualAttachment[] BuildDefaultAttachments(string sheetPath)
+        {
+            if (string.IsNullOrEmpty(sheetPath)) return null;
+
+            // Pixel Crawler's Knight, Wizard, and Rogue base sheets only include sleeve/shoulder
+            // cuffs; modular hands + held gear come from Weapons/Hands.png & Weapons/Wood.png.
+            // Coordinates below are in unflipped (facing-right) local space relative to bottom pivot (0,0).
+            if (sheetPath.IndexOf("/NPCs/Wizard/", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                var handGrip = LoadSprite(HandsSheetPath, "Hands_01");
+                var handIdle = LoadSprite(HandsSheetPath, "Hands_00");
+                var staff = LoadSprite(WoodWeaponsSheetPath, "Wood_11");
+                return new[]
+                {
+                    new VisualAttachment
+                    {
+                        id = "BackHand", sprite = handIdle,
+                        localOffset = new Vector2(-0.42f, 0.50f), localZ = -0.001f,
+                        localScale = Vector2.one,
+                    },
+                    new VisualAttachment
+                    {
+                        id = "Staff", sprite = staff,
+                        localOffset = new Vector2(0.56f, 1.04f), localZ = -0.002f,
+                        localScale = Vector2.one, rotationZ = -6f,
+                    },
+                    new VisualAttachment
+                    {
+                        id = "FrontHand", sprite = handGrip,
+                        localOffset = new Vector2(0.50f, 0.56f), localZ = -0.003f,
+                        localScale = Vector2.one,
+                    },
+                };
+            }
+
+            if (sheetPath.IndexOf("/NPCs/Knight/", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                var gauntletGrip = LoadSprite(HandsSheetPath, "Hands_05");
+                var gauntletFist = LoadSprite(HandsSheetPath, "Hands_07");
+                var sword = LoadSprite(WoodWeaponsSheetPath, "Wood_00");
+                var buckler = LoadSprite(WoodWeaponsSheetPath, "Wood_07");
+                return new[]
+                {
+                    new VisualAttachment
+                    {
+                        id = "Sword", sprite = sword,
+                        localOffset = new Vector2(-0.62f, 1.08f), localZ = -0.001f,
+                        localScale = Vector2.one, rotationZ = 10f,
+                    },
+                    new VisualAttachment
+                    {
+                        id = "SwordHand", sprite = gauntletGrip,
+                        localOffset = new Vector2(-0.56f, 0.48f), localZ = -0.002f,
+                        localScale = Vector2.one,
+                    },
+                    new VisualAttachment
+                    {
+                        id = "Shield", sprite = buckler,
+                        localOffset = new Vector2(0.44f, 0.52f), localZ = -0.003f,
+                        localScale = Vector2.one,
+                    },
+                    new VisualAttachment
+                    {
+                        id = "ShieldHand", sprite = gauntletFist,
+                        localOffset = new Vector2(0.42f, 0.48f), localZ = -0.004f,
+                        localScale = Vector2.one,
+                    },
+                };
+            }
+
+            if (sheetPath.IndexOf("/NPCs/Rogue/", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                var gloveLeft = LoadSprite(HandsSheetPath, "Hands_08");
+                var gloveRight = LoadSprite(HandsSheetPath, "Hands_11");
+                var dagger = LoadSprite(WoodWeaponsSheetPath, "Wood_08");
+                return new[]
+                {
+                    new VisualAttachment
+                    {
+                        id = "Dagger", sprite = dagger,
+                        localOffset = new Vector2(-0.56f, 0.88f), localZ = 0.001f,
+                        localScale = Vector2.one, rotationZ = 22f,
+                    },
+                    new VisualAttachment
+                    {
+                        id = "BackHand", sprite = gloveLeft,
+                        localOffset = new Vector2(-0.48f, 0.50f), localZ = -0.001f,
+                        localScale = Vector2.one,
+                    },
+                    new VisualAttachment
+                    {
+                        id = "FrontHand", sprite = gloveRight,
+                        localOffset = new Vector2(0.42f, 0.50f), localZ = -0.002f,
+                        localScale = Vector2.one,
+                    },
+                };
+            }
+
+            return null;
         }
 
         public static void BindActorVisual(GameObject actor, VisualProfile profile, bool addYSort = true)

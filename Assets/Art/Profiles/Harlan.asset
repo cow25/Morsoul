@@ -20,3 +20,4 @@ MonoBehaviour:
   visualScale: {x: 1, y: 1}
   flipX: 1
   sortingOrder: 0
+  attachments: []
