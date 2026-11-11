@@ -23,11 +23,16 @@ namespace Morsoul.Hub.Editor
         const string TreeM3Path = "Assets/Art/Environments/Props/Trees/Model_03/Size_03.png";
         const string VegPath = "Assets/Art/Environments/Props/Static/Vegetation.png";
         const string RocksPath = "Assets/Art/Environments/Props/Static/Rocks.png";
+        const string DungeonPropsPath = "Assets/Art/Environments/Props/Static/Dungeon_Props.png";
+        const string ResourcesPath = "Assets/Art/Environments/Props/Static/Resources.png";
+        const string ExtPropsPath = "Assets/Art/Environments/Buildings/Exterior/Props.png";
         const string PlayerSheetPath = "Assets/Art/Characters/Player/Body_A/Idle_Base/Idle_Down-Sheet.png";
         const string ElizaSheetPath = "Assets/Art/Characters/NPCs/Citizen_F/Peasant_A/Idle/Idle-Sheet.png";
         const string PlayerControllerPath = "Assets/Animations/Player/Player_BodyA.controller";
         const string ElizaControllerPath = "Assets/Animations/NPCs/NPC_CitizenF_PeasantA.controller";
-        const string EyeGlintPath = "Assets/Art/Vfx/BushEyeGlint.png";
+        const string EyeScanReticlePath = "Assets/Art/Vfx/EyeScanReticle.png";
+        const string EyeScanSweepPath = "Assets/Art/Vfx/EyeScanSweep.png";
+        const string EyeScanWavePath = "Assets/Art/Vfx/EyeScanWave.png";
 
         [MenuItem("Morsoul/Hub/Create Prologue Wilderness Scene")]
         public static void CreateOrUpdate() => BuildInternal(prompt: true);
@@ -74,7 +79,7 @@ namespace Morsoul.Hub.Editor
                 BuildPlayableCorridorColliders(scene);
 
                 var eliza = BuildElizaActor(scene);
-                var elizaSurvey = EnsureEmpty("ElizaSurveySpot", new Vector3(14.1f, 0.4f, 0f));
+                var elizaSurvey = EnsureEmpty("ElizaSurveySpot", new Vector3(14.2f, 0.25f, 0f));
                 var bush = BuildElizaCoverBush(scene);
                 var beacon = BuildEyeHighlight(scene);
                 var blocker = BuildRouteBlocker(scene);
@@ -217,23 +222,57 @@ namespace Morsoul.Hub.Editor
             var tallPine = PixelCrawlerHubToolkit.LoadSprite(TreeM3Path, "Tree_Model_03_Size_03_00");
 
             var bushMed = PixelCrawlerHubToolkit.LoadSprite(VegPath, "Vegetation_04");
+            var bushGold = PixelCrawlerHubToolkit.LoadSprite(VegPath, "Vegetation_05");
             var bushSmall = PixelCrawlerHubToolkit.LoadSprite(VegPath, "Vegetation_12");
             var fern = PixelCrawlerHubToolkit.LoadSprite(VegPath, "Vegetation_26");
+            var fernGold = PixelCrawlerHubToolkit.LoadSprite(VegPath, "Vegetation_49");
+            var reedTall = PixelCrawlerHubToolkit.LoadSprite(VegPath, "Vegetation_33");
             var flowerA = PixelCrawlerHubToolkit.LoadSprite(VegPath, "Vegetation_34");
             var flowerB = PixelCrawlerHubToolkit.LoadSprite(VegPath, "Vegetation_35");
+            var flowerCluster = PixelCrawlerHubToolkit.LoadSprite(VegPath, "Vegetation_147");
+            var mushroomA = PixelCrawlerHubToolkit.LoadSprite(VegPath, "Vegetation_110");
+            var mushroomB = PixelCrawlerHubToolkit.LoadSprite(VegPath, "Vegetation_111");
             var deadShrub = PixelCrawlerHubToolkit.LoadSprite(VegPath, "Vegetation_95");
 
             var greyPillar = PixelCrawlerHubToolkit.LoadSprite(RocksPath, "Rocks_04");
+            var brownPillar = PixelCrawlerHubToolkit.LoadSprite(RocksPath, "Rocks_00");
+            var mossyPillar = PixelCrawlerHubToolkit.LoadSprite(RocksPath, "Rocks_52");
             var greyBoulder = PixelCrawlerHubToolkit.LoadSprite(RocksPath, "Rocks_05");
             var brownBoulder = PixelCrawlerHubToolkit.LoadSprite(RocksPath, "Rocks_01");
             var smallRock = PixelCrawlerHubToolkit.LoadSprite(RocksPath, "Rocks_03");
+            var flatStone = PixelCrawlerHubToolkit.LoadSprite(RocksPath, "Rocks_13");
+            var crystalTall = PixelCrawlerHubToolkit.LoadSprite(RocksPath, "Rocks_96");
+            var crystalSmall = PixelCrawlerHubToolkit.LoadSprite(RocksPath, "Rocks_100");
+            var crystalCluster = PixelCrawlerHubToolkit.LoadSprite(RocksPath, "Rocks_101");
 
-            // Ruins gate framing (West).
-            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Ruin_Monolith_N", greyPillar, new Vector2(-10.2f, 1.4f));
-            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Ruin_Monolith_S", greyPillar, new Vector2(-10.2f, -2.8f));
-            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Ruin_Boulder_NW", greyBoulder, new Vector2(-8.7f, 1.9f));
+            var runeSteleA = PixelCrawlerHubToolkit.LoadSprite(DungeonPropsPath, "Dungeon_Props_02");
+            var runeSteleB = PixelCrawlerHubToolkit.LoadSprite(DungeonPropsPath, "Dungeon_Props_03");
+            var runeSteleC = PixelCrawlerHubToolkit.LoadSprite(DungeonPropsPath, "Dungeon_Props_04");
+            var bannerRed = PixelCrawlerHubToolkit.LoadSprite(DungeonPropsPath, "Dungeon_Props_14");
+            var bannerBlue = PixelCrawlerHubToolkit.LoadSprite(DungeonPropsPath, "Dungeon_Props_15");
+            var bannerGreen = PixelCrawlerHubToolkit.LoadSprite(DungeonPropsPath, "Dungeon_Props_16");
+
+            var logPlank = PixelCrawlerHubToolkit.LoadSprite(ResourcesPath, "Resources_21");
+            var stonePile = PixelCrawlerHubToolkit.LoadSprite(ResourcesPath, "Resources_02");
+            var supplyCrate = PixelCrawlerHubToolkit.LoadSprite(ResourcesPath, "Resources_34");
+            var crateAlt = PixelCrawlerHubToolkit.LoadSprite(ResourcesPath, "Resources_35");
+            var woodenBench = PixelCrawlerHubToolkit.LoadSprite(ExtPropsPath, "Ext_Props_14");
+            var planterBox = PixelCrawlerHubToolkit.LoadSprite(ExtPropsPath, "Ext_Props_12");
+
+            // Ruins gate framing (West) — monoliths, carved steles, tattered banners & azure mana crystals.
+            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Ruin_Monolith_N", greyPillar, new Vector2(-10.4f, 1.45f));
+            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Ruin_Monolith_S", mossyPillar, new Vector2(-10.3f, -2.75f));
+            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Ruin_Boulder_NW", greyBoulder, new Vector2(-8.6f, 2.0f));
             PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Ruin_Boulder_SW", greyBoulder, new Vector2(-8.6f, -2.5f));
-            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Ruin_DeadShrub", deadShrub, new Vector2(-7.8f, 2.2f));
+            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Ruin_DeadShrub", deadShrub, new Vector2(-7.8f, 2.25f));
+            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Ruin_Stele_N", runeSteleA, new Vector2(-9.35f, 1.8f));
+            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Ruin_Stele_S", runeSteleB, new Vector2(-7.2f, -2.15f));
+            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Ruin_Banner_N", bannerBlue, new Vector2(-11.4f, 1.7f));
+            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Ruin_Banner_S", bannerRed, new Vector2(-11.3f, -2.1f));
+            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Ruin_Crystal_NW", crystalTall, new Vector2(-9.7f, 1.3f));
+            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Ruin_Crystal_SW", crystalCluster, new Vector2(-9.3f, -1.95f));
+            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Ruin_Crystal_Shard", crystalSmall, new Vector2(-7.85f, 1.7f));
+            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Ruin_StonePile", stonePile, new Vector2(-6.6f, -2.2f));
 
             // North forest treeline (staggered deep backdrop + border row).
             Sprite[] northPool = { oakGreen, pineA, oakGold, pineB, oakOrange, tallPine };
@@ -248,7 +287,7 @@ namespace Morsoul.Hub.Editor
             }
 
             // South forest border: keep canopy tops below the walking path so actors stay unoccluded.
-            Sprite[] southCurbProps = { bushMed, stump, bushSmall, greyBoulder, bushMed, brownBoulder };
+            Sprite[] southCurbProps = { bushMed, stump, bushSmall, greyBoulder, bushGold, brownBoulder };
             Sprite[] southDeepTrees = { pineB, pineA, oakGreen, oakGold, pineA };
             for (int i = 0; i < 16; i++)
             {
@@ -262,38 +301,61 @@ namespace Morsoul.Hub.Editor
                 }
             }
 
-            // Trailside bushes, stumps, rocks & wildflowers (staying clear of walking lane y[-1.6, 1.6]).
+            // Roadside rest stop & settlement trail props.
+            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Trail_Bench", woodenBench, new Vector2(-2.1f, 1.95f));
+            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Trail_Planter", planterBox, new Vector2(-0.15f, 1.8f));
+            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Trail_FelledLog_W", logPlank, new Vector2(5.45f, 1.75f));
+            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Trail_Stele_Mid", runeSteleC, new Vector2(6.5f, 2.05f));
+            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Trail_Bench_E", woodenBench, new Vector2(19.6f, 1.95f));
+            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Trail_Crate_E1", supplyCrate, new Vector2(21.45f, 1.75f));
+            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Trail_Crate_E2", crateAlt, new Vector2(22.25f, 1.7f));
+            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Trail_Banner_Guild", bannerGreen, new Vector2(23.15f, 1.95f));
+
+            // Trailside bushes framing the roadside clearing and surrounding Eliza's hiding thicket (x=12.7, y=1.45).
             var bushes = new (Vector2 pos, Sprite spr)[]
             {
                 (new Vector2(-5.4f, 1.9f), bushMed),
                 (new Vector2(2.8f, 1.85f), bushSmall),
                 (new Vector2(8.5f, 1.95f), bushMed),
-                (new Vector2(18.2f, 1.85f), bushMed),
+                (new Vector2(11.75f, 1.72f), bushSmall),  // Left shoulder of Eliza's hiding thicket
+                (new Vector2(14.15f, 1.85f), bushGold),  // Right shoulder of Eliza's hiding thicket
+                (new Vector2(17.4f, 1.85f), bushMed),
                 (new Vector2(-3.2f, -2.35f), bushMed),
                 (new Vector2(6.5f, -2.45f), bushSmall),
-                (new Vector2(14.8f, -2.4f), bushMed),
+                (new Vector2(14.8f, -2.4f), bushGold),
             };
             for (int i = 0; i < bushes.Length; i++)
                 PixelCrawlerHubToolkit.PlaceSpriteProp(root, $"Veg_Bush_{i:D2}", bushes[i].spr, bushes[i].pos);
 
-            foreach (var x in new[] { -6.5f, 4.5f, 11.2f, 20.5f })
-                PixelCrawlerHubToolkit.PlaceSpriteProp(root, $"Stump_{x:F0}", stump, new Vector2(x, 2.1f));
+            foreach (var x in new[] { -6.5f, 4.5f, 10.6f })
+                PixelCrawlerHubToolkit.PlaceSpriteProp(root, $"Stump_{x:F0}", stump, new Vector2(x, 2.15f));
 
             var scatter = new (Vector2 pos, Sprite spr)[]
             {
                 (new Vector2(-4.1f, -2.0f), fern),
+                (new Vector2(-3.1f, 3.6f), reedTall),
+                (new Vector2(-1.2f, 3.7f), reedTall),
                 (new Vector2(-1.0f, 1.75f), flowerA),
-                (new Vector2(0.8f, -2.15f), fern),
+                (new Vector2(0.8f, -2.15f), fernGold),
+                (new Vector2(1.4f, 3.55f), flowerCluster),
+                (new Vector2(3.85f, 1.9f), mushroomA),
                 (new Vector2(4.2f, -2.2f), flowerB),
                 (new Vector2(7.6f, 1.8f), flowerA),
                 (new Vector2(9.4f, -2.1f), brownBoulder),
+                (new Vector2(10.8f, 1.95f), mushroomB),
                 (new Vector2(11.6f, -2.05f), flowerB),
-                (new Vector2(15.2f, 1.8f), fern),
-                (new Vector2(16.7f, -2.35f), smallRock),
+                (new Vector2(11.9f, 1.42f), smallRock),
+                (new Vector2(13.65f, 1.55f), fern),
+                (new Vector2(14.6f, 1.75f), flowerA),
+                (new Vector2(15.2f, 1.8f), fernGold),
+                (new Vector2(16.7f, -2.35f), flatStone),
+                (new Vector2(17.5f, -4.3f), reedTall),
+                (new Vector2(19.2f, -4.25f), flowerCluster),
                 (new Vector2(21.4f, 1.7f), flowerA),
             };
             for (int i = 0; i < scatter.Length; i++)
                 PixelCrawlerHubToolkit.PlaceSpriteProp(root, $"Veg_Detail_{i:D2}", scatter[i].spr, scatter[i].pos);
+            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Trail_Log_East", brownPillar, new Vector2(26.5f, 2.35f));
         }
 
         static void BuildPlayableCorridorColliders(Scene scene)
@@ -327,10 +389,12 @@ namespace Morsoul.Hub.Editor
 
             var go = new GameObject("ElizaCover");
             SceneManager.MoveGameObjectToScene(go, scene);
-            go.transform.position = new Vector3(12.7f, -0.15f, -0.15f * YSort2D.DepthPerUnitY - 0.005f);
+            // Rests along the northern roadside thicket rather than blocking the dirt trail center.
+            const float bushY = 1.45f;
+            go.transform.position = new Vector3(12.7f, bushY, bushY * YSort2D.DepthPerUnitY - 0.005f);
 
             var sr = go.AddComponent<SpriteRenderer>();
-            sr.sprite = PixelCrawlerHubToolkit.LoadSprite(VegPath, "Vegetation_00");
+            sr.sprite = PixelCrawlerHubToolkit.LoadSprite(VegPath, "Vegetation_04");
             go.AddComponent<YSort2D>().bias = -0.005f;
             return go;
         }
@@ -340,15 +404,40 @@ namespace Morsoul.Hub.Editor
             var existing = PixelCrawlerHubToolkit.FindRoot(scene, "EyeHighlight");
             if (existing != null) Object.DestroyImmediate(existing);
 
-            EnsureEyeGlintSpriteAsset();
+            EnsureEyeScanSpriteAssets();
             var go = new GameObject("EyeHighlight");
             SceneManager.MoveGameObjectToScene(go, scene);
-            go.transform.position = new Vector3(12.7f, 0.65f, -0.04f);
+            go.transform.position = new Vector3(12.7f, 2.3f, -0.05f);
 
-            var sr = go.AddComponent<SpriteRenderer>();
-            sr.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(EyeGlintPath);
-            sr.color = new Color(0.25f, 0.95f, 1f, 0.95f);
-            sr.sortingOrder = 6;
+            var scan = go.AddComponent<EyeScanPulse2D>();
+            var scanColor = new Color(0.28f, 0.96f, 1f, 0.95f);
+
+            var reticleGo = new GameObject("ScanReticle");
+            reticleGo.transform.SetParent(go.transform, false);
+            var reticleSr = reticleGo.AddComponent<SpriteRenderer>();
+            reticleSr.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(EyeScanReticlePath);
+            reticleSr.color = scanColor;
+            reticleSr.sortingOrder = 18;
+
+            var sweepGo = new GameObject("ScanSweepBeam");
+            sweepGo.transform.SetParent(go.transform, false);
+            sweepGo.transform.localPosition = new Vector3(0f, 0f, -0.01f);
+            var sweepSr = sweepGo.AddComponent<SpriteRenderer>();
+            sweepSr.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(EyeScanSweepPath);
+            sweepSr.color = scanColor;
+            sweepSr.sortingOrder = 19;
+
+            var waveGo = new GameObject("ScanSonarWave");
+            waveGo.transform.SetParent(go.transform, false);
+            waveGo.transform.localPosition = new Vector3(0f, 0f, -0.02f);
+            var waveSr = waveGo.AddComponent<SpriteRenderer>();
+            waveSr.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(EyeScanWavePath);
+            waveSr.color = scanColor;
+            waveSr.sortingOrder = 20;
+
+            scan.reticleRenderer = reticleSr;
+            scan.sweepRenderer = sweepSr;
+            scan.waveRenderer = waveSr;
             go.SetActive(false);
             return go;
         }
@@ -369,8 +458,10 @@ namespace Morsoul.Hub.Editor
             var boulder = PixelCrawlerHubToolkit.LoadSprite(RocksPath, "Rocks_00");
             var boulderSmall = PixelCrawlerHubToolkit.LoadSprite(RocksPath, "Rocks_05");
             var bramble = PixelCrawlerHubToolkit.LoadSprite(VegPath, "Vegetation_94");
+            var logBeam = PixelCrawlerHubToolkit.LoadSprite(ResourcesPath, "Resources_21");
             PixelCrawlerHubToolkit.PlaceSpriteProp(go.transform, "Blocker_RockN", boulder, new Vector2(24f, 0.5f));
             PixelCrawlerHubToolkit.PlaceSpriteProp(go.transform, "Blocker_Bramble", bramble, new Vector2(23.85f, -0.45f));
+            PixelCrawlerHubToolkit.PlaceSpriteProp(go.transform, "Blocker_LogW", logBeam, new Vector2(23.5f, -0.95f));
             PixelCrawlerHubToolkit.PlaceSpriteProp(go.transform, "Blocker_RockS", boulderSmall, new Vector2(24f, -1.6f));
             return go;
         }
@@ -404,41 +495,135 @@ namespace Morsoul.Hub.Editor
             intro.elizaEmote = elizaEmote;
             intro.playerEmote = playerEmote;
             intro.routeBlocker = blocker;
+            intro.elizaHidePosition = new Vector2(12.8f, 1.8f);
+            intro.elizaDefensivePosition = new Vector2(13.9f, 0.25f);
+            intro.elizaRushDetour = new Vector2(13.0f, 0.0f);
+            intro.elizaAttackPosition = new Vector2(11.9f, 0.0f);
+            intro.playerExitBypass = new Vector2(11.6f, -0.25f);
             intro.safeResumePosition = new Vector3(1.5f, 0f, 0f);
             intro.nextSceneName = "Hub_LowerMarket";
             intro.nextCaseId = 1;
             intro.autoLoadNextScene = true;
         }
 
-        static void EnsureEyeGlintSpriteAsset()
+        static void EnsureEyeScanSpriteAssets()
         {
-            if (File.Exists(EyeGlintPath)) return;
             PixelCrawlerHubToolkit.EnsureFolder("Assets/Art/Vfx");
+            EnsureReticleSprite();
+            EnsureSweepSprite();
+            EnsureWaveSprite();
+        }
 
-            var tex = new Texture2D(16, 8, TextureFormat.RGBA32, false);
-            var clear = new Color32(0, 0, 0, 0);
-            var glow = new Color32(100, 240, 255, 160);
-            var core = new Color32(220, 255, 255, 255);
-            var pixels = new Color32[16 * 8];
-            for (int i = 0; i < pixels.Length; i++) pixels[i] = clear;
+        static void EnsureReticleSprite()
+        {
+            const int w = 40;
+            const int h = 40;
+            var pixels = new Color32[w * h];
+            var bright = new Color32(215, 255, 255, 255);
+            var glow = new Color32(70, 235, 255, 210);
+            var soft = new Color32(50, 210, 255, 95);
 
-            // Two crisp 16-bit glowing eye slits inside bush shadows.
-            foreach (int cx in new[] { 4, 11 })
+            // Corner lock-on brackets + subtle outer scan dots.
+            int arm = 9;
+            int min = 2;
+            int max = w - 3;
+            for (int i = 0; i < arm; i++)
             {
-                for (int dx = -1; dx <= 1; dx++)
-                    pixels[4 * 16 + (cx + dx)] = glow;
-                pixels[3 * 16 + cx] = core;
-                pixels[4 * 16 + cx] = core;
-                pixels[5 * 16 + cx] = glow;
+                PlotCornerGlow(pixels, w, h, min + i, min, bright, glow);
+                PlotCornerGlow(pixels, w, h, min, min + i, bright, glow);
+                PlotCornerGlow(pixels, w, h, max - i, min, bright, glow);
+                PlotCornerGlow(pixels, w, h, max, min + i, bright, glow);
+                PlotCornerGlow(pixels, w, h, min + i, max, bright, glow);
+                PlotCornerGlow(pixels, w, h, min, max - i, bright, glow);
+                PlotCornerGlow(pixels, w, h, max - i, max, bright, glow);
+                PlotCornerGlow(pixels, w, h, max, max - i, bright, glow);
             }
 
+            // Inner crosshair ticks at midpoints.
+            int mid = w / 2;
+            for (int k = 4; k <= 7; k++)
+            {
+                pixels[k * w + mid] = soft;
+                pixels[(h - 1 - k) * w + mid] = soft;
+                pixels[mid * w + k] = soft;
+                pixels[mid * w + (w - 1 - k)] = soft;
+            }
+
+            WritePointSprite(EyeScanReticlePath, w, h, pixels);
+        }
+
+        static void EnsureSweepSprite()
+        {
+            const int w = 36;
+            const int h = 8;
+            var pixels = new Color32[w * h];
+            for (int y = 0; y < h; y++)
+            {
+                float dist = Mathf.Abs(y - 3.5f) / 3.5f;
+                byte a = (byte)Mathf.RoundToInt(Mathf.Pow(1f - dist, 1.5f) * 235f);
+                byte r = (byte)(y == 3 || y == 4 ? 225 : 85);
+                byte g = (byte)(y == 3 || y == 4 ? 255 : 240);
+                for (int x = 1; x < w - 1; x++)
+                {
+                    float edge = Mathf.Min(x, w - 1 - x) / 4f;
+                    byte pxAlpha = (byte)Mathf.RoundToInt(a * Mathf.Clamp01(edge));
+                    pixels[y * w + x] = new Color32(r, g, 255, pxAlpha);
+                }
+            }
+            WritePointSprite(EyeScanSweepPath, w, h, pixels);
+        }
+
+        static void EnsureWaveSprite()
+        {
+            const int w = 32;
+            const int h = 32;
+            var pixels = new Color32[w * h];
+            float cx = 15.5f;
+            float cy = 15.5f;
+            for (int y = 0; y < h; y++)
+            {
+                for (int x = 0; x < w; x++)
+                {
+                    float d = Mathf.Sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy));
+                    float ringDist = Mathf.Abs(d - 11.5f);
+                    if (ringDist <= 1.8f)
+                    {
+                        byte a = (byte)Mathf.RoundToInt((1f - ringDist / 1.8f) * 240f);
+                        byte r = (byte)(ringDist < 0.8f ? 210 : 75);
+                        pixels[y * w + x] = new Color32(r, 245, 255, a);
+                    }
+                }
+            }
+            WritePointSprite(EyeScanWavePath, w, h, pixels);
+        }
+
+        static void PlotCornerGlow(Color32[] pixels, int w, int h, int x, int y, Color32 core, Color32 glow)
+        {
+            if (x >= 0 && x < w && y >= 0 && y < h)
+                pixels[y * w + x] = core;
+            for (int dy = -1; dy <= 1; dy++)
+            {
+                for (int dx = -1; dx <= 1; dx++)
+                {
+                    if (dx == 0 && dy == 0) continue;
+                    int nx = x + dx;
+                    int ny = y + dy;
+                    if (nx >= 0 && nx < w && ny >= 0 && ny < h && pixels[ny * w + nx].a == 0)
+                        pixels[ny * w + nx] = glow;
+                }
+            }
+        }
+
+        static void WritePointSprite(string assetPath, int width, int height, Color32[] pixels)
+        {
+            var tex = new Texture2D(width, height, TextureFormat.RGBA32, false);
             tex.SetPixels32(pixels);
             tex.Apply();
-            File.WriteAllBytes(EyeGlintPath, tex.EncodeToPNG());
+            File.WriteAllBytes(assetPath, tex.EncodeToPNG());
             Object.DestroyImmediate(tex);
-            AssetDatabase.ImportAsset(EyeGlintPath, ImportAssetOptions.ForceUpdate);
+            AssetDatabase.ImportAsset(assetPath, ImportAssetOptions.ForceUpdate);
 
-            var ti = AssetImporter.GetAtPath(EyeGlintPath) as TextureImporter;
+            var ti = AssetImporter.GetAtPath(assetPath) as TextureImporter;
             if (ti != null)
             {
                 ti.textureType = TextureImporterType.Sprite;
