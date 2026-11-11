@@ -124,16 +124,21 @@ namespace Morsoul.Hub
         {
             if (target == null) yield break;
             Vector3 start = target.position;
+            Vector2 dir = (Vector2)(destination - start);
+            var anim = target.GetComponent<HubCharacterAnimator>();
+            if (dir.sqrMagnitude > 0.0001f) anim?.Tick(dir.normalized);
             float elapsed = 0f;
             duration = Mathf.Max(0.01f, duration);
             while (elapsed < duration)
             {
                 elapsed += Time.deltaTime;
+                if (dir.sqrMagnitude > 0.0001f) anim?.Tick(dir.normalized);
                 MoveTarget(target, Vector3.Lerp(start, destination,
                     Mathf.Clamp01(elapsed / duration)));
                 yield return null;
             }
             MoveTarget(target, destination);
+            anim?.Tick(Vector2.zero);
         }
 
         void MoveTarget(Transform target, Vector3 position)

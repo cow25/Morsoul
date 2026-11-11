@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d3d25a568b87437dbda4a6fef515314a, type: 3}
   m_Name: Player
   m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.VisualProfile
-  sprite: {fileID: 21300000, guid: a2c669e6fd6ca574d9bb571e7471f38a, type: 3}
-  animatorController: {fileID: 0}
+  sprite: {fileID: -8107172888652668758, guid: 10f580e5cb35fc64e8955fd2577bc87e, type: 3}
+  animatorController: {fileID: 9100000, guid: eee5af27aac37134c9b1d65fc972cc08, type: 2}
   tint: {r: 1, g: 1, b: 1, a: 1}
   material: {fileID: 0}
-  visualOffset: {x: 0, y: 0}
+  visualOffset: {x: 0, y: -0.35}
   visualScale: {x: 1, y: 1}
   flipX: 0
   sortingOrder: 0

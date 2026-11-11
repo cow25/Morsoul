@@ -13,17 +13,17 @@ MonoBehaviour:
   m_Name: ArtImportSettings
   m_EditorClassIdentifier: Morsoul.Hub.Editor::Morsoul.Hub.Editor.HubArtImportSettings
   characters:
-    spritePixelsPerUnit: 32
+    spritePixelsPerUnit: 16
     filterMode: 0
     mipmaps: 0
     compression: 0
   environments:
-    spritePixelsPerUnit: 32
+    spritePixelsPerUnit: 16
     filterMode: 0
     mipmaps: 0
     compression: 0
   ui:
-    spritePixelsPerUnit: 32
+    spritePixelsPerUnit: 16
     filterMode: 0
     mipmaps: 0
     compression: 0

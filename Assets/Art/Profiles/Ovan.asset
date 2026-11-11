@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d3d25a568b87437dbda4a6fef515314a, type: 3}
   m_Name: Ovan
   m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.VisualProfile
-  sprite: {fileID: 0}
-  animatorController: {fileID: 0}
+  sprite: {fileID: -3145328045451892686, guid: 713fb4412237f1f4eb0b5c43876d19ea, type: 3}
+  animatorController: {fileID: 9100000, guid: 843ec36987216af4096903557ad0e03b, type: 2}
   tint: {r: 1, g: 1, b: 1, a: 1}
   material: {fileID: 0}
-  visualOffset: {x: 0, y: 0}
+  visualOffset: {x: 0, y: -0.35}
   visualScale: {x: 1, y: 1}
   flipX: 0
   sortingOrder: 0

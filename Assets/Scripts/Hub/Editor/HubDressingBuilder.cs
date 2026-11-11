@@ -104,14 +104,7 @@ namespace Morsoul.Hub.Editor
         [MenuItem("Morsoul/Hub/Dress Environment (Overlays + Prologue Wilderness)")]
         public static void DressAll()
         {
-            DressScene($"{ScenesFolder}/Hub_LowerMarket_Art.unity", LowerMarket());
-            DressScene($"{ScenesFolder}/Hub_Wilderness_Art.unity", Wilderness());
-            DressScene($"{ScenesFolder}/Hub_CathedralNave_Art.unity", CathedralNave());
-            DressScene($"{ScenesFolder}/Hub_IronHollow_Art.unity", IronHollow());
-            DressScene($"{ScenesFolder}/Prologue_Wilderness.unity", PrologueWilderness());
-            DressScene($"{ScenesFolder}/Hub_Guild.unity", GuildInterior());
-            AssetDatabase.SaveAssets();
-            Debug.Log("HubDressingBuilder: environment dressing rebuilt in 4 overlays + Prologue_Wilderness + Hub_Guild.");
+            Debug.Log("HubDressingBuilder: all 6 hubs are now owned by dedicated Pixel Crawler scene builders.");
         }
 
         // --- Layouts --------------------------------------------------------
