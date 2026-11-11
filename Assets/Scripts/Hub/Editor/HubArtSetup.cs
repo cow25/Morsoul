@@ -14,7 +14,6 @@ namespace Morsoul.Hub.Editor
         const string LowerMarketArtScenePath = "Assets/Scenes/Hub_LowerMarket_Art.unity";
         const string WildernessArtScenePath = "Assets/Scenes/Hub_Wilderness_Art.unity";
 
-        [MenuItem("Morsoul/Hub/Install Art Pipeline Into Hub Scenes")]
         public static void Install()
         {
             if (Application.isBatchMode && SceneManager.sceneCount == 1 &&

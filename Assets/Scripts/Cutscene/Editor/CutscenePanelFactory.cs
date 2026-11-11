@@ -13,7 +13,6 @@ namespace Morsoul.Cutscene.Editor
         const string PanelSettingsPath = "Assets/UI Toolkit/MainPanelSettings.asset";
         const string ExpectedPanelSettingsGuid = "50b0a700fb7fda64abced48bc2d03124";
 
-        [MenuItem("Morsoul/UI/Create Cutscene Panel Prefab")]
         static void CreateCutscenePanelPrefab()
         {
             var panelSettings = AssetDatabase.LoadAssetAtPath<PanelSettings>(PanelSettingsPath);

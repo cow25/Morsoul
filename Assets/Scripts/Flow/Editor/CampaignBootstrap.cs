@@ -9,7 +9,7 @@ namespace Morsoul.Flow.Editor
     /// </summary>
     public static class CampaignBootstrap
     {
-        [MenuItem("Morsoul/Setup/Rebuild Campaign Wiring")]
+        [MenuItem("Morsoul/Rebuild Campaign Wiring", priority = 1)]
         public static void RunAll()
         {
             Morsoul.Data.Editor.CaseDatabaseGenerator.Rebuild();

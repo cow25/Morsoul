@@ -22,7 +22,7 @@ namespace Morsoul.Hub.Editor
         const string DungeonPropsPath = "Assets/Art/Environments/Props/Static/Dungeon_Props.png";
         const string EsotericPath = "Assets/Art/Environments/Props/Static/Esoteric.png";
 
-        [MenuItem("Morsoul/Hub/Rebuild Cathedral Nave (Pixel Crawler)")]
+        [MenuItem("Morsoul/Scenes/Cathedral Nave", priority = 16)]
         public static void RebuildMenu() => Rebuild();
 
         public static void Rebuild()

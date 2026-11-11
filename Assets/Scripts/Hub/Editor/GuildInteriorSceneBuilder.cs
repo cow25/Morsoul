@@ -29,7 +29,6 @@ namespace Morsoul.Hub.Editor
         /// One-step orchestration: dialogue assets -> Hub_Guild scene -> Lower
         /// Market expansion -> Pixel Crawler Lower Market rebuild.
         /// </summary>
-        [MenuItem("Morsoul/Hub/Build Guild Expansion (All)")]
         public static void BuildAll()
         {
             HubContentSetup.Install();
@@ -41,7 +40,7 @@ namespace Morsoul.Hub.Editor
                       "(Pixel Crawler), market door + arrival escort, Lower Market rebuilt.");
         }
 
-        [MenuItem("Morsoul/Hub/Create Guild Interior Scene (Hub_Guild)")]
+        [MenuItem("Morsoul/Scenes/Guild Interior", priority = 14)]
         public static void Build()
         {
             GuildIntroContentGenerator.Generate();

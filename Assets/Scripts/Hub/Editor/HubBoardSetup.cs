@@ -23,7 +23,6 @@ namespace Morsoul.Hub.Editor
         const string PanelSettingsPath = "Assets/UI Toolkit/MainPanelSettings.asset";
         const string WeightedBoardUxmlPath = "Assets/WeightedBoard.uxml";
 
-        [MenuItem("Morsoul/Hub/Install Deduction Board Into Hub Scenes")]
         public static void Install()
         {
             if (Application.isBatchMode && SceneManager.sceneCount == 1 &&

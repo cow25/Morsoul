@@ -86,6 +86,9 @@ namespace Morsoul.Tests
         [Test]
         public void SceneEntryPoint_PendingEntry_UsesNamedMarker()
         {
+            UnityEditor.SceneManagement.EditorSceneManager.NewScene(
+                UnityEditor.SceneManagement.NewSceneSetup.EmptyScene,
+                UnityEditor.SceneManagement.NewSceneMode.Single);
             var core = CoreRuntime.Ensure();
             var spawn = new GameObject("PlayerSpawn");
             spawn.tag = "PlayerSpawn";
@@ -324,7 +327,7 @@ namespace Morsoul.Tests
         }
 
         [Test]
-        public void LowerMarket_RestSpot_RelocatedToLowerRight()
+        public void LowerMarket_RestSpot_RelocatedBesideNoticeBoard()
         {
             var scene = UnityEditor.SceneManagement.EditorSceneManager.OpenScene(
                 "Assets/Scenes/Hub_LowerMarket.unity",
@@ -332,9 +335,11 @@ namespace Morsoul.Tests
             try
             {
                 var restSpot = GameObject.Find("RestSpot");
+                var noticeBoard = GameObject.Find("NoticeBoard");
                 Assert.IsNotNull(restSpot, "RestSpot must exist in Hub_LowerMarket.");
-                Assert.AreEqual(5.0f, restSpot.transform.position.x, 0.5f, "RestSpot X must be in lower-right.");
-                Assert.AreEqual(-2.0f, restSpot.transform.position.y, 0.5f, "RestSpot Y must be in lower-right.");
+                Assert.IsNotNull(noticeBoard, "NoticeBoard must exist in Hub_LowerMarket.");
+                Assert.AreEqual(-2.45f, restSpot.transform.position.x, 0.5f, "RestSpot X must sit beside NoticeBoard.");
+                Assert.AreEqual(2.3f, restSpot.transform.position.y, 0.5f, "RestSpot Y must sit beside NoticeBoard.");
             }
             finally
             {
@@ -385,6 +390,61 @@ namespace Morsoul.Tests
             {
                 // Leave scene open
             }
+        }
+
+        [Test]
+        public void LowerMarket_ExpandedPopulation_HasInteractablesAndAmbientStrollers()
+        {
+            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(
+                "Assets/Scenes/Hub_LowerMarket.unity",
+                UnityEditor.SceneManagement.OpenSceneMode.Single);
+
+            string[] extraInteractables =
+            {
+                "MarketNpc_Smith",
+                "MarketNpc_Apothecary",
+                "MarketNpc_Chef",
+                "MarketNpc_Guard",
+                "MarketNpc_Courier",
+            };
+
+            foreach (string name in extraInteractables)
+            {
+                var go = GameObject.Find(name);
+                Assert.IsNotNull(go, $"{name} must exist in expanded Hub_LowerMarket.");
+                var npc = go.GetComponent<NpcInteractable>();
+                Assert.IsNotNull(npc, $"{name} must carry NpcInteractable.");
+                Assert.IsNotNull(npc.dialogue, $"{name} must have assigned flavor dialogue.");
+                Assert.IsNotNull(go.GetComponent<YSort2D>(), $"{name} must carry YSort2D.");
+            }
+
+            string[] strollers =
+            {
+                "AmbientMarket_Stroll_North",
+                "AmbientMarket_Stroll_Plaza",
+                "AmbientMarket_Stroll_West",
+                "AmbientMarket_Stroll_East",
+                "AmbientMarket_Stroll_South",
+                "AmbientMarket_WatchPatrol",
+            };
+
+            foreach (string name in strollers)
+            {
+                var go = GameObject.Find(name);
+                Assert.IsNotNull(go, $"{name} must exist in expanded Hub_LowerMarket.");
+                Assert.IsNull(go.GetComponent<Interactable2D>(), $"{name} must remain non-interactable.");
+                var stroller = go.GetComponent<AmbientStroller2D>();
+                Assert.IsNotNull(stroller, $"{name} must carry AmbientStroller2D.");
+                Assert.IsNotNull(stroller.waypoints, $"{name} must have patrol waypoints.");
+                Assert.GreaterOrEqual(stroller.waypoints.Length, 2, $"{name} must have >= 2 waypoints.");
+                Assert.IsNotNull(go.GetComponent<YSort2D>(), $"{name} must carry YSort2D.");
+            }
+
+            // Confirm expanded spread reaches both far West Caravan (-16..-18) and far East Market (12..16).
+            var guard = GameObject.Find("MarketNpc_Guard");
+            var chef = GameObject.Find("MarketNpc_Chef");
+            Assert.Greater(chef.transform.position.x - guard.transform.position.x, 25f,
+                "Expanded Lower Market NPC spread must span >= 25 units horizontally.");
         }
     }
 }

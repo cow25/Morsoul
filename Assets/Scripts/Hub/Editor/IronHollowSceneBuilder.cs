@@ -29,7 +29,7 @@ namespace Morsoul.Hub.Editor
         const string ExtPropsPath = "Assets/Art/Environments/Buildings/Exterior/Props.png";
         const string IntPropsPath = "Assets/Art/Environments/Buildings/Interior/Interior_Props_01.png";
 
-        [MenuItem("Morsoul/Hub/Rebuild Iron Hollow (Pixel Crawler)")]
+        [MenuItem("Morsoul/Scenes/Iron Hollow", priority = 17)]
         public static void RebuildMenu() => Rebuild();
 
         public static void Rebuild()

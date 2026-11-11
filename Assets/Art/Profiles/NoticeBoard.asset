@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d3d25a568b87437dbda4a6fef515314a, type: 3}
   m_Name: NoticeBoard
   m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.VisualProfile
-  sprite: {fileID: 2004011813, guid: e9af404c3a5a0c04a9e3a2162a716ad6, type: 3}
+  sprite: {fileID: -1304417952, guid: 0b577b71c11c2c94b9666ebe930b0921, type: 3}
   animatorController: {fileID: 0}
   tint: {r: 1, g: 1, b: 1, a: 1}
   material: {fileID: 0}

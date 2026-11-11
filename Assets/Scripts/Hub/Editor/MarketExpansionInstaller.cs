@@ -20,7 +20,6 @@ namespace Morsoul.Hub.Editor
         const string MarketPath = "Assets/Scenes/Hub_LowerMarket.unity";
         const string BarksPath = "Assets/Data/Dialogue/Case01/D_MarketBarks_01.asset";
 
-        [MenuItem("Morsoul/Hub/Expand Lower Market (Guild Entrance + Arrival)")]
         public static void Install()
         {
             GuildIntroContentGenerator.Generate();
@@ -136,11 +135,11 @@ namespace Morsoul.Hub.Editor
                     }
                 }
 
-                // Rest Spot: relocated to open lower-right area of the market hub.
+                // Rest Spot: relocated to the wooden bench beside the NoticeBoard.
                 var restSpot = FindRoot(scene, "RestSpot");
                 if (restSpot != null)
                 {
-                    restSpot.transform.position = new Vector3(5.0f, -2.0f, 0f);
+                    restSpot.transform.position = new Vector3(-2.45f, 2.3f, 0f);
                 }
 
                 // Ignatius: positioned by the east road with comfortable interaction collider.

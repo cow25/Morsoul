@@ -52,7 +52,6 @@ namespace Morsoul.Hub.Editor
             public Action populate;                // per-hub content, name-guarded
         }
 
-        [MenuItem("Morsoul/Hub/Install 2D Content Into Hub Scenes")]
         public static void Install()
         {
             // Batch mode starts on an untitled scene that can't host additive
@@ -264,7 +263,7 @@ namespace Morsoul.Hub.Editor
         static void EnsureRestSpot(Scene scene)
         {
             Vector3 targetPos = scene.path == MarketPath
-                ? new Vector3(5f, -2f, 0f)
+                ? new Vector3(-2.45f, 2.3f, 0f)
                 : scene.path == CathedralPath
                     ? new Vector3(-5.2f, 0.5f, 0f)
                     : scene.path == WildernessPath

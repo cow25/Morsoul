@@ -25,7 +25,7 @@ namespace Morsoul.Hub.Editor
         const string BonfirePath = "Assets/Art/Environments/Stations/Bonfire/Bonfire.png";
         const string DungeonPropsPath = "Assets/Art/Environments/Props/Static/Dungeon_Props.png";
 
-        [MenuItem("Morsoul/Hub/Rebuild Wilderness (Pixel Crawler)")]
+        [MenuItem("Morsoul/Scenes/Wilderness", priority = 15)]
         public static void RebuildMenu() => Rebuild();
 
         public static void Rebuild()

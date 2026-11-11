@@ -9,6 +9,8 @@ namespace Morsoul.Hub
         public string moveYParam = "MoveY";
         public string speedParam = "Speed";
         public bool flipByMoveX = true;
+        [Tooltip("When true, another controller drives Tick(move) instead of Update polling HubPlayerController.")]
+        public bool externalDrive;
 
         HubPlayerController _controller;
         Animator _animator;
@@ -47,7 +49,8 @@ namespace Morsoul.Hub
 
         void Update()
         {
-            Tick(_controller != null ? _controller.MoveInput : Vector2.zero);
+            if (!externalDrive)
+                Tick(_controller != null ? _controller.MoveInput : Vector2.zero);
         }
 
         public void Tick(Vector2 move)

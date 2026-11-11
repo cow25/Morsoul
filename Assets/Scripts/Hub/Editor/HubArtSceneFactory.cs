@@ -10,10 +10,8 @@ namespace Morsoul.Hub.Editor
     {
         const string ScenesFolder = "Assets/Scenes";
 
-        [MenuItem("Morsoul/Hub/Create Art Overlay Scene (Lower Market)")]
         public static void CreateLowerMarketArt() => CreateArtScene("Hub_LowerMarket_Art");
 
-        [MenuItem("Morsoul/Hub/Create Art Overlay Scene (Wilderness)")]
         public static void CreateWildernessArt() => CreateArtScene("Hub_Wilderness_Art");
 
         internal static void CreateArtScene(string sceneName)

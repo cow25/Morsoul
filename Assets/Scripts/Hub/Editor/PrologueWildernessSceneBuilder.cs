@@ -34,7 +34,7 @@ namespace Morsoul.Hub.Editor
         const string EyeScanSweepPath = "Assets/Art/Vfx/EyeScanSweep.png";
         const string EyeScanWavePath = "Assets/Art/Vfx/EyeScanWave.png";
 
-        [MenuItem("Morsoul/Hub/Create Prologue Wilderness Scene")]
+        [MenuItem("Morsoul/Scenes/Prologue Wilderness", priority = 12)]
         public static void CreateOrUpdate() => BuildInternal(prompt: true);
 
         public static void ForceUpdate() => BuildInternal(prompt: false);

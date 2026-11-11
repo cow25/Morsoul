@@ -235,7 +235,7 @@ namespace Morsoul.Hub.Editor
             return file;
         }
 
-        static List<RectInt> ExtractAlphaIslands(
+        internal static List<RectInt> ExtractAlphaIslands(
             Color32[] pixels, int w, int h, int minExtent,
             bool skipTopLeftHeader, int headerWidth, int headerHeight)
         {
@@ -310,7 +310,7 @@ namespace Morsoul.Hub.Editor
             }
         }
 
-        static List<RectInt> ExtractGridAndRightTail(
+        internal static List<RectInt> ExtractGridAndRightTail(
             Color32[] pixels, int w, int h, int cellW, int cellH, int tailStartX, int minExtent)
         {
             var results = new List<RectInt>();

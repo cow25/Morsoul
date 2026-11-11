@@ -17,7 +17,7 @@ namespace Morsoul.Title.Editor
         const string PanelSettingsPath = "Assets/UI Toolkit/MainPanelSettings.asset";
         const string TitleUxmlPath = "Assets/Title.uxml";
 
-        [MenuItem("Morsoul/Scene/Create Title Scene")]
+        [MenuItem("Morsoul/Scenes/Title Scene", priority = 10)]
         public static void CreateTitleScene()
         {
             if (AssetDatabase.LoadAssetAtPath<SceneAsset>(ScenePath) != null || File.Exists(ScenePath))
