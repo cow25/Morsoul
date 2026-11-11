@@ -14,6 +14,33 @@ MonoBehaviour:
   m_EditorClassIdentifier: Morsoul.Dialogue::Morsoul.Dialogue.DialogueData
   id: D_Ovan_01
   nodes:
+  - id: ovan_has_warrant
+    speakerName: Guildmaster Ovan
+    speakerPortrait: {fileID: 0}
+    text: (Waves a hurried hand) "You already have the storage clearance warrant, Astra! The lower cellar grate in the Lower Market is unlocked. Go investigate the vault before Ignatius causes any more trouble!"
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: C1_WarrantGranted
+    options: []
+    nextNodeId: ovan_repeat_briefed
+  - id: ovan_repeat_briefed
+    speakerName: Guildmaster Ovan
+    speakerPortrait: {fileID: 0}
+    text: '"Have you decided what you need from me, Astra? That subterranean storage vault won''t inspect itself."'
+    registersClue: {fileID: 0}
+    setsFlag: 
+    requiresFlag: C1_BriefingSeen
+    options:
+    - label: Inquire about the vault's security
+      nextNodeId: ovan_security
+      requiresFlag: 
+    - label: Ask about Master Ignatius
+      nextNodeId: ovan_ignatius
+      requiresFlag: 
+    - label: Demand storage clearance (Forensic Entry Warrant)
+      nextNodeId: ovan_warrant
+      requiresFlag: 
+    nextNodeId: ovan_greeting
   - id: ovan_greeting
     speakerName: Eliza
     speakerPortrait: {fileID: 0}
@@ -64,7 +91,7 @@ MonoBehaviour:
     - label: Ask about Master Ignatius
       nextNodeId: ovan_ignatius
       requiresFlag: 
-    - label: Demand crime scene access
+    - label: Demand storage clearance (Forensic Entry Warrant)
       nextNodeId: ovan_warrant
       requiresFlag: 
     nextNodeId: 
@@ -131,5 +158,5 @@ MonoBehaviour:
     requiresFlag: 
     options: []
     nextNodeId: 
-  startNodeId: ovan_greeting
+  startNodeId: ovan_has_warrant
   portraits: []

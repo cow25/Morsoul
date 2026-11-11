@@ -299,8 +299,8 @@ namespace Morsoul.Tests
             Assert.AreEqual(new Vector3(1f, 6f, 0f), cornerV, "vertical leg first");
 
             // Already axis-aligned: no corner inserted.
-            Assert.AreEqual(to, AxisMove.Corner(from, new Vector3(4f, 2f, 0f)));
-            Assert.AreEqual(to, AxisMove.Corner(from, new Vector3(1f, 6f, 0f)));
+            Assert.AreEqual(new Vector3(4f, 2f, 0f), AxisMove.Corner(from, new Vector3(4f, 2f, 0f)));
+            Assert.AreEqual(new Vector3(1f, 6f, 0f), AxisMove.Corner(from, new Vector3(1f, 6f, 0f)));
 
             Assert.AreEqual(7f, AxisMove.PathLength(from, to));
         }

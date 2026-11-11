@@ -161,10 +161,12 @@ namespace Morsoul.Tests
         [Test]
         public void GeneratedAssets_AreValid()
         {
-            const string root = "Assets/__MorsoulTestTemp";
+            string root = "Assets/__MorsoulTest01_" + System.Guid.NewGuid().ToString("N");
             try
             {
                 CaseDataGenerator.Generate(root);
+                AssetDatabase.ImportAsset($"{root}/Case00/Case_00.asset", ImportAssetOptions.ForceSynchronousImport);
+                AssetDatabase.ImportAsset($"{root}/Case01/Case_01.asset", ImportAssetOptions.ForceSynchronousImport);
 
                 var case0 = AssetDatabase.LoadAssetAtPath<CaseData>($"{root}/Case00/Case_00.asset");
                 var case1 = AssetDatabase.LoadAssetAtPath<CaseData>($"{root}/Case01/Case_01.asset");
@@ -193,11 +195,11 @@ namespace Morsoul.Tests
         [Test]
         public void Case02_GeneratedAssets_AreValid()
         {
-            const string root = "Assets/__MorsoulTestTemp";
-            AssetDatabase.DeleteAsset(root);
+            string root = "Assets/__MorsoulTest02_" + System.Guid.NewGuid().ToString("N");
             try
             {
                 CaseDataGenerator.GenerateCase2Assets(root);
+                AssetDatabase.ImportAsset($"{root}/Case02/Case_02.asset", ImportAssetOptions.ForceSynchronousImport);
 
                 var case2 = AssetDatabase.LoadAssetAtPath<CaseData>($"{root}/Case02/Case_02.asset");
                 Assert.NotNull(case2, "Case_02.asset was not generated.");
@@ -271,11 +273,11 @@ namespace Morsoul.Tests
         [Test]
         public void Case03_GeneratedAssets_AreValid()
         {
-            const string root = "Assets/__MorsoulTestTemp";
-            AssetDatabase.DeleteAsset(root);
+            string root = "Assets/__MorsoulTest03_" + System.Guid.NewGuid().ToString("N");
             try
             {
                 CaseDataGenerator.GenerateCase3Assets(root);
+                AssetDatabase.ImportAsset($"{root}/Case03/Case_03.asset", ImportAssetOptions.ForceSynchronousImport);
 
                 var case3 = AssetDatabase.LoadAssetAtPath<CaseData>($"{root}/Case03/Case_03.asset");
                 Assert.NotNull(case3, "Case_03.asset was not generated.");

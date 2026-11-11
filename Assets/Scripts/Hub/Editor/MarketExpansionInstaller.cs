@@ -62,25 +62,39 @@ namespace Morsoul.Hub.Editor
                 }
                 marker.transform.position = new Vector3(3f, 2.4f, 0f);
 
-                // Ambient townsfolk so the market reads inhabited.
-                foreach (var (name, pos) in new (string, Vector3)[]
+                // Ambient townsfolk placed sensibly around the market:
+                // Vendor behind the west stall, Townsperson near north houses.
+                var vendor = FindRoot(scene, "Vendor");
+                if (vendor == null)
                 {
-                    ("Vendor", new Vector3(-4.5f, -1.8f, 0f)),
-                    ("Townsperson", new Vector3(-5.6f, 1.2f, 0f)),
-                })
-                {
-                    if (FindRoot(scene, name) != null) continue;
-                    HubSceneFactory.CreateInteractable(name,
-                        new Color(0.6f, 0.5f, 0.4f), pos, out NpcInteractable npc);
+                    HubSceneFactory.CreateInteractable("Vendor",
+                        new Color(0.6f, 0.5f, 0.4f), new Vector3(-4.5f, -2.4f, 0f), out NpcInteractable npc);
                     npc.promptText = "[E] Talk";
                     npc.dialogue = AssetDatabase.LoadAssetAtPath<DialogueData>(BarksPath);
                 }
+                else
+                {
+                    vendor.transform.position = new Vector3(-4.5f, -2.4f, 0f);
+                }
 
-                // Market crowd expansion: cluster of multiple distinct NPC sprites
-                // gathered around MarketCrowd at (-2.5, 1.5).
+                var townsperson = FindRoot(scene, "Townsperson");
+                if (townsperson == null)
+                {
+                    HubSceneFactory.CreateInteractable("Townsperson",
+                        new Color(0.6f, 0.5f, 0.4f), new Vector3(-5.2f, 2.2f, 0f), out NpcInteractable npc);
+                    npc.promptText = "[E] Talk";
+                    npc.dialogue = AssetDatabase.LoadAssetAtPath<DialogueData>(BarksPath);
+                }
+                else
+                {
+                    townsperson.transform.position = new Vector3(-5.2f, 2.2f, 0f);
+                }
+
+                // Central crowd positioned in a clear plaza alcove
                 var centralCrowd = FindRoot(scene, "MarketCrowd");
                 if (centralCrowd != null)
                 {
+                    centralCrowd.transform.position = new Vector3(-3.8f, 0.8f, 0f);
                     var crowdNpc = centralCrowd.GetComponent<NpcInteractable>();
                     if (crowdNpc != null)
                     {
@@ -89,12 +103,17 @@ namespace Morsoul.Hub.Editor
                     }
                 }
 
-                foreach (var (name, profileName, pos, tint) in new (string, string, Vector3, Color)[]
+                // De-clutter crowd members across logical market spots:
+                // MarketCrowd_Vendor behind east stall, Townsperson strolling north,
+                // Adventurer conversing near the plaza well.
+                var crowdPlacements = new (string, string, Vector3, Color)[]
                 {
-                    ("MarketCrowd_Vendor", "Vendor", new Vector3(-2.0f, 1.8f, 0f), new Color(0.6f, 0.5f, 0.4f)),
-                    ("MarketCrowd_Townsperson", "Townsperson", new Vector3(-3.1f, 1.5f, 0f), new Color(0.5f, 0.55f, 0.45f)),
-                    ("MarketCrowd_Adventurer", "Adventurer_Young", new Vector3(-2.4f, 0.9f, 0f), new Color(0.55f, 0.45f, 0.35f)),
-                })
+                    ("MarketCrowd_Vendor", "Vendor", new Vector3(4.5f, -2.4f, 0f), new Color(0.6f, 0.5f, 0.4f)),
+                    ("MarketCrowd_Townsperson", "Townsperson", new Vector3(-2.8f, 1.8f, 0f), new Color(0.5f, 0.55f, 0.45f)),
+                    ("MarketCrowd_Adventurer", "Adventurer_Young", new Vector3(-2.3f, -2.0f, 0f), new Color(0.55f, 0.45f, 0.35f)),
+                };
+
+                foreach (var (name, profileName, pos, tint) in crowdPlacements)
                 {
                     var existingMember = FindRoot(scene, name);
                     if (existingMember == null)
@@ -111,19 +130,24 @@ namespace Morsoul.Hub.Editor
                             visual.Apply(visual.profile);
                         }
                     }
+                    else
+                    {
+                        existingMember.transform.position = pos;
+                    }
                 }
 
-                // Rest Spot: relocated to the lower-right area of the market hub.
+                // Rest Spot: relocated to open lower-right area of the market hub.
                 var restSpot = FindRoot(scene, "RestSpot");
                 if (restSpot != null)
                 {
                     restSpot.transform.position = new Vector3(5.0f, -2.0f, 0f);
                 }
 
-                // Ignatius: ensure solid collider, dialogue reference, and Case 1 wiring.
+                // Ignatius: positioned by the east road with comfortable interaction collider.
                 var ignatius = FindRoot(scene, "Ignatius");
                 if (ignatius != null)
                 {
+                    ignatius.transform.position = new Vector3(4.0f, 1.5f, 0f);
                     var ignatiusNpc = ignatius.GetComponent<NpcInteractable>();
                     if (ignatiusNpc != null)
                     {
@@ -132,6 +156,12 @@ namespace Morsoul.Hub.Editor
                         ignatiusNpc.promptText = "[E] Talk";
                         ignatiusNpc.dialogue = AssetDatabase.LoadAssetAtPath<DialogueData>(
                             "Assets/Data/Dialogue/Case01/D_Ignatius_Claim_01.asset");
+                    }
+                    var col = ignatius.GetComponent<BoxCollider2D>();
+                    if (col != null)
+                    {
+                        col.size = new Vector2(1.8f, 1.8f);
+                        col.offset = new Vector2(-0.3f, -0.3f);
                     }
                 }
 
@@ -162,19 +192,34 @@ namespace Morsoul.Hub.Editor
                 arrival.doorDialogue = AssetDatabase.LoadAssetAtPath<DialogueData>(
                     GuildIntroContentGenerator.Folder + "/D_Guild_Door.asset");
 
-                // The notice board is a physical object — you bump into it —
-                // parked beside the Guild door, clear of the door walkway.
+                // The notice board is a physical object placed prominently near the central plaza path crossing.
                 foreach (var interactable in Object.FindObjectsByType<Interactable2D>(
                     FindObjectsInactive.Include))
                     if (interactable.gameObject.scene == scene &&
                         interactable.name == "NoticeBoard")
                     {
                         interactable.blocksMovement = true;
-                        interactable.transform.position = new Vector3(1.85f, 2.35f, 0f);
+                        interactable.transform.position = new Vector3(1.5f, 0.8f, 0f);
                         if (interactable is InspectionInteractable inspection &&
                             inspection.inspectionDialogue == null)
                             inspection.inspectionDialogue = EnsureNoticeDialogue();
                     }
+
+                // Camera framing: solid color background to prevent any skybox bleeding at edges,
+                // and bounds clamped to the dressed environment.
+                var cam = FindInScene<Camera>(scene);
+                if (cam != null)
+                {
+                    cam.clearFlags = CameraClearFlags.SolidColor;
+                    cam.backgroundColor = new Color(0.08f, 0.10f, 0.08f, 1f);
+                }
+                var cameraFollow = FindInScene<CameraFollow2D>(scene);
+                if (cameraFollow != null)
+                {
+                    cameraFollow.useBounds = true;
+                    cameraFollow.boundsMin = new Vector2(-11f, -5.5f);
+                    cameraFollow.boundsMax = new Vector2(11f, 6.5f);
+                }
 
                 // Belt-and-braces: dynamic Y-sort on every actor serialized
                 // before the RequireComponent rule existed.

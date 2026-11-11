@@ -140,6 +140,7 @@ namespace Morsoul.Hub
             float centerX = contactX + triggerHalf + playerHalf;
             var position = transform.position;
             transform.position = new Vector3(Mathf.Min(centerX, triggerMaxX), position.y, position.z);
+            Physics2D.SyncTransforms();
         }
 
         void OnTriggerEnter2D(Collider2D other)
@@ -477,11 +478,15 @@ namespace Morsoul.Hub
         {
             if (target == null) yield break;
             Vector3 start = target.position;
+            Vector2 dir = ((Vector2)(destination - start));
+            var anim = target.GetComponent<HubCharacterAnimator>();
+            if (dir.sqrMagnitude > 0.0001f) anim?.Tick(dir.normalized);
             float elapsed = 0f;
             duration = Mathf.Max(0.01f, duration);
             while (elapsed < duration)
             {
                 elapsed += Time.deltaTime;
+                if (dir.sqrMagnitude > 0.0001f) anim?.Tick(dir.normalized);
                 // Linear, not eased: constant leg speed is what makes the
                 // 90° walk read as classic tile-RPG movement and keeps two
                 // walkers at equal speeds actually synchronized.
@@ -490,6 +495,7 @@ namespace Morsoul.Hub
                 yield return null;
             }
             MoveTarget(target, destination);
+            anim?.Tick(Vector2.zero);
         }
 
         void MoveTarget(Transform target, Vector3 position)

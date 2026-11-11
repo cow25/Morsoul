@@ -11,7 +11,7 @@ namespace Morsoul.Hub.Editor
         [Serializable]
         public class TexturePreset
         {
-            public int spritePixelsPerUnit = 32;
+            public int spritePixelsPerUnit = 16;
             public FilterMode filterMode = FilterMode.Point;
             public bool mipmaps;
             public TextureImporterCompression compression = TextureImporterCompression.Uncompressed;
