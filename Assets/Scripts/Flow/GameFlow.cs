@@ -72,6 +72,7 @@ namespace Morsoul.Flow
 
         CaseSession _session;
         readonly List<ClueData> _collectedClues = new List<ClueData>();
+        Func<bool> _pauseModalPredicate;
         bool _endingRequested;
         bool _endingCompleted;
         bool _mistrialHandled;
@@ -159,11 +160,23 @@ namespace Morsoul.Flow
             }
             if (cutscenePlayer != null)
                 cutscenePlayer.CutsceneEnded += HandleCutsceneEnded;
+            if (_pauseModalPredicate == null)
+            {
+                _pauseModalPredicate = () =>
+                    (dialogue != null && dialogue.IsPlaying) ||
+                    (board != null && board.IsOpen) ||
+                    (weightedBoard != null && weightedBoard.IsOpen) ||
+                    (interrogation != null && interrogation.IsOpen) ||
+                    (resolution != null && resolution.IsVisible);
+            }
+            Core.PauseMenuController.RegisterExternalModal(_pauseModalPredicate);
         }
 
         /// <summary>Detaches every subscription made by <see cref="Bind"/>.</summary>
         public void Unbind()
         {
+            if (_pauseModalPredicate != null)
+                Core.PauseMenuController.UnregisterExternalModal(_pauseModalPredicate);
             if (board != null)
             {
                 board.FocusCosted -= HandleBoardFocusCosted;
@@ -242,7 +255,8 @@ namespace Morsoul.Flow
             if (weightedBoard != null)
                 weightedBoard.CanUse = () => !encounter && !_endingRequested &&
                     !(journalPanel != null && journalPanel.IsOpen) &&
-                    (investigationScene || caseData.caseId == 5 || Core.CoreRuntime.Instance == null);
+                    (investigationScene || caseData.caseId == 0 || caseData.caseId == 5 ||
+                     Core.CoreRuntime.Instance == null);
             if (journalPanel != null)
                 journalPanel.CanOpen = () =>
                     !_endingRequested &&

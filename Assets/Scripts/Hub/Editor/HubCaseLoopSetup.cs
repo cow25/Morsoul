@@ -19,7 +19,6 @@ namespace Morsoul.Hub.Editor
         const string CathedralScenePath = "Assets/Scenes/Hub_CathedralNave.unity";
         const string IronHollowScenePath = "Assets/Scenes/Hub_IronHollow.unity";
 
-        [MenuItem("Morsoul/Hub/Install Case Loop Entry Into Hub Scenes")]
         public static void Install()
         {
             // Batch mode starts on an untitled scene that can't host additive

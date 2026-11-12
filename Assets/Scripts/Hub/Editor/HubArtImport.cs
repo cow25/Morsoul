@@ -67,7 +67,6 @@ namespace Morsoul.Hub.Editor
             "Assets/Audio/VO",
         };
 
-        [MenuItem("Morsoul/Art/Create Art & Audio Folders")]
         public static void CreateFolders()
         {
             foreach (var folder in Folders) EnsureFolder(folder);

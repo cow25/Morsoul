@@ -65,6 +65,9 @@ namespace Morsoul.Hub
             // (the plaza spawn stays the default for non-arrival entries).
             yield return FadeTo(dialogue, 1f, 0f);
             if (player != null) MoveTarget(player.transform, playerEntry);
+            var cameraFollow = FindAnyObjectByType<CameraFollow2D>();
+            if (cameraFollow != null && player != null)
+                cameraFollow.SnapToTarget(player.transform);
             if (eliza != null)
             {
                 eliza.position = elizaEntry;

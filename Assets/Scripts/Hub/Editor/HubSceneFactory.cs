@@ -31,7 +31,6 @@ namespace Morsoul.Hub.Editor
         const string VisualProfilesFolder = "Assets/Art/Profiles";
         const string Case01RunicLogPath = "Assets/Data/Cases/Case01/RunicLog_01.asset";
 
-        [MenuItem("Morsoul/Hub/Create Hub Scene (Lower Market)")]
         static void CreateLowerMarket()
         {
             if (!ConfirmOverwrite(LowerMarketScenePath)) return;
@@ -108,7 +107,6 @@ namespace Morsoul.Hub.Editor
             SaveScene(scene, LowerMarketScenePath);
         }
 
-        [MenuItem("Morsoul/Hub/Create Hub Scene (Wilderness)")]
         static void CreateWilderness()
         {
             if (!ConfirmOverwrite(WildernessScenePath)) return;

@@ -159,9 +159,12 @@ namespace Morsoul.Hub.Editor
             return go;
         }
 
+        const string HandsSheetPath = "Assets/Art/Characters/Weapons/Hands.png";
+
         public static VisualProfile EnsureCharacterProfile(
             string profileName, string sheetPath, string idleSpriteName,
-            string controllerPath, Vector2 visualOffset, bool flipX = false)
+            string controllerPath, Vector2 visualOffset, bool flipX = false,
+            VisualAttachment[] attachments = null, Color? tint = null)
         {
             EnsureFolder(ProfilesRoot);
             string assetPath = $"{ProfilesRoot}/{profileName}.asset";
@@ -176,15 +179,64 @@ namespace Morsoul.Hub.Editor
             profile.animatorController = string.IsNullOrEmpty(controllerPath)
                 ? null
                 : AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(controllerPath);
-            profile.tint = Color.white;
+            profile.tint = tint ?? Color.white;
             profile.visualOffset = visualOffset;
             profile.visualScale = Vector2.one;
             profile.flipX = flipX;
             profile.sortingOrder = 0;
+            profile.attachments = attachments ?? BuildDefaultAttachments(sheetPath);
 
             EditorUtility.SetDirty(profile);
             return profile;
         }
+
+        static VisualAttachment[] BuildDefaultAttachments(string sheetPath)
+        {
+            if (string.IsNullOrEmpty(sheetPath)) return null;
+
+            // Pixel Crawler's Knight, Wizard, and Rogue base sheets only include sleeve/shoulder
+            // cuffs; modular hands come from Weapons/Hands.png (empty-handed, no held items),
+            // tucked tightly at sleeve cuffs in unflipped (facing-right) local space.
+            if (sheetPath.IndexOf("/NPCs/Wizard/", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                return MakeHandPair(
+                    LoadSprite(HandsSheetPath, "Hands_00"), new Vector2(-0.27f, 0.45f),
+                    LoadSprite(HandsSheetPath, "Hands_02"), new Vector2(0.29f, 0.48f));
+            }
+
+            if (sheetPath.IndexOf("/NPCs/Knight/", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                return MakeHandPair(
+                    LoadSprite(HandsSheetPath, "Hands_06"), new Vector2(-0.28f, 0.44f),
+                    LoadSprite(HandsSheetPath, "Hands_07"), new Vector2(0.26f, 0.44f));
+            }
+
+            if (sheetPath.IndexOf("/NPCs/Rogue/", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                return MakeHandPair(
+                    LoadSprite(HandsSheetPath, "Hands_04"), new Vector2(-0.28f, 0.45f),
+                    LoadSprite(HandsSheetPath, "Hands_05"), new Vector2(0.26f, 0.45f));
+            }
+
+            return null;
+        }
+
+        static VisualAttachment[] MakeHandPair(Sprite backHand, Vector2 backPos, Sprite frontHand, Vector2 frontPos) =>
+            new[]
+            {
+                new VisualAttachment
+                {
+                    id = "BackHand", sprite = backHand,
+                    localOffset = backPos, localZ = -0.001f,
+                    localScale = Vector2.one,
+                },
+                new VisualAttachment
+                {
+                    id = "FrontHand", sprite = frontHand,
+                    localOffset = frontPos, localZ = -0.002f,
+                    localScale = Vector2.one,
+                },
+            };
 
         public static void BindActorVisual(GameObject actor, VisualProfile profile, bool addYSort = true)
         {
@@ -201,6 +253,10 @@ namespace Morsoul.Hub.Editor
             if (visual == null) visual = actor.AddComponent<EntityVisual>();
             visual.profile = profile;
             visual.Apply(profile);
+            EditorUtility.SetDirty(actor);
+            EditorUtility.SetDirty(visual);
+            if (visual.Renderer != null) EditorUtility.SetDirty(visual.Renderer);
+            if (visual.Animator != null) EditorUtility.SetDirty(visual.Animator);
         }
 
         public static void BindRoot(Scene scene, string rootName, VisualProfile profile)

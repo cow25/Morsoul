@@ -401,7 +401,7 @@ namespace Morsoul.Core
             // Investigation routes are registered only when their real levels are delivered.
             Seed(RouteKeys.Hub(0), "Hub_LowerMarket");   // tutorial case shares the market hub
             Seed(RouteKeys.Hub(1), "Hub_LowerMarket");
-            Seed(RouteKeys.Hub(2), "Hub_CathedralNave"); // Cathedral of Saint Althea
+            Seed(RouteKeys.Hub(2), "Hub_CathedralCourtyard"); // Cathedral of Saint Althea (Exterior Drop-off)
             Seed(RouteKeys.Hub(3), "Hub_Wilderness");    // Whisperwood hub
             Seed(RouteKeys.Hub(4), "Hub_IronHollow");    // Iron Hollow railhead
         }

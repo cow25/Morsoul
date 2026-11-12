@@ -88,6 +88,7 @@ namespace Morsoul.Journal
         float _previousTimeScale = 1f;
         int _uiVersion;
         Func<bool> _openBlocker;
+        Func<bool> _pauseBlocker;
 
         public bool IsOpen => _isOpen;
         public JournalTab ActiveTab => _activeTab;
@@ -95,7 +96,11 @@ namespace Morsoul.Journal
         void OnEnable()
         {
             _panelRenderer = GetComponent<PanelRenderer>();
-            if (_panelRenderer != null) _panelRenderer.RegisterUIReloadCallback(OnUIReload);
+            if (_panelRenderer != null)
+            {
+                _panelRenderer.sortingOrder = 40;
+                _panelRenderer.RegisterUIReloadCallback(OnUIReload);
+            }
             if (journal != null) journal.ClueRegistered += OnClueRegistered;
             if (context == null) context = FindAnyObjectByType<HubContext>();
             if (context != null)
@@ -103,6 +108,8 @@ namespace Morsoul.Journal
                 _openBlocker = () => _isOpen;
                 context.AddUiBlocker(_openBlocker);
             }
+            _pauseBlocker ??= () => _isOpen;
+            PauseMenuController.RegisterExternalModal(_pauseBlocker);
             SyncLogsFromSession();
         }
 
@@ -115,6 +122,7 @@ namespace Morsoul.Journal
                 context.RemoveUiBlocker(_openBlocker);
                 _openBlocker = null;
             }
+            if (_pauseBlocker != null) PauseMenuController.UnregisterExternalModal(_pauseBlocker);
             if (_isOpen)
             {
                 Time.timeScale = _previousTimeScale;
@@ -223,6 +231,7 @@ namespace Morsoul.Journal
         {
             if (!_isOpen) return;
             _isOpen = false;
+            PauseMenuController.NotifyExternalModalClosed();
             Time.timeScale = _previousTimeScale;
             if (_root != null) _root.style.display = DisplayStyle.None;
             if (manageCursor)

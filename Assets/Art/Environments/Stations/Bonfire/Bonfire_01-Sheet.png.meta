@@ -5,6 +5,15 @@ TextureImporter:
   - first:
       213: 5546010367031134299
     second: Bonfire_01-Sheet_0
+  - first:
+      213: 2504620900122937244
+    second: Bonfire_01-Sheet_1
+  - first:
+      213: -8574287193880940155
+    second: Bonfire_01-Sheet_2
+  - first:
+      213: 2955932329741600782
+    second: Bonfire_01-Sheet_3
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -120,10 +129,10 @@ TextureImporter:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 128
+        width: 32
         height: 32
-      alignment: 0
-      pivot: {x: 0, y: 0}
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -132,6 +141,72 @@ TextureImporter:
       bones: []
       spriteID: b5846877b0367fc40800000000000000
       internalID: 5546010367031134299
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bonfire_01-Sheet_1
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 0
+        width: 32
+        height: 32
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c97c8d8407332c220800000000000000
+      internalID: 2504620900122937244
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bonfire_01-Sheet_2
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 0
+        width: 32
+        height: 32
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 581bb86c933020980800000000000000
+      internalID: -8574287193880940155
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bonfire_01-Sheet_3
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 0
+        width: 32
+        height: 32
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e08475eeac4950920800000000000000
+      internalID: 2955932329741600782
       vertices: []
       indices: 
       edges: []
@@ -151,6 +226,9 @@ TextureImporter:
       entries: []
     nameFileIdTable:
       Bonfire_01-Sheet_0: 5546010367031134299
+      Bonfire_01-Sheet_1: 2504620900122937244
+      Bonfire_01-Sheet_2: -8574287193880940155
+      Bonfire_01-Sheet_3: 2955932329741600782
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

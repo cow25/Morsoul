@@ -8,7 +8,6 @@ namespace Morsoul.Dev.Editor
 {
     public static class ProcessNewSprites
     {
-        [MenuItem("Morsoul/Art/Process Characters And Path")]
         public static void Run()
         {
             string brainDir = @"C:\Users\Administrator\.gemini\antigravity\brain\b080a7e8-1f4d-49ea-8b25-7142f99a7454";

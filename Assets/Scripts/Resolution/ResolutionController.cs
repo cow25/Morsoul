@@ -72,7 +72,11 @@ namespace Morsoul.Resolution
         void OnEnable()
         {
             _panelRenderer = GetComponent<PanelRenderer>();
-            if (_panelRenderer != null) _panelRenderer.RegisterUIReloadCallback(OnUIReload);
+            if (_panelRenderer != null)
+            {
+                _panelRenderer.sortingOrder = 80;
+                _panelRenderer.RegisterUIReloadCallback(OnUIReload);
+            }
         }
 
         void OnDisable()

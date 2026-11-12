@@ -154,6 +154,81 @@ namespace Morsoul.Tests
         }
 
         [Test]
+        public void Encounter_ScanDeactivatesWhenElizaEmerges_AndExitReleasesCameraFollow()
+        {
+            var go = new GameObject("ScanAndCameraTest", typeof(BoxCollider2D));
+            var highlightGo = new GameObject("EyeHighlight", typeof(EyeScanPulse2D));
+            var bushGo = new GameObject("ElizaCover");
+            var cameraGo = new GameObject("IntroCamera", typeof(Camera), typeof(CameraFollow2D));
+            var playerGo = new GameObject("Player", typeof(HubPlayerController));
+            try
+            {
+                var dialogue = go.AddComponent<Morsoul.Dialogue.DialogueController>();
+                dialogue.manageCursor = false;
+                var context = go.AddComponent<HubContext>();
+                context.dialogue = dialogue;
+                var intro = go.AddComponent<PrologueElizaIntroController>();
+                intro.context = context;
+                intro.player = playerGo.GetComponent<HubPlayerController>();
+                intro.cameraFollow = cameraGo.GetComponent<CameraFollow2D>();
+                intro.bushProp = bushGo.transform;
+                intro.eyeHighlight = highlightGo.transform;
+
+                var sequence = (System.Collections.IEnumerator)typeof(PrologueElizaIntroController)
+                    .GetMethod("RunSequence", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                    .Invoke(intro, new object[] { _session });
+
+                bool scanActiveOnNotice = false;
+                bool scanOffOnWarning = false;
+                bool exitReached = false;
+                bool cameraUnfollowedOnExit = false;
+
+                while (sequence.MoveNext())
+                {
+                    if (exitReached)
+                    {
+                        cameraUnfollowedOnExit = intro.cameraFollow.target == null;
+                        break;
+                    }
+
+                    var line = sequence.Current as System.Collections.IEnumerator;
+                    if (line == null || !line.GetType().Name.StartsWith("<Line>")) continue;
+                    try
+                    {
+                        Assert.IsTrue(line.MoveNext());
+                        var node = dialogue.Runner.Current;
+                        if (node.text == "Someone is hiding in that bush.")
+                            scanActiveOnNotice = highlightGo.activeSelf;
+                        if (node.text.Contains("\u2593"))
+                            scanOffOnWarning = !highlightGo.activeSelf;
+                        if (node.text == "I'll answer your questions along the way. We've got time.")
+                            exitReached = true;
+
+                        Assert.IsTrue(line.MoveNext());
+                        dialogue.Runner.Advance();
+                        Assert.IsFalse(line.MoveNext());
+                    }
+                    finally
+                    {
+                        (line as System.IDisposable)?.Dispose();
+                    }
+                }
+
+                Assert.IsTrue(scanActiveOnNotice, "Eye scan should be active when noticing someone in the bush.");
+                Assert.IsTrue(scanOffOnWarning, "Eye scan should turn off before Eliza's warning line once she emerges.");
+                Assert.IsTrue(exitReached && cameraUnfollowedOnExit, "CameraFollow2D.target must be cleared during the exit walkout.");
+            }
+            finally
+            {
+                Object.DestroyImmediate(go);
+                Object.DestroyImmediate(highlightGo);
+                Object.DestroyImmediate(bushGo);
+                Object.DestroyImmediate(cameraGo);
+                Object.DestroyImmediate(playerGo);
+            }
+        }
+
+        [Test]
         public void StageEncounter_KeepsPlayerAndCamera_StagesElizaSurveying()
         {
             var cameraGo = new GameObject("IntroCamera", typeof(Camera), typeof(CameraFollow2D));

@@ -49,6 +49,9 @@ namespace Morsoul.Hub.Editor
             "Assets/Art/Environments/Props/Trees/Model_03/Size_03.png",
             "Assets/Art/Environments/Props/Trees/Model_03/Size_04.png",
             "Assets/Art/Environments/Props/Trees/Model_03/Size_05.png",
+            "Assets/Art/Characters/Weapons/Hands.png",
+            "Assets/Art/Characters/Weapons/Wood.png",
+            "Assets/Art/Characters/Weapons/Bone.png",
         };
 
         struct NpcAnimSpec
@@ -81,6 +84,55 @@ namespace Morsoul.Hub.Editor
                 Name = "NPC_CitizenF_TavernB",
                 IdleSheet = "Assets/Art/Characters/NPCs/Citizen_F/Tavern_B/Idle/Idle_Side-Sheet.png",
                 MoveSheet = "Assets/Art/Characters/NPCs/Citizen_F/Tavern_B/Walk/Walk_Side-Sheet.png",
+                IdleFps = 6f, MoveFps = 8f,
+            },
+            new NpcAnimSpec
+            {
+                Name = "NPC_CitizenM_GuardA",
+                IdleSheet = "Assets/Art/Characters/NPCs/Citizen_M/Guard_A/Idle/Idle_Side-Sheet.png",
+                MoveSheet = "Assets/Art/Characters/NPCs/Citizen_M/Guard_A/Walk/Walk_Side-Sheet.png",
+                IdleFps = 6f, MoveFps = 8f,
+            },
+            new NpcAnimSpec
+            {
+                Name = "NPC_CitizenM_MerchantA",
+                IdleSheet = "Assets/Art/Characters/NPCs/Citizen_M/Merchant_A/Idle/Idle_Side-Sheet.png",
+                MoveSheet = "Assets/Art/Characters/NPCs/Citizen_M/Merchant_A/Walk/Walk_Side-Sheet.png",
+                IdleFps = 6f, MoveFps = 8f,
+            },
+            new NpcAnimSpec
+            {
+                Name = "NPC_CitizenM_AdventurerA",
+                IdleSheet = "Assets/Art/Characters/NPCs/Citizen_M/Adventurer_A/Idle/Idle_Side-Sheet.png",
+                MoveSheet = "Assets/Art/Characters/NPCs/Citizen_M/Adventurer_A/Walk/Walk_Side-Sheet.png",
+                IdleFps = 6f, MoveFps = 8f,
+            },
+            new NpcAnimSpec
+            {
+                Name = "NPC_CitizenM_AdventurerB",
+                IdleSheet = "Assets/Art/Characters/NPCs/Citizen_M/Adventurer_B/Idle/Idle_Side-Sheet.png",
+                MoveSheet = "Assets/Art/Characters/NPCs/Citizen_M/Adventurer_B/Walk/Walk_Side-Sheet.png",
+                IdleFps = 6f, MoveFps = 8f,
+            },
+            new NpcAnimSpec
+            {
+                Name = "NPC_CitizenM_VillagerA",
+                IdleSheet = "Assets/Art/Characters/NPCs/Citizen_M/Villager_A/Idle/Idle_Side-Sheet.png",
+                MoveSheet = "Assets/Art/Characters/NPCs/Citizen_M/Villager_A/Walk/Walk_Side-Sheet.png",
+                IdleFps = 6f, MoveFps = 8f,
+            },
+            new NpcAnimSpec
+            {
+                Name = "NPC_CitizenM_MerchantB",
+                IdleSheet = "Assets/Art/Characters/NPCs/Citizen_M/Merchant_B/Idle/Idle_Side-Sheet.png",
+                MoveSheet = "Assets/Art/Characters/NPCs/Citizen_M/Merchant_B/Walk/Walk_Side-Sheet.png",
+                IdleFps = 6f, MoveFps = 8f,
+            },
+            new NpcAnimSpec
+            {
+                Name = "NPC_CitizenM_SmithA",
+                IdleSheet = "Assets/Art/Characters/NPCs/Citizen_M/Smith_A/Idle/Idle_Side-Sheet.png",
+                MoveSheet = "Assets/Art/Characters/NPCs/Citizen_M/Smith_A/Walk/Walk_Side-Sheet.png",
                 IdleFps = 6f, MoveFps = 8f,
             },
             new NpcAnimSpec
@@ -132,10 +184,16 @@ namespace Morsoul.Hub.Editor
 
             int controllers = 0;
             if (BuildPlayerBodyAController() != null) controllers++;
+            if (BuildPlayerGolemController() != null) controllers++;
+            foreach (var name in new[] { "Ovan", "Ignatius", "Carrier", "Eliza", "Accord", "Vane", "Harlan", "GrandOverseer" })
+            {
+                if (BuildNamedNpc4DirController(name) != null) controllers++;
+            }
             foreach (var spec in NpcSpecs)
             {
                 if (BuildNpcController(spec) != null) controllers++;
             }
+            if (EnsureMaleVillagerController() != null) controllers++;
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -165,25 +223,32 @@ namespace Morsoul.Hub.Editor
             bool isRocks = assetPath.EndsWith("/Rocks.png", StringComparison.OrdinalIgnoreCase);
             bool isTreeM1S3 = assetPath.EndsWith("/Model_01/Size_03.png", StringComparison.OrdinalIgnoreCase);
             bool isBonfire = assetPath.EndsWith("/Bonfire/Bonfire.png", StringComparison.OrdinalIgnoreCase);
+            bool isHands = assetPath.EndsWith("/Weapons/Hands.png", StringComparison.OrdinalIgnoreCase);
+            bool isWeaponSheet = assetPath.Contains("/Characters/Weapons/");
             var boxes = isTreeM1S3
                 ? ExtractGridAndRightTail(pixels, w, h, cellW: 48, cellH: 96, tailStartX: 192, minExtent: 5)
                 : isBonfire
                     ? ExtractGridAndRightTail(pixels, w, h, cellW: 32, cellH: 48, tailStartX: w, minExtent: 5)
-                    : ExtractAlphaIslands(pixels, w, h, minExtent: 5,
-                        skipTopLeftHeader: isRocks, headerWidth: 56, headerHeight: 14);
+                    : isHands
+                        ? ExtractGridAndRightTail(pixels, w, h, cellW: 16, cellH: 16, tailStartX: w, minExtent: 3)
+                        : ExtractAlphaIslands(pixels, w, h, minExtent: 5,
+                            skipTopLeftHeader: isRocks, headerWidth: 56, headerHeight: 14);
             if (boxes.Count == 0) return 0;
 
             if (assetPath.EndsWith("/Buildings/Exterior/Roofs.png", StringComparison.OrdinalIgnoreCase))
                 SplitWideTopRoofs(boxes, h);
 
-            // Sort top-to-bottom by rough 16px row band, then left-to-right.
-            boxes.Sort((a, b) =>
+            if (!isHands)
             {
-                int bandA = (h - a.yMax) / 16;
-                int bandB = (h - b.yMax) / 16;
-                int cmp = bandA.CompareTo(bandB);
-                return cmp != 0 ? cmp : a.xMin.CompareTo(b.xMin);
-            });
+                // Sort top-to-bottom by rough 16px row band, then left-to-right.
+                boxes.Sort((a, b) =>
+                {
+                    int bandA = (h - a.yMax) / 16;
+                    int bandB = (h - b.yMax) / 16;
+                    int cmp = bandA.CompareTo(bandB);
+                    return cmp != 0 ? cmp : a.xMin.CompareTo(b.xMin);
+                });
+            }
 
             string prefix = MakeSpritePrefix(assetPath);
 
@@ -199,7 +264,9 @@ namespace Morsoul.Hub.Editor
             var dataProvider = factory.GetSpriteEditorDataProviderFromObject(importer);
             dataProvider.InitSpriteEditorDataProvider();
 
-            var rects = new SpriteRect[boxes.Count];
+            var extra = GetExtraNamedPropRects(assetPath);
+            int totalCount = boxes.Count + extra.Length;
+            var rects = new SpriteRect[totalCount];
             for (int i = 0; i < boxes.Count; i++)
             {
                 var r = boxes[i];
@@ -208,9 +275,13 @@ namespace Morsoul.Hub.Editor
                     name = $"{prefix}_{i:D2}",
                     spriteID = GUID.Generate(),
                     rect = new Rect(r.xMin, r.yMin, r.width, r.height),
-                    alignment = SpriteAlignment.BottomCenter,
-                    pivot = new Vector2(0.5f, 0f),
+                    alignment = isWeaponSheet ? SpriteAlignment.Center : SpriteAlignment.BottomCenter,
+                    pivot = isWeaponSheet ? new Vector2(0.5f, 0.5f) : new Vector2(0.5f, 0f),
                 };
+            }
+            for (int j = 0; j < extra.Length; j++)
+            {
+                rects[boxes.Count + j] = extra[j];
             }
 
             dataProvider.SetSpriteRects(rects);
@@ -218,6 +289,38 @@ namespace Morsoul.Hub.Editor
             EditorUtility.SetDirty(importer);
             importer.SaveAndReimport();
             return rects.Length;
+        }
+
+        static SpriteRect[] GetExtraNamedPropRects(string assetPath)
+        {
+            if (!assetPath.EndsWith("/Buildings/Interior/Interior_Props_01.png", StringComparison.OrdinalIgnoreCase))
+                return Array.Empty<SpriteRect>();
+
+            static SpriteRect Named(string name, int x, int y, int w, int h) => new SpriteRect
+            {
+                name = name,
+                spriteID = GUID.Generate(),
+                rect = new Rect(x, y, w, h),
+                alignment = SpriteAlignment.BottomCenter,
+                pivot = new Vector2(0.5f, 0f),
+            };
+
+            // Individual Pixel Crawler props that were merged into multi-item alpha islands:
+            return new[]
+            {
+                Named("Guild_Bookshelf", 48, 240, 48, 46),
+                Named("Guild_HearthStone", 272, 240, 48, 64),
+                Named("Guild_HearthBroad", 320, 240, 64, 64),
+                Named("Guild_HearthBrick", 384, 240, 48, 64),
+                Named("Guild_TableBanquetWood", 368, 336, 62, 41),
+                Named("Guild_TableBanquetCloth", 432, 336, 64, 41),
+                Named("Guild_CarpetGreen", 336, 0, 48, 48),
+                Named("Guild_CarpetGreenInner", 340, 4, 40, 40),
+                Named("Guild_CarpetSlate", 384, 0, 48, 48),
+                Named("Guild_WindowSky", 64, 176, 32, 32),
+                Named("Guild_CrateSingle", 208, 238, 16, 25),
+                Named("Guild_BarrelSingle", 224, 240, 16, 22),
+            };
         }
 
         static string MakeSpritePrefix(string assetPath)
@@ -235,7 +338,7 @@ namespace Morsoul.Hub.Editor
             return file;
         }
 
-        static List<RectInt> ExtractAlphaIslands(
+        internal static List<RectInt> ExtractAlphaIslands(
             Color32[] pixels, int w, int h, int minExtent,
             bool skipTopLeftHeader, int headerWidth, int headerHeight)
         {
@@ -310,7 +413,7 @@ namespace Morsoul.Hub.Editor
             }
         }
 
-        static List<RectInt> ExtractGridAndRightTail(
+        internal static List<RectInt> ExtractGridAndRightTail(
             Color32[] pixels, int w, int h, int cellW, int cellH, int tailStartX, int minExtent)
         {
             var results = new List<RectInt>();
@@ -360,40 +463,62 @@ namespace Morsoul.Hub.Editor
 
         static AnimatorController BuildPlayerBodyAController()
         {
-            const string folder = AnimRoot + "/Player";
-            const string controllerPath = folder + "/Player_BodyA.controller";
+            return Build4DirController(
+                $"{AnimRoot}/Player", "Player_BodyA", "BodyA", "Run",
+                "Assets/Art/Characters/Player/Body_A/Idle_Base/Idle",
+                "Assets/Art/Characters/Player/Body_A/Run_Base/Run",
+                6f, 10f);
+        }
 
-            var idleDown = CreateSpriteClip($"{folder}/BodyA_Idle_Down.anim",
-                "Assets/Art/Characters/Player/Body_A/Idle_Base/Idle_Down-Sheet.png", 6f, true);
-            var idleSide = CreateSpriteClip($"{folder}/BodyA_Idle_Side.anim",
-                "Assets/Art/Characters/Player/Body_A/Idle_Base/Idle_Side-Sheet.png", 6f, true);
-            var idleUp = CreateSpriteClip($"{folder}/BodyA_Idle_Up.anim",
-                "Assets/Art/Characters/Player/Body_A/Idle_Base/Idle_Up-Sheet.png", 6f, true);
+        static AnimatorController BuildPlayerGolemController()
+        {
+            return Build4DirController(
+                $"{AnimRoot}/Player", "Player_Golem", "Golem", "Run",
+                "Assets/Art/Characters/Player/Golem/Idle/Idle",
+                "Assets/Art/Characters/Player/Golem/Run/Run",
+                6f, 8f);
+        }
 
-            var runDown = CreateSpriteClip($"{folder}/BodyA_Run_Down.anim",
-                "Assets/Art/Characters/Player/Body_A/Run_Base/Run_Down-Sheet.png", 10f, true);
-            var runSide = CreateSpriteClip($"{folder}/BodyA_Run_Side.anim",
-                "Assets/Art/Characters/Player/Body_A/Run_Base/Run_Side-Sheet.png", 10f, true);
-            var runUp = CreateSpriteClip($"{folder}/BodyA_Run_Up.anim",
-                "Assets/Art/Characters/Player/Body_A/Run_Base/Run_Up-Sheet.png", 10f, true);
+        static AnimatorController BuildNamedNpc4DirController(string npcName)
+        {
+            return Build4DirController(
+                $"{AnimRoot}/NPCs", $"NPC_{npcName}", $"NPC_{npcName}", "Move",
+                $"Assets/Art/Characters/NPCs/Named/{npcName}/Idle/Idle",
+                $"Assets/Art/Characters/NPCs/Named/{npcName}/Walk/Walk",
+                6f, 8f);
+        }
 
-            if (idleDown == null || runDown == null) return null;
+        static AnimatorController Build4DirController(
+            string folder, string controllerName, string clipPrefix, string moveStateName,
+            string idlePrefix, string movePrefix, float idleFps, float moveFps)
+        {
+            string controllerPath = $"{folder}/{controllerName}.controller";
+
+            var idleDown = CreateSpriteClip($"{folder}/{clipPrefix}_Idle_Down.anim", $"{idlePrefix}_Down-Sheet.png", idleFps, true);
+            var idleSide = CreateSpriteClip($"{folder}/{clipPrefix}_Idle_Side.anim", $"{idlePrefix}_Side-Sheet.png", idleFps, true);
+            var idleUp = CreateSpriteClip($"{folder}/{clipPrefix}_Idle_Up.anim", $"{idlePrefix}_Up-Sheet.png", idleFps, true);
+
+            var moveDown = CreateSpriteClip($"{folder}/{clipPrefix}_{moveStateName}_Down.anim", $"{movePrefix}_Down-Sheet.png", moveFps, true);
+            var moveSide = CreateSpriteClip($"{folder}/{clipPrefix}_{moveStateName}_Side.anim", $"{movePrefix}_Side-Sheet.png", moveFps, true);
+            var moveUp = CreateSpriteClip($"{folder}/{clipPrefix}_{moveStateName}_Up.anim", $"{movePrefix}_Up-Sheet.png", moveFps, true);
+
+            if (idleDown == null || moveDown == null) return null;
 
             var controller = ResetController(controllerPath);
             AddStandardParameters(controller);
 
             var sm = controller.layers[0].stateMachine;
             var idleTree = Create4DirBlendTree(controller, "Idle", idleDown, idleSide, idleUp);
-            var runTree = Create4DirBlendTree(controller, "Run", runDown, runSide, runUp);
+            var moveTree = Create4DirBlendTree(controller, moveStateName, moveDown, moveSide, moveUp);
 
             var idleState = sm.AddState("Idle");
             idleState.motion = idleTree;
             sm.defaultState = idleState;
 
-            var runState = sm.AddState("Run");
-            runState.motion = runTree;
+            var moveState = sm.AddState(moveStateName);
+            moveState.motion = moveTree;
 
-            WireMovingTransitions(idleState, runState);
+            WireMovingTransitions(idleState, moveState);
             EditorUtility.SetDirty(controller);
             return controller;
         }
@@ -434,7 +559,12 @@ namespace Morsoul.Hub.Editor
         {
             controller.AddParameter("Moving", AnimatorControllerParameterType.Bool);
             controller.AddParameter("MoveX", AnimatorControllerParameterType.Float);
-            controller.AddParameter("MoveY", AnimatorControllerParameterType.Float);
+            controller.AddParameter(new AnimatorControllerParameter
+            {
+                name = "MoveY",
+                type = AnimatorControllerParameterType.Float,
+                defaultFloat = -1f,
+            });
             controller.AddParameter("Speed", AnimatorControllerParameterType.Float);
         }
 
@@ -471,15 +601,75 @@ namespace Morsoul.Hub.Editor
             toIdle.AddCondition(AnimatorConditionMode.IfNot, 0f, "Moving");
         }
 
+        public static AnimatorController EnsureMaleVillagerController()
+        {
+            string folder = $"{AnimRoot}/NPCs";
+            EnsureFolder(AnimRoot);
+            EnsureFolder(folder);
+            string controllerPath = $"{folder}/NPC_Male_Villager.controller";
+
+            var idleDown = CreateSpriteClipByPrefix($"{folder}/MaleVillager_Idle_Down.anim",
+                MarketPackAssetSetup.MaleIdleSheetPath, "Char_Down_", 6f, true);
+            var idleSide = CreateSpriteClipByPrefix($"{folder}/MaleVillager_Idle_Side.anim",
+                MarketPackAssetSetup.MaleIdleSheetPath, "Char_Right_", 6f, true);
+            var idleUp = CreateSpriteClipByPrefix($"{folder}/MaleVillager_Idle_Up.anim",
+                MarketPackAssetSetup.MaleIdleSheetPath, "Char_Up_", 6f, true);
+
+            var walkDown = CreateSpriteClipByPrefix($"{folder}/MaleVillager_Walk_Down.anim",
+                MarketPackAssetSetup.MaleWalkSheetPath, "Char_Down_", 8f, true);
+            var walkSide = CreateSpriteClipByPrefix($"{folder}/MaleVillager_Walk_Side.anim",
+                MarketPackAssetSetup.MaleWalkSheetPath, "Char_Right_", 8f, true);
+            var walkUp = CreateSpriteClipByPrefix($"{folder}/MaleVillager_Walk_Up.anim",
+                MarketPackAssetSetup.MaleWalkSheetPath, "Char_Up_", 8f, true);
+
+            if (idleDown == null || walkDown == null) return null;
+
+            var controller = ResetController(controllerPath);
+            AddStandardParameters(controller);
+
+            var sm = controller.layers[0].stateMachine;
+            var idleTree = Create4DirBlendTree(controller, "Idle", idleDown, idleSide, idleUp);
+            var moveTree = Create4DirBlendTree(controller, "Move", walkDown, walkSide, walkUp);
+
+            var idleState = sm.AddState("Idle");
+            idleState.motion = idleTree;
+            sm.defaultState = idleState;
+
+            var moveState = sm.AddState("Move");
+            moveState.motion = moveTree;
+
+            WireMovingTransitions(idleState, moveState);
+            EditorUtility.SetDirty(controller);
+            AssetDatabase.SaveAssets();
+            return controller;
+        }
+
+        static AnimationClip CreateSpriteClipByPrefix(
+            string clipPath, string sheetPath, string namePrefix, float fps, bool loop)
+        {
+            var sprites = AssetDatabase.LoadAllAssetsAtPath(sheetPath)
+                .OfType<Sprite>()
+                .Where(s => s.name.StartsWith(namePrefix, StringComparison.Ordinal))
+                .OrderBy(s => s.rect.x)
+                .ToArray();
+            return BuildClipFromSprites(clipPath, sheetPath, sprites, fps, loop);
+        }
+
         static AnimationClip CreateSpriteClip(string clipPath, string sheetPath, float fps, bool loop)
         {
             var sprites = AssetDatabase.LoadAllAssetsAtPath(sheetPath)
                 .OfType<Sprite>()
                 .OrderBy(s => s.rect.x)
                 .ToArray();
-            if (sprites.Length == 0)
+            return BuildClipFromSprites(clipPath, sheetPath, sprites, fps, loop);
+        }
+
+        static AnimationClip BuildClipFromSprites(
+            string clipPath, string sheetPath, Sprite[] sprites, float fps, bool loop)
+        {
+            if (sprites == null || sprites.Length == 0)
             {
-                Debug.LogWarning($"PixelCrawlerPropAndAnimSetup: no sprites at '{sheetPath}'.");
+                Debug.LogWarning($"PixelCrawlerPropAndAnimSetup: no sprites matching '{clipPath}' at '{sheetPath}'.");
                 return null;
             }
 

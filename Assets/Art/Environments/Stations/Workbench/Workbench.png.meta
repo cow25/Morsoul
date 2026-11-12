@@ -5,6 +5,15 @@ TextureImporter:
   - first:
       213: 2008836717833708222
     second: Workbench_0
+  - first:
+      213: -4610155871373247123
+    second: Workbench_Wood_Med
+  - first:
+      213: 2127081336339383941
+    second: Workbench_Steel_Med
+  - first:
+      213: -8711211860782727487
+    second: Workbench_Steel_Small
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -115,23 +124,67 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Workbench_0
+      name: Workbench_Wood_Med
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 192
-        height: 352
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 48
+        y: 240
+        width: 48
+        height: 48
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: eb26d320a52d0eb10800000000000000
-      internalID: 2008836717833708222
+      spriteID: d6dbd9f19af6500c0800000000000000
+      internalID: -4610155871373247123
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Workbench_Steel_Med
+      rect:
+        serializedVersion: 2
+        x: 48
+        y: 176
+        width: 48
+        height: 61
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5864fd4a439e48d10800000000000000
+      internalID: 2127081336339383941
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Workbench_Steel_Small
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 176
+        width: 32
+        height: 61
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1ce30e277fe8b1780800000000000000
+      internalID: -8711211860782727487
       vertices: []
       indices: 
       edges: []
@@ -151,6 +204,9 @@ TextureImporter:
       entries: []
     nameFileIdTable:
       Workbench_0: 2008836717833708222
+      Workbench_Steel_Med: 2127081336339383941
+      Workbench_Steel_Small: -8711211860782727487
+      Workbench_Wood_Med: -4610155871373247123
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

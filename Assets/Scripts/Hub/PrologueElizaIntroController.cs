@@ -55,20 +55,20 @@ namespace Morsoul.Hub
         public float surveyHoldSeconds = 1.4f;
         [Tooltip("Seconds of black between the Eliza cutaway and the approach.")]
         public float cutawayFadeSeconds = 0.35f;
-        [Tooltip("Concealed spot behind the bush's east edge.")]
-        public Vector2 elizaHidePosition = new Vector2(13.35f, 0.5f);
-        [Tooltip("Where Eliza stands after stepping back out of cover, defensive.")]
-        public Vector2 elizaDefensivePosition = new Vector2(14.15f, 0.6f);
-        [Tooltip("South waypoint so her lunge clears the bush instead of clipping it.")]
-        public Vector2 elizaRushDetour = new Vector2(13.5f, -0.6f);
+        [Tooltip("Concealed spot behind the northern roadside bush.")]
+        public Vector2 elizaHidePosition = new Vector2(12.8f, 1.8f);
+        [Tooltip("Where Eliza stands after stepping out of cover onto the clearing, defensive.")]
+        public Vector2 elizaDefensivePosition = new Vector2(13.9f, 0.25f);
+        [Tooltip("Approach waypoint before facing the protagonist in the clearing.")]
+        public Vector2 elizaRushDetour = new Vector2(13.0f, 0.0f);
         [Tooltip("Where the lunge ends when uninterrupted — just short of the protagonist.")]
-        public Vector2 elizaAttackPosition = new Vector2(11.8f, -0.6f);
+        public Vector2 elizaAttackPosition = new Vector2(11.9f, 0.0f);
         public float rushSpeed = 4f;
         public float exitSpeed = 1.7f;
         [Tooltip("How long the protagonist waits before following her out.")]
         public float exitFollowDelay = 0.3f;
-        [Tooltip("Waypoint south of the bush so his exit path walks around it.")]
-        public Vector2 playerExitBypass = new Vector2(12.4f, -0.65f);
+        [Tooltip("Lane offset so his exit walks slightly south of Eliza down the trail.")]
+        public Vector2 playerExitBypass = new Vector2(11.6f, -0.25f);
         public float exitX = 24.5f;
 
         bool _running;
@@ -242,12 +242,18 @@ namespace Morsoul.Hub
             yield return Line("Golem (thought)", "Everything looks different through this eye.");
 
             // The Eye detects her concealment; the Golem cautiously approaches.
+            if (eyeHighlight != null)
+            {
+                var scan = eyeHighlight.GetComponent<EyeScanPulse2D>();
+                if (scan != null) scan.Configure(playerTransform, bushProp != null ? bushProp : eyeHighlight);
+            }
             SetActive(eyeHighlight, true);
             yield return Line("Golem (thought)", "Someone is hiding in that bush.");
             yield return MoveToSpeed(playerTransform,
                 new Vector3(playerCloseX, 0f, 0f), approachSpeed * 0.5f);
 
-            // Alarmed, she emerges from behind the bush and steps back, defensive.
+            // End the scan reticle cleanly the moment she emerges from cover.
+            SetActive(eyeHighlight, false);
             SetActive(eliza, true);
             yield return MoveTo(eliza,
                 new Vector3(elizaDefensivePosition.x, elizaDefensivePosition.y, 0f), 0.45f);
@@ -271,7 +277,6 @@ namespace Morsoul.Hub
             yield return Line("Golem",
                 "I have no weapons on me! At least hear me out first!");
             yield return Emote(elizaEmote, "...", 1.5f);
-            SetActive(eyeHighlight, false);
 
             // B. Narrative bridge — fade to black, explanation card, fade back in.
             yield return FadeTo(dialogue, 1f, 0.8f);
@@ -317,12 +322,16 @@ namespace Morsoul.Hub
             yield return Line("Eliza",
                 "I'll answer your questions along the way. We've got time.");
 
-            // D. Exit — she leads, he follows a step behind at matching pace,
-            // both on sharp axis-aligned paths around the bush.
+            // D. Exit — unfollow the player so the camera holds on the clearing
+            // while Eliza leads and both walk completely off-screen east.
+            if (cameraFollow != null) cameraFollow.target = null;
+            float targetExitX = ComputeOffscreenExitX();
+            float elizaExitX = targetExitX + 1.0f;
+
             var elizaExit = StartCoroutine(MoveToSpeed(eliza,
-                new Vector3(exitX, 0f, 0f), exitSpeed));
+                new Vector3(elizaExitX, 0.25f, 0f), exitSpeed, horizontalFirst: false));
             yield return Wait(exitFollowDelay);
-            var golemExit = StartCoroutine(GolemExits(playerTransform));
+            var golemExit = StartCoroutine(GolemExits(playerTransform, targetExitX));
             yield return elizaExit;
             yield return golemExit;
             yield return FadeTo(dialogue, 1f, 0.8f);
@@ -383,15 +392,23 @@ namespace Morsoul.Hub
                 new Vector3(elizaAttackPosition.x, elizaAttackPosition.y, 0f), rushSpeed);
         }
 
-        /// <summary>He skirts the bush's south edge (vertical leg first) then
-        /// walks straight east out of the frame.</summary>
-        IEnumerator GolemExits(Transform playerTransform)
+        /// <summary>Moves slightly south into his trail lane, then walks straight
+        /// east completely off-frame.</summary>
+        IEnumerator GolemExits(Transform playerTransform, float destinationX)
         {
             yield return MoveToSpeed(playerTransform,
                 new Vector3(playerExitBypass.x, playerExitBypass.y, 0f),
                 exitSpeed, horizontalFirst: false);
             yield return MoveToSpeed(playerTransform,
-                new Vector3(exitX, playerExitBypass.y, 0f), exitSpeed);
+                new Vector3(destinationX, playerExitBypass.y, 0f), exitSpeed);
+        }
+
+        float ComputeOffscreenExitX()
+        {
+            var cam = cameraFollow != null ? cameraFollow.GetComponent<Camera>() : null;
+            if (cam != null && cam.orthographic)
+                return cam.transform.position.x + cam.orthographicSize * cam.aspect + 1.8f;
+            return exitX;
         }
 
         IEnumerator FadeTo(DialogueController dialogue, float targetOpacity, float seconds)

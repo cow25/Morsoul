@@ -5,6 +5,15 @@ TextureImporter:
   - first:
       213: 781399814591633983
     second: Fire_01-Sheet_0
+  - first:
+      213: -2738198777102002723
+    second: Fire_01-Sheet_1
+  - first:
+      213: 5871211434053123137
+    second: Fire_01-Sheet_2
+  - first:
+      213: -6529296968771462369
+    second: Fire_01-Sheet_3
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -120,10 +129,10 @@ TextureImporter:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 128
+        width: 32
         height: 48
-      alignment: 0
-      pivot: {x: 0, y: 0}
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -132,6 +141,72 @@ TextureImporter:
       bones: []
       spriteID: f3a5a48cdf618da00800000000000000
       internalID: 781399814591633983
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire_01-Sheet_1
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 0
+        width: 32
+        height: 48
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dd51d6648b6fff9d0800000000000000
+      internalID: -2738198777102002723
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire_01-Sheet_2
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 0
+        width: 32
+        height: 48
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 14cb2f731bbba7150800000000000000
+      internalID: 5871211434053123137
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fire_01-Sheet_3
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 0
+        width: 32
+        height: 48
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f1b975720074365a0800000000000000
+      internalID: -6529296968771462369
       vertices: []
       indices: 
       edges: []
@@ -151,6 +226,9 @@ TextureImporter:
       entries: []
     nameFileIdTable:
       Fire_01-Sheet_0: 781399814591633983
+      Fire_01-Sheet_1: -2738198777102002723
+      Fire_01-Sheet_2: 5871211434053123137
+      Fire_01-Sheet_3: -6529296968771462369
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

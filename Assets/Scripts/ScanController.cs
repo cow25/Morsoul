@@ -23,6 +23,10 @@ public class ScanController : MonoBehaviour
 
     private void Update()
     {
+        if (Morsoul.Core.PauseMenuController.AnyModalOrPauseOpen ||
+            Morsoul.Dev.DevMenuOverlay.IsOpen)
+            return;
+
         // 1. Check for Hold Input
         bool wantsToScan = Keyboard.current != null && Keyboard.current.tabKey.isPressed;
 

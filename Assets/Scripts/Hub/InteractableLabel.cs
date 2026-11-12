@@ -1,3 +1,4 @@
+using Morsoul.Core;
 using UnityEngine;
 
 namespace Morsoul.Hub
@@ -19,6 +20,7 @@ namespace Morsoul.Hub
         void OnGUI()
         {
             if (string.IsNullOrEmpty(text)) return;
+            if (PauseMenuController.AnyModalOrPauseOpen) return;
             var cam = Camera.main;
             if (cam == null) return;
             var screen = cam.WorldToScreenPoint(transform.position);

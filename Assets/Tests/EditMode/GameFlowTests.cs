@@ -548,7 +548,7 @@ namespace Morsoul.Tests
             gsm.SeedDefaultRoutes();
 
             Assert.AreEqual("Hub_LowerMarket", gsm.routes.Resolve(Core.RouteKeys.Hub(1)));
-            Assert.AreEqual("Hub_CathedralNave", gsm.routes.Resolve(Core.RouteKeys.Hub(2)));
+            Assert.AreEqual("Hub_CathedralCourtyard", gsm.routes.Resolve(Core.RouteKeys.Hub(2)));
             Assert.AreEqual("Hub_Wilderness", gsm.routes.Resolve(Core.RouteKeys.Hub(3)));
             Assert.AreEqual("Hub_IronHollow", gsm.routes.Resolve(Core.RouteKeys.Hub(4)));
             Assert.IsNull(gsm.routes.Resolve(Core.RouteKeys.Hub(5)));
@@ -1267,6 +1267,27 @@ namespace Morsoul.Tests
                 System.Reflection.BindingFlags.Instance |
                 System.Reflection.BindingFlags.NonPublic).Invoke(loop, null);
             Assert.AreSame(music, audio.CurrentMusic);
+        }
+
+        [Test]
+        public void CaseZero_InCaseLoop_OpensWeightedBoardDirectly()
+        {
+            var data = LoadCase(0);
+            Assert.NotNull(data);
+            Assert.NotNull(data.evidenceGraph);
+            var core = Core.CoreRuntime.Ensure();
+            _objects.Add(core.gameObject);
+            core.Session.Reset();
+            core.Session.CurrentCase = 0;
+
+            var board = New<WeightedBoardController>("WeightedBoard");
+            _flow.weightedBoard = board;
+            _flow.investigationScene = false;
+            _flow.BeginCase(data);
+
+            Assert.IsNotNull(board.CanUse);
+            Assert.IsTrue(board.CanUse());
+            Assert.IsTrue(board.IsOpen);
         }
     }
 }

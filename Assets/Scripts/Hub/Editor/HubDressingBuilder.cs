@@ -101,7 +101,6 @@ namespace Morsoul.Hub.Editor
             public P(string type, float x, float y) { Type = type; X = x; Y = y; }
         }
 
-        [MenuItem("Morsoul/Hub/Dress Environment (Overlays + Prologue Wilderness)")]
         public static void DressAll()
         {
             Debug.Log("HubDressingBuilder: all 6 hubs are now owned by dedicated Pixel Crawler scene builders.");
