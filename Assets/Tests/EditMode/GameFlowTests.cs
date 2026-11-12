@@ -548,7 +548,7 @@ namespace Morsoul.Tests
             gsm.SeedDefaultRoutes();
 
             Assert.AreEqual("Hub_LowerMarket", gsm.routes.Resolve(Core.RouteKeys.Hub(1)));
-            Assert.AreEqual("Hub_CathedralNave", gsm.routes.Resolve(Core.RouteKeys.Hub(2)));
+            Assert.AreEqual("Hub_CathedralCourtyard", gsm.routes.Resolve(Core.RouteKeys.Hub(2)));
             Assert.AreEqual("Hub_Wilderness", gsm.routes.Resolve(Core.RouteKeys.Hub(3)));
             Assert.AreEqual("Hub_IronHollow", gsm.routes.Resolve(Core.RouteKeys.Hub(4)));
             Assert.IsNull(gsm.routes.Resolve(Core.RouteKeys.Hub(5)));

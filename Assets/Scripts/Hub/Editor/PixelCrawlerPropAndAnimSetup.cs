@@ -116,6 +116,27 @@ namespace Morsoul.Hub.Editor
             },
             new NpcAnimSpec
             {
+                Name = "NPC_CitizenM_VillagerA",
+                IdleSheet = "Assets/Art/Characters/NPCs/Citizen_M/Villager_A/Idle/Idle_Side-Sheet.png",
+                MoveSheet = "Assets/Art/Characters/NPCs/Citizen_M/Villager_A/Walk/Walk_Side-Sheet.png",
+                IdleFps = 6f, MoveFps = 8f,
+            },
+            new NpcAnimSpec
+            {
+                Name = "NPC_CitizenM_MerchantB",
+                IdleSheet = "Assets/Art/Characters/NPCs/Citizen_M/Merchant_B/Idle/Idle_Side-Sheet.png",
+                MoveSheet = "Assets/Art/Characters/NPCs/Citizen_M/Merchant_B/Walk/Walk_Side-Sheet.png",
+                IdleFps = 6f, MoveFps = 8f,
+            },
+            new NpcAnimSpec
+            {
+                Name = "NPC_CitizenM_SmithA",
+                IdleSheet = "Assets/Art/Characters/NPCs/Citizen_M/Smith_A/Idle/Idle_Side-Sheet.png",
+                MoveSheet = "Assets/Art/Characters/NPCs/Citizen_M/Smith_A/Walk/Walk_Side-Sheet.png",
+                IdleFps = 6f, MoveFps = 8f,
+            },
+            new NpcAnimSpec
+            {
                 Name = "NPC_Knight",
                 IdleSheet = "Assets/Art/Characters/NPCs/Knight/Idle/Idle-Sheet.png",
                 MoveSheet = "Assets/Art/Characters/NPCs/Knight/Run/Run-Sheet.png",
@@ -163,7 +184,8 @@ namespace Morsoul.Hub.Editor
 
             int controllers = 0;
             if (BuildPlayerBodyAController() != null) controllers++;
-            foreach (var name in new[] { "Ovan", "Ignatius", "Carrier" })
+            if (BuildPlayerGolemController() != null) controllers++;
+            foreach (var name in new[] { "Ovan", "Ignatius", "Carrier", "Eliza", "Accord", "Vane", "Harlan", "GrandOverseer" })
             {
                 if (BuildNamedNpc4DirController(name) != null) controllers++;
             }
@@ -242,7 +264,9 @@ namespace Morsoul.Hub.Editor
             var dataProvider = factory.GetSpriteEditorDataProviderFromObject(importer);
             dataProvider.InitSpriteEditorDataProvider();
 
-            var rects = new SpriteRect[boxes.Count];
+            var extra = GetExtraNamedPropRects(assetPath);
+            int totalCount = boxes.Count + extra.Length;
+            var rects = new SpriteRect[totalCount];
             for (int i = 0; i < boxes.Count; i++)
             {
                 var r = boxes[i];
@@ -255,12 +279,48 @@ namespace Morsoul.Hub.Editor
                     pivot = isWeaponSheet ? new Vector2(0.5f, 0.5f) : new Vector2(0.5f, 0f),
                 };
             }
+            for (int j = 0; j < extra.Length; j++)
+            {
+                rects[boxes.Count + j] = extra[j];
+            }
 
             dataProvider.SetSpriteRects(rects);
             dataProvider.Apply();
             EditorUtility.SetDirty(importer);
             importer.SaveAndReimport();
             return rects.Length;
+        }
+
+        static SpriteRect[] GetExtraNamedPropRects(string assetPath)
+        {
+            if (!assetPath.EndsWith("/Buildings/Interior/Interior_Props_01.png", StringComparison.OrdinalIgnoreCase))
+                return Array.Empty<SpriteRect>();
+
+            static SpriteRect Named(string name, int x, int y, int w, int h) => new SpriteRect
+            {
+                name = name,
+                spriteID = GUID.Generate(),
+                rect = new Rect(x, y, w, h),
+                alignment = SpriteAlignment.BottomCenter,
+                pivot = new Vector2(0.5f, 0f),
+            };
+
+            // Individual Pixel Crawler props that were merged into multi-item alpha islands:
+            return new[]
+            {
+                Named("Guild_Bookshelf", 48, 240, 48, 46),
+                Named("Guild_HearthStone", 272, 240, 48, 64),
+                Named("Guild_HearthBroad", 320, 240, 64, 64),
+                Named("Guild_HearthBrick", 384, 240, 48, 64),
+                Named("Guild_TableBanquetWood", 368, 336, 62, 41),
+                Named("Guild_TableBanquetCloth", 432, 336, 64, 41),
+                Named("Guild_CarpetGreen", 336, 0, 48, 48),
+                Named("Guild_CarpetGreenInner", 340, 4, 40, 40),
+                Named("Guild_CarpetSlate", 384, 0, 48, 48),
+                Named("Guild_WindowSky", 64, 176, 32, 32),
+                Named("Guild_CrateSingle", 208, 238, 16, 25),
+                Named("Guild_BarrelSingle", 224, 240, 16, 22),
+            };
         }
 
         static string MakeSpritePrefix(string assetPath)
@@ -408,6 +468,15 @@ namespace Morsoul.Hub.Editor
                 "Assets/Art/Characters/Player/Body_A/Idle_Base/Idle",
                 "Assets/Art/Characters/Player/Body_A/Run_Base/Run",
                 6f, 10f);
+        }
+
+        static AnimatorController BuildPlayerGolemController()
+        {
+            return Build4DirController(
+                $"{AnimRoot}/Player", "Player_Golem", "Golem", "Run",
+                "Assets/Art/Characters/Player/Golem/Idle/Idle",
+                "Assets/Art/Characters/Player/Golem/Run/Run",
+                6f, 8f);
         }
 
         static AnimatorController BuildNamedNpc4DirController(string npcName)

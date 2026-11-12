@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d3d25a568b87437dbda4a6fef515314a, type: 3}
   m_Name: Wild_BlightStump
   m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.VisualProfile
-  sprite: {fileID: 609974885, guid: 6611cb92030d1c1448fbafbd518cbb38, type: 3}
+  sprite: {fileID: 21300000, guid: dbad9a85ca90e3941bda16b10197bc77, type: 3}
   animatorController: {fileID: 0}
   tint: {r: 1, g: 1, b: 1, a: 1}
   material: {fileID: 0}
@@ -20,3 +20,4 @@ MonoBehaviour:
   visualScale: {x: 1, y: 1}
   flipX: 0
   sortingOrder: 0
+  attachments: []

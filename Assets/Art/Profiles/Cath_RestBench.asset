@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d3d25a568b87437dbda4a6fef515314a, type: 3}
   m_Name: Cath_RestBench
   m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.VisualProfile
-  sprite: {fileID: -753463202, guid: a006bb0e6e3e4a541b2116a3c9f1a630, type: 3}
+  sprite: {fileID: -1504894701, guid: a006bb0e6e3e4a541b2116a3c9f1a630, type: 3}
   animatorController: {fileID: 0}
   tint: {r: 1, g: 1, b: 1, a: 1}
   material: {fileID: 0}

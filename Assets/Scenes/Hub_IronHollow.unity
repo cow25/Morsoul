@@ -472,7 +472,7 @@ Transform:
   m_GameObject: {fileID: 319990399}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.56, y: 0.48, z: -0.002}
+  m_LocalPosition: {x: -0.26, y: 0.44, z: -0.002}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -527,7 +527,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -1091482528, guid: f4d0d6ed7753c7141b4c4bce4223a756, type: 3}
+  m_Sprite: {fileID: -591598963, guid: f4d0d6ed7753c7141b4c4bce4223a756, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 1
   m_FlipY: 0
@@ -584,7 +584,7 @@ Animator:
   m_GameObject: {fileID: 321214150}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 1b698b7239e285f49821319a244700e5, type: 2}
+  m_Controller: {fileID: 9100000, guid: d67a13cfd328a9944abeab123f31198e, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -982,8 +982,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 566427242}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: -0.08715574, w: 0.9961947}
-  m_LocalPosition: {x: 0.62, y: 1.08, z: -0.001}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.28, y: 0.44, z: -0.001}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1038,7 +1038,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 354481863, guid: 60556943ef98947418b9f10a86c01edc, type: 3}
+  m_Sprite: {fileID: 1906335246, guid: f4d0d6ed7753c7141b4c4bce4223a756, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 1
   m_FlipY: 0
@@ -1159,7 +1159,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &632864342
 Transform:
   m_ObjectHideFlags: 0
@@ -1655,7 +1655,7 @@ Animator:
   m_GameObject: {fileID: 855163913}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: eee5af27aac37134c9b1d65fc972cc08, type: 2}
+  m_Controller: {fileID: 9100000, guid: 870dcb240598bc747b6942079bc84209, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -1904,7 +1904,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &931977291
 Transform:
   m_ObjectHideFlags: 0
@@ -2214,8 +2214,8 @@ MonoBehaviour:
   target: {fileID: 1769939123}
   smoothTime: 0.25
   useBounds: 1
-  boundsMin: {x: -10, y: -5.5}
-  boundsMax: {x: 10, y: 6.5}
+  boundsMin: {x: -8, y: -4.4}
+  boundsMax: {x: 8, y: 4.7}
   insetByView: 1
 --- !u!20 &1086983579
 Camera:
@@ -2227,7 +2227,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
-  m_BackGroundColor: {r: 0.09, g: 0.07, b: 0.06, a: 1}
+  m_BackGroundColor: {r: 0.06, g: 0.06, b: 0.08, a: 1}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -2734,7 +2734,7 @@ Transform:
   m_GameObject: {fileID: 1281669542}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -5, y: 0.5, z: 0}
+  m_LocalPosition: {x: -6.4, y: 0.3, z: 0.006}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -3602,7 +3602,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1584091838
 Transform:
   m_ObjectHideFlags: 0
@@ -4147,7 +4147,7 @@ Animator:
   m_GameObject: {fileID: 1797210515}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 9f97a6e92368b704594e07202b5b8711, type: 2}
+  m_Controller: {fileID: 9100000, guid: 3aabb7fe1d94c31439e9055adde031b4, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -4524,7 +4524,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1927311754
 Transform:
   m_ObjectHideFlags: 0
@@ -4616,7 +4616,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1948740641
 Transform:
   m_ObjectHideFlags: 0
@@ -4938,7 +4938,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 78cb930b8d624950a82508dfb8dc5bb2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.EntityVisual
-  profile: {fileID: 11400000, guid: f17d555b8efaad544a0e47fdcfe2d220, type: 2}
+  profile: {fileID: 11400000, guid: 9a9b764eef5fb5f44925757fec87a587, type: 2}
   _defaultMaterial: {fileID: 2100000, guid: 9dfc825aed78fcd4ba02077103263b40, type: 2}
 --- !u!114 &2088534043
 MonoBehaviour:

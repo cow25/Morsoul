@@ -181,7 +181,7 @@ namespace Morsoul.Hub.Editor
                     int frameH = h;
                     Vector2 pivot = new Vector2(0.5f, 0f);
 
-                    if (path.Contains("/Body_A/") || path.Contains("/Citizen_F/")
+                    if (path.Contains("/Player/") || path.Contains("/Citizen_F/")
                         || path.Contains("/Citizen_M/") || path.Contains("/Named/"))
                     {
                         // 64x64 padded frames with feet resting 16px from the bottom edge.

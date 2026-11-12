@@ -204,19 +204,19 @@ namespace Morsoul.Hub.Editor
                     5.2f, new Color(0.06f, 0.06f, 0.08f, 1f));
 
                 var playerProf = PixelCrawlerHubToolkit.EnsureCharacterProfile(
-                    "Player", "Assets/Art/Characters/Player/Body_A/Idle_Base/Idle_Down-Sheet.png",
-                    "Idle_Down-Sheet_0", "Assets/Animations/Player/Player_BodyA.controller",
+                    "Player", "Assets/Art/Characters/Player/Golem/Idle/Idle_Down-Sheet.png",
+                    "Idle_Down-Sheet_0", "Assets/Animations/Player/Player_Golem.controller",
                     new Vector2(0f, -0.35f));
                 var thrunProf = PixelCrawlerHubToolkit.EnsureCharacterProfile(
                     "Thrun", "Assets/Art/Characters/NPCs/Knight/Idle/Idle-Sheet.png",
                     "Idle-Sheet_0", "Assets/Animations/NPCs/NPC_Knight.controller",
                     new Vector2(0f, -0.35f), flipX: true);
                 var harlanProf = PixelCrawlerHubToolkit.EnsureCharacterProfile(
-                    "Harlan", "Assets/Art/Characters/NPCs/Citizen_F/Tavern_B/Idle/Idle_Side-Sheet.png",
-                    "Idle_Side-Sheet_0", "Assets/Animations/NPCs/NPC_CitizenF_TavernB.controller",
+                    "Harlan", "Assets/Art/Characters/NPCs/Named/Harlan/Idle/Idle_Down-Sheet.png",
+                    "Idle_Down-Sheet_0", "Assets/Animations/NPCs/NPC_Harlan.controller",
                     new Vector2(0f, -0.35f), flipX: true);
                 var minerProf = PixelCrawlerHubToolkit.EnsureCharacterProfile(
-                    "Eliza", "Assets/Art/Characters/NPCs/Citizen_F/Peasant_A/Idle/Idle-Sheet.png",
+                    "PeasantF", "Assets/Art/Characters/NPCs/Citizen_F/Peasant_A/Idle/Idle-Sheet.png",
                     "Idle-Sheet_0", "Assets/Animations/NPCs/NPC_CitizenF_PeasantA.controller",
                     new Vector2(0f, -0.35f));
                 var carrierProf = PixelCrawlerHubToolkit.EnsureCharacterProfile(

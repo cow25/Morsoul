@@ -160,7 +160,8 @@ namespace Morsoul.Hub.Editor
                 hud.postInvestigationObjective = spec.postInvestigationObjective;
                 EnsureCaseDoor(scene);
                 EnsureRestSpot(scene);
-                EnsureCarrier(scene);
+                if (spec.scenePath != CathedralPath)
+                    EnsureCarrier(scene);
                 ConfigureJournal(scene, spec.journalCaseId);
                 ConfigureCamera(scene, spec);
                 if (spec.interludeDialoguePath != null)

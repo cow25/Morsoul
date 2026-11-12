@@ -26,10 +26,10 @@ namespace Morsoul.Hub.Editor
         const string DungeonPropsPath = "Assets/Art/Environments/Props/Static/Dungeon_Props.png";
         const string ResourcesPath = "Assets/Art/Environments/Props/Static/Resources.png";
         const string ExtPropsPath = "Assets/Art/Environments/Buildings/Exterior/Props.png";
-        const string PlayerSheetPath = "Assets/Art/Characters/Player/Body_A/Idle_Base/Idle_Down-Sheet.png";
-        const string ElizaSheetPath = "Assets/Art/Characters/NPCs/Citizen_F/Peasant_A/Idle/Idle-Sheet.png";
-        const string PlayerControllerPath = "Assets/Animations/Player/Player_BodyA.controller";
-        const string ElizaControllerPath = "Assets/Animations/NPCs/NPC_CitizenF_PeasantA.controller";
+        const string PlayerSheetPath = "Assets/Art/Characters/Player/Golem/Idle/Idle_Down-Sheet.png";
+        const string ElizaSheetPath = "Assets/Art/Characters/NPCs/Named/Eliza/Idle/Idle_Down-Sheet.png";
+        const string PlayerControllerPath = "Assets/Animations/Player/Player_Golem.controller";
+        const string ElizaControllerPath = "Assets/Animations/NPCs/NPC_Eliza.controller";
         const string EyeScanReticlePath = "Assets/Art/Vfx/EyeScanReticle.png";
         const string EyeScanSweepPath = "Assets/Art/Vfx/EyeScanSweep.png";
         const string EyeScanWavePath = "Assets/Art/Vfx/EyeScanWave.png";
@@ -375,8 +375,8 @@ namespace Morsoul.Hub.Editor
             eliza.transform.position = new Vector3(12f, 0f, 0f);
 
             var elizaProfile = PixelCrawlerHubToolkit.EnsureCharacterProfile(
-                "Eliza", ElizaSheetPath, "Idle-Sheet_0",
-                ElizaControllerPath, new Vector2(0f, -0.35f), flipX: true);
+                "Eliza", ElizaSheetPath, "Idle_Down-Sheet_0",
+                ElizaControllerPath, new Vector2(0f, -0.35f));
             PixelCrawlerHubToolkit.BindActorVisual(eliza, elizaProfile, addYSort: true);
             eliza.SetActive(false);
             return eliza;

@@ -52,17 +52,18 @@ namespace Morsoul.Hub.Editor
         struct NpcProfiles
         {
             public VisualProfile Eliza;
+            public VisualProfile PeasantF;
             public VisualProfile Ignatius;
             public VisualProfile Ovan;
             public VisualProfile Carrier;
             public VisualProfile GuardA;
             public VisualProfile MerchantA;
             public VisualProfile AdventurerA;
+            public VisualProfile VillagerA;
+            public VisualProfile MerchantB;
+            public VisualProfile SmithA;
             public VisualProfile TavernA;
             public VisualProfile TavernB;
-            public VisualProfile MaleVillager;
-            public VisualProfile MaleMerchant;
-            public VisualProfile MaleSmith;
         }
 
         [MenuItem("Morsoul/Scenes/Lower Market", priority = 13)]
@@ -588,8 +589,8 @@ namespace Morsoul.Hub.Editor
                 var profiles = LoadNpcProfiles();
 
                 var playerProfile = PixelCrawlerHubToolkit.EnsureCharacterProfile(
-                    "Player", "Assets/Art/Characters/Player/Body_A/Idle_Base/Idle_Down-Sheet.png",
-                    "Idle_Down-Sheet_0", "Assets/Animations/Player/Player_BodyA.controller",
+                    "Player", "Assets/Art/Characters/Player/Golem/Idle/Idle_Down-Sheet.png",
+                    "Idle_Down-Sheet_0", "Assets/Animations/Player/Player_Golem.controller",
                     new Vector2(0f, -0.35f));
                 BindRoot(scene, "Player", playerProfile);
 
@@ -648,7 +649,11 @@ namespace Morsoul.Hub.Editor
         static NpcProfiles LoadNpcProfiles() => new NpcProfiles
         {
             Eliza = PixelCrawlerHubToolkit.EnsureCharacterProfile(
-                "Eliza", "Assets/Art/Characters/NPCs/Citizen_F/Peasant_A/Idle/Idle-Sheet.png",
+                "Eliza", "Assets/Art/Characters/NPCs/Named/Eliza/Idle/Idle_Down-Sheet.png",
+                "Idle_Down-Sheet_0", "Assets/Animations/NPCs/NPC_Eliza.controller",
+                new Vector2(0f, -0.35f)),
+            PeasantF = PixelCrawlerHubToolkit.EnsureCharacterProfile(
+                "PeasantF", "Assets/Art/Characters/NPCs/Citizen_F/Peasant_A/Idle/Idle-Sheet.png",
                 "Idle-Sheet_0", "Assets/Animations/NPCs/NPC_CitizenF_PeasantA.controller",
                 new Vector2(0f, -0.35f), flipX: true),
             Ignatius = PixelCrawlerHubToolkit.EnsureCharacterProfile(
@@ -675,6 +680,18 @@ namespace Morsoul.Hub.Editor
                 "Adventurer_A", "Assets/Art/Characters/NPCs/Citizen_M/Adventurer_A/Idle/Idle_Side-Sheet.png",
                 "Idle_Side-Sheet_0", "Assets/Animations/NPCs/NPC_CitizenM_AdventurerA.controller",
                 new Vector2(0f, -0.35f), flipX: true),
+            VillagerA = PixelCrawlerHubToolkit.EnsureCharacterProfile(
+                "Villager_A", "Assets/Art/Characters/NPCs/Citizen_M/Villager_A/Idle/Idle_Side-Sheet.png",
+                "Idle_Side-Sheet_0", "Assets/Animations/NPCs/NPC_CitizenM_VillagerA.controller",
+                new Vector2(0f, -0.35f)),
+            MerchantB = PixelCrawlerHubToolkit.EnsureCharacterProfile(
+                "Merchant_B", "Assets/Art/Characters/NPCs/Citizen_M/Merchant_B/Idle/Idle_Side-Sheet.png",
+                "Idle_Side-Sheet_0", "Assets/Animations/NPCs/NPC_CitizenM_MerchantB.controller",
+                new Vector2(0f, -0.35f)),
+            SmithA = PixelCrawlerHubToolkit.EnsureCharacterProfile(
+                "Smith_A", "Assets/Art/Characters/NPCs/Citizen_M/Smith_A/Idle/Idle_Side-Sheet.png",
+                "Idle_Side-Sheet_0", "Assets/Animations/NPCs/NPC_CitizenM_SmithA.controller",
+                new Vector2(0f, -0.35f)),
             TavernA = PixelCrawlerHubToolkit.EnsureCharacterProfile(
                 "Vendor", "Assets/Art/Characters/NPCs/Citizen_F/Tavern_A/Idle/Idle_Side-Sheet.png",
                 "Idle_Side-Sheet_0", "Assets/Animations/NPCs/NPC_CitizenF_TavernA.controller",
@@ -683,18 +700,6 @@ namespace Morsoul.Hub.Editor
                 "Townsperson", "Assets/Art/Characters/NPCs/Citizen_F/Tavern_B/Idle/Idle_Side-Sheet.png",
                 "Idle_Side-Sheet_0", "Assets/Animations/NPCs/NPC_CitizenF_TavernB.controller",
                 new Vector2(0f, -0.35f), flipX: true),
-            MaleVillager = PixelCrawlerHubToolkit.EnsureCharacterProfile(
-                "MaleVillager", MarketPackAssetSetup.MaleIdleSheetPath,
-                "Char_Down_0", "Assets/Animations/NPCs/NPC_Male_Villager.controller",
-                new Vector2(0f, -0.35f)),
-            MaleMerchant = PixelCrawlerHubToolkit.EnsureCharacterProfile(
-                "MaleMerchant", MarketPackAssetSetup.MaleIdleSheetPath,
-                "Char_Down_0", "Assets/Animations/NPCs/NPC_Male_Villager.controller",
-                new Vector2(0f, -0.35f), tint: new Color(0.84f, 0.91f, 1f, 1f)),
-            MaleSmith = PixelCrawlerHubToolkit.EnsureCharacterProfile(
-                "MaleSmith", MarketPackAssetSetup.MaleIdleSheetPath,
-                "Char_Down_0", "Assets/Animations/NPCs/NPC_Male_Villager.controller",
-                new Vector2(0f, -0.35f), tint: new Color(1f, 0.90f, 0.82f, 1f)),
         };
 
         static void RepositionCoreAnchors(Scene scene, NpcProfiles profiles)
@@ -752,9 +757,9 @@ namespace Morsoul.Hub.Editor
             BindRoot(scene, "Ignatius", profiles.Ignatius);
             BindRoot(scene, "Vendor", profiles.TavernA);
             BindRoot(scene, "MarketCrowd_Vendor", profiles.TavernA);
-            BindRoot(scene, "Townsperson", profiles.Eliza);
+            BindRoot(scene, "Townsperson", profiles.PeasantF);
             BindRoot(scene, "MarketCrowd", profiles.TavernB);
-            BindRoot(scene, "MarketCrowd_Townsperson", profiles.Eliza);
+            BindRoot(scene, "MarketCrowd_Townsperson", profiles.PeasantF);
             BindRoot(scene, "MarketCrowd_Adventurer", profiles.AdventurerA);
             BindRoot(scene, "Carrier", profiles.Carrier);
 
@@ -893,7 +898,7 @@ namespace Morsoul.Hub.Editor
 
             // --- Additional Random Interactable NPCs across districts ---
             SpawnInteractableNpc(scene, "MarketNpc_Smith",
-                profiles.MaleSmith, new Vector3(12.2f, 3.2f, 0f),
+                profiles.SmithA, new Vector3(12.2f, 3.2f, 0f),
                 EnsureFlavorDialogue("D_MarketSmith_01", "Forge Apprentice",
                     "Master Ignatius won't let anyone near that smelted lock. Funny thing is, the slag cooled too fast to be dragonfire.") ?? defaultBarks);
 
@@ -913,26 +918,26 @@ namespace Morsoul.Hub.Editor
                     "You came down from the ruined road? Good to see the eastern path finally open again—watch your step near the bazaar.") ?? defaultBarks);
 
             SpawnInteractableNpc(scene, "MarketNpc_Courier",
-                profiles.MaleVillager, new Vector3(-4.6f, -2.5f, 0f),
+                profiles.VillagerA, new Vector3(-4.6f, -2.5f, 0f),
                 EnsureFlavorDialogue("D_MarketCourier_01", "Guild Courier",
                     "Dispatches have been piling up since sunrise. At least with the plaza widened, carts can finally turn around.") ?? defaultBarks);
 
-            // --- Non-Interactable Strolling Market Citizens (attached-arm sprites + patrolling watch) ---
-            SpawnAmbientNpc(scene, "AmbientMarket_Stroll_North", profiles.MaleMerchant,
+            // --- Non-Interactable Strolling Market Citizens (cohesive Pixel Crawler sprites) ---
+            SpawnAmbientNpc(scene, "AmbientMarket_Stroll_North", profiles.MerchantB,
                 new Vector3(-4.2f, 3.5f, 0f), new[]
                 {
                     new Vector2(-4.2f, 3.5f), new Vector2(5.5f, 3.5f),
                     new Vector2(-4.2f, 3.5f), new Vector2(-11.2f, 3.5f)
                 }, walkSpeed: 1.15f, pauseSeconds: 2.2f);
 
-            SpawnAmbientNpc(scene, "AmbientMarket_Stroll_Plaza", profiles.Eliza,
+            SpawnAmbientNpc(scene, "AmbientMarket_Stroll_Plaza", profiles.PeasantF,
                 new Vector2(-6.5f, 0.4f), new[]
                 {
                     new Vector2(-6.5f, 0.4f),  new Vector2(-6.5f, -2.6f),
                     new Vector2(2.6f, -2.6f),  new Vector2(2.6f, 1.2f)
                 }, walkSpeed: 1.3f, pauseSeconds: 1.6f);
 
-            SpawnAmbientNpc(scene, "AmbientMarket_Stroll_West", profiles.MaleVillager,
+            SpawnAmbientNpc(scene, "AmbientMarket_Stroll_West", profiles.VillagerA,
                 new Vector2(-13.8f, -1.8f), new[]
                 {
                     new Vector2(-13.8f, -1.8f), new Vector2(-7.8f, -1.8f)
@@ -945,7 +950,7 @@ namespace Morsoul.Hub.Editor
                     new Vector2(16.0f, -1.5f), new Vector2(11.4f, -1.5f)
                 }, walkSpeed: 1.2f, pauseSeconds: 2.0f);
 
-            SpawnAmbientNpc(scene, "AmbientMarket_Stroll_South", profiles.Eliza,
+            SpawnAmbientNpc(scene, "AmbientMarket_Stroll_South", profiles.PeasantF,
                 new Vector2(-3.2f, -4.3f), new[]
                 {
                     new Vector2(-3.2f, -4.3f), new Vector2(6.8f, -4.3f)
@@ -959,9 +964,9 @@ namespace Morsoul.Hub.Editor
                 }, walkSpeed: 1.35f, pauseSeconds: 1.4f);
 
             // --- Non-Interactable Stationary Background Folk (mixed townsfolk idling cleanly off props/flowers) ---
-            SpawnAmbientNpc(scene, "AmbientMarket_Idle_Lodge", profiles.MaleMerchant,
+            SpawnAmbientNpc(scene, "AmbientMarket_Idle_Lodge", profiles.MerchantB,
                 new Vector2(-15.4f, 3.4f), null);
-            SpawnAmbientNpc(scene, "AmbientMarket_Idle_Sawmill", profiles.MaleSmith,
+            SpawnAmbientNpc(scene, "AmbientMarket_Idle_Sawmill", profiles.SmithA,
                 new Vector2(-6.2f, -5.65f), null);
             SpawnAmbientNpc(scene, "AmbientMarket_Idle_SouthGate", profiles.GuardA,
                 new Vector2(1.45f, -4.55f), null);

@@ -32,7 +32,7 @@ namespace Morsoul.Hub
         {
             new HubLabel { caseId = 0, label = "Asterveil — Lower Market" },
             new HubLabel { caseId = 1, label = "Asterveil — Lower Market" },
-            new HubLabel { caseId = 2, label = "Asterveil — Cathedral Nave" },
+            new HubLabel { caseId = 2, label = "Asterveil — Cathedral Grounds" },
             new HubLabel { caseId = 3, label = "Whisperwood — Boundary Trail" },
             new HubLabel { caseId = 4, label = "Iron Hollow — Railhead" },
         };
