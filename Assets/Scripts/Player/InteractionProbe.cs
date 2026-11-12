@@ -31,14 +31,28 @@ public class InteractionProbe : MonoBehaviour
                 
                 if (Mouse.current.leftButton.wasPressedThisFrame)
                 {
-                    clue.Collect();
-                    DiaryManager manager = FindAnyObjectByType<DiaryManager>();
-                    if (manager != null) manager.AddClue(clue);
+                    InspectManager.Instance.OpenInspect(clue);
                 }
             }
             else if (hit.collider.TryGetComponent(out DialogueTrigger dialogue))
             {
                 HUDManager.Instance.ShowInteractionPrompt("[E] Talk", dialogue.dialogueText);
+            }
+            else if (hit.collider.TryGetComponent(out LockableInteractable interactable))
+            {
+                if (interactable.IsLocked())
+                {
+                    HUDManager.Instance.ShowInteractionPrompt("[Locked]", interactable.lockedDescription);
+                }
+                else
+                {
+                    HUDManager.Instance.ShowInteractionPrompt("[L-Click] Interact", interactable.unlockedDescription);
+                    
+                    if (Mouse.current.leftButton.wasPressedThisFrame)
+                    {
+                        interactable.Interact();
+                    }
+                }
             }
         }
         else
