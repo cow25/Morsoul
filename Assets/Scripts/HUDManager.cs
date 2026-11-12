@@ -93,6 +93,7 @@ public class HUDManager : MonoBehaviour
     {
         SyncSessionState();
         SyncDiaryToJournal();
+        UpdateKeyHighlights();
     }
 
     private void OnUIReload(PanelRenderer renderer, VisualElement root, int version)
@@ -154,6 +155,21 @@ public class HUDManager : MonoBehaviour
                 _caseLabel.text = expectedCase;
             }
         }
+    }
+
+    private void UpdateKeyHighlights()
+    {
+        var keyboard = UnityEngine.InputSystem.Keyboard.current;
+        if (keyboard == null) return;
+
+        if (_escButton != null)
+            _escButton.style.opacity = keyboard.escapeKey.isPressed ? 1f : 0.2f;
+        if (_golemEyeRow != null)
+            _golemEyeRow.style.opacity = keyboard.tabKey.isPressed ? 1f : 0.2f;
+        if (_deskButton != null)
+            _deskButton.style.opacity = keyboard.gKey.isPressed ? 1f : 0.2f;
+        if (_boardButton != null)
+            _boardButton.style.opacity = keyboard.hKey.isPressed ? 1f : 0.2f;
     }
 
     public void SetObjective(string objective, string caseTitle = null)

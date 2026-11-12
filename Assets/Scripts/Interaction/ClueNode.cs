@@ -20,6 +20,14 @@ public class ClueNode : MonoBehaviour
         if (state == State.Collected) return;
         state = State.Collected;
         Debug.Log($"Collected Clue: {id}");
-        // Later, we will call GameManager and DiaryManager here
+
+        if (kind == Kind.Item)
+        {
+            gameObject.SetActive(false);
+        }
+        else
+        {
+            Debug.Log($"{kind} clue remains in the world.");
+        }
     }
 }
