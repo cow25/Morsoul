@@ -1,0 +1,9 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <ui:VisualElement name="InspectRoot" style="position: absolute; top: 0; bottom: 0; left: 0; right: 0; background-color: rgba(10, 10, 10, 0); display: none; align-items: center; justify-content: center;">
+        <ui:Image name="InspectImage" style="width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0); -unity-background-scale-mode: scale-to-fit;"/>
+        <ui:VisualElement style="position: absolute; bottom: 10%; width: 60%; align-items: center;">
+            <ui:Label name="InspectDescription" text="Clue description goes here." style="font-size: 18px; color: rgb(200, 200, 200); white-space: normal; -unity-text-align: middle-center; -unity-font-definition: url(&quot;project://database/Assets/Fonts/Middleearth.ttf?fileID=12800000&amp;guid=9c5492c0de01d69479e20601347df005&amp;type=3#Middleearth&quot;);"/>
+            <ui:Label text="[ESC] to close" name="Label" style="font-size: 14px; color: gray; margin-top: 20px; -unity-font-definition: url(&quot;project://database/Assets/Fonts/Middleearth.ttf?fileID=12800000&amp;guid=9c5492c0de01d69479e20601347df005&amp;type=3#Middleearth&quot;);"/>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

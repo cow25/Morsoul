@@ -6,6 +6,11 @@ public class HUDManager : MonoBehaviour
     public static HUDManager Instance { get; private set; }
     private PanelRenderer panelRenderer; 
 
+    private VisualElement _escLabel;
+    private VisualElement _golemEyePanel;
+    private VisualElement _deskPanel;
+    private VisualElement _boardPanel;
+
     private VisualElement _aetherSightRow;
     private VisualElement _interactionContainer;
     private Label _focusValueLabel;
@@ -37,6 +42,11 @@ public class HUDManager : MonoBehaviour
         if (_uiVersion == version) return;
         _uiVersion = version;
 
+        _escLabel = root.Q<VisualElement>("EscLabel");
+        _golemEyePanel = root.Q<VisualElement>("GolemEyePanel");
+        _deskPanel = root.Q<VisualElement>("DeskPanel");
+        _boardPanel = root.Q<VisualElement>("BoardPanel");
+
         _aetherSightRow = root.Q<VisualElement>("AetherSightRow");
         _focusValueLabel = root.Q<Label>("FocusValueLabel");
         _focusBarFill = root.Q<VisualElement>("FocusBarFill");
@@ -54,6 +64,25 @@ public class HUDManager : MonoBehaviour
         ApplyFocusToUI();
     }
 
+    private void Update()
+    {
+        if (_escLabel == null || _golemEyePanel == null || _deskPanel == null || _boardPanel == null) return;
+        if (UnityEngine.InputSystem.Keyboard.current == null) return;
+
+        var keyboard = UnityEngine.InputSystem.Keyboard.current;
+
+        // 1. Profile (Esc)
+        _escLabel.style.opacity = keyboard.escapeKey.isPressed ? 1f : 0.2f;
+
+        // 2. Golem Eye (Tab)
+        _golemEyePanel.style.opacity = keyboard.tabKey.isPressed ? 1f : 0.2f;
+
+        // 3. Desk (G)
+        _deskPanel.style.opacity = keyboard.gKey.isPressed ? 1f : 0.2f;
+
+        // 4. Board (H)
+        _boardPanel.style.opacity = keyboard.hKey.isPressed ? 1f : 0.2f;
+    }
 
     public void UpdateFocus(int currentFocus, int maxFocus)
     {
