@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Morsoul.Dialogue;
+using Morsoul.Dialogue.Editor;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -51,11 +52,17 @@ namespace Morsoul.Hub.Editor
         struct NpcProfiles
         {
             public VisualProfile Eliza;
-            public VisualProfile Knight;
-            public VisualProfile Wizard;
+            public VisualProfile Ignatius;
+            public VisualProfile Ovan;
+            public VisualProfile Carrier;
+            public VisualProfile GuardA;
+            public VisualProfile MerchantA;
+            public VisualProfile AdventurerA;
             public VisualProfile TavernA;
             public VisualProfile TavernB;
-            public VisualProfile Rogue;
+            public VisualProfile MaleVillager;
+            public VisualProfile MaleMerchant;
+            public VisualProfile MaleSmith;
         }
 
         [MenuItem("Morsoul/Scenes/Lower Market", priority = 13)]
@@ -63,6 +70,7 @@ namespace Morsoul.Hub.Editor
 
         public static void Rebuild()
         {
+            GuildIntroContentGenerator.Generate();
             MarketPackAssetSetup.EnsureAll();
             PixelCrawlerHubToolkit.ClearCache();
             RebuildArtOverlay();
@@ -169,7 +177,8 @@ namespace Morsoul.Hub.Editor
             if (marketShopBuilding != null)
             {
                 PixelCrawlerHubToolkit.PlaceSpriteProp(propsRoot, "Bazaar_Storefront_W",
-                    marketShopBuilding, new Vector2(-16.5f, 4.9f), zBias: -0.25f, sortingOrder: 3);
+                    marketShopBuilding, new Vector2(-16.5f, 4.95f), zBias: 0.25f, sortingOrder: 0,
+                    colliderSize: new Vector2(7.6f, 1.4f), colliderOffset: new Vector2(0f, 0.7f));
             }
             else
             {
@@ -191,13 +200,13 @@ namespace Morsoul.Hub.Editor
 
             if (marketShopBuilding == null)
                 PixelCrawlerHubToolkit.PlaceSpriteProp(propsRoot, "Lodge_Roof",
-                    roofBrown, new Vector2(-14.5f, 7.0f), zBias: -0.4f, sortingOrder: 4);
+                    roofBrown, new Vector2(-14.5f, 7.0f), zBias: -0.4f, sortingOrder: -1);
             PixelCrawlerHubToolkit.PlaceSpriteProp(propsRoot, "Apoth_Roof",
-                roofBrown, new Vector2(-5.5f, 7.0f), zBias: -0.4f, sortingOrder: 4);
+                roofBrown, new Vector2(-5.5f, 7.0f), zBias: -0.4f, sortingOrder: -1);
             PixelCrawlerHubToolkit.PlaceSpriteProp(propsRoot, "Guild_Roof",
-                roofGreen ?? roofBrown, new Vector2(3.0f, 7.2f), zBias: -0.45f, sortingOrder: 5);
+                roofGreen ?? roofBrown, new Vector2(3.0f, 7.2f), zBias: -0.45f, sortingOrder: -1);
             PixelCrawlerHubToolkit.PlaceSpriteProp(propsRoot, "Vault_Roof",
-                roofSlate ?? roofBrown, new Vector2(12.5f, 7.25f), zBias: -0.42f, sortingOrder: 5);
+                roofSlate ?? roofBrown, new Vector2(12.5f, 7.25f), zBias: -0.42f, sortingOrder: -1);
 
             var cottageDoor = PixelCrawlerHubToolkit.LoadSprite(ExtPropsPath, "Ext_Props_06");
             var guildArchDoor = PixelCrawlerHubToolkit.LoadSprite(ExtPropsPath, "Ext_Props_00");
@@ -209,13 +218,15 @@ namespace Morsoul.Hub.Editor
             var greenBanner = PixelCrawlerHubToolkit.LoadSprite(DungeonPropsPath, "Dungeon_Props_16");
             var signRight = LoadPackSprite(FantasyPropsDir + "Sign_1.png");
 
-            // 1. West Market Storefront details (baskets cleanly flanking the west storefront plaza).
+            // 1. West Market Storefront details (baskets cleanly flanking the west storefront with Y-sort and solid colliders).
             var basketCitrus = LoadPackSprite(VillagePropsDir + "kitchen_props4_2.png");
             var basketApples = LoadPackSprite(VillagePropsDir + "kitchen_props4_3.png");
             if (basketCitrus != null)
-                PixelCrawlerHubToolkit.PlaceSpriteProp(propsRoot, "Storefront_Basket_A", basketCitrus, new Vector2(-17.2f, 4.6f), sortingOrder: 5);
+                PixelCrawlerHubToolkit.PlaceSpriteProp(propsRoot, "Storefront_Basket_A", basketCitrus,
+                    new Vector2(-18.2f, 4.55f), colliderSize: new Vector2(0.85f, 0.55f), colliderOffset: new Vector2(0f, 0.25f));
             if (basketApples != null)
-                PixelCrawlerHubToolkit.PlaceSpriteProp(propsRoot, "Storefront_Basket_B", basketApples, new Vector2(-16.1f, 4.6f), sortingOrder: 5);
+                PixelCrawlerHubToolkit.PlaceSpriteProp(propsRoot, "Storefront_Basket_B", basketApples,
+                    new Vector2(-17.3f, 4.55f), colliderSize: new Vector2(0.85f, 0.55f), colliderOffset: new Vector2(0f, 0.25f));
             if (signRight != null)
                 PixelCrawlerHubToolkit.PlaceSpriteProp(propsRoot, "Storefront_Sign", signRight, new Vector2(-12.1f, 4.7f));
 
@@ -230,6 +241,8 @@ namespace Morsoul.Hub.Editor
 
             // 3. Guild Hall facade — arched door centered at x=3.0 behind GuildEntrance.
             PixelCrawlerHubToolkit.PlaceSpriteProp(propsRoot, "Guild_Door", guildArchDoor, new Vector2(3.0f, 5.0f), zBias: 0.25f);
+            if (signRight != null)
+                PixelCrawlerHubToolkit.PlaceSpriteProp(propsRoot, "Guild_Sign", signRight, new Vector2(1.9f, 4.45f));
             if (greenBanner != null)
             {
                 PixelCrawlerHubToolkit.PlaceSpriteProp(propsRoot, "Guild_Banner_W", greenBanner, new Vector2(2.0f, 5.45f), zBias: 0.25f);
@@ -331,7 +344,7 @@ namespace Morsoul.Hub.Editor
             var bannerBlue = PixelCrawlerHubToolkit.LoadSprite(OtherObjectsSheetPath, "Other_objects_16");
 
             // Retro Interior tabletop accents (proportionally matched at 18 PPU).
-            var openBook = PixelCrawlerHubToolkit.LoadSprite(RetroItemsPath, "RetroItem_08");
+            var openBook = PixelCrawlerHubToolkit.LoadSprite(RetroItemsPath, "RetroItem_24");
             var litCandle = PixelCrawlerHubToolkit.LoadSprite(RetroItemsPath, "RetroItem_26");
             var foodPlate = PixelCrawlerHubToolkit.LoadSprite(RetroItemsPath, "RetroItem_32");
             var stewPot = PixelCrawlerHubToolkit.LoadSprite(RetroItemsPath, "RetroItem_38");
@@ -361,27 +374,24 @@ namespace Morsoul.Hub.Editor
             PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Caravan_Sacks_W", sackWide, new Vector2(-15.5f, -5.4f));
             PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Caravan_GrainSack_W", grainSackStack ?? sackWide, new Vector2(-15.4f, -4.15f));
             PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Bazaar_Banner_W", purpleBanner, new Vector2(-18.8f, -3.2f));
-            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Bazaar_Sign_W", signRight, new Vector2(-8.0f, -3.3f));
+            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Bazaar_Sign_W", signRight, new Vector2(-7.0f, -3.3f));
 
-            // --- 2. North Apothecary & Herb Shop (-8..-4, 3.4..4.8) ---
+            // --- 2. North Apothecary & Herb Shop (uncluttered facade, book + candle on table) ---
             PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Apoth_Shelf_A", apothShelfA,
-                new Vector2(-8.1f, 4.6f), colliderSize: new Vector2(1.9f, 0.9f), colliderOffset: new Vector2(0f, 0.45f));
-            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Apoth_Shelf_B", apothShelfB,
-                new Vector2(-6.3f, 4.6f), colliderSize: new Vector2(1.9f, 0.9f), colliderOffset: new Vector2(0f, 0.45f));
-            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Apoth_HerbRack", rackHerbsA,
-                new Vector2(-3.9f, 4.55f), colliderSize: new Vector2(1.3f, 0.85f), colliderOffset: new Vector2(0f, 0.4f));
-            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Apoth_HerbCrate", herbCrate, new Vector2(-9.5f, 4.45f));
-            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Apoth_Table", marketTable,
-                new Vector2(-8.2f, 3.1f), colliderSize: new Vector2(2.0f, 0.95f), colliderOffset: new Vector2(0f, 0.45f));
-            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Apoth_Book", openBook, new Vector2(-8.55f, 3.72f), zBias: -0.02f, sortingOrder: 6);
-            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Apoth_Candle", litCandle, new Vector2(-7.85f, 3.75f), zBias: -0.02f, sortingOrder: 6);
+                new Vector2(-9.25f, 4.6f), colliderSize: new Vector2(1.8f, 0.85f), colliderOffset: new Vector2(0f, 0.42f));
+            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Apoth_HerbCrate", herbCrate,
+                new Vector2(-9.5f, 3.35f), colliderSize: new Vector2(0.9f, 0.6f), colliderOffset: new Vector2(0f, 0.3f));
+            var apothTable = PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Apoth_Table", marketTable,
+                new Vector2(-7.8f, 2.95f), colliderSize: new Vector2(2.0f, 0.95f), colliderOffset: new Vector2(0f, 0.45f));
+            PlaceTabletopProp(apothTable, "Apoth_Book", openBook, new Vector2(-0.35f, 0.65f));
+            PlaceTabletopProp(apothTable, "Apoth_Candle", litCandle, new Vector2(0.35f, 0.68f));
 
-            // --- 3. Central Guild Promenade Seating & Banners (RestSpot bench sits beside NoticeBoard at -2.3, 2.3) ---
-            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Plaza_Cafe_Table", marketTable,
+            // --- 3. Central Guild Promenade Seating & Banners (RestSpot bench sits beside NoticeBoard at -2.45, 2.3) ---
+            var cafeTable = PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Plaza_Cafe_Table", marketTable,
                 new Vector2(5.4f, -0.6f), colliderSize: new Vector2(2.0f, 0.95f), colliderOffset: new Vector2(0f, 0.45f));
             PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Plaza_Cafe_Bench_W", smallBench, new Vector2(4.0f, -0.55f));
             PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Plaza_Cafe_Bench_E", smallBench, new Vector2(6.8f, -0.55f));
-            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Plaza_Cafe_Pie", bakedPie, new Vector2(5.4f, 0.25f), zBias: -0.02f, sortingOrder: 6);
+            PlaceTabletopProp(cafeTable, "Plaza_Cafe_Pie", bakedPie, new Vector2(0f, 0.72f));
             PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Guild_StandBanner_W", purpleBanner, new Vector2(1.4f, 4.15f));
             PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Guild_StandBanner_E", purpleBanner, new Vector2(4.6f, 4.15f));
 
@@ -413,10 +423,10 @@ namespace Morsoul.Hub.Editor
                 new Vector2(9.2f, -4.85f), colliderSize: new Vector2(1.4f, 0.9f), colliderOffset: new Vector2(0f, 0.45f));
             PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Stall_East_BreadBasket", breadBasket, new Vector2(13.0f, -5.3f));
             PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Stall_East_FruitBasket", fruitBasket, new Vector2(15.5f, -5.3f));
-            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Stall_East_ServiceTable", marketTable,
+            var serviceTable = PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Stall_East_ServiceTable", marketTable,
                 new Vector2(16.0f, -3.1f), colliderSize: new Vector2(2.0f, 0.95f), colliderOffset: new Vector2(0f, 0.45f));
-            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Stall_East_Dish", foodPlate, new Vector2(15.65f, -2.2f), zBias: -0.02f, sortingOrder: 6);
-            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Stall_East_StewPot", stewPot, new Vector2(16.4f, -2.15f), zBias: -0.02f, sortingOrder: 6);
+            PlaceTabletopProp(serviceTable, "Stall_East_Dish", foodPlate, new Vector2(-0.35f, 0.72f));
+            PlaceTabletopProp(serviceTable, "Stall_East_StewPot", stewPot, new Vector2(0.4f, 0.75f));
             PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Stall_East_Sign", signLeft, new Vector2(8.6f, -3.2f));
 
             // --- 6. South Square Kiosks, Gate Archway & Supply Depot ---
@@ -441,12 +451,11 @@ namespace Morsoul.Hub.Editor
             PixelCrawlerHubToolkit.PlaceSpriteProp(root, "South_GateBanner_W", bannerRed, new Vector2(-2.65f, -6.3f));
             PixelCrawlerHubToolkit.PlaceSpriteProp(root, "South_GateBanner_E", bannerBlue, new Vector2(2.65f, -6.3f));
 
-            // --- 7. Warm Double-Lantern Street Lamps (Fantasy Tileset LampPost_3) ---
+            // --- 7. Warm Double-Lantern Street Lamps (roadside corners only, clear of storefronts & tables) ---
             var lampPositions = new[]
             {
-                new Vector2(-19.3f, 1.5f), new Vector2(-9.8f, 2.6f), new Vector2(-5.25f, 2.15f),
-                new Vector2(6.9f, 3.3f),   new Vector2(17.5f, 2.9f), new Vector2(-6.4f, -3.3f),
-                new Vector2(7.6f, -3.4f),  new Vector2(-4.5f, -7.2f), new Vector2(4.5f, -7.2f),
+                new Vector2(-19.3f, 1.6f), new Vector2(17.6f, 2.1f),
+                new Vector2(-4.6f, -7.2f), new Vector2(4.6f, -7.2f),
             };
             for (int i = 0; i < lampPositions.Length; i++)
             {
@@ -489,9 +498,9 @@ namespace Morsoul.Hub.Editor
 
             var flowers = new[]
             {
-                new Vector2(-17.4f, 4.4f), new Vector2(-9.4f, 3.9f), new Vector2(-2.9f, 4.25f),
+                new Vector2(-17.4f, 4.4f), new Vector2(-10.5f, 3.9f), new Vector2(-2.9f, 4.25f),
                 new Vector2(6.8f, 4.1f),   new Vector2(-12.2f, -6.3f), new Vector2(9.2f, -6.1f),
-                new Vector2(12.2f, -7.2f), new Vector2(15.5f, -7.3f),
+                new Vector2(11.8f, -7.2f), new Vector2(15.5f, -7.3f),
             };
             for (int i = 0; i < flowers.Length; i++)
                 PixelCrawlerHubToolkit.PlaceSpriteProp(root, $"Market_Flower_{i:D2}",
@@ -500,6 +509,17 @@ namespace Morsoul.Hub.Editor
             PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Brook_Reed_01", reedTall, new Vector2(11.4f, -8.2f));
             PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Brook_Reed_02", reedTall, new Vector2(16.2f, -8.3f));
             PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Brook_Boulder_SE", boulder, new Vector2(17.8f, -7.8f));
+        }
+
+        static void PlaceTabletopProp(GameObject table, string name, Sprite sprite, Vector2 localOffset)
+        {
+            if (table == null || sprite == null) return;
+            var go = new GameObject(name);
+            go.transform.SetParent(table.transform, false);
+            go.transform.localPosition = new Vector3(localOffset.x, localOffset.y, -0.001f);
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.sortingOrder = 0;
         }
 
         static void AddGatePillarCollider(GameObject parent, string name, float localX, float localY)
@@ -518,7 +538,7 @@ namespace Morsoul.Hub.Editor
             var root = new GameObject("MarketBounds");
             SceneManager.MoveGameObjectToScene(root, scene);
 
-            AddBoundaryBox(root, "Bound_NorthBuildings", new Vector2(0f, 6.1f), new Vector2(44f, 2.2f));
+            AddBoundaryBox(root, "Bound_NorthBuildings", new Vector2(0f, 6.0f), new Vector2(44f, 2.1f));
             AddBoundaryBox(root, "Bound_West", new Vector2(-20.2f, -1.5f), new Vector2(1.4f, 17f));
             AddBoundaryBox(root, "Bound_East", new Vector2(19.2f, -1.5f), new Vector2(1.4f, 17f));
             AddBoundaryBox(root, "Bound_SouthW", new Vector2(-11.2f, -8.5f), new Vector2(18.5f, 1.4f));
@@ -580,15 +600,38 @@ namespace Morsoul.Hub.Editor
                 BindStaticProp(scene, "NoticeBoard", "NoticeBoard", FantasyPropsDir + "BulletinBoard_1.png", "BulletinBoard_1");
                 BindStaticProp(scene, "RestSpot", "RestSpot", ExtPropsPath, "Ext_Props_14");
                 var restGo = PixelCrawlerHubToolkit.FindRoot(scene, "RestSpot");
-                if (restGo != null && restGo.TryGetComponent<BoxCollider2D>(out var restCol))
+                if (restGo != null)
                 {
-                    restCol.isTrigger = true;
-                    restCol.size = new Vector2(2.6f, 1.4f);
+                    if (restGo.TryGetComponent<BoxCollider2D>(out var restCol))
+                    {
+                        restCol.isTrigger = true;
+                        restCol.size = new Vector2(2.6f, 1.4f);
+                    }
+                    var solidTf = restGo.transform.Find("SolidBody");
+                    var solidChild = solidTf != null ? solidTf.gameObject : null;
+                    if (solidChild == null)
+                    {
+                        solidChild = new GameObject("SolidBody");
+                        solidChild.transform.SetParent(restGo.transform, false);
+                    }
+                    solidChild.transform.localPosition = Vector3.zero;
+                    var solidCol = solidChild.GetComponent<BoxCollider2D>();
+                    if (solidCol == null)
+                        solidCol = solidChild.AddComponent<BoxCollider2D>();
+                    solidCol.isTrigger = false;
+                    solidCol.size = new Vector2(2.2f, 0.65f);
+                    solidCol.offset = new Vector2(0f, 0.35f);
                 }
                 BindStaticProp(scene, "VaultGate", "VaultGate", IntPropsPath, "Int_Interior_Props_01_45");
 
                 HideTriggerVisual(scene, "GuildEntrance");
                 HideTriggerVisual(scene, "CaseDoor");
+                var caseDoorGo = PixelCrawlerHubToolkit.FindRoot(scene, "CaseDoor");
+                if (caseDoorGo != null && caseDoorGo.TryGetComponent<BoxCollider2D>(out var caseDoorCol))
+                {
+                    caseDoorCol.isTrigger = true;
+                    caseDoorCol.size = new Vector2(2.0f, 1.8f);
+                }
 
                 EditorSceneManager.MarkSceneDirty(scene);
                 EditorSceneManager.SaveScene(scene, MainScenePath);
@@ -608,13 +651,29 @@ namespace Morsoul.Hub.Editor
                 "Eliza", "Assets/Art/Characters/NPCs/Citizen_F/Peasant_A/Idle/Idle-Sheet.png",
                 "Idle-Sheet_0", "Assets/Animations/NPCs/NPC_CitizenF_PeasantA.controller",
                 new Vector2(0f, -0.35f), flipX: true),
-            Knight = PixelCrawlerHubToolkit.EnsureCharacterProfile(
-                "Ignatius", "Assets/Art/Characters/NPCs/Knight/Idle/Idle-Sheet.png",
-                "Idle-Sheet_0", "Assets/Animations/NPCs/NPC_Knight.controller",
+            Ignatius = PixelCrawlerHubToolkit.EnsureCharacterProfile(
+                "Ignatius", "Assets/Art/Characters/NPCs/Named/Ignatius/Idle/Idle_Down-Sheet.png",
+                "Idle_Down-Sheet_0", "Assets/Animations/NPCs/NPC_Ignatius.controller",
+                new Vector2(0f, -0.35f)),
+            Ovan = PixelCrawlerHubToolkit.EnsureCharacterProfile(
+                "Ovan", "Assets/Art/Characters/NPCs/Named/Ovan/Idle/Idle_Down-Sheet.png",
+                "Idle_Down-Sheet_0", "Assets/Animations/NPCs/NPC_Ovan.controller",
+                new Vector2(0f, -0.35f)),
+            Carrier = PixelCrawlerHubToolkit.EnsureCharacterProfile(
+                "Carrier", "Assets/Art/Characters/NPCs/Named/Carrier/Idle/Idle_Down-Sheet.png",
+                "Idle_Down-Sheet_0", "Assets/Animations/NPCs/NPC_Carrier.controller",
+                new Vector2(0f, -0.35f)),
+            GuardA = PixelCrawlerHubToolkit.EnsureCharacterProfile(
+                "Guard_A", "Assets/Art/Characters/NPCs/Citizen_M/Guard_A/Idle/Idle_Side-Sheet.png",
+                "Idle_Side-Sheet_0", "Assets/Animations/NPCs/NPC_CitizenM_GuardA.controller",
                 new Vector2(0f, -0.35f), flipX: true),
-            Wizard = PixelCrawlerHubToolkit.EnsureCharacterProfile(
-                "Ovan", "Assets/Art/Characters/NPCs/Wizard/Idle/Idle-Sheet.png",
-                "Idle-Sheet_0", "Assets/Animations/NPCs/NPC_Wizard.controller",
+            MerchantA = PixelCrawlerHubToolkit.EnsureCharacterProfile(
+                "Merchant_A", "Assets/Art/Characters/NPCs/Citizen_M/Merchant_A/Idle/Idle_Side-Sheet.png",
+                "Idle_Side-Sheet_0", "Assets/Animations/NPCs/NPC_CitizenM_MerchantA.controller",
+                new Vector2(0f, -0.35f)),
+            AdventurerA = PixelCrawlerHubToolkit.EnsureCharacterProfile(
+                "Adventurer_A", "Assets/Art/Characters/NPCs/Citizen_M/Adventurer_A/Idle/Idle_Side-Sheet.png",
+                "Idle_Side-Sheet_0", "Assets/Animations/NPCs/NPC_CitizenM_AdventurerA.controller",
                 new Vector2(0f, -0.35f), flipX: true),
             TavernA = PixelCrawlerHubToolkit.EnsureCharacterProfile(
                 "Vendor", "Assets/Art/Characters/NPCs/Citizen_F/Tavern_A/Idle/Idle_Side-Sheet.png",
@@ -624,21 +683,37 @@ namespace Morsoul.Hub.Editor
                 "Townsperson", "Assets/Art/Characters/NPCs/Citizen_F/Tavern_B/Idle/Idle_Side-Sheet.png",
                 "Idle_Side-Sheet_0", "Assets/Animations/NPCs/NPC_CitizenF_TavernB.controller",
                 new Vector2(0f, -0.35f), flipX: true),
-            Rogue = PixelCrawlerHubToolkit.EnsureCharacterProfile(
-                "Carrier", "Assets/Art/Characters/NPCs/Rogue/Idle/Idle-Sheet.png",
-                "Idle-Sheet_0", "Assets/Animations/NPCs/NPC_Rogue.controller",
+            MaleVillager = PixelCrawlerHubToolkit.EnsureCharacterProfile(
+                "MaleVillager", MarketPackAssetSetup.MaleIdleSheetPath,
+                "Char_Down_0", "Assets/Animations/NPCs/NPC_Male_Villager.controller",
                 new Vector2(0f, -0.35f)),
+            MaleMerchant = PixelCrawlerHubToolkit.EnsureCharacterProfile(
+                "MaleMerchant", MarketPackAssetSetup.MaleIdleSheetPath,
+                "Char_Down_0", "Assets/Animations/NPCs/NPC_Male_Villager.controller",
+                new Vector2(0f, -0.35f), tint: new Color(0.84f, 0.91f, 1f, 1f)),
+            MaleSmith = PixelCrawlerHubToolkit.EnsureCharacterProfile(
+                "MaleSmith", MarketPackAssetSetup.MaleIdleSheetPath,
+                "Char_Down_0", "Assets/Animations/NPCs/NPC_Male_Villager.controller",
+                new Vector2(0f, -0.35f), tint: new Color(1f, 0.90f, 0.82f, 1f)),
         };
 
         static void RepositionCoreAnchors(Scene scene, NpcProfiles profiles)
         {
             // Doors, portals, & landmarks spread sensibly across all 4 market districts.
-            SetPos(scene, "GuildEntrance", new Vector3(3.0f, 4.9f, 0f));
-            SetPos(scene, "Spawn_GuildDoor", new Vector3(3.0f, 4.1f, 0f));
+            EnsureGuildEntrance(scene);
+            EnsureSpawnMarker(scene, "Spawn_GuildDoor", "guild_door", new Vector3(3.0f, 4.1f, 0f));
             SetPos(scene, "VaultGate", new Vector3(13.5f, 5.0f, 0f));
             SetPos(scene, "CaseDoor", new Vector3(-14.5f, 4.9f, 0f));
             SetPos(scene, "Carrier", new Vector3(-16.0f, -0.8f, 0f));
             SetPos(scene, "NoticeBoard", new Vector3(1.05f, 2.2f, 0f));
+            var noticeGo = PixelCrawlerHubToolkit.FindRoot(scene, "NoticeBoard");
+            if (noticeGo != null && noticeGo.TryGetComponent<InspectionInteractable>(out var notice))
+            {
+                notice.blocksMovement = true;
+                if (notice.inspectionDialogue == null)
+                    notice.inspectionDialogue = AssetDatabase.LoadAssetAtPath<DialogueData>(
+                        $"{FlavorDialogueFolder}/D_NoticeBoard_01.asset");
+            }
             // RestSpot occupies the wooden bench right beside the NoticeBoard.
             var restGo = PixelCrawlerHubToolkit.FindRoot(scene, "RestSpot");
             if (restGo == null)
@@ -653,38 +728,154 @@ namespace Morsoul.Hub.Editor
                 restGo.transform.position = new Vector3(-2.45f, 2.3f, 0f);
             }
 
+            // Ovan's office is upstairs inside Hub_Guild; keep the outdoor fallback inactive.
+            var ovan = PixelCrawlerHubToolkit.FindRoot(scene, "Ovan");
+            if (ovan != null)
+            {
+                PixelCrawlerHubToolkit.BindActorVisual(ovan, profiles.Ovan, addYSort: true);
+                ovan.SetActive(false);
+            }
+
             // Key & Existing Crowd NPCs cleanly separated into market zones.
             SetPos(scene, "Ignatius", new Vector3(8.5f, 2.8f, 0f));
-            SetPos(scene, "Vendor", new Vector3(-8.0f, -4.55f, 0f));
-            SetPos(scene, "Townsperson", new Vector3(-13.4f, 3.6f, 0f));
             var barks = AssetDatabase.LoadAssetAtPath<DialogueData>(BarksPath);
+            EnsureTalkNpc(scene, "Vendor", new Vector3(-8.0f, -4.55f, 0f), barks);
+            EnsureTalkNpc(scene, "Townsperson", new Vector3(-13.4f, 3.6f, 0f), barks);
             EnsureCrowdMember(scene, "MarketCrowd", new Vector3(-5.2f, 1.4f, 0f), barks);
-            EnsureCrowdMember(scene, "MarketCrowd_Vendor", new Vector3(12.2f, -4.65f, 0f), barks);
+            EnsureCrowdMember(scene, "MarketCrowd_Vendor", new Vector3(12.4f, -3.75f, 0f), barks);
             EnsureCrowdMember(scene, "MarketCrowd_Townsperson", new Vector3(1.4f, -3.1f, 0f), barks);
             EnsureCrowdMember(scene, "MarketCrowd_Adventurer", new Vector3(9.5f, -0.4f, 0f), barks);
 
+            var arrivalEliza = EnsureArrivalEliza(scene, new Vector3(-15.0f, -0.5f, 0f));
+
             BindRoot(scene, "ArrivalEliza", profiles.Eliza);
-            BindRoot(scene, "Ignatius", profiles.Knight);
-            BindRoot(scene, "Ovan", profiles.Wizard);
+            BindRoot(scene, "Ignatius", profiles.Ignatius);
             BindRoot(scene, "Vendor", profiles.TavernA);
             BindRoot(scene, "MarketCrowd_Vendor", profiles.TavernA);
             BindRoot(scene, "Townsperson", profiles.Eliza);
             BindRoot(scene, "MarketCrowd", profiles.TavernB);
             BindRoot(scene, "MarketCrowd_Townsperson", profiles.Eliza);
-            BindRoot(scene, "MarketCrowd_Adventurer", profiles.Rogue);
-            BindRoot(scene, "Carrier", profiles.Rogue);
+            BindRoot(scene, "MarketCrowd_Adventurer", profiles.AdventurerA);
+            BindRoot(scene, "Carrier", profiles.Carrier);
 
-            // Arrival sequence waypoints spanning the expanded West Boulevard -> Guild Hall.
-            var arrival = FindInScene<MarketArrivalController>(scene);
-            if (arrival != null)
+            // Arrival sequence spanning the expanded West Boulevard -> Guild Hall.
+            var arrival = EnsureMarketArrivalController(scene, arrivalEliza.transform);
+            arrival.playerEntry = new Vector3(-16.5f, -0.5f, 0f);
+            arrival.elizaEntry = new Vector3(-15.0f, -0.5f, 0f);
+            arrival.elizaLead = new Vector3(-9.5f, -0.5f, 0f);
+            arrival.elizaDoor = new Vector3(3.0f, 4.2f, 0f);
+            arrival.playerDoor = new Vector3(3.5f, 3.9f, 0f);
+            arrival.elizaInside = new Vector3(3.0f, 5.1f, 0f);
+        }
+
+        static void EnsureGuildEntrance(Scene scene)
+        {
+            var pos = new Vector3(3.0f, 4.9f, 0f);
+            var doorGo = PixelCrawlerHubToolkit.FindRoot(scene, "GuildEntrance");
+            GateInteractable door;
+            if (doorGo == null)
             {
-                arrival.playerEntry = new Vector3(-16.5f, -0.5f, 0f);
-                arrival.elizaEntry = new Vector3(-15.0f, -0.5f, 0f);
-                arrival.elizaLead = new Vector3(-9.5f, -0.5f, 0f);
-                arrival.elizaDoor = new Vector3(3.0f, 4.2f, 0f);
-                arrival.playerDoor = new Vector3(3.5f, 3.9f, 0f);
-                arrival.elizaInside = new Vector3(3.0f, 5.1f, 0f);
+                doorGo = HubSceneFactory.CreateInteractable("GuildEntrance",
+                    new Color(0.55f, 0.55f, 0.65f), pos, out door);
+                SceneManager.MoveGameObjectToScene(doorGo, scene);
             }
+            else
+            {
+                doorGo.transform.position = pos;
+                door = doorGo.GetComponent<GateInteractable>() ?? doorGo.AddComponent<GateInteractable>();
+            }
+
+            doorGo.SetActive(true);
+            door.promptText = "[E] Enter";
+            door.requiredFlag = "";
+            door.targetScene = "Hub_Guild";
+
+            var col = doorGo.GetComponent<BoxCollider2D>();
+            if (col != null)
+            {
+                col.isTrigger = true;
+                col.size = new Vector2(2.0f, 1.6f);
+            }
+
+            var nameTransform = doorGo.transform.Find("NameLabel");
+            if (nameTransform != null && nameTransform.TryGetComponent<InteractableLabel>(out var label))
+                label.text = "Merchant Guild";
+        }
+
+        static void EnsureSpawnMarker(Scene scene, string rootName, string entryId, Vector3 pos)
+        {
+            var markerGo = PixelCrawlerHubToolkit.FindRoot(scene, rootName);
+            if (markerGo == null)
+            {
+                markerGo = new GameObject(rootName);
+                SceneManager.MoveGameObjectToScene(markerGo, scene);
+            }
+            markerGo.transform.position = pos;
+            var marker = markerGo.GetComponent<SceneSpawnMarker>() ?? markerGo.AddComponent<SceneSpawnMarker>();
+            marker.entryId = entryId;
+        }
+
+        static void EnsureTalkNpc(Scene scene, string name, Vector3 pos, DialogueData barks)
+        {
+            var go = PixelCrawlerHubToolkit.FindRoot(scene, name);
+            if (go == null)
+            {
+                HubSceneFactory.CreateInteractable(name, new Color(0.6f, 0.5f, 0.4f), pos, out NpcInteractable npc);
+                npc.promptText = "[E] Talk";
+                npc.dialogue = barks;
+                npc.blocksMovement = true;
+                SceneManager.MoveGameObjectToScene(npc.gameObject, scene);
+                return;
+            }
+            go.transform.position = pos;
+            if (go.TryGetComponent<NpcInteractable>(out var existing))
+            {
+                existing.promptText = "[E] Talk";
+                if (existing.dialogue == null) existing.dialogue = barks;
+                existing.blocksMovement = true;
+            }
+        }
+
+        static GameObject EnsureArrivalEliza(Scene scene, Vector3 pos)
+        {
+            var eliza = PixelCrawlerHubToolkit.FindRoot(scene, "ArrivalEliza");
+            if (eliza == null)
+            {
+                eliza = HubSceneFactory.NewQuadObject("ArrivalEliza",
+                    new Color(0.9f, 0.55f, 0.35f), pos);
+                HubSceneFactory.ApplyVisualProfile(eliza);
+                SceneManager.MoveGameObjectToScene(eliza, scene);
+            }
+            else
+            {
+                eliza.transform.position = pos;
+            }
+            if (eliza.GetComponent<YSort2D>() == null)
+                eliza.AddComponent<YSort2D>();
+            eliza.SetActive(false);
+            return eliza;
+        }
+
+        static MarketArrivalController EnsureMarketArrivalController(Scene scene, Transform arrivalEliza)
+        {
+            var arrivalGo = PixelCrawlerHubToolkit.FindRoot(scene, "MarketArrivalController");
+            if (arrivalGo == null)
+            {
+                arrivalGo = new GameObject("MarketArrivalController");
+                SceneManager.MoveGameObjectToScene(arrivalGo, scene);
+            }
+            var arrival = arrivalGo.GetComponent<MarketArrivalController>()
+                ?? arrivalGo.AddComponent<MarketArrivalController>();
+            arrival.context = FindInScene<HubContext>(scene);
+            var playerGo = PixelCrawlerHubToolkit.FindRoot(scene, "Player");
+            arrival.player = playerGo != null ? playerGo.GetComponent<HubPlayerController>() : null;
+            arrival.eliza = arrivalEliza;
+            arrival.guildSceneName = "Hub_Guild";
+            arrival.entryDialogue = AssetDatabase.LoadAssetAtPath<DialogueData>(
+                GuildIntroContentGenerator.Folder + "/D_Market_Arrival.asset");
+            arrival.doorDialogue = AssetDatabase.LoadAssetAtPath<DialogueData>(
+                GuildIntroContentGenerator.Folder + "/D_Guild_Door.asset");
+            return arrival;
         }
 
         static void BuildMarketPopulation(Scene scene, NpcProfiles profiles)
@@ -702,12 +893,12 @@ namespace Morsoul.Hub.Editor
 
             // --- Additional Random Interactable NPCs across districts ---
             SpawnInteractableNpc(scene, "MarketNpc_Smith",
-                profiles.Knight, new Vector3(12.2f, 3.2f, 0f),
+                profiles.MaleSmith, new Vector3(12.2f, 3.2f, 0f),
                 EnsureFlavorDialogue("D_MarketSmith_01", "Forge Apprentice",
                     "Master Ignatius won't let anyone near that smelted lock. Funny thing is, the slag cooled too fast to be dragonfire.") ?? defaultBarks);
 
             SpawnInteractableNpc(scene, "MarketNpc_Apothecary",
-                profiles.Wizard, new Vector3(-5.8f, 3.35f, 0f),
+                profiles.MerchantA, new Vector3(-5.9f, 3.25f, 0f),
                 EnsureFlavorDialogue("D_MarketApoth_01", "Herbalist",
                     "Someone bought out half my lamp oil and sulfur-bane yesterday afternoon. Said they were 'cleaning an old cellar.'") ?? defaultBarks);
 
@@ -717,17 +908,17 @@ namespace Morsoul.Hub.Editor
                     "Fresh honey-glazed skewers! Half the Watch ordered dinner early when the Guild sealed the vault lane.") ?? defaultBarks);
 
             SpawnInteractableNpc(scene, "MarketNpc_Guard",
-                profiles.Knight, new Vector3(-16.2f, 1.4f, 0f),
+                profiles.GuardA, new Vector3(-16.2f, 1.4f, 0f),
                 EnsureFlavorDialogue("D_MarketGuard_01", "West Gate Watch",
                     "You came down from the ruined road? Good to see the eastern path finally open again—watch your step near the bazaar.") ?? defaultBarks);
 
             SpawnInteractableNpc(scene, "MarketNpc_Courier",
-                profiles.Rogue, new Vector3(-4.6f, -2.5f, 0f),
+                profiles.MaleVillager, new Vector3(-4.6f, -2.5f, 0f),
                 EnsureFlavorDialogue("D_MarketCourier_01", "Guild Courier",
                     "Dispatches have been piling up since sunrise. At least with the plaza widened, carts can finally turn around.") ?? defaultBarks);
 
-            // --- Non-Interactable Strolling Market Citizens (6 patrolling shoppers/guards) ---
-            SpawnAmbientNpc(scene, "AmbientMarket_Stroll_North", profiles.TavernB,
+            // --- Non-Interactable Strolling Market Citizens (attached-arm sprites + patrolling watch) ---
+            SpawnAmbientNpc(scene, "AmbientMarket_Stroll_North", profiles.MaleMerchant,
                 new Vector3(-4.2f, 3.5f, 0f), new[]
                 {
                     new Vector2(-4.2f, 3.5f), new Vector2(5.5f, 3.5f),
@@ -741,7 +932,7 @@ namespace Morsoul.Hub.Editor
                     new Vector2(2.6f, -2.6f),  new Vector2(2.6f, 1.2f)
                 }, walkSpeed: 1.3f, pauseSeconds: 1.6f);
 
-            SpawnAmbientNpc(scene, "AmbientMarket_Stroll_West", profiles.Rogue,
+            SpawnAmbientNpc(scene, "AmbientMarket_Stroll_West", profiles.MaleVillager,
                 new Vector2(-13.8f, -1.8f), new[]
                 {
                     new Vector2(-13.8f, -1.8f), new Vector2(-7.8f, -1.8f)
@@ -760,22 +951,22 @@ namespace Morsoul.Hub.Editor
                     new Vector2(-3.2f, -4.3f), new Vector2(6.8f, -4.3f)
                 }, walkSpeed: 1.25f, pauseSeconds: 1.9f);
 
-            SpawnAmbientNpc(scene, "AmbientMarket_WatchPatrol", profiles.Knight,
+            SpawnAmbientNpc(scene, "AmbientMarket_WatchPatrol", profiles.GuardA,
                 new Vector2(-10.4f, 0.5f), new[]
                 {
                     new Vector2(-10.4f, 0.5f), new Vector2(-5.5f, 0.5f),
                     new Vector2(-5.5f, 2.5f),  new Vector2(-10.4f, 2.5f)
                 }, walkSpeed: 1.35f, pauseSeconds: 1.4f);
 
-            // --- Non-Interactable Stationary Background Folk (4 locals idling by yards) ---
-            SpawnAmbientNpc(scene, "AmbientMarket_Idle_Lodge", profiles.Wizard,
+            // --- Non-Interactable Stationary Background Folk (mixed townsfolk idling cleanly off props/flowers) ---
+            SpawnAmbientNpc(scene, "AmbientMarket_Idle_Lodge", profiles.MaleMerchant,
                 new Vector2(-15.4f, 3.4f), null);
-            SpawnAmbientNpc(scene, "AmbientMarket_Idle_Sawmill", profiles.Rogue,
+            SpawnAmbientNpc(scene, "AmbientMarket_Idle_Sawmill", profiles.MaleSmith,
                 new Vector2(-6.2f, -5.65f), null);
-            SpawnAmbientNpc(scene, "AmbientMarket_Idle_SouthGate", profiles.Knight,
+            SpawnAmbientNpc(scene, "AmbientMarket_Idle_SouthGate", profiles.GuardA,
                 new Vector2(1.45f, -4.55f), null);
             SpawnAmbientNpc(scene, "AmbientMarket_Idle_Brook", profiles.TavernB,
-                new Vector2(12.8f, -6.8f), null);
+                new Vector2(13.8f, -6.5f), null);
         }
 
         static void SpawnInteractableNpc(
@@ -882,10 +1073,13 @@ namespace Morsoul.Hub.Editor
         {
             var go = PixelCrawlerHubToolkit.FindRoot(scene, rootName);
             if (go == null) return;
-            var mr = go.GetComponent<MeshRenderer>();
-            if (mr != null) mr.enabled = false;
             var ev = go.GetComponent<EntityVisual>();
-            if (ev != null) ev.Apply(null);
+            if (ev != null)
+            {
+                ev.Apply(null);
+                Object.DestroyImmediate(ev);
+            }
+            var mr = go.GetComponent<MeshRenderer>();
             if (mr != null) mr.enabled = false;
         }
 

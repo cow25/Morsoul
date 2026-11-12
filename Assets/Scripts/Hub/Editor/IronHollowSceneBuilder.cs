@@ -220,8 +220,8 @@ namespace Morsoul.Hub.Editor
                     "Idle-Sheet_0", "Assets/Animations/NPCs/NPC_CitizenF_PeasantA.controller",
                     new Vector2(0f, -0.35f));
                 var carrierProf = PixelCrawlerHubToolkit.EnsureCharacterProfile(
-                    "Carrier", "Assets/Art/Characters/NPCs/Rogue/Idle/Idle-Sheet.png",
-                    "Idle-Sheet_0", "Assets/Animations/NPCs/NPC_Rogue.controller",
+                    "Carrier", "Assets/Art/Characters/NPCs/Named/Carrier/Idle/Idle_Down-Sheet.png",
+                    "Idle_Down-Sheet_0", "Assets/Animations/NPCs/NPC_Carrier.controller",
                     new Vector2(0f, -0.35f));
 
                 PixelCrawlerHubToolkit.BindRoot(scene, "Player", playerProf);

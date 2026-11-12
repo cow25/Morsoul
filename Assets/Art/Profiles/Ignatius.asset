@@ -12,44 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d3d25a568b87437dbda4a6fef515314a, type: 3}
   m_Name: Ignatius
   m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.VisualProfile
-  sprite: {fileID: -3145328045451892686, guid: 32854c38fda818344a21369dfce8c279, type: 3}
-  animatorController: {fileID: 9100000, guid: d2abc98074fd3814382361a637ec5d88, type: 2}
+  sprite: {fileID: -8107172888652668758, guid: fb10deba36ba4e24d8526476e169dc0b, type: 3}
+  animatorController: {fileID: 9100000, guid: 72550487b5e62c346a97ea15238064c1, type: 2}
   tint: {r: 1, g: 1, b: 1, a: 1}
   material: {fileID: 0}
   visualOffset: {x: 0, y: -0.35}
   visualScale: {x: 1, y: 1}
-  flipX: 1
+  flipX: 0
   sortingOrder: 0
-  attachments:
-  - id: Sword
-    sprite: {fileID: 354481863, guid: 60556943ef98947418b9f10a86c01edc, type: 3}
-    localOffset: {x: -0.62, y: 1.08}
-    localZ: -0.001
-    localScale: {x: 1, y: 1}
-    rotationZ: 10
-    sortingOrderOffset: 0
-    flipX: 0
-  - id: SwordHand
-    sprite: {fileID: -1091482528, guid: f4d0d6ed7753c7141b4c4bce4223a756, type: 3}
-    localOffset: {x: -0.56, y: 0.48}
-    localZ: -0.002
-    localScale: {x: 1, y: 1}
-    rotationZ: 0
-    sortingOrderOffset: 0
-    flipX: 0
-  - id: Shield
-    sprite: {fileID: -81823545, guid: 60556943ef98947418b9f10a86c01edc, type: 3}
-    localOffset: {x: 0.44, y: 0.52}
-    localZ: -0.003
-    localScale: {x: 1, y: 1}
-    rotationZ: 0
-    sortingOrderOffset: 0
-    flipX: 0
-  - id: ShieldHand
-    sprite: {fileID: -591598963, guid: f4d0d6ed7753c7141b4c4bce4223a756, type: 3}
-    localOffset: {x: 0.42, y: 0.48}
-    localZ: -0.004
-    localScale: {x: 1, y: 1}
-    rotationZ: 0
-    sortingOrderOffset: 0
-    flipX: 0
+  attachments: []

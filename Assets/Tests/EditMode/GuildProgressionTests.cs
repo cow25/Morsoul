@@ -446,5 +446,50 @@ namespace Morsoul.Tests
             Assert.Greater(chef.transform.position.x - guard.transform.position.x, 25f,
                 "Expanded Lower Market NPC spread must span >= 25 units horizontally.");
         }
+
+        [Test]
+        public void LowerMarket_HasGuildEntrance_MarketArrival_AndOutdoorOvanDisabled()
+        {
+            var scene = UnityEditor.SceneManagement.EditorSceneManager.OpenScene(
+                "Assets/Scenes/Hub_LowerMarket.unity",
+                UnityEditor.SceneManagement.OpenSceneMode.Single);
+
+            GameObject FindRoot(string name)
+            {
+                foreach (var root in scene.GetRootGameObjects())
+                    if (root.name == name) return root;
+                return null;
+            }
+
+            var ovan = FindRoot("Ovan");
+            if (ovan != null)
+                Assert.IsFalse(ovan.activeSelf, "Outdoor Ovan must be inactive once moved upstairs into Hub_Guild.");
+
+            var guildEntrance = FindRoot("GuildEntrance");
+            Assert.IsNotNull(guildEntrance, "GuildEntrance door must exist in Hub_LowerMarket.");
+            Assert.IsTrue(guildEntrance.activeSelf, "GuildEntrance must be active.");
+            var gate = guildEntrance.GetComponent<GateInteractable>();
+            Assert.IsNotNull(gate, "GuildEntrance must carry GateInteractable.");
+            Assert.AreEqual("Hub_Guild", gate.targetScene);
+
+            var guildSpawn = FindRoot("Spawn_GuildDoor");
+            Assert.IsNotNull(guildSpawn, "Spawn_GuildDoor marker must exist for Guild returns.");
+            var marker = guildSpawn.GetComponent<SceneSpawnMarker>();
+            Assert.IsNotNull(marker);
+            Assert.AreEqual("guild_door", marker.entryId);
+
+            var arrivalEliza = FindRoot("ArrivalEliza");
+            Assert.IsNotNull(arrivalEliza, "ArrivalEliza stand-in must exist in Hub_LowerMarket.");
+            Assert.IsFalse(arrivalEliza.activeSelf, "ArrivalEliza must start inactive until arrival runs.");
+
+            var arrival = Object.FindAnyObjectByType<MarketArrivalController>();
+            Assert.IsNotNull(arrival, "MarketArrivalController must exist in Hub_LowerMarket.");
+            Assert.IsNotNull(arrival.context, "MarketArrivalController.context must be wired.");
+            Assert.IsNotNull(arrival.player, "MarketArrivalController.player must be wired.");
+            Assert.IsNotNull(arrival.eliza, "MarketArrivalController.eliza must be wired.");
+            Assert.IsNotNull(arrival.entryDialogue, "MarketArrivalController.entryDialogue must be wired.");
+            Assert.IsNotNull(arrival.doorDialogue, "MarketArrivalController.doorDialogue must be wired.");
+            Assert.AreEqual("Hub_Guild", arrival.guildSceneName);
+        }
     }
 }

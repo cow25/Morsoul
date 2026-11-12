@@ -21,6 +21,7 @@ namespace Morsoul.Hub
         bool _hasMoveY;
         bool _hasSpeed;
         Vector2 _facing = Vector2.down;
+        float _stridePhase;
 
         void Awake()
         {
@@ -66,10 +67,15 @@ namespace Morsoul.Hub
             if (_hasMoveY) _animator.SetFloat(moveYParam, _facing.y);
 
             if (flipByMoveX && _renderer != null && moving && Mathf.Abs(move.x) > 0.01f)
-            {
                 _renderer.flipX = move.x < 0f;
-                if (_visual != null) _visual.SyncFlip(_renderer.flipX);
-            }
+
+            if (moving)
+                _stridePhase += Time.deltaTime * 11f;
+            else
+                _stridePhase = 0f;
+
+            if (_visual != null && _renderer != null)
+                _visual.AnimateAttachments(_renderer.flipX, _stridePhase, moving ? 1f : 0f);
         }
     }
 }

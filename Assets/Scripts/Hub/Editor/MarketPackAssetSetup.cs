@@ -26,6 +26,8 @@ namespace Morsoul.Hub.Editor
         const string SuppliesSheetPath = "Assets/Art/Environments/Dungeon_Objects/supplies_objects.png";
         const string OtherObjectsSheetPath = "Assets/Art/Environments/Dungeon_Objects/Other_objects.png";
         const string RetroSmallItemsPath = "Assets/Art/Environments/Retro_Interior/TopDownHouse_SmallItems.png";
+        internal const string MaleIdleSheetPath = "Assets/Art/Environments/Fantasy_Tileset/Characters/Main Character/Character_Idle.png";
+        internal const string MaleWalkSheetPath = "Assets/Art/Environments/Fantasy_Tileset/Characters/Main Character/Character_Walk.png";
 
         [MenuItem("Morsoul/Art/Setup Market Pack Sprites")]
         public static void EnsureAll()
@@ -38,7 +40,10 @@ namespace Morsoul.Hub.Editor
             EnsureSlicedSheet(SuppliesSheetPath, "supplies_objects", ppu: 20f, useGrid16: false);
             EnsureSlicedSheet(OtherObjectsSheetPath, "Other_objects", ppu: 20f, useGrid16: false);
             EnsureSlicedSheet(RetroSmallItemsPath, "RetroItem", ppu: 18f, useGrid16: true);
+            EnsureMainCharacterSheet(MaleIdleSheetPath, ppu: 18f);
+            EnsureMainCharacterSheet(MaleWalkSheetPath, ppu: 18f);
             AssetDatabase.Refresh();
+            PixelCrawlerPropAndAnimSetup.EnsureMaleVillagerController();
         }
 
         static void ConfigureTopLevelSingleSprites(string folder, float ppu, bool tightCrop)
@@ -206,6 +211,94 @@ namespace Morsoul.Hub.Editor
             }
 
             dataProvider.SetSpriteRects(rects);
+            dataProvider.Apply();
+            EditorUtility.SetDirty(importer);
+            importer.SaveAndReimport();
+        }
+
+        static void EnsureMainCharacterSheet(string assetPath, float ppu)
+        {
+            if (!File.Exists(assetPath)) return;
+            var importer = AssetImporter.GetAtPath(assetPath) as TextureImporter;
+            if (importer == null) return;
+
+            var existingReps = AssetDatabase.LoadAllAssetRepresentationsAtPath(assetPath);
+            if (importer.spriteImportMode == SpriteImportMode.Multiple &&
+                Mathf.Abs(importer.spritePixelsPerUnit - ppu) < 0.01f &&
+                existingReps.Length == 16 &&
+                existingReps[0] != null && existingReps[0].name.StartsWith("Char_", StringComparison.Ordinal))
+                return;
+
+            var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            if (!tex.LoadImage(File.ReadAllBytes(assetPath)))
+            {
+                UnityEngine.Object.DestroyImmediate(tex);
+                return;
+            }
+
+            int w = tex.width;
+            int h = tex.height;
+            Color32[] pixels = tex.GetPixels32();
+            UnityEngine.Object.DestroyImmediate(tex);
+
+            const int cellW = 40;
+            const int cellH = 48;
+            // Unity bottom-up rows in Fantasy Tileset Main Character sheets: Left (top row), Right, Up, Down (bottom row).
+            string[] rowNames = { "Char_Down", "Char_Up", "Char_Right", "Char_Left" };
+            var rectList = new List<SpriteRect>(16);
+
+            for (int row = rowNames.Length - 1; row >= 0; row--)
+            {
+                int cy = row * cellH;
+                if (cy + cellH > h) continue;
+                for (int col = 0; col < 4; col++)
+                {
+                    int cx = col * cellW;
+                    if (cx + cellW > w) continue;
+
+                    int minX = cx + cellW, maxX = cx - 1, minY = cy + cellH, maxY = cy - 1;
+                    for (int y = cy; y < cy + cellH; y++)
+                    {
+                        int rowOff = y * w;
+                        for (int x = cx; x < cx + cellW; x++)
+                        {
+                            if (pixels[rowOff + x].a <= 10) continue;
+                            if (x < minX) minX = x;
+                            if (x > maxX) maxX = x;
+                            if (y < minY) minY = y;
+                            if (y > maxY) maxY = y;
+                        }
+                    }
+
+                    if (maxX < minX || maxY < minY) continue;
+                    rectList.Add(new SpriteRect
+                    {
+                        name = $"{rowNames[row]}_{col}",
+                        spriteID = GUID.Generate(),
+                        rect = new Rect(minX, minY, maxX - minX + 1, maxY - minY + 1),
+                        alignment = SpriteAlignment.BottomCenter,
+                        pivot = new Vector2(0.5f, 0f),
+                    });
+                }
+            }
+
+            if (rectList.Count == 0) return;
+
+            bool modeChanging = importer.spriteImportMode != SpriteImportMode.Multiple;
+            importer.textureType = TextureImporterType.Sprite;
+            importer.spriteImportMode = SpriteImportMode.Multiple;
+            importer.spritePixelsPerUnit = ppu;
+            importer.filterMode = FilterMode.Point;
+            importer.mipmapEnabled = false;
+            importer.textureCompression = TextureImporterCompression.Uncompressed;
+            EditorUtility.SetDirty(importer);
+            if (modeChanging) importer.SaveAndReimport();
+
+            var factory = new SpriteDataProviderFactories();
+            factory.Init();
+            var dataProvider = factory.GetSpriteEditorDataProviderFromObject(importer);
+            dataProvider.InitSpriteEditorDataProvider();
+            dataProvider.SetSpriteRects(rectList.ToArray());
             dataProvider.Apply();
             EditorUtility.SetDirty(importer);
             importer.SaveAndReimport();

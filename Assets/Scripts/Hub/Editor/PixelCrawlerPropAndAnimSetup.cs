@@ -88,6 +88,34 @@ namespace Morsoul.Hub.Editor
             },
             new NpcAnimSpec
             {
+                Name = "NPC_CitizenM_GuardA",
+                IdleSheet = "Assets/Art/Characters/NPCs/Citizen_M/Guard_A/Idle/Idle_Side-Sheet.png",
+                MoveSheet = "Assets/Art/Characters/NPCs/Citizen_M/Guard_A/Walk/Walk_Side-Sheet.png",
+                IdleFps = 6f, MoveFps = 8f,
+            },
+            new NpcAnimSpec
+            {
+                Name = "NPC_CitizenM_MerchantA",
+                IdleSheet = "Assets/Art/Characters/NPCs/Citizen_M/Merchant_A/Idle/Idle_Side-Sheet.png",
+                MoveSheet = "Assets/Art/Characters/NPCs/Citizen_M/Merchant_A/Walk/Walk_Side-Sheet.png",
+                IdleFps = 6f, MoveFps = 8f,
+            },
+            new NpcAnimSpec
+            {
+                Name = "NPC_CitizenM_AdventurerA",
+                IdleSheet = "Assets/Art/Characters/NPCs/Citizen_M/Adventurer_A/Idle/Idle_Side-Sheet.png",
+                MoveSheet = "Assets/Art/Characters/NPCs/Citizen_M/Adventurer_A/Walk/Walk_Side-Sheet.png",
+                IdleFps = 6f, MoveFps = 8f,
+            },
+            new NpcAnimSpec
+            {
+                Name = "NPC_CitizenM_AdventurerB",
+                IdleSheet = "Assets/Art/Characters/NPCs/Citizen_M/Adventurer_B/Idle/Idle_Side-Sheet.png",
+                MoveSheet = "Assets/Art/Characters/NPCs/Citizen_M/Adventurer_B/Walk/Walk_Side-Sheet.png",
+                IdleFps = 6f, MoveFps = 8f,
+            },
+            new NpcAnimSpec
+            {
                 Name = "NPC_Knight",
                 IdleSheet = "Assets/Art/Characters/NPCs/Knight/Idle/Idle-Sheet.png",
                 MoveSheet = "Assets/Art/Characters/NPCs/Knight/Run/Run-Sheet.png",
@@ -135,10 +163,15 @@ namespace Morsoul.Hub.Editor
 
             int controllers = 0;
             if (BuildPlayerBodyAController() != null) controllers++;
+            foreach (var name in new[] { "Ovan", "Ignatius", "Carrier" })
+            {
+                if (BuildNamedNpc4DirController(name) != null) controllers++;
+            }
             foreach (var spec in NpcSpecs)
             {
                 if (BuildNpcController(spec) != null) controllers++;
             }
+            if (EnsureMaleVillagerController() != null) controllers++;
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -370,40 +403,53 @@ namespace Morsoul.Hub.Editor
 
         static AnimatorController BuildPlayerBodyAController()
         {
-            const string folder = AnimRoot + "/Player";
-            const string controllerPath = folder + "/Player_BodyA.controller";
+            return Build4DirController(
+                $"{AnimRoot}/Player", "Player_BodyA", "BodyA", "Run",
+                "Assets/Art/Characters/Player/Body_A/Idle_Base/Idle",
+                "Assets/Art/Characters/Player/Body_A/Run_Base/Run",
+                6f, 10f);
+        }
 
-            var idleDown = CreateSpriteClip($"{folder}/BodyA_Idle_Down.anim",
-                "Assets/Art/Characters/Player/Body_A/Idle_Base/Idle_Down-Sheet.png", 6f, true);
-            var idleSide = CreateSpriteClip($"{folder}/BodyA_Idle_Side.anim",
-                "Assets/Art/Characters/Player/Body_A/Idle_Base/Idle_Side-Sheet.png", 6f, true);
-            var idleUp = CreateSpriteClip($"{folder}/BodyA_Idle_Up.anim",
-                "Assets/Art/Characters/Player/Body_A/Idle_Base/Idle_Up-Sheet.png", 6f, true);
+        static AnimatorController BuildNamedNpc4DirController(string npcName)
+        {
+            return Build4DirController(
+                $"{AnimRoot}/NPCs", $"NPC_{npcName}", $"NPC_{npcName}", "Move",
+                $"Assets/Art/Characters/NPCs/Named/{npcName}/Idle/Idle",
+                $"Assets/Art/Characters/NPCs/Named/{npcName}/Walk/Walk",
+                6f, 8f);
+        }
 
-            var runDown = CreateSpriteClip($"{folder}/BodyA_Run_Down.anim",
-                "Assets/Art/Characters/Player/Body_A/Run_Base/Run_Down-Sheet.png", 10f, true);
-            var runSide = CreateSpriteClip($"{folder}/BodyA_Run_Side.anim",
-                "Assets/Art/Characters/Player/Body_A/Run_Base/Run_Side-Sheet.png", 10f, true);
-            var runUp = CreateSpriteClip($"{folder}/BodyA_Run_Up.anim",
-                "Assets/Art/Characters/Player/Body_A/Run_Base/Run_Up-Sheet.png", 10f, true);
+        static AnimatorController Build4DirController(
+            string folder, string controllerName, string clipPrefix, string moveStateName,
+            string idlePrefix, string movePrefix, float idleFps, float moveFps)
+        {
+            string controllerPath = $"{folder}/{controllerName}.controller";
 
-            if (idleDown == null || runDown == null) return null;
+            var idleDown = CreateSpriteClip($"{folder}/{clipPrefix}_Idle_Down.anim", $"{idlePrefix}_Down-Sheet.png", idleFps, true);
+            var idleSide = CreateSpriteClip($"{folder}/{clipPrefix}_Idle_Side.anim", $"{idlePrefix}_Side-Sheet.png", idleFps, true);
+            var idleUp = CreateSpriteClip($"{folder}/{clipPrefix}_Idle_Up.anim", $"{idlePrefix}_Up-Sheet.png", idleFps, true);
+
+            var moveDown = CreateSpriteClip($"{folder}/{clipPrefix}_{moveStateName}_Down.anim", $"{movePrefix}_Down-Sheet.png", moveFps, true);
+            var moveSide = CreateSpriteClip($"{folder}/{clipPrefix}_{moveStateName}_Side.anim", $"{movePrefix}_Side-Sheet.png", moveFps, true);
+            var moveUp = CreateSpriteClip($"{folder}/{clipPrefix}_{moveStateName}_Up.anim", $"{movePrefix}_Up-Sheet.png", moveFps, true);
+
+            if (idleDown == null || moveDown == null) return null;
 
             var controller = ResetController(controllerPath);
             AddStandardParameters(controller);
 
             var sm = controller.layers[0].stateMachine;
             var idleTree = Create4DirBlendTree(controller, "Idle", idleDown, idleSide, idleUp);
-            var runTree = Create4DirBlendTree(controller, "Run", runDown, runSide, runUp);
+            var moveTree = Create4DirBlendTree(controller, moveStateName, moveDown, moveSide, moveUp);
 
             var idleState = sm.AddState("Idle");
             idleState.motion = idleTree;
             sm.defaultState = idleState;
 
-            var runState = sm.AddState("Run");
-            runState.motion = runTree;
+            var moveState = sm.AddState(moveStateName);
+            moveState.motion = moveTree;
 
-            WireMovingTransitions(idleState, runState);
+            WireMovingTransitions(idleState, moveState);
             EditorUtility.SetDirty(controller);
             return controller;
         }
@@ -444,7 +490,12 @@ namespace Morsoul.Hub.Editor
         {
             controller.AddParameter("Moving", AnimatorControllerParameterType.Bool);
             controller.AddParameter("MoveX", AnimatorControllerParameterType.Float);
-            controller.AddParameter("MoveY", AnimatorControllerParameterType.Float);
+            controller.AddParameter(new AnimatorControllerParameter
+            {
+                name = "MoveY",
+                type = AnimatorControllerParameterType.Float,
+                defaultFloat = -1f,
+            });
             controller.AddParameter("Speed", AnimatorControllerParameterType.Float);
         }
 
@@ -481,15 +532,75 @@ namespace Morsoul.Hub.Editor
             toIdle.AddCondition(AnimatorConditionMode.IfNot, 0f, "Moving");
         }
 
+        public static AnimatorController EnsureMaleVillagerController()
+        {
+            string folder = $"{AnimRoot}/NPCs";
+            EnsureFolder(AnimRoot);
+            EnsureFolder(folder);
+            string controllerPath = $"{folder}/NPC_Male_Villager.controller";
+
+            var idleDown = CreateSpriteClipByPrefix($"{folder}/MaleVillager_Idle_Down.anim",
+                MarketPackAssetSetup.MaleIdleSheetPath, "Char_Down_", 6f, true);
+            var idleSide = CreateSpriteClipByPrefix($"{folder}/MaleVillager_Idle_Side.anim",
+                MarketPackAssetSetup.MaleIdleSheetPath, "Char_Right_", 6f, true);
+            var idleUp = CreateSpriteClipByPrefix($"{folder}/MaleVillager_Idle_Up.anim",
+                MarketPackAssetSetup.MaleIdleSheetPath, "Char_Up_", 6f, true);
+
+            var walkDown = CreateSpriteClipByPrefix($"{folder}/MaleVillager_Walk_Down.anim",
+                MarketPackAssetSetup.MaleWalkSheetPath, "Char_Down_", 8f, true);
+            var walkSide = CreateSpriteClipByPrefix($"{folder}/MaleVillager_Walk_Side.anim",
+                MarketPackAssetSetup.MaleWalkSheetPath, "Char_Right_", 8f, true);
+            var walkUp = CreateSpriteClipByPrefix($"{folder}/MaleVillager_Walk_Up.anim",
+                MarketPackAssetSetup.MaleWalkSheetPath, "Char_Up_", 8f, true);
+
+            if (idleDown == null || walkDown == null) return null;
+
+            var controller = ResetController(controllerPath);
+            AddStandardParameters(controller);
+
+            var sm = controller.layers[0].stateMachine;
+            var idleTree = Create4DirBlendTree(controller, "Idle", idleDown, idleSide, idleUp);
+            var moveTree = Create4DirBlendTree(controller, "Move", walkDown, walkSide, walkUp);
+
+            var idleState = sm.AddState("Idle");
+            idleState.motion = idleTree;
+            sm.defaultState = idleState;
+
+            var moveState = sm.AddState("Move");
+            moveState.motion = moveTree;
+
+            WireMovingTransitions(idleState, moveState);
+            EditorUtility.SetDirty(controller);
+            AssetDatabase.SaveAssets();
+            return controller;
+        }
+
+        static AnimationClip CreateSpriteClipByPrefix(
+            string clipPath, string sheetPath, string namePrefix, float fps, bool loop)
+        {
+            var sprites = AssetDatabase.LoadAllAssetsAtPath(sheetPath)
+                .OfType<Sprite>()
+                .Where(s => s.name.StartsWith(namePrefix, StringComparison.Ordinal))
+                .OrderBy(s => s.rect.x)
+                .ToArray();
+            return BuildClipFromSprites(clipPath, sheetPath, sprites, fps, loop);
+        }
+
         static AnimationClip CreateSpriteClip(string clipPath, string sheetPath, float fps, bool loop)
         {
             var sprites = AssetDatabase.LoadAllAssetsAtPath(sheetPath)
                 .OfType<Sprite>()
                 .OrderBy(s => s.rect.x)
                 .ToArray();
-            if (sprites.Length == 0)
+            return BuildClipFromSprites(clipPath, sheetPath, sprites, fps, loop);
+        }
+
+        static AnimationClip BuildClipFromSprites(
+            string clipPath, string sheetPath, Sprite[] sprites, float fps, bool loop)
+        {
+            if (sprites == null || sprites.Length == 0)
             {
-                Debug.LogWarning($"PixelCrawlerPropAndAnimSetup: no sprites at '{sheetPath}'.");
+                Debug.LogWarning($"PixelCrawlerPropAndAnimSetup: no sprites matching '{clipPath}' at '{sheetPath}'.");
                 return null;
             }
 

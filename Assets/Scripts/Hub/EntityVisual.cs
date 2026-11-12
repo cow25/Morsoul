@@ -139,9 +139,17 @@ namespace Morsoul.Hub
 
         public void SyncFlip(bool facingLeft)
         {
+            AnimateAttachments(facingLeft, 0f, 0f);
+        }
+
+        public void AnimateAttachments(bool facingLeft, float stridePhase, float moveWeight)
+        {
             if (profile == null || profile.attachments == null) return;
             var visualRoot = transform.Find(VisualChildName);
             if (visualRoot == null) return;
+
+            float swingSin = moveWeight > 0.01f ? Mathf.Sin(stridePhase) * moveWeight : 0f;
+            float bobCos = moveWeight > 0.01f ? Mathf.Abs(Mathf.Cos(stridePhase)) * 0.03f * moveWeight : 0f;
 
             for (int i = 0; i < profile.attachments.Length; i++)
             {
@@ -149,9 +157,12 @@ namespace Morsoul.Hub
                 if (child == null || !child.gameObject.activeSelf) continue;
 
                 var att = profile.attachments[i];
-                float x = facingLeft ? -att.localOffset.x : att.localOffset.x;
-                child.localPosition = new Vector3(x, att.localOffset.y, att.localZ);
-                float rot = facingLeft ? -att.rotationZ : att.rotationZ;
+                float dirSign = i == 0 ? 1f : -1f;
+                float flipSign = facingLeft ? -1f : 1f;
+                float x = (facingLeft ? -att.localOffset.x : att.localOffset.x) + dirSign * swingSin * 0.07f * flipSign;
+                float y = att.localOffset.y + bobCos;
+                child.localPosition = new Vector3(x, y, att.localZ);
+                float rot = (facingLeft ? -att.rotationZ : att.rotationZ) - dirSign * swingSin * 12f * flipSign;
                 child.localRotation = Quaternion.Euler(0f, 0f, rot);
                 if (child.TryGetComponent<SpriteRenderer>(out var sr))
                     sr.flipX = att.flipX ^ facingLeft;

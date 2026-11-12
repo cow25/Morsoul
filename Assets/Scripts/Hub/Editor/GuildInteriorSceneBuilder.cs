@@ -390,17 +390,26 @@ namespace Morsoul.Hub.Editor
                 "Idle_Side-Sheet_0", "Assets/Animations/NPCs/NPC_CitizenF_TavernB.controller",
                 new Vector2(0f, -0.35f));
             var ovanProf = PixelCrawlerHubToolkit.EnsureCharacterProfile(
-                "Ovan", "Assets/Art/Characters/NPCs/Wizard/Idle/Idle-Sheet.png",
-                "Idle-Sheet_0", "Assets/Animations/NPCs/NPC_Wizard.controller",
+                "Ovan", "Assets/Art/Characters/NPCs/Named/Ovan/Idle/Idle_Down-Sheet.png",
+                "Idle_Down-Sheet_0", "Assets/Animations/NPCs/NPC_Ovan.controller",
                 new Vector2(0f, -0.35f));
-            var rogueProf = PixelCrawlerHubToolkit.EnsureCharacterProfile(
-                "Carrier", "Assets/Art/Characters/NPCs/Rogue/Idle/Idle-Sheet.png",
-                "Idle-Sheet_0", "Assets/Animations/NPCs/NPC_Rogue.controller",
+            PixelCrawlerHubToolkit.EnsureCharacterProfile(
+                "Carrier", "Assets/Art/Characters/NPCs/Named/Carrier/Idle/Idle_Down-Sheet.png",
+                "Idle_Down-Sheet_0", "Assets/Animations/NPCs/NPC_Carrier.controller",
                 new Vector2(0f, -0.35f));
-            var knightProf = PixelCrawlerHubToolkit.EnsureCharacterProfile(
-                "Ignatius", "Assets/Art/Characters/NPCs/Knight/Idle/Idle-Sheet.png",
-                "Idle-Sheet_0", "Assets/Animations/NPCs/NPC_Knight.controller",
+            var advAProf = PixelCrawlerHubToolkit.EnsureCharacterProfile(
+                "Adventurer_A", "Assets/Art/Characters/NPCs/Citizen_M/Adventurer_A/Idle/Idle_Side-Sheet.png",
+                "Idle_Side-Sheet_0", "Assets/Animations/NPCs/NPC_CitizenM_AdventurerA.controller",
+                new Vector2(0f, -0.35f));
+            var advBProf = PixelCrawlerHubToolkit.EnsureCharacterProfile(
+                "Adventurer_B", "Assets/Art/Characters/NPCs/Citizen_M/Adventurer_B/Idle/Idle_Side-Sheet.png",
+                "Idle_Side-Sheet_0", "Assets/Animations/NPCs/NPC_CitizenM_AdventurerB.controller",
                 new Vector2(0f, -0.35f), flipX: true);
+            // Refresh Ignatius's shared profile too so Guild Interior rebuilds keep it clean.
+            PixelCrawlerHubToolkit.EnsureCharacterProfile(
+                "Ignatius", "Assets/Art/Characters/NPCs/Named/Ignatius/Idle/Idle_Down-Sheet.png",
+                "Idle_Down-Sheet_0", "Assets/Animations/NPCs/NPC_Ignatius.controller",
+                new Vector2(0f, -0.35f));
 
             PixelCrawlerHubToolkit.BindActorVisual(player, playerProf, addYSort: true);
             PixelCrawlerHubToolkit.BindActorVisual(eliza, elizaProf, addYSort: true);
@@ -408,9 +417,9 @@ namespace Morsoul.Hub.Editor
             PixelCrawlerHubToolkit.BindActorVisual(ovan, ovanProf, addYSort: true);
 
             if (advNpcs.TryGetValue("Adventurer_Young", out var aYoung))
-                PixelCrawlerHubToolkit.BindActorVisual(aYoung, rogueProf, addYSort: true);
+                PixelCrawlerHubToolkit.BindActorVisual(aYoung, advAProf, addYSort: true);
             if (advNpcs.TryGetValue("Adventurer_Scarred", out var aScar))
-                PixelCrawlerHubToolkit.BindActorVisual(aScar, knightProf, addYSort: true);
+                PixelCrawlerHubToolkit.BindActorVisual(aScar, advBProf, addYSort: true);
             if (advNpcs.TryGetValue("Adventurer_Ranger", out var aRang))
                 PixelCrawlerHubToolkit.BindActorVisual(aRang, elizaProf, addYSort: true);
         }
