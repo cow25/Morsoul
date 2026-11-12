@@ -2110,7 +2110,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bfdb32342be47bc429bbf718f087acd1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SceneLoader
-  sceneToLoad: 
+  sceneToLoad: Prologue_Wilderness
 --- !u!43 &825460287
 Mesh:
   m_ObjectHideFlags: 0
@@ -4048,6 +4048,10 @@ PrefabInstance:
     - target: {fileID: 1975298993140540547, guid: 28b3a9b166728ee48a4e6c7ed782ecb0, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8892104410900336796, guid: 28b3a9b166728ee48a4e6c7ed782ecb0, type: 3}
+      propertyPath: m_BackGroundColor.a
+      value: 0.23529412
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
