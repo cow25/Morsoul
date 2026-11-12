@@ -7,11 +7,13 @@ Read [README.md](README.md) for contributor setup, the system/folder map, runtim
 - The user performs all commits. Agents must not commit, push, change Git configuration, or migrate LFS history.
 - Unity version: 6000.6.7f1. Keep Force Text serialization enabled and commit every asset together with its existing `.meta`. Never recreate GUIDs to fix a conflict.
 - 2D/Core owner: `Assets/Scripts/{Core,Data,Board,Engine,Gameplay,Flow,Hub,Dialogue,Journal,Interrogation,Cutscene,Title,Resolution}`, their editor generators, UI assets and prefabs, `Title`, `Hub_LowerMarket`, `Hub_CathedralNave`, `Hub_Wilderness`, `Hub_IronHollow`, `Prologue_Wilderness`, and the demo stand-in scenes `Prologue_2D` and `Investigation_01_Placeholder` (retired once the 3D prologue/vault replace their routes).
-- 3D owner: `Assets/Scenes/PrologueRuins.unity`, future investigation scenes, root-level `PlayerController`, `ScanController`, `HUDManager`, `DiaryManager`, and `Assets/Scripts/{Interaction,Player,Systems}`. Do not move or edit these without coordinating with that developer.
-- Shared changes requiring coordination: Packages, ProjectSettings, input actions, render pipeline settings, tags/layers, build profiles, Core public contracts and data schemas. Choose one editor per shared asset at a time.
-- Use independent prefabs or art-only additive scenes for parallel scene work. An additive art scene must contain no second player, camera, input listener or Core runtime. It requires an explicit load/unload owner; merely creating the file does not integrate it.
-- Hub and content generators can overwrite designer changes. Do not regenerate a hand-authored scene or asset without reviewing the confirmation and backing up the work. Keep art outside generator-owned assets.
-- Existing ScriptableObject definitions and GUIDs are integration contracts. Do not rename IDs or alter save semantics without coordinating both lanes.
+- 3D owner:
+  - Scenes: `Assets/Scenes/3D/` (including `PrologueRuins.unity` and `Case1UndergroundStorageVault.unity`), future 3D investigation scenes, and their associated lighting data/lightmaps.
+  - Prefabs: `SharedRoot.prefab` (including all Manager, Player, and UI children).
+  - Scripts: Root-level `PlayerController`, `ScanController`, `HUDManager`, `DiaryManager`, `InspectManager`, `LoadingManager`, and `Assets/Scripts/{Interaction,Player,Systems}`.
+  - UI/Visuals: `Assets/Panels/3D/` (including `HUD.uxml`, `Inspect.uxml`, `Loading.uxml`), the `ScanEffect` Shader Graph, `InspectRT` Render Texture, and the `PC_Renderer_3D` pipeline asset. 
+  - Do not move, edit, or regenerate these assets without coordinating with the 3D developer.
+- Shared changes requiring coordination: Packages, ProjectSettings, input actions, render pipeline settings (`PC_Renderer_3D`), tags/layers (specifically `Interactable` and `InspectLayer`), build profiles, Core public contracts and data schemas. Choose one editor per shared asset at a time.UIDs are integration contracts. Do not rename IDs or alter save semantics without coordinating both lanes.
 
 ## Git and Unity merging
 

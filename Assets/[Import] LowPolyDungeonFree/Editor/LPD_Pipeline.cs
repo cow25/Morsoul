@@ -54,7 +54,7 @@ namespace LowPolyDungeon
     [InitializeOnLoad]
     public static class LPD_Pipeline
     {
-        const string Root = "Assets/LowPolyDungeonFree";
+        const string Root = "Assets/[Import] LowPolyDungeonFree";
         const string MatDir = Root + "/Materials";
         const string MetalSmoothPath = Root + "/Textures/LPD_Palette_MetalSmooth.png";
 

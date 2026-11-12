@@ -13,6 +13,7 @@ public class HUDManager : MonoBehaviour
 
     private VisualElement _aetherSightRow;
     private VisualElement _interactionContainer;
+    private VisualElement _hudRoot;
     private Label _focusValueLabel;
     private VisualElement _focusBarFill;
     private Label _interactionText;
@@ -41,6 +42,8 @@ public class HUDManager : MonoBehaviour
     {
         if (_uiVersion == version) return;
         _uiVersion = version;
+
+        _hudRoot = root.Q<VisualElement>("HUD-Root"); 
 
         _escLabel = root.Q<VisualElement>("EscLabel");
         _golemEyePanel = root.Q<VisualElement>("GolemEyePanel");
@@ -132,4 +135,12 @@ public class HUDManager : MonoBehaviour
         if (_interactionContainer != null)
             _interactionContainer.style.display = DisplayStyle.None;
     }
+
+    public void SetHUDVisibility(bool isVisible)
+{
+    if (_hudRoot != null)
+    {
+        _hudRoot.style.display = isVisible ? DisplayStyle.Flex : DisplayStyle.None;
+    }
+}
 }

@@ -7,7 +7,6 @@ public class LockableInteractable : MonoBehaviour
     [Tooltip("Leave empty if the door is never locked.")]
     public string requiredItemId = "I1_Key"; 
     public string lockedDescription = "Looks like it can be opened by something.";
-    public string unlockedDescription = "It's unlocked. [L-Click] to open.";
 
     [Header("Events")]
     [Tooltip("What happens when the player interacts successfully?")]
@@ -15,8 +14,8 @@ public class LockableInteractable : MonoBehaviour
 
     public bool IsLocked()
     {
-        if (string.IsNullOrEmpty(requiredItemId)) return false;
-        if (DiaryManager.Instance == null) return true;
+        if (string.IsNullOrEmpty(requiredItemId)) return false; 
+        if (DiaryManager.Instance == null) return true; 
 
         return !DiaryManager.Instance.HasClue(requiredItemId); 
     }
@@ -27,7 +26,6 @@ public class LockableInteractable : MonoBehaviour
         {
             Debug.Log("Door Unlocked! Triggering event...");
             onInteractSuccess?.Invoke();
-            
             requiredItemId = ""; 
         }
         else
