@@ -33,6 +33,10 @@ namespace Morsoul.Hub
         public string routeKey;
         /// <summary>Played when the gate is locked; optional.</summary>
         public Morsoul.Dialogue.DialogueData lockedDialogue;
+        /// <summary>When true, entering the trigger collider activates the gate automatically without [E].</summary>
+        public bool triggerOnEnter;
+
+        bool _triggeredOnEnter;
 
         /// <summary>Fired just before scene load; argument is the checkpoint reason.</summary>
         public event Action<string> CheckpointRequested;
@@ -40,6 +44,21 @@ namespace Morsoul.Hub
         void Reset()
         {
             promptText = "[E] Enter";
+        }
+
+        void OnTriggerEnter2D(Collider2D other)
+        {
+            if (!triggerOnEnter || _triggeredOnEnter || other == null || !other.CompareTag("Player"))
+                return;
+            _triggeredOnEnter = true;
+            var ctx = FindFirstObjectByType<HubContext>();
+            Interact(ctx);
+        }
+
+        void OnTriggerExit2D(Collider2D other)
+        {
+            if (other != null && other.CompareTag("Player"))
+                _triggeredOnEnter = false;
         }
 
         public override void Interact(HubContext ctx)

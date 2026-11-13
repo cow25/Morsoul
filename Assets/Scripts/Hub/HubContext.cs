@@ -33,6 +33,29 @@ namespace Morsoul.Hub
 
         readonly List<Func<bool>> _uiBlockers = new List<Func<bool>>();
         DialogueController _boundDialogue;
+        Func<bool> _pauseModalPredicate;
+
+        void OnEnable()
+        {
+            BindDialogueEffects();
+            _pauseModalPredicate ??= () =>
+                DialoguePlaying ||
+                (travelMenu != null && travelMenu.IsOpen) ||
+                (ResolveBoardPanel() != null && boardPanel.IsOpen);
+            PauseMenuController.RegisterExternalModal(_pauseModalPredicate);
+        }
+
+        void OnDisable()
+        {
+            if (_pauseModalPredicate != null)
+                PauseMenuController.UnregisterExternalModal(_pauseModalPredicate);
+            if (_boundDialogue != null)
+            {
+                _boundDialogue.ClueRegistered -= OnDialogueClueRegistered;
+                _boundDialogue.FlagSet -= OnDialogueFlagSet;
+                _boundDialogue = null;
+            }
+        }
 
         /// <summary>True when a dialogue is currently playing (blocks movement/interaction).</summary>
         public bool DialoguePlaying => dialogue != null && dialogue.IsPlaying;
@@ -46,7 +69,8 @@ namespace Morsoul.Hub
         {
             get
             {
-                if (DialoguePlaying ||
+                if (PauseMenuController.IsPaused ||
+                    DialoguePlaying ||
                     (travelMenu != null && travelMenu.IsOpen) ||
                     (ResolveBoardPanel() != null && boardPanel.IsOpen) ||
                     CutsceneActive)
@@ -103,18 +127,6 @@ namespace Morsoul.Hub
             dialogue.SetDialogue(data);
             dialogue.Play();
             return dialogue.IsPlaying;
-        }
-
-        void OnEnable() => BindDialogueEffects();
-
-        void OnDisable()
-        {
-            if (_boundDialogue != null)
-            {
-                _boundDialogue.ClueRegistered -= OnDialogueClueRegistered;
-                _boundDialogue.FlagSet -= OnDialogueFlagSet;
-                _boundDialogue = null;
-            }
         }
 
         /// <summary>Attaches the scene's one dialogue-effects binding; idempotent.</summary>

@@ -1,197 +1,251 @@
 .board-root {
     -unity-font-definition: url("project://database/Assets/Fonts/Middleearth.ttf");
-}
-
-.hud-text-large {
-    font-size: 18px;
-    color: white;
-    text-shadow: 1px 1px 2px black;
-    -unity-font-style: bold;
-}
-
-.hud-text {
-    font-size: 16px;
-    color: white;
-    text-shadow: 1px 1px 2px black;
-}
-
-.hud-text-small {
-    font-size: 12px;
-    text-shadow: 1px 1px 1px black;
-    color: rgb(200, 200, 200);
-}
-
-.keycap {
-    background-color: rgba(40, 40, 40, 0.8);
-    border-color: rgba(255, 255, 255, 0.5);
-    border-width: 1px;
-    border-radius: 4px;
-    color: white;
-    padding: 2px 8px;
-    font-size: 14px;
-    -unity-text-align: middle-center;
-    margin-left: 5px;
-    margin-right: 5px;
-}
-
-.board-backdrop {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.72);
+    background-color: rgba(10, 9, 8, 0.72);
+    align-items: center;
+    justify-content: center;
 }
 
 .board-panel {
-    background-color: rgba(14, 11, 18, 0.94);
-    border-color: rgba(255, 255, 255, 0.35);
-    border-width: 1px;
-    border-radius: 8px;
-    padding: 14px 18px;
+    width: 88%;
+    height: 86%;
+    max-width: 1220px;
+    max-height: 760px;
+    background-image: url("project://database/Assets/Art/UI/Cork_Board_Panel.png");
+    -unity-background-scale-mode: stretch-to-fill;
+    padding: 56px 68px 56px 68px;
+    flex-direction: column;
 }
 
-.clue-card {
-    width: 180px;
-    height: 110px;
+.board-header-row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
     flex-shrink: 0;
-    flex-direction: column;
-    background-color: rgba(30, 26, 38, 0.85);
-    border-color: rgba(255, 255, 255, 0.35);
+}
+
+.board-back-button {
+    background-image: url("project://database/Assets/Art/UI/Flat/UI_Flat_Button01a_1.png");
+    -unity-background-image-tint-color: rgb(232, 218, 188);
+    background-color: transparent;
+    border-width: 0;
+    padding: 7px 18px;
+    color: rgb(32, 22, 14);
+    font-size: 14px;
+    -unity-font-style: bold;
+}
+
+.board-back-button:hover {
+    -unity-background-image-tint-color: rgb(252, 236, 198);
+}
+
+.board-title {
+    font-size: 22px;
+    color: rgb(28, 18, 12);
+    -unity-font-style: bold;
+    background-color: rgba(242, 228, 198, 0.85);
+    border-color: rgba(104, 78, 48, 0.65);
+    border-width: 1px;
+    border-radius: 4px;
+    padding: 5px 14px;
+}
+
+.board-section-label {
+    font-size: 13px;
+    color: rgb(42, 28, 16);
+    -unity-font-style: bold;
+    background-color: rgba(236, 220, 188, 0.72);
+    align-self: flex-start;
+    padding: 3px 10px;
+    border-radius: 3px;
+    margin-bottom: 6px;
+}
+
+.clue-rack {
+    min-height: 128px;
+    max-height: 146px;
+    flex-direction: row;
+    margin-bottom: 10px;
+    background-color: rgba(66, 46, 28, 0.22);
+    border-color: rgba(88, 62, 38, 0.4);
     border-width: 1px;
     border-radius: 6px;
     padding: 8px;
-    margin-left: 4px;
-    margin-right: 4px;
+}
+
+.clue-card {
+    width: 168px;
+    min-height: 94px;
+    flex-shrink: 0;
+    background-color: rgba(246, 236, 212, 0.94);
+    border-color: rgba(110, 78, 44, 0.8);
+    border-width: 1.5px;
+    border-radius: 4px;
+    padding: 8px 10px;
+    margin-right: 10px;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
 }
 
 .clue-card:hover {
-    background-color: rgba(52, 45, 66, 0.92);
-    border-color: rgba(255, 255, 255, 0.6);
+    background-color: rgba(255, 246, 224, 0.98);
+    border-color: rgb(146, 98, 28);
 }
 
 .clue-card--selected {
-    border-color: rgb(130, 80, 160);
+    background-color: rgba(236, 218, 250, 0.96);
+    border-color: rgb(118, 66, 152);
     border-width: 2px;
-    background-color: rgba(68, 44, 88, 0.6);
+    border-radius: 4px;
 }
 
 .clue-card-name {
-    font-size: 13px;
-    color: white;
-    text-shadow: 1px 1px 1px black;
+    font-size: 12px;
+    color: rgb(30, 20, 12);
+    -unity-font-style: bold;
     white-space: normal;
-    flex-grow: 1;
 }
 
 .clue-card-type {
-    font-size: 11px;
-    color: rgb(185, 165, 205);
-    -unity-text-align: middle-right;
+    font-size: 10px;
+    color: rgb(116, 76, 30);
+    margin-top: auto;
+}
+
+.workspace-row {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 12px;
     flex-shrink: 0;
 }
 
 .slot-button {
-    width: 260px;
-    height: 42px;
-    background-color: rgba(30, 26, 38, 0.85);
-    border-color: rgba(255, 255, 255, 0.3);
-    border-width: 1px;
-    border-radius: 6px;
-    color: rgb(170, 170, 170);
+    width: 210px;
+    height: 44px;
+    margin-right: 10px;
+    background-color: rgba(242, 228, 198, 0.88);
+    border-color: rgba(112, 82, 48, 0.75);
+    border-width: 1.5px;
+    border-radius: 5px;
+    color: rgb(68, 52, 36);
     font-size: 14px;
     -unity-text-align: middle-center;
 }
 
 .slot-button:hover {
-    background-color: rgba(52, 45, 66, 0.92);
-    border-color: rgba(255, 255, 255, 0.55);
+    background-color: rgba(252, 240, 214, 0.96);
 }
 
 .slot-button--filled {
-    color: white;
-    border-color: rgb(130, 80, 160);
+    color: rgb(32, 20, 14);
+    -unity-font-style: bold;
+    border-color: rgb(124, 70, 156);
+    border-width: 2px;
 }
 
 .link-button {
-    height: 42px;
-    padding-left: 16px;
-    padding-right: 16px;
-    background-color: rgba(48, 38, 62, 0.9);
-    border-color: rgb(130, 80, 160);
-    border-width: 1px;
-    border-radius: 6px;
-    color: white;
+    height: 44px;
+    padding: 0 20px;
+    background-image: url("project://database/Assets/Art/UI/Flat/UI_Flat_Button01a_1.png");
+    -unity-background-image-tint-color: rgb(216, 188, 238);
+    background-color: transparent;
+    border-width: 0;
+    color: rgb(30, 18, 42);
     font-size: 14px;
+    -unity-font-style: bold;
 }
 
 .link-button:hover {
-    background-color: rgba(72, 55, 94, 0.95);
-    border-color: rgb(165, 120, 195);
+    -unity-background-image-tint-color: rgb(235, 212, 252);
+}
+
+.premise-row {
+    flex-direction: row;
+    flex-wrap: wrap;
+    min-height: 78px;
+    background-color: rgba(66, 46, 28, 0.18);
+    border-color: rgba(88, 62, 38, 0.38);
+    border-width: 1px;
+    border-radius: 6px;
+    padding: 8px;
+    margin-bottom: 12px;
 }
 
 .premise-card {
-    min-width: 170px;
+    min-width: 185px;
     flex-shrink: 0;
-    background-color: rgba(44, 34, 58, 0.85);
-    border-color: rgb(130, 80, 160);
-    border-width: 1px;
-    border-radius: 6px;
+    background-color: rgba(246, 236, 212, 0.94);
+    border-color: rgb(118, 72, 150);
+    border-width: 1.5px;
+    border-radius: 5px;
     padding: 8px 12px;
     margin-right: 8px;
+    margin-bottom: 6px;
 }
 
 .premise-card-title {
     font-size: 14px;
-    color: white;
-    text-shadow: 1px 1px 1px black;
+    color: rgb(32, 20, 16);
     white-space: normal;
+}
+
+.board-footer-row {
+    flex-direction: row;
+    justify-content: flex-end;
+    margin-top: auto;
+    flex-shrink: 0;
 }
 
 .submit-button {
     height: 44px;
-    padding-left: 20px;
-    padding-right: 20px;
-    background-color: rgba(48, 38, 62, 0.9);
-    border-color: rgb(130, 80, 160);
-    border-width: 1px;
-    border-radius: 6px;
-    color: white;
+    padding: 0 22px;
+    background-image: url("project://database/Assets/Art/UI/Flat/UI_Flat_Button01a_1.png");
+    -unity-background-image-tint-color: rgb(228, 198, 134);
+    background-color: transparent;
+    border-width: 0;
+    color: rgb(32, 20, 12);
     font-size: 15px;
     -unity-font-style: bold;
 }
 
 .submit-button:hover {
-    background-color: rgba(72, 55, 94, 0.95);
-    border-color: rgb(165, 120, 195);
+    -unity-background-image-tint-color: rgb(248, 220, 158);
 }
 
 .submit-button--disabled {
-    color: rgba(255, 255, 255, 0.4);
-    background-color: rgba(30, 26, 38, 0.5);
-    border-color: rgba(255, 255, 255, 0.15);
+    opacity: 0.72;
     -unity-font-style: normal;
 }
 
 .feedback-banner {
     border-width: 1px;
-    border-radius: 6px;
-    padding: 8px 12px;
+    border-radius: 5px;
+    padding: 8px 14px;
     margin-top: 10px;
 }
 
+.feedback-text {
+    font-size: 14px;
+    color: rgb(252, 246, 236);
+    white-space: normal;
+}
+
 .banner--error {
-    background-color: rgba(96, 34, 40, 0.75);
-    border-color: rgba(190, 95, 100, 0.8);
+    background-color: rgba(112, 32, 36, 0.92);
+    border-color: rgb(212, 118, 118);
 }
 
 .banner--info {
-    background-color: rgba(35, 60, 48, 0.75);
-    border-color: rgba(110, 160, 125, 0.8);
+    background-color: rgba(34, 68, 48, 0.92);
+    border-color: rgb(118, 178, 134);
 }
 
 .banner--hint {
-    color: rgb(198, 166, 226);
+    color: rgb(232, 206, 250);
+    font-size: 13px;
+    margin-top: 3px;
+    white-space: normal;
 }
 
 .prompt-modal {
@@ -200,7 +254,7 @@
     top: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.55);
+    background-color: rgba(8, 7, 6, 0.65);
     align-items: center;
     justify-content: center;
 }
@@ -208,99 +262,97 @@
 .prompt-card {
     width: 60%;
     max-width: 720px;
-    background-color: rgba(18, 14, 24, 0.97);
-    border-color: rgba(255, 255, 255, 0.4);
-    border-width: 1px;
-    border-radius: 8px;
-    padding: 18px 22px;
+    background-image: url("project://database/Assets/Art/UI/Ornate_Runic_Card.png");
+    -unity-background-scale-mode: stretch-to-fill;
+    padding: 46px 56px 40px 56px;
+}
+
+.prompt-question {
+    font-size: 17px;
+    color: rgb(28, 20, 14);
+    -unity-font-style: bold;
+    margin-bottom: 10px;
 }
 
 .option-button {
     white-space: normal;
-    background-color: rgba(30, 26, 38, 0.9);
-    border-color: rgba(255, 255, 255, 0.3);
-    border-width: 1px;
-    border-radius: 6px;
-    padding: 10px 12px;
+    background-image: url("project://database/Assets/Art/UI/Flat/UI_Flat_Button01a_1.png");
+    -unity-background-image-tint-color: rgb(242, 232, 212);
+    background-color: transparent;
+    border-width: 0;
+    padding: 10px 14px;
     margin-top: 8px;
-    color: white;
+    color: rgb(28, 20, 14);
     font-size: 14px;
     -unity-text-align: middle-left;
 }
 
 .option-button:hover {
-    background-color: rgba(60, 50, 78, 0.95);
-    border-color: rgb(130, 80, 160);
+    -unity-background-image-tint-color: rgb(255, 240, 198);
 }
 
 .cancel-button {
-    height: 34px;
-    padding-left: 18px;
-    padding-right: 18px;
+    height: 36px;
+    padding: 0 18px;
+    margin-top: 12px;
     align-self: flex-end;
-    background-color: rgba(40, 40, 40, 0.85);
-    border-color: rgba(255, 255, 255, 0.35);
-    border-width: 1px;
-    border-radius: 6px;
-    color: white;
+    background-image: url("project://database/Assets/Art/UI/Flat/UI_Flat_Button01a_1.png");
+    -unity-background-image-tint-color: rgb(210, 196, 174);
+    background-color: transparent;
+    border-width: 0;
+    color: rgb(32, 22, 14);
     font-size: 13px;
 }
-
-.cancel-button:hover {
-    background-color: rgba(60, 60, 60, 0.9);
-    border-color: rgba(255, 255, 255, 0.6);
-}
-
-/* --- Hint popup (Eliza / internal diagnostic) ------------------------------- */
 
 .hint-popup {
     position: absolute;
-    top: 10%;
-    right: 8%;
-    width: 380px;
+    top: 8%;
+    right: 6%;
+    width: 420px;
     flex-direction: row;
-    background-color: rgba(20, 15, 30, 0.96);
-    border-color: rgb(130, 80, 160);
-    border-width: 2px;
-    border-radius: 8px;
-    padding: 12px 14px;
+    background-image: url("project://database/Assets/Art/UI/Ornate_Runic_Card.png");
+    -unity-background-scale-mode: stretch-to-fill;
+    padding: 36px 42px 30px 42px;
 }
 
 .hint-portrait {
-    width: 64px;
-    height: 80px;
+    width: 68px;
+    height: 82px;
     flex-shrink: 0;
-    background-color: rgba(10, 8, 14, 0.9);
-    border-color: rgb(130, 80, 160);
-    border-width: 1px;
+    margin-right: 12px;
+    background-color: rgba(232, 218, 190, 0.85);
+    border-color: rgba(74, 54, 34, 0.8);
+    border-width: 1.5px;
     border-radius: 4px;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.hint-body {
+    flex-grow: 1;
+    flex-direction: column;
 }
 
 .hint-speaker {
-    font-size: 13px;
-    color: rgb(198, 166, 226);
+    font-size: 15px;
+    color: rgb(88, 38, 114);
     -unity-font-style: bold;
+    margin-bottom: 4px;
 }
 
 .hint-text {
     font-size: 13px;
-    color: rgb(230, 220, 240);
-    -unity-font-style: italic;
+    color: rgb(32, 24, 18);
+    margin-bottom: 8px;
 }
 
 .hint-close {
-    height: 26px;
-    padding-left: 16px;
-    padding-right: 16px;
-    background-color: rgba(48, 38, 62, 0.9);
-    border-color: rgb(130, 80, 160);
-    border-width: 1px;
-    border-radius: 5px;
-    color: white;
+    height: 28px;
+    padding: 0 16px;
+    align-self: flex-end;
+    background-image: url("project://database/Assets/Art/UI/Flat/UI_Flat_Button01a_1.png");
+    -unity-background-image-tint-color: rgb(232, 216, 186);
+    background-color: transparent;
+    border-width: 0;
+    color: rgb(32, 22, 14);
     font-size: 12px;
-}
-
-.hint-close:hover {
-    background-color: rgba(72, 55, 94, 0.95);
-    border-color: rgb(165, 120, 195);
 }

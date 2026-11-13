@@ -36,7 +36,6 @@ namespace Morsoul.Hub.Editor
         const string WeightedBoardUxmlPath = "Assets/WeightedBoard.uxml";
         const string MarketSceneName = "Hub_LowerMarket";
 
-        [MenuItem("Morsoul/Setup/Build Demo Stand-In Scenes")]
         public static void BuildAll()
         {
             CreatePrologue();
@@ -48,7 +47,6 @@ namespace Morsoul.Hub.Editor
         }
 
         /// <summary>Patches route keys in saved stand-in scenes without regenerating them.</summary>
-        [MenuItem("Morsoul/Setup/Patch Demo Route Wiring")]
         public static void PatchRouteWiring()
         {
             PatchLowerMarket();

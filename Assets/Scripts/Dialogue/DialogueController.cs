@@ -70,7 +70,11 @@ namespace Morsoul.Dialogue
         void OnEnable()
         {
             _panelRenderer = GetComponent<PanelRenderer>();
-            if (_panelRenderer != null) _panelRenderer.RegisterUIReloadCallback(OnUIReload);
+            if (_panelRenderer != null)
+            {
+                _panelRenderer.sortingOrder = 20;
+                _panelRenderer.RegisterUIReloadCallback(OnUIReload);
+            }
         }
 
         void OnDisable()

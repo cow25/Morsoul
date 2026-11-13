@@ -1,42 +1,48 @@
 .travel-menu-root {
     -unity-font-definition: url("project://database/Assets/Fonts/Middleearth.ttf");
+    background-color: rgba(10, 9, 8, 0.55);
 }
 
 .travel-menu-box {
-    background-color: rgba(14, 11, 18, 0.94);
-    border-color: rgba(255, 255, 255, 0.35);
-    border-width: 1px;
-    border-radius: 8px;
-    padding: 14px 18px;
+    background-image: url("project://database/Assets/Art/UI/Ornate_Runic_Card.png");
+    -unity-background-scale-mode: stretch-to-fill;
+    padding: 46px 58px 40px 58px;
+    border-width: 0;
 }
 
 .travel-menu-title {
-    font-size: 18px;
-    color: rgb(229, 169, 60);
-    text-shadow: 1px 1px 2px black;
+    font-size: 20px;
+    color: rgb(32, 22, 14);
+    text-shadow: 0 0 0 transparent;
     -unity-font-style: bold;
+    margin-bottom: 6px;
 }
 
 .travel-destination {
     white-space: normal;
-    background-color: rgba(30, 26, 38, 0.9);
-    border-color: rgba(255, 255, 255, 0.2);
+    background-image: url("project://database/Assets/Art/UI/Flat/UI_Flat_Button01a_1.png");
+    -unity-background-image-tint-color: rgb(238, 226, 200);
+    background-color: transparent;
     border-width: 1px;
+    border-color: rgba(112, 82, 48, 0.45);
     border-radius: 4px;
-    margin-top: 4px;
-    padding: 8px 10px;
+    margin-top: 6px;
+    padding: 9px 14px;
     font-size: 16px;
-    color: white;
-    text-align: left;
+    color: rgb(30, 20, 14);
+    -unity-text-align: middle-left;
 }
 
 .travel-destination--selected {
-    border-color: rgb(229, 169, 60);
-    background-color: rgba(60, 48, 30, 0.95);
+    -unity-background-image-tint-color: rgb(246, 214, 142);
+    border-color: rgb(146, 98, 24);
+    border-width: 2px;
+    -unity-font-style: bold;
 }
 
 .travel-menu-hint {
     font-size: 13px;
-    color: rgb(200, 200, 200);
-    text-shadow: 1px 1px 2px black;
+    color: rgb(72, 54, 38);
+    text-shadow: 0 0 0 transparent;
+    margin-top: 8px;
 }

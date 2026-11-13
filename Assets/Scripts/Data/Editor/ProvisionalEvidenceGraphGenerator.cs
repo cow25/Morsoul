@@ -26,7 +26,6 @@ namespace Morsoul.Data.Editor
             "lockpick) contradict. Any stray authored link breaks the unlock - " +
             "the dissonance mechanic.";
 
-        [MenuItem("Morsoul/Data/Draft Provisional Evidence Graphs (Non-Canonical)")]
         public static void Draft()
         {
             if (!EditorUtility.DisplayDialog(

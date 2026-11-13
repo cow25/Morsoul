@@ -1,45 +1,50 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
     <Style src="project://database/Assets/Board.uss"/>
-    <ui:VisualElement name="Board-Root" class="board-root" style="position: absolute; width: 100%; height: 100%; display: none;" picking-mode="Ignore">
-        <ui:VisualElement name="Backdrop" class="board-backdrop"/>
-        <ui:VisualElement name="BoardPanel" class="board-panel" style="position: absolute; top: 8%; left: 10%; width: 80%; height: 84%;">
-            <ui:VisualElement name="HeaderRow" style="flex-direction: row; align-items: center; margin-bottom: 10px; flex-shrink: 0;">
-                <ui:Label name="TitleLabel" text="Deduction Board" class="hud-text-large"/>
-                <ui:Label name="CaseTitleLabel" text="" class="hud-text" style="color: rgb(200, 200, 200); margin-left: 15px; flex-grow: 1;"/>
-                <ui:Label name="CloseHint" text="(H) close" class="hud-text-small"/>
+    <ui:VisualElement name="Board-Root" class="board-root" style="position: absolute; width: 100%; height: 100%; display: none;">
+        <ui:VisualElement name="BoardPanel" class="board-panel">
+            <ui:VisualElement name="HeaderRow" class="board-header-row">
+                <ui:Button name="CloseBoardButton" text="← Back  [H]" class="board-back-button"/>
+                <ui:Label name="CaseTitleLabel" text="Case Investigation" class="board-title"/>
             </ui:VisualElement>
-            <ui:ScrollView name="ClueRack" mode="Horizontal" style="margin-bottom: 12px; flex-shrink: 0;"/>
-            <ui:VisualElement name="SlotsRow" style="flex-direction: row; align-items: center; margin-bottom: 12px; flex-shrink: 0;">
-                <ui:Button name="SlotA" text="Slot A — empty" class="slot-button" style="margin-right: 10px;"/>
-                <ui:Button name="SlotB" text="Slot B — empty" class="slot-button" style="margin-right: 10px;"/>
-                <ui:Button name="LinkButton" text="Link (or auto on 2nd card)" class="link-button"/>
+
+            <ui:Label name="RackHeader" text="Pinned Evidence — Select two clues to test a causal link" class="board-section-label"/>
+            <ui:ScrollView name="ClueRack" mode="Horizontal" class="clue-rack"/>
+
+            <ui:VisualElement name="WorkspaceRow" class="workspace-row">
+                <ui:Button name="SlotA" text="Slot A" class="slot-button"/>
+                <ui:Button name="SlotB" text="Slot B" class="slot-button"/>
+                <ui:Button name="LinkButton" text="Link Clues" class="link-button"/>
             </ui:VisualElement>
-            <ui:Label name="PremiseHeader" text="Established Premises" class="hud-text-small" style="margin-bottom: 5px; flex-shrink: 0;"/>
-            <ui:VisualElement name="PremiseRow" style="flex-direction: row; flex-wrap: wrap; margin-bottom: 12px; flex-shrink: 0;"/>
-            <ui:VisualElement name="HypothesisRow" style="flex-direction: row; align-items: center; flex-shrink: 0;">
-                <ui:Button name="SubmitButton" text="[Space] Submit Master Hypothesis" class="submit-button submit-button--disabled"/>
+
+            <ui:Label name="PremiseHeader" text="Verified Premises (2 needed for Master Hypothesis)" class="board-section-label"/>
+            <ui:VisualElement name="PremiseRow" class="premise-row"/>
+
+            <ui:VisualElement name="FooterRow" class="board-footer-row">
+                <ui:Button name="SubmitButton" text="Submit Master Hypothesis" class="submit-button submit-button--disabled"/>
             </ui:VisualElement>
-            <ui:VisualElement name="FeedbackBanner" class="feedback-banner" style="display: none; flex-shrink: 0;">
-                <ui:Label name="FeedbackLabel" class="hud-text" style="white-space: normal;"/>
-                <ui:Label name="HintLabel" class="hud-text-small banner--hint" style="white-space: normal; margin-top: 4px; display: none;"/>
+
+            <ui:VisualElement name="FeedbackBanner" class="feedback-banner" style="display: none;">
+                <ui:Label name="FeedbackLabel" text="" class="feedback-text"/>
+                <ui:Label name="HintLabel" text="" class="banner--hint" style="display: none;"/>
             </ui:VisualElement>
         </ui:VisualElement>
+
         <ui:VisualElement name="PromptModal" class="prompt-modal" style="display: none;">
             <ui:VisualElement name="PromptCard" class="prompt-card">
-                <ui:Label name="PromptQuestion" text="" class="hud-text" style="white-space: normal; margin-bottom: 10px;"/>
+                <ui:Label name="PromptQuestion" text="" class="prompt-question" style="white-space: normal;"/>
                 <ui:Button name="OptionButton0" text="" class="option-button"/>
                 <ui:Button name="OptionButton1" text="" class="option-button"/>
                 <ui:Button name="OptionButton2" text="" class="option-button"/>
-                <ui:Button name="CancelPromptButton" text="Back" class="cancel-button" style="margin-top: 12px;"/>
-                <ui:Label name="PromptFooter" text="(A/B/C) answer (ESC) back" class="hud-text-small" style="margin-top: 10px; -unity-text-align: middle-center;"/>
+                <ui:Button name="CancelPromptButton" text="Cancel" class="cancel-button"/>
             </ui:VisualElement>
         </ui:VisualElement>
+
         <ui:VisualElement name="HintPopup" class="hint-popup" style="display: none;">
             <ui:VisualElement name="HintPortrait" class="hint-portrait"/>
-            <ui:VisualElement name="HintBody" style="flex-grow: 1; flex-direction: column; margin-left: 10px;">
+            <ui:VisualElement name="HintBody" class="hint-body">
                 <ui:Label name="HintSpeaker" text="Eliza" class="hint-speaker"/>
-                <ui:Label name="HintText" text="" class="hint-text" style="white-space: normal; margin-top: 4px;"/>
-                <ui:Button name="HintClose" text="OK" class="hint-close" style="align-self: flex-end; margin-top: 8px;"/>
+                <ui:Label name="HintText" text="" class="hint-text" style="white-space: normal;"/>
+                <ui:Button name="HintClose" text="Dismiss" class="hint-close"/>
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>

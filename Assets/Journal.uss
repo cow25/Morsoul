@@ -1,214 +1,192 @@
 .journal-root {
     -unity-font-definition: url("project://database/Assets/Fonts/Middleearth.ttf");
+    background-color: rgba(10, 9, 8, 0.72);
+    align-items: center;
+    justify-content: center;
 }
 
-.hud-text-large {
-    font-size: 18px;
-    color: white;
-    text-shadow: 1px 1px 2px black;
-    -unity-font-style: bold;
+.journal-desk-container {
+    width: 78%;
+    max-width: 1120px;
+    height: 76%;
+    max-height: 700px;
+    flex-direction: column;
+    align-items: stretch;
 }
 
-.hud-text {
-    font-size: 16px;
-    color: white;
-    text-shadow: 1px 1px 2px black;
+.journal-bookmark-strip {
+    flex-direction: row;
+    padding-left: 48px;
+    margin-bottom: -6px;
+    flex-shrink: 0;
 }
-
-.hud-text-small {
-    font-size: 12px;
-    text-shadow: 1px 1px 1px black;
-    color: rgb(200, 200, 200);
-}
-
-.journal-backdrop {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.72);
-}
-
-.journal-panel {
-    background-color: rgba(14, 11, 18, 0.94);
-    border-color: rgba(255, 255, 255, 0.35);
-    border-width: 1px;
-    border-radius: 8px;
-    padding: 14px 18px;
-}
-
-/* --- Header tabs ---------------------------------------------------------- */
 
 .journal-tab {
-    height: 34px;
-    padding-left: 14px;
-    padding-right: 14px;
-    margin-left: 6px;
-    background-color: rgba(30, 26, 38, 0.85);
-    border-color: rgba(255, 255, 255, 0.3);
-    border-width: 1px;
-    border-radius: 6px;
-    color: rgb(170, 170, 170);
+    background-image: url("project://database/Assets/Art/UI/Flat/UI_Flat_FrameSlot03a.png");
+    -unity-background-image-tint-color: rgb(92, 74, 54);
+    background-color: transparent;
+    border-width: 0;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    padding: 8px 18px 10px 18px;
+    margin-right: 6px;
+    color: rgb(224, 210, 184);
     font-size: 13px;
 }
 
 .journal-tab:hover {
-    background-color: rgba(52, 45, 66, 0.92);
-    border-color: rgba(255, 255, 255, 0.55);
-    color: white;
+    -unity-background-image-tint-color: rgb(128, 102, 70);
+    color: rgb(255, 240, 206);
 }
 
 .journal-tab--active {
-    color: white;
-    border-color: rgb(130, 80, 160);
-    background-color: rgba(68, 44, 88, 0.6);
+    background-image: url("project://database/Assets/Art/UI/Flat/UI_Flat_Button01a_1.png");
+    -unity-background-image-tint-color: rgb(232, 214, 174);
+    color: rgb(32, 22, 14);
     -unity-font-style: bold;
 }
 
-/* --- Entry cards ---------------------------------------------------------- */
-
-.journal-card {
+.journal-panel {
+    flex-grow: 1;
+    background-image: url("project://database/Assets/Art/UI/Open_Book_Parchment.png");
+    -unity-background-scale-mode: stretch-to-fill;
+    padding: 44px 56px 46px 56px;
     flex-direction: column;
-    background-color: rgba(30, 26, 38, 0.85);
-    border-color: rgba(255, 255, 255, 0.35);
-    border-width: 1px;
-    border-radius: 6px;
-    padding: 8px 10px;
-    margin-bottom: 6px;
-    margin-right: 4px;
 }
 
-.journal-card:hover {
-    background-color: rgba(52, 45, 66, 0.92);
-    border-color: rgba(255, 255, 255, 0.6);
+.journal-pages-row {
+    flex-grow: 1;
+    flex-direction: row;
+    justify-content: space-between;
 }
 
-.journal-card-name {
+.journal-page {
+    width: 46.5%;
+    flex-direction: column;
+}
+
+.journal-page-left {
+    padding-right: 12px;
+}
+
+.journal-page-right {
+    padding-left: 16px;
+    justify-content: flex-start;
+}
+
+.journal-header-row {
+    flex-direction: column;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(88, 66, 44, 0.45);
+    padding-bottom: 10px;
+    margin-bottom: 14px;
+    flex-shrink: 0;
+}
+
+.journal-title {
+    font-size: 23px;
+    color: rgb(38, 26, 18);
+    -unity-font-style: bold;
+    margin-bottom: 4px;
+}
+
+.journal-type {
     font-size: 13px;
-    color: white;
-    text-shadow: 1px 1px 1px black;
-    white-space: normal;
-}
-
-.journal-card-meta {
-    font-size: 11px;
-    color: rgb(185, 165, 205);
-    margin-top: 2px;
-    white-space: normal;
-}
-
-.journal-card-preview {
-    font-size: 12px;
-    color: rgb(200, 200, 200);
-    margin-top: 5px;
-    white-space: normal;
-}
-
-/* --- Runic logs ----------------------------------------------------------- */
-
-.log--locked {
-    background-color: rgba(24, 22, 30, 0.85);
-    border-color: rgba(150, 140, 170, 0.4);
-}
-
-.log--locked .journal-card-preview {
-    color: rgb(150, 140, 170);
+    color: rgb(118, 78, 32);
     -unity-font-style: italic;
 }
 
-/* --- Lingering Dissonance banner ------------------------------------------ */
+.journal-desc {
+    font-size: 15px;
+    color: rgb(52, 38, 26);
+}
 
-.dissonance-banner {
-    background-color: rgba(58, 34, 80, 0.8);
-    border-color: rgb(150, 90, 200);
+.journal-footer-hint {
+    margin-top: auto;
+    font-size: 12px;
+    color: rgba(74, 56, 40, 0.8);
+    -unity-text-align: middle-right;
+    padding-top: 12px;
+}
+
+.journal-tab-body {
+    flex-grow: 1;
+    padding-right: 6px;
+}
+
+.journal-card {
+    background-color: rgba(244, 232, 206, 0.72);
+    border-color: rgba(112, 84, 52, 0.55);
     border-width: 1px;
-    border-radius: 6px;
+    border-radius: 5px;
     padding: 10px 12px;
     margin-bottom: 8px;
-    margin-right: 4px;
+}
+
+.journal-card-name {
+    font-size: 15px;
+    color: rgb(34, 22, 14);
+    -unity-font-style: bold;
+}
+
+.journal-card-meta {
+    font-size: 12px;
+    color: rgb(114, 74, 30);
+    margin-top: 2px;
+}
+
+.journal-card-preview {
+    font-size: 13px;
+    color: rgb(56, 42, 30);
+    white-space: normal;
+    margin-top: 5px;
+}
+
+.log--locked {
+    background-color: rgba(182, 166, 142, 0.55);
+    border-color: rgba(112, 92, 68, 0.5);
+}
+
+.log--locked .journal-card-name {
+    color: rgb(78, 66, 54);
+}
+
+.log--locked .journal-card-meta {
+    color: rgb(104, 88, 70);
+}
+
+.dissonance-banner {
+    background-color: rgba(108, 62, 134, 0.16);
+    border-color: rgb(118, 56, 142);
+    border-width: 1px;
+    border-radius: 6px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
 }
 
 .dissonance-title {
-    font-size: 14px;
-    color: rgb(210, 170, 250);
+    font-size: 16px;
+    color: rgb(88, 34, 114);
     -unity-font-style: bold;
-    text-shadow: 1px 1px 1px black;
+    margin-bottom: 4px;
 }
 
 .dissonance-line {
-    font-size: 12px;
-    color: rgb(198, 166, 226);
-    margin-top: 4px;
+    font-size: 13px;
+    color: rgb(48, 28, 58);
     white-space: normal;
 }
 
 .dissonance-location {
-    font-size: 11px;
-    color: rgb(170, 150, 200);
-    margin-top: 4px;
-    white-space: normal;
-}
-
-/* --- Detail pane ------------------------------------------------------------ */
-
-.entry-detail {
-    width: 40%;
-    min-width: 260px;
-    max-width: 380px;
-    margin-left: 12px;
-    flex-shrink: 0;
-    background-color: rgba(30, 26, 38, 0.85);
-    border-color: rgba(255, 255, 255, 0.35);
-    border-width: 1px;
-    border-radius: 6px;
-    padding: 10px 12px;
-}
-
-.detail-title {
-    font-size: 15px;
-    color: white;
-    -unity-font-style: bold;
-    text-shadow: 1px 1px 1px black;
-    white-space: normal;
-}
-
-.detail-type {
-    font-size: 11px;
-    color: rgb(185, 165, 205);
-    margin-top: 2px;
-    white-space: normal;
-}
-
-.detail-desc {
-    font-size: 13px;
-    color: rgb(215, 215, 215);
-    white-space: normal;
-}
-
-.mark-button {
-    height: 32px;
-    padding-left: 16px;
-    padding-right: 16px;
-    margin-top: 10px;
-    align-self: flex-start;
-    flex-shrink: 0;
-    background-color: rgba(48, 38, 62, 0.9);
-    border-color: rgb(130, 80, 160);
-    border-width: 1px;
-    border-radius: 6px;
-    color: white;
-    font-size: 13px;
-}
-
-.mark-button:hover {
-    background-color: rgba(72, 55, 94, 0.95);
-    border-color: rgb(165, 120, 195);
+    font-size: 12px;
+    color: rgb(108, 46, 132);
+    margin-top: 6px;
 }
 
 .empty-label {
-    font-size: 13px;
-    color: rgb(160, 160, 160);
-    margin: 8px;
+    font-size: 14px;
+    color: rgba(88, 68, 48, 0.85);
+    padding: 20px 8px;
+    -unity-text-align: middle-center;
     white-space: normal;
 }

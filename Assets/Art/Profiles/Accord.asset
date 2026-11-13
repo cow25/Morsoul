@@ -12,11 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d3d25a568b87437dbda4a6fef515314a, type: 3}
   m_Name: Accord
   m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.VisualProfile
-  sprite: {fileID: -3145328045451892686, guid: 32854c38fda818344a21369dfce8c279, type: 3}
-  animatorController: {fileID: 9100000, guid: d2abc98074fd3814382361a637ec5d88, type: 2}
+  sprite: {fileID: -8107172888652668758, guid: 658ea7d7891c5134fa8624f97045c28b, type: 3}
+  animatorController: {fileID: 9100000, guid: 0114da74af083664796fc95f27061567, type: 2}
   tint: {r: 1, g: 1, b: 1, a: 1}
   material: {fileID: 0}
   visualOffset: {x: 0, y: -0.35}
   visualScale: {x: 1, y: 1}
   flipX: 1
   sortingOrder: 0
+  attachments: []

@@ -31,7 +31,7 @@ namespace Morsoul.Dev.Editor
             ("PrologueRuins (3D)", "Assets/Scenes/PrologueRuins.unity"),
         };
 
-        [MenuItem("Morsoul/Dev/Dev Menu")]
+        [MenuItem("Morsoul/Dev Menu", priority = 0)]
         public static void Open() => GetWindow<DevMenuWindow>("Dev Menu");
 
         void OnGUI()

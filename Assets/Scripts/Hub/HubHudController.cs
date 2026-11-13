@@ -1,4 +1,6 @@
+using System.Linq;
 using Morsoul.Core;
+using Morsoul.Data;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -35,9 +37,17 @@ namespace Morsoul.Hub
         VisualElement _root;
         Label _caseLabel;
         Label _objectiveLabel;
+        Label _activeGoalTitle;
+        Label _userNameLabel;
         Label _focusText;
         Label _footerLabel;
         VisualElement _focusFill;
+        VisualElement _golemEyeRow;
+        VisualElement _aetherSightRow;
+        VisualElement _emotionEchoRow;
+        Button _escButton;
+        Button _deskButton;
+        Button _boardButton;
         int _uiVersion;
         float _lastFocus = -1f;
         float _lastFocusMax = -1f;
@@ -46,7 +56,11 @@ namespace Morsoul.Hub
         void OnEnable()
         {
             _panelRenderer = GetComponent<PanelRenderer>();
-            if (_panelRenderer != null) _panelRenderer.RegisterUIReloadCallback(OnUIReload);
+            if (_panelRenderer != null)
+            {
+                _panelRenderer.sortingOrder = 0;
+                _panelRenderer.RegisterUIReloadCallback(OnUIReload);
+            }
             UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
             RefreshObjective();
             if (CoreRuntime.Instance != null)
@@ -227,6 +241,7 @@ namespace Morsoul.Hub
         void Update()
         {
             RefreshObjective();
+            SyncSessionHud();
 
             var focus = CoreRuntime.Instance != null ? CoreRuntime.Instance.Focus : null;
             if (focus == null) return;
@@ -236,6 +251,29 @@ namespace Morsoul.Hub
                 _lastFocus = focus.Percent;
                 _lastFocusMax = focus.Maximum;
                 ApplyFocus(focus.Percent, focus.Maximum, focus.Normalized);
+            }
+        }
+
+        void SyncSessionHud()
+        {
+            var session = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session : null;
+            if (_userNameLabel != null)
+            {
+                string display = session != null && !string.IsNullOrWhiteSpace(session.PlayerName)
+                    ? session.PlayerName.Trim() : "User";
+                if (_userNameLabel.text != display) _userNameLabel.text = display;
+            }
+            if (session != null)
+            {
+                if (_golemEyeRow != null)
+                    _golemEyeRow.style.display = session.Tools.Contains(Tool.GolemEye)
+                        ? DisplayStyle.Flex : DisplayStyle.None;
+                if (_aetherSightRow != null)
+                    _aetherSightRow.style.display = session.Tools.Contains(Tool.AetherSight)
+                        ? DisplayStyle.Flex : DisplayStyle.None;
+                if (_emotionEchoRow != null)
+                    _emotionEchoRow.style.display = session.Tools.Contains(Tool.EmotionEcho)
+                        ? DisplayStyle.Flex : DisplayStyle.None;
             }
         }
 
@@ -264,10 +302,14 @@ namespace Morsoul.Hub
             AppliedObjective = text;
 
             var panel = _root != null ? _root.Q<VisualElement>("ObjectivePanel") : null;
-            bool hasContent = !string.IsNullOrEmpty(currentCaseText) || !string.IsNullOrEmpty(text);
+            bool hasObjective = !string.IsNullOrEmpty(text);
             if (panel != null)
             {
-                panel.style.display = hasContent ? DisplayStyle.Flex : DisplayStyle.None;
+                panel.style.display = hasObjective ? DisplayStyle.Flex : DisplayStyle.None;
+            }
+            if (_activeGoalTitle != null)
+            {
+                _activeGoalTitle.style.display = hasObjective ? DisplayStyle.Flex : DisplayStyle.None;
             }
 
             if (_caseLabel != null)
@@ -287,7 +329,7 @@ namespace Morsoul.Hub
         void ApplyFocus(float energy, float maximum, float normalized)
         {
             if (_focusText != null)
-                _focusText.text = $"Focus: {Mathf.RoundToInt(energy)} / {Mathf.RoundToInt(maximum)}";
+                _focusText.text = $"Focus Energy: {Mathf.RoundToInt(energy)}/{Mathf.RoundToInt(maximum)}";
             if (_focusFill != null)
                 _focusFill.style.width = Length.Percent(Mathf.Clamp01(normalized) * 100f);
         }
@@ -300,18 +342,66 @@ namespace Morsoul.Hub
             _root = root.Q<VisualElement>("HubHud-Root");
             _caseLabel = root.Q<Label>("CaseLabel");
             _objectiveLabel = root.Q<Label>("ObjectiveLabel");
+            _activeGoalTitle = root.Q<Label>("ActiveGoalTitle");
+            _userNameLabel = root.Q<Label>("UserNameLabel");
             _focusText = root.Q<Label>("FocusText");
             _focusFill = root.Q<VisualElement>("FocusBarFill");
             _footerLabel = root.Q<Label>("FooterLabel");
+            _golemEyeRow = root.Q<VisualElement>("GolemEyeRow");
+            _aetherSightRow = root.Q<VisualElement>("AetherSightRow");
+            _emotionEchoRow = root.Q<VisualElement>("EmotionEchoRow");
+            _escButton = root.Q<Button>("EscKeyButton");
+            _deskButton = root.Q<Button>("DeskKeyButton");
+            _boardButton = root.Q<Button>("BoardKeyButton");
+
+            if (_escButton != null) _escButton.clicked += PauseMenuController.TogglePause;
+            if (_deskButton != null) _deskButton.clicked += TriggerJournalShortcut;
+            if (_boardButton != null) _boardButton.clicked += TriggerBoardShortcut;
 
             AppliedCaseText = null;
             AppliedObjective = null;
             RefreshObjective();
+            SyncSessionHud();
             if (_footerLabel != null) _footerLabel.text = footerText ?? "";
 
             // Force a refresh on the next Update.
             _lastFocus = -1f;
             _lastFocusMax = -1f;
+        }
+
+        static void TriggerJournalShortcut()
+        {
+            foreach (var mb in FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include))
+            {
+                if (mb == null) continue;
+                var type = mb.GetType();
+                if (type.Name == "JournalController")
+                {
+                    var isOpenProp = type.GetProperty("IsOpen");
+                    bool isOpen = isOpenProp != null && (bool)isOpenProp.GetValue(mb);
+                    type.GetMethod(isOpen ? "Close" : "Open")?.Invoke(mb, null);
+                    return;
+                }
+            }
+        }
+
+        static void TriggerBoardShortcut()
+        {
+            foreach (var mb in FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include))
+            {
+                if (mb == null) continue;
+                var type = mb.GetType();
+                if (type.Name == "WeightedBoardController")
+                {
+                    var canUseField = type.GetField("CanUse");
+                    if (canUseField != null && canUseField.GetValue(mb) is System.Func<bool> canUse && !canUse())
+                        continue;
+                    var isOpenProp = type.GetProperty("IsOpen");
+                    bool isOpen = isOpenProp != null && (bool)isOpenProp.GetValue(mb);
+                    type.GetMethod(isOpen ? "Close" : "Open")?.Invoke(mb, null);
+                    return;
+                }
+            }
         }
     }
 }

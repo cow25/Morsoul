@@ -1,0 +1,139 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/PauseMenu.uss"/>
+    <ui:VisualElement name="PauseMenu-Root" class="pause-root" style="display: none;">
+        <ui:VisualElement name="Backdrop" class="pause-backdrop"/>
+        <ui:VisualElement class="pause-stack">
+            <!-- Top Card: Investigator Dossier -->
+            <ui:VisualElement name="IdentityCard" class="pause-card">
+                <ui:VisualElement class="pause-header-row">
+                    <ui:Label text="Morsoul : World's Case" class="pause-card-title"/>
+                </ui:VisualElement>
+                <ui:VisualElement class="dossier-body">
+                    <ui:VisualElement class="dossier-fields">
+                        <ui:VisualElement class="dossier-col">
+                            <ui:VisualElement class="dossier-field">
+                                <ui:Label text="Surname" class="dossier-label"/>
+                                <ui:Label name="DossierSurname" text="Doe" class="dossier-value"/>
+                            </ui:VisualElement>
+                            <ui:VisualElement class="dossier-field">
+                                <ui:Label text="Name" class="dossier-label"/>
+                                <ui:Label name="DossierName" text="John" class="dossier-value"/>
+                            </ui:VisualElement>
+                            <ui:VisualElement class="dossier-field">
+                                <ui:Label text="Date Birth" class="dossier-label"/>
+                                <ui:Label name="DossierDob" text="09-09-2009" class="dossier-value"/>
+                            </ui:VisualElement>
+                            <ui:VisualElement class="dossier-field">
+                                <ui:Label text="Cases Solved" class="dossier-label"/>
+                                <ui:Label name="DossierCasesSolved" text="0" class="dossier-value"/>
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+                        <ui:VisualElement class="dossier-col" style="margin-right: 0; flex-grow: 1;">
+                            <ui:VisualElement class="dossier-field">
+                                <ui:Label name="ReputationLevelLabel" text="Reputation Level : 10" class="dossier-label"/>
+                                <ui:VisualElement class="rep-track">
+                                    <ui:VisualElement name="ReputationBarFill" class="rep-fill"/>
+                                </ui:VisualElement>
+                                <ui:Label name="ReputationPointsLabel" text="120/400" class="rep-points"/>
+                            </ui:VisualElement>
+                            <ui:VisualElement class="dossier-field">
+                                <ui:Label text="Date Issued" class="dossier-label"/>
+                                <ui:Label name="DossierDateIssued" text="27-10-2026" class="dossier-value"/>
+                            </ui:VisualElement>
+                            <ui:VisualElement class="dossier-field">
+                                <ui:Label text="Title" class="dossier-label"/>
+                                <ui:Label name="DossierTitle" text="Initiated Construct" class="dossier-value"/>
+                            </ui:VisualElement>
+                            <ui:VisualElement class="dossier-row-inline">
+                                <ui:VisualElement class="dossier-field">
+                                    <ui:Label text="Sex" class="dossier-label"/>
+                                    <ui:Label name="DossierSex" text="N/A" class="dossier-value"/>
+                                </ui:VisualElement>
+                                <ui:VisualElement class="dossier-field" style="margin-left: 16px;">
+                                    <ui:Label text="Species" class="dossier-label"/>
+                                    <ui:Label name="DossierSpecies" text="Golem" class="dossier-value"/>
+                                </ui:VisualElement>
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                    <ui:VisualElement class="dossier-portrait-col">
+                        <ui:VisualElement class="dossier-portrait-frame">
+                            <ui:VisualElement class="dossier-portrait-img"/>
+                        </ui:VisualElement>
+                        <ui:Label text="One clue at a time." class="dossier-motto"/>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <!-- Bottom Card: Actions / Settings -->
+            <ui:VisualElement name="ActionsCard" class="pause-card pause-card-bottom">
+                <ui:VisualElement class="pause-header-row">
+                    <ui:Label text="Morsoul : World's Case" class="pause-card-title"/>
+                    <ui:Label text="Runic design" class="pause-card-subtitle"/>
+                </ui:VisualElement>
+
+                <!-- Actions Page -->
+                <ui:VisualElement name="ActionsPage">
+                    <ui:VisualElement class="pause-actions-grid">
+                        <ui:VisualElement class="pause-action-col">
+                            <ui:Button name="SaveStateButton" text="Save State" class="pause-action-btn"/>
+                            <ui:Button name="SettingsButton" text="Settings" class="pause-action-btn"/>
+                        </ui:VisualElement>
+                        <ui:VisualElement class="pause-action-col">
+                            <ui:Button name="ResumeButton" text="Resume  [ESC]" class="pause-action-btn"/>
+                            <ui:Button name="QuitGameButton" text="Quit Game" class="pause-action-btn"/>
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                    <ui:Label name="PauseStatusBanner" text="" class="pause-status" style="display: none;"/>
+                    <ui:VisualElement name="QuitConfirmRow" class="quit-confirm-row" style="display: none;">
+                        <ui:Button name="ReturnTitleButton" text="Return to Title" class="pause-action-btn-secondary"/>
+                        <ui:Button name="ExitAppButton" text="Exit Desktop" class="pause-action-btn-secondary"/>
+                        <ui:Button name="QuitCancelButton" text="Cancel" class="pause-action-btn-secondary"/>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+                <!-- Settings Subpage -->
+                <ui:VisualElement name="SettingsPage" style="display: none; margin-top: 4px;">
+                    <ui:VisualElement class="settings-row">
+                        <ui:Label text="Master Volume" class="settings-label"/>
+                        <ui:VisualElement class="settings-bar-wrap">
+                            <ui:Button name="MasterMinusButton" text="-" class="settings-step-btn"/>
+                            <ui:VisualElement class="settings-track">
+                                <ui:VisualElement name="MasterFill" class="settings-fill"/>
+                            </ui:VisualElement>
+                            <ui:Button name="MasterPlusButton" text="+" class="settings-step-btn"/>
+                            <ui:Label name="MasterValueLabel" text="100%" class="settings-val"/>
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                    <ui:VisualElement class="settings-row">
+                        <ui:Label text="Music Volume" class="settings-label"/>
+                        <ui:VisualElement class="settings-bar-wrap">
+                            <ui:Button name="MusicMinusButton" text="-" class="settings-step-btn"/>
+                            <ui:VisualElement class="settings-track">
+                                <ui:VisualElement name="MusicFill" class="settings-fill"/>
+                            </ui:VisualElement>
+                            <ui:Button name="MusicPlusButton" text="+" class="settings-step-btn"/>
+                            <ui:Label name="MusicValueLabel" text="100%" class="settings-val"/>
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                    <ui:VisualElement class="settings-row">
+                        <ui:Label text="SFX Volume" class="settings-label"/>
+                        <ui:VisualElement class="settings-bar-wrap">
+                            <ui:Button name="SfxMinusButton" text="-" class="settings-step-btn"/>
+                            <ui:VisualElement class="settings-track">
+                                <ui:VisualElement name="SfxFill" class="settings-fill"/>
+                            </ui:VisualElement>
+                            <ui:Button name="SfxPlusButton" text="+" class="settings-step-btn"/>
+                            <ui:Label name="SfxValueLabel" text="100%" class="settings-val"/>
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                    <ui:VisualElement class="settings-row" style="margin-top: 4px;">
+                        <ui:Button name="FullscreenToggleButton" text="Fullscreen: ON" class="pause-action-btn-secondary"/>
+                        <ui:Button name="SettingsBackButton" text="Back" class="pause-action-btn-secondary" style="margin-right: 0;"/>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
+

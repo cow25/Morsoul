@@ -2,60 +2,129 @@
     -unity-font-definition: url("project://database/Assets/Fonts/Middleearth.ttf");
 }
 
-.dialogue-box {
-    background-color: rgba(14, 11, 18, 0.94);
-    border-color: rgba(255, 255, 255, 0.35);
-    border-width: 1px;
-    border-radius: 8px;
-    padding: 14px 18px;
+.dialogue-stage {
+    position: absolute;
+    left: 21%;
+    right: 12%;
+    bottom: 4%;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
 }
 
 .dialogue-portrait {
-    width: 96px;
-    height: 96px;
-    margin-right: 14px;
-    border-color: rgb(229, 169, 60);
-    border-width: 1px;
-    border-radius: 6px;
-    background-color: rgba(30, 26, 38, 0.9);
+    width: 240px;
+    height: 240px;
+    margin-bottom: -6px;
     -unity-background-scale-mode: scale-to-fit;
+    background-color: transparent;
+}
+
+.dialogue-box-wrapper {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
 }
 
 .dialogue-speaker {
-    font-size: 18px;
-    color: rgb(229, 169, 60);
-    text-shadow: 1px 1px 2px black;
-    -unity-font-style: bold;
+    font-size: 24px;
+    color: rgb(252, 248, 240);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.95);
+    margin-left: 14px;
+    margin-bottom: 4px;
+    flex-shrink: 0;
+}
+
+.dialogue-box {
+    width: 100%;
+    min-height: 150px;
+    background-color: rgba(232, 228, 222, 0.90);
+    border-color: rgba(255, 250, 242, 0.65);
+    border-width: 1.5px;
+    border-radius: 10px;
+    padding: 18px 24px 14px 24px;
+}
+
+.dialogue-content {
+    flex-grow: 1;
+    flex-direction: column;
 }
 
 .dialogue-text {
-    font-size: 16px;
-    color: white;
-    text-shadow: 1px 1px 2px black;
+    font-size: 19px;
+    color: rgb(26, 23, 20);
+    text-shadow: 0 0 0 rgba(0, 0, 0, 0);
+    margin-bottom: 6px;
+}
+
+.dialogue-options-container {
+    flex-shrink: 0;
+    margin-top: 8px;
+    flex-direction: column;
 }
 
 .dialogue-option-button {
     white-space: normal;
-    background-color: rgba(30, 26, 38, 0.9);
-    border-color: rgb(229, 169, 60);
-    border-width: 1px;
-    border-radius: 6px;
-    padding: 8px 12px;
+    background-image: url("project://database/Assets/Art/UI/Flat/UI_Flat_Button01a_1.png");
+    -unity-background-image-tint-color: rgba(242, 238, 230, 0.96);
+    background-color: transparent;
+    border-width: 0;
+    border-radius: 5px;
+    padding: 9px 16px;
     margin-top: 6px;
-    color: white;
-    font-size: 14px;
+    color: rgb(24, 22, 20);
+    font-size: 15px;
     -unity-text-align: middle-left;
 }
 
 .dialogue-option-button:hover {
-    background-color: rgba(58, 46, 32, 0.95);
-    border-color: rgb(255, 205, 110);
-    color: rgb(255, 220, 150);
+    -unity-background-image-tint-color: rgb(255, 238, 198);
+    color: rgb(18, 14, 10);
+}
+
+.dialogue-option-button:active {
+    background-image: url("project://database/Assets/Art/UI/Flat/UI_Flat_Button01a_3.png");
+    -unity-background-image-tint-color: rgb(245, 220, 165);
+}
+
+.dialogue-name-input-row {
+    flex-direction: row;
+    align-items: center;
+    margin-top: 10px;
+    flex-shrink: 0;
+}
+
+.dialogue-name-field {
+    flex-grow: 1;
+    font-size: 16px;
+}
+
+.dialogue-name-field > .unity-base-text-field__input {
+    background-color: rgba(248, 244, 236, 0.96);
+    color: rgb(24, 22, 20);
+    border-color: rgba(95, 78, 56, 0.7);
+    border-width: 1px;
+    border-radius: 4px;
+    padding: 6px 10px;
+}
+
+.dialogue-confirm-button {
+    margin-left: 8px;
+    margin-top: 0;
+    flex-shrink: 0;
+    -unity-text-align: middle-center;
+    min-width: 100px;
 }
 
 .dialogue-continue-hint {
-    font-size: 12px;
-    color: rgb(200, 200, 200);
-    text-shadow: 1px 1px 1px black;
+    font-size: 13px;
+    color: rgba(58, 50, 44, 0.85);
     -unity-text-align: middle-right;
+    margin-top: auto;
+    padding-top: 6px;
+    flex-shrink: 0;
+}
+
+.dialogue-fade-text {
+    -unity-font-definition: url("project://database/Assets/Fonts/Middleearth.ttf");
 }

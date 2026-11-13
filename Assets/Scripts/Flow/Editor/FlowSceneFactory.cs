@@ -35,7 +35,7 @@ namespace Morsoul.Flow.Editor
         const string DialogueUxmlPath = "Assets/Dialogue.uxml";
         const string JournalUxmlPath = "Assets/Journal.uxml";
 
-        [MenuItem("Morsoul/Scene/Create Case Loop Scene")]
+        [MenuItem("Morsoul/Scenes/Case Loop Scene", priority = 11)]
         public static void CreateCaseLoopScene()
         {
             if (AssetDatabase.LoadAssetAtPath<SceneAsset>(ScenePath) != null
@@ -118,7 +118,6 @@ namespace Morsoul.Flow.Editor
         /// CaseLoop GameFlow. Run after "Morsoul/Data/Generate Finale Cutscenes";
         /// missing assets are reported, never invented.
         /// </summary>
-        [MenuItem("Morsoul/Scene/Assign Finale Cutscenes To Case Loop")]
         public static void AssignFinaleCutscenes()
         {
             const string folder = "Assets/Data/Cutscenes/Case05";

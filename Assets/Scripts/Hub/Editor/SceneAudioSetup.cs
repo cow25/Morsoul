@@ -26,14 +26,11 @@ namespace Morsoul.Hub.Editor
             "Assets/Scenes/Hub_IronHollow.unity",
         };
 
-        [MenuItem("Morsoul/Hub/Create Art Overlay Scene (Cathedral Nave)")]
         public static void CreateCathedralArt() => HubArtSceneFactory.CreateArtScene("Hub_CathedralNave_Art");
 
-        [MenuItem("Morsoul/Hub/Create Art Overlay Scene (Iron Hollow)")]
         public static void CreateIronHollowArt() => HubArtSceneFactory.CreateArtScene("Hub_IronHollow_Art");
 
         /// <summary>Creates both missing art overlays and installs all audio loops.</summary>
-        [MenuItem("Morsoul/Hub/Install Scene Audio + Missing Art Overlays")]
         public static void InstallAll()
         {
             ParkOnSavedScene();
@@ -68,7 +65,7 @@ namespace Morsoul.Hub.Editor
         }
 
         /// <summary>Adds a "SceneAudio" GameObject to every delivered 2D scene.</summary>
-        [MenuItem("Morsoul/Hub/Install Scene Audio Loops")]
+        [MenuItem("Morsoul/Scenes/Install Scene Audio Loops", priority = 30)]
         public static void InstallAudioLoops()
         {
             ParkOnSavedScene();
