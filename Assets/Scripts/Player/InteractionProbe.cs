@@ -77,7 +77,7 @@ public class InteractionProbe : MonoBehaviour
                 }
             }
         }
-        else
+        else if (HUDManager.Instance != null)
         {
             HUDManager.Instance.HideInteractionPrompt();
         }

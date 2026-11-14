@@ -8,8 +8,11 @@ public class PlayerSpawner : MonoBehaviour
         GameObject spawnPoint = GameObject.FindWithTag("PlayerSpawn");
         if (spawnPoint != null)
         {
+            var cc = GetComponent<CharacterController>();
+            if (cc != null) cc.enabled = false;
             transform.position = spawnPoint.transform.position;
             transform.rotation = spawnPoint.transform.rotation;
+            if (cc != null) cc.enabled = true;
         }
     }
 

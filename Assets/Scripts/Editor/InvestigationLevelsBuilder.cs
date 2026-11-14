@@ -483,66 +483,194 @@ namespace Morsoul.Editor
         {
             var scene = CreateBaseScene(
                 Case3ScenePath,
-                new Color(0.15f, 0.24f, 0.18f),
-                new Color(0.11f, 0.18f, 0.14f),
-                0.025f,
-                new Vector3(0f, 1.0f, 0f),
+                new Color(0.16f, 0.22f, 0.18f),
+                new Color(0.10f, 0.15f, 0.12f),
+                0.032f,
+                new Vector3(0f, 1.08f, -5.5f),
                 Vector3.zero);
 
             var env = new GameObject("Environment").transform;
             SceneManager.MoveGameObjectToScene(env.gameObject, scene);
 
-            // Forest clearing ground + invisible perimeter walls
-            EnsureSolidBox("ForestGround", new Vector3(0f, -0.25f, 8f), new Vector3(32f, 0.5f, 32f), new Color(0.16f, 0.24f, 0.14f), env);
-            BuildPerimeterColliders(env, new Vector3(0f, 0f, 8f), new Vector3(30f, 6f, 30f));
-
-            // Ring of trees & bushes
-            for (int i = 0; i < 16; i++)
+            // Soft moonlight filtered through the forest canopy
+            foreach (var l in Object.FindObjectsByType<Light>(FindObjectsInactive.Include, FindObjectsSortMode.None))
             {
-                float angle = i * Mathf.PI * 2f / 16f;
-                Vector3 p = new Vector3(Mathf.Cos(angle) * 13f, 0f, 8f + Mathf.Sin(angle) * 13f);
-                PlaceProp(Mfp + "Miscellaneous/tree.prefab", env, p, new Vector3(0f, i * 23f, 0f), Vector3.one * 1.4f);
-                PlaceProp(Bushes + $"P_Bush0{(i % 5) + 1}.prefab", env, p * 0.88f, Vector3.zero, Vector3.one);
+                if (l.type == LightType.Directional)
+                {
+                    l.color = new Color(0.70f, 0.84f, 0.76f);
+                    l.intensity = 0.95f;
+                }
             }
 
-            // Elder Spirit Tree at (0, 0, 14) + Ritual Stone Altar at (-4, 0, 8)
-            PlaceProp(Mfp + "Miscellaneous/tree.prefab", env, new Vector3(0f, 0f, 14f), Vector3.zero, Vector3.one * 2.4f);
-            PlaceProp(Mfp + "Miscellaneous/granite_panel.prefab", env, new Vector3(-4f, 0.5f, 8f), Vector3.zero, new Vector3(1.8f, 1.0f, 1.2f));
-            AddPointLight(env, new Vector3(0f, 4f, 11f), new Color(0.45f, 0.95f, 0.65f), 2.5f, 18f);
+            // Custom sculpted Terrain (flat dirt ritual clearing + flat dirt exit trail + rolling forest hills)
+            const string customDir = "Assets/Art/Environments/Custom/Whisperwood3D";
+            if (!System.IO.Directory.Exists(customDir)) System.IO.Directory.CreateDirectory(customDir);
+
+            // Clean up previously generated procedural tree assets so the 3D dev can drop in their own models
+            foreach (var oldTree in new[] { customDir + "/TreePine.prefab", customDir + "/TreeBroadleaf.prefab", customDir + "/TreeBark.mat", customDir + "/PineLeaf.mat", customDir + "/OakLeaf.mat", customDir + "/ElderBark.mat", customDir + "/ElderCanopy.mat" })
+            {
+                if (AssetDatabase.LoadAssetAtPath<Object>(oldTree) != null)
+                    AssetDatabase.DeleteAsset(oldTree);
+            }
+
+            var terrain = CreateWhisperwoodTerrain(customDir, env);
+
+            // Invisible perimeter barrier enclosing the playable grove (x in [-14, 14], z in [-11.5, 20.5])
+            BuildPerimeterColliders(env, new Vector3(0f, 0f, 4.5f), new Vector3(28f, 10f, 32f));
+
+            var ritualMat = EnsureRitualCircleMaterial(customDir);
+
+            // Vegetation & Flora (bushes, stumps, fallen logs) — no placeholder trees
+            var forest = new GameObject("ForestAndVegetation").transform;
+            forest.SetParent(env, false);
+            var rng = new System.Random(307);
+
+            // Interior bushes & undergrowth around clearing edge, trail borders, and hills
+            for (int i = 0; i < 65; i++)
+            {
+                float x = Mathf.Lerp(-13.5f, 13.5f, (float)rng.NextDouble());
+                float z = Mathf.Lerp(-10.5f, 19.5f, (float)rng.NextDouble());
+                bool insideRitualDirt = Vector2.Distance(new Vector2(x, z), new Vector2(0f, 7.5f)) < 5.6f;
+                bool onTrailCenter = Mathf.Abs(x) < 2.1f && z >= -11.5f && z <= 2.5f;
+                bool nearAltar = Vector2.Distance(new Vector2(x, z), new Vector2(-4.2f, 7.5f)) < 1.8f;
+                if (insideRitualDirt || onTrailCenter || nearAltar) continue;
+
+                float y = terrain.SampleHeight(new Vector3(x, 0f, z));
+                string bushPath = Bushes + $"P_Bush0{(i % 5) + 1}.prefab";
+                float s = 0.8f + (float)rng.NextDouble() * 0.9f;
+                PlaceProp(bushPath, forest, new Vector3(x, y - 0.08f, z), new Vector3(0f, (float)rng.NextDouble() * 360f, 0f), Vector3.one * s);
+            }
+
+            // Dense vegetation + fog barrier ringing the invisible boundary (leaving the South dirt path open)
+            var barrierVisuals = new GameObject("BarrierFloraAndFog").transform;
+            barrierVisuals.SetParent(env, false);
+            for (int i = 0; i < 64; i++)
+            {
+                float t = i / 64f;
+                float side = i % 4;
+                float bx, bz;
+                if (side == 0) { bx = -14.2f + (float)(rng.NextDouble() * 1.4 - 0.7); bz = Mathf.Lerp(-11.5f, 20.5f, (i / 4) / 16f); }
+                else if (side == 1) { bx = 14.2f + (float)(rng.NextDouble() * 1.4 - 0.7); bz = Mathf.Lerp(-11.5f, 20.5f, (i / 4) / 16f); }
+                else if (side == 2) { bx = Mathf.Lerp(-14f, 14f, (i / 4) / 16f); bz = 20.5f + (float)(rng.NextDouble() * 1.4 - 0.7); }
+                else
+                {
+                    bx = Mathf.Lerp(-14f, 14f, (i / 4) / 16f);
+                    bz = -11.5f + (float)(rng.NextDouble() * 1.2 - 0.6);
+                    if (Mathf.Abs(bx) < 2.6f) continue; // Keep South entrance path open!
+                }
+
+                float by = terrain.SampleHeight(new Vector3(bx, 0f, bz));
+                string bushPath = Bushes + $"P_Bush0{(i % 5) + 1}.prefab";
+                float bs = 1.35f + (float)rng.NextDouble() * 0.75f;
+                PlaceProp(bushPath, barrierVisuals, new Vector3(bx, by - 0.1f, bz), new Vector3(0f, (float)rng.NextDouble() * 360f, 0f), Vector3.one * bs);
+            }
+
+            // Perimeter fog banks visually marking the impassable forest mist
+            var fogMat = EnsureFogParticleMaterial(customDir);
+            AddBoundaryFog(barrierVisuals, new Vector3(-14.5f, 1.4f, 4.5f), new Vector3(2f, 2f, 32f), fogMat);
+            AddBoundaryFog(barrierVisuals, new Vector3(14.5f, 1.4f, 4.5f), new Vector3(2f, 2f, 32f), fogMat);
+            AddBoundaryFog(barrierVisuals, new Vector3(0f, 1.4f, 20.8f), new Vector3(28f, 2f, 2f), fogMat);
+            AddBoundaryFog(barrierVisuals, new Vector3(-8.5f, 1.4f, -11.8f), new Vector3(11f, 2f, 2f), fogMat);
+            AddBoundaryFog(barrierVisuals, new Vector3(8.5f, 1.4f, -11.8f), new Vector3(11f, 2f, 2f), fogMat);
+
+            // A few appropriately-sized stumps & fallen logs grounded on the terrain
+            PlaceProp(Mfp + "Miscellaneous/half_tree.prefab", forest, new Vector3(-6.8f, terrain.SampleHeight(new Vector3(-6.8f, 0f, 1.5f)) - 0.06f, 1.5f), new Vector3(0f, 35f, 0f), Vector3.one * 0.45f);
+            PlaceProp(Mfp + "Miscellaneous/half_tree.001.prefab", forest, new Vector3(6.4f, terrain.SampleHeight(new Vector3(6.4f, 0f, 3.2f)) - 0.06f, 3.2f), new Vector3(0f, -60f, 0f), Vector3.one * 0.42f);
+            PlaceProp(Mfp + "Miscellaneous/trunk.prefab", forest, new Vector3(7.4f, terrain.SampleHeight(new Vector3(7.4f, 0f, 10.8f)) - 0.06f, 10.8f), new Vector3(0f, -28f, 0f), Vector3.one * 0.48f);
+
+            // Elder Spirit Tree anchor at North edge of the clearing (0, 0, 16.2) for 3D dev's tree model
+            var elderRoot = new GameObject("ElderSpiritTree_Anchor").transform;
+            elderRoot.SetParent(env, false);
+            elderRoot.position = new Vector3(0f, 0f, 16.2f);
+            AddPointLight(env, new Vector3(0f, 3.8f, 14.5f), new Color(0.42f, 0.95f, 0.65f), 2.8f, 15f);
+
+            // Flat Ritual Clearing: Glowing Spell Circle + Stone Altar + Ritual Candles
+            var ritual = new GameObject("RitualSite").transform;
+            ritual.SetParent(env, false);
+
+            var circleQuad = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            circleQuad.name = "RitualSpellCircle";
+            Object.DestroyImmediate(circleQuad.GetComponent<Collider>());
+            circleQuad.transform.SetParent(ritual, false);
+            circleQuad.transform.position = new Vector3(0f, 0.08f, 7.5f);
+            circleQuad.transform.eulerAngles = new Vector3(90f, 0f, 0f);
+            circleQuad.transform.localScale = new Vector3(7.2f, 7.2f, 1f);
+            circleQuad.GetComponent<MeshRenderer>().sharedMaterial = ritualMat;
+
+            // Ring of ritual candles grounded around the spell circle
+            for (int c = 0; c < 6; c++)
+            {
+                float a = c * Mathf.PI * 2f / 6f;
+                Vector3 cPos = new Vector3(Mathf.Cos(a) * 3.55f, 0.0f, 7.5f + Mathf.Sin(a) * 3.55f);
+                PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_CandleTriple_01.prefab", ritual, cPos, Vector3.zero, Vector3.one * 1.15f);
+            }
+            AddPointLight(env, new Vector3(0f, 1.5f, 7.5f), new Color(0.78f, 0.25f, 0.95f), 2.4f, 11f);
+
+            // Stone Ritual Altar on the West edge of the circle (-4.2, 0, 7.5), top surface at y = 0.85
+            EnsureSolidBox("RitualStoneAltar", new Vector3(-4.2f, 0.425f, 7.5f), new Vector3(1.1f, 0.85f, 1.8f), new Color(0.24f, 0.25f, 0.27f), ritual);
+            PlaceProp(Mfp + "Miscellaneous/cauldron.prefab", ritual, new Vector3(1.6f, 0f, 13.6f), Vector3.zero, Vector3.one * 0.9f);
+            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_CandleSingle_01.prefab", ritual, new Vector3(-4.45f, 0.85f, 8.15f), Vector3.zero, Vector3.one);
+
+            // Identifiable Open South Trail Exit: two lanterns flanking the open dirt path (no blocking slab)
+            var exitGroup = new GameObject("GroveExitTrailMarkers").transform;
+            exitGroup.SetParent(env, false);
+            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_LanternFloor_01.prefab", exitGroup, new Vector3(-2.1f, 0f, -9.8f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_LanternFloor_01.prefab", exitGroup, new Vector3(2.1f, 0f, -9.8f), Vector3.zero, Vector3.one);
+            AddPointLight(env, new Vector3(0f, 2.0f, -9.8f), new Color(1f, 0.78f, 0.45f), 2.6f, 10f);
 
             var clues = new GameObject("Clues").transform;
             SceneManager.MoveGameObjectToScene(clues.gameObject, scene);
 
-            // C1_03: Brass Extraction Siphon at Elder Tree roots
-            var siphon = CreatePrimitiveMarker("BrassExtractionSiphon", PrimitiveType.Cylinder, new Vector3(0f, 0.8f, 12.2f),
-                new Vector3(0.55f, 1.2f, 0.55f), new Color(0.75f, 0.55f, 0.2f), clues, false);
+            // C1_03: Brass Extraction Siphon at Elder Tree roots (grounded at y = 0.58)
+            var siphon = CreatePrimitiveMarker("BrassExtractionSiphon", PrimitiveType.Cylinder, new Vector3(0f, 0.58f, 14.0f),
+                new Vector3(0.55f, 0.58f, 0.55f), new Color(0.75f, 0.55f, 0.2f), clues, false);
+            AddAmbientMist(siphon.transform, new Color(0.25f, 0.85f, 0.55f, 0.45f));
             CreateClueNode("C1_ExtractionSiphon", "C1_03", ClueNode.Kind.Physical, ClueNode.Tool.None, ClueNode.State.Revealed,
                 "Industrial pneumatic tap driven deep into the Elder Spirit Tree's taproot, draining raw mana into pressurized canisters.",
-                new Vector3(0f, 1.0f, 12.2f), new Vector3(1.5f, 1.8f, 1.5f), clues, siphon);
+                new Vector3(0f, 0.8f, 14.0f), new Vector3(1.6f, 1.6f, 1.6f), clues, siphon);
 
-            // C2_03: Inscribed Silver Ritual Dagger on Altar
-            var dagger = CreatePrimitiveMarker("SilverRitualDagger", PrimitiveType.Cube, new Vector3(-4f, 1.15f, 7.6f),
-                new Vector3(0.18f, 0.08f, 0.65f), new Color(0.82f, 0.86f, 0.92f), clues, false);
+            // C2_03: Inscribed Silver Ritual Dagger resting flush on top of the Stone Altar (y = 0.87)
+            var daggerRoot = new GameObject("SilverRitualDagger").transform;
+            daggerRoot.SetParent(clues, false);
+            daggerRoot.position = new Vector3(-4.2f, 0.87f, 7.5f);
+            CreatePrimitiveMarker("Blade", PrimitiveType.Cube, new Vector3(-4.2f, 0.87f, 7.65f),
+                new Vector3(0.10f, 0.04f, 0.52f), new Color(0.84f, 0.88f, 0.94f), daggerRoot, false);
+            CreatePrimitiveMarker("Crossguard", PrimitiveType.Cube, new Vector3(-4.2f, 0.87f, 7.38f),
+                new Vector3(0.28f, 0.06f, 0.06f), new Color(0.62f, 0.54f, 0.28f), daggerRoot, false);
+            CreatePrimitiveMarker("Hilt", PrimitiveType.Cube, new Vector3(-4.2f, 0.87f, 7.25f),
+                new Vector3(0.06f, 0.06f, 0.20f), new Color(0.28f, 0.16f, 0.18f), daggerRoot, false);
             CreateClueNode("C2_RitualDagger", "C2_03", ClueNode.Kind.Physical, ClueNode.Tool.None, ClueNode.State.Revealed,
                 "Ceremonial silver dagger bearing the Veiled Circle's eclipsed eye insignia, coated with Case 1's solvent stabilizer.",
-                new Vector3(-4f, 1.2f, 7.6f), new Vector3(1.2f, 1.0f, 1.2f), clues, dagger);
+                new Vector3(-4.2f, 0.95f, 7.5f), new Vector3(1.4f, 1.1f, 1.4f), clues, daggerRoot.gameObject);
 
-            // C3_03: Vane's Discarded Ritual Cloak
-            var cloak = PlaceProp(Mfp + "Miscellaneous/carpet.prefab", clues, new Vector3(-4.4f, 0.05f, 9.5f), new Vector3(0f, 35f, 0f), new Vector3(0.8f, 0.8f, 0.8f));
+            // C3_03: Vane's Discarded Ritual Cloak (grounded beside the altar, without off-center chimney hood)
+            var cloak = PlaceProp(Dfk + "Decoration/Textiles/dfk_carpet_black_small.prefab", clues, new Vector3(-5.5f, 0.02f, 9.6f), new Vector3(0f, 35f, 0f), new Vector3(0.85f, 0.85f, 0.85f));
+            AddAmbientMist(cloak.transform, new Color(0.65f, 0.28f, 0.95f, 0.35f));
             CreateClueNode("C3_VaneCloak", "C3_03", ClueNode.Kind.Physical, ClueNode.Tool.None, ClueNode.State.Revealed,
                 "Vane's discarded ritual cloak. Lingers with fanatical zeal and deceit tying him to the Sanctum Core ritual.",
-                new Vector3(-4.4f, 0.6f, 9.5f), new Vector3(1.6f, 1.2f, 1.6f), clues, cloak);
+                new Vector3(-5.5f, 0.45f, 9.6f), new Vector3(1.6f, 1.0f, 1.6f), clues, cloak);
 
-            // L3_03: Central Altar Ground — requires AetherSight
+            // L3_03: Central Altar Ground (center of spell circle) — requires AetherSight
+            AddPointLight(env, new Vector3(0f, 0.8f, 7.5f), new Color(0.25f, 0.85f, 0.95f), 1.4f, 5.0f);
             CreateClueNode("L3_RunicLog3_AltarGround", "L3_03", ClueNode.Kind.Physical, ClueNode.Tool.AetherSight, ClueNode.State.Hidden,
                 "Buried pre-cataclysm telemetry beneath the altar: Displacement Device Telemetry (Runic Log #3).",
-                new Vector3(0f, 0.6f, 8f), new Vector3(1.8f, 1.2f, 1.8f), clues);
+                new Vector3(0f, 0.45f, 7.5f), new Vector3(1.8f, 1.2f, 1.8f), clues);
 
-            // Exit Boundary Stone back to Whisperwood Trail
-            CreateExitPortal("Exit_GroveBoundaryStone", 3, "Hub_Wilderness",
-                "[L-Click] Return to Whisperwood Trail",
-                "Exit the deep grove clearing back to the Whisperwood Ranger Outpost.",
-                new Vector3(0f, 1.2f, -3.5f), new Vector3(2.2f, 2.4f, 1.4f), clues);
+            // Open Trail Exit back to Whisperwood Trail
+            CreateExitPortal("Exit_WhisperwoodTrail", 3, "Hub_Wilderness",
+                "[L-Click] Follow Trail to Whisperwood Outpost",
+                "Walk back down the forest path to the Whisperwood Ranger Outpost.",
+                new Vector3(0f, 1.2f, -10.5f), new Vector3(3.6f, 2.4f, 1.6f), clues);
+
+            // Dynamic Active Goal controller for Case 3
+            var ctrlGo = new GameObject("Case3ObjectiveController");
+            SceneManager.MoveGameObjectToScene(ctrlGo, scene);
+            var objCtrl = ctrlGo.AddComponent<InvestigationObjectiveController>();
+            objCtrl.caseId = 3;
+            objCtrl.requiredClueIds = new[] { "C1_03", "C2_03", "C3_03" };
+            objCtrl.gatherObjectiveFormat = "Inspect the Elder Tree siphon, ritual dagger, and Vane's cloak ({0}/{1}).";
+            objCtrl.boardObjective = "Evidence gathered. Open the Deduction Board [H] or return to Whisperwood Trail.";
+            objCtrl.solvedObjective = "Board solved! Return to the Whisperwood Trail to confront Vane.";
 
             SaveScene(scene, Case3ScenePath);
         }
@@ -552,26 +680,140 @@ namespace Morsoul.Editor
         {
             var scene = CreateBaseScene(
                 Case4ScenePath,
-                new Color(0.16f, 0.13f, 0.11f),
-                new Color(0.10f, 0.08f, 0.07f),
-                0.025f,
-                new Vector3(0f, 1.0f, 0f),
+                new Color(0.18f, 0.14f, 0.12f),
+                new Color(0.09f, 0.07f, 0.06f),
+                0.022f,
+                new Vector3(0f, 1.0f, 0.5f),
                 Vector3.zero);
 
             var env = new GameObject("Environment").transform;
             SceneManager.MoveGameObjectToScene(env.gameObject, scene);
 
-            // Subterranean Dwarven facility (22x26)
-            BuildBoxRoom(env, new Vector3(0f, 0f, 10f), new Vector3(22f, 7f, 26f),
-                new Color(0.20f, 0.18f, 0.17f), new Color(0.25f, 0.22f, 0.20f), true);
+            // Invisible perimeter colliders (x in [-10, 10], z in [-2, 22]) backed by real 3D rock/rubble walls
+            BuildPerimeterColliders(env, new Vector3(0f, 0f, 10f), new Vector3(20f, 4.5f, 24f));
 
-            PlaceProp(Mfp + "Miscellaneous/furnace.prefab", env, new Vector3(-7f, 0f, 5f), Vector3.zero, Vector3.one);
-            PlaceProp(Mfp + "Miscellaneous/anvil.prefab", env, new Vector3(6f, 0f, 4f), Vector3.zero, Vector3.one);
-            PlaceProp(Mfp + "Platforms/platform.prefab", env, new Vector3(0f, 0f, 0f), Vector3.zero, Vector3.one);
-            PlaceProp(Mfp + "Castle walls/stone_half_wall.prefab", env, new Vector3(-5f, 0f, 12f), Vector3.zero, Vector3.one);
-            PlaceProp(Mfp + "Castle walls/stone_half_wall.prefab", env, new Vector3(5f, 0f, 12f), Vector3.zero, Vector3.one);
-            AddPointLight(env, new Vector3(0f, 5f, 6f), new Color(1f, 0.68f, 0.42f), 2.8f, 18f);
-            AddPointLight(env, new Vector3(0f, 5f, 17f), new Color(0.45f, 0.85f, 1f), 2.5f, 16f);
+            // 4m x 4m stone floor tiles (-8..8 in X, 0..20 in Z)
+            for (int gx = -8; gx <= 8; gx += 4)
+            for (int gz = 0; gz <= 20; gz += 4)
+            {
+                string tile = gz >= 12
+                    ? "02_Floors/SM_LPD_Floor_PavingFlagstone_01.prefab"
+                    : ((gx + gz) % 8 == 0 ? "02_Floors/SM_LPD_Floor_PavingFlagstoneWorn_01.prefab" : "02_Floors/SM_LPD_Floor_PavingFlagstone_01.prefab");
+                PlaceProp(Lpd + tile, env, new Vector3(gx, 0f, gz), Vector3.zero, Vector3.one);
+            }
+
+            // Mine timber-braced ceiling in outer mining bay (z=0..8) & stone ceiling in sub-lab (z=12..20)
+            for (int gx = -8; gx <= 8; gx += 4)
+            for (int gz = 0; gz <= 20; gz += 4)
+            {
+                string ceil = gz < 12 ? "01_Structure/SM_LPD_Struct_CeilTimberBraced_01.prefab" : "01_Structure/SM_LPD_Struct_CeilFlat_01.prefab";
+                PlaceProp(Lpd + ceil, env, new Vector3(gx, 4.0f, gz), Vector3.zero, Vector3.one);
+            }
+
+            // Rough stone/rubble perimeter walls (x = +/-10, z = -2 / +22)
+            for (int gx = -8; gx <= 8; gx += 4)
+            {
+                string northWall = gx == 0 ? "01_Structure/SM_LPD_Struct_WallNiche_01.prefab" : "01_Structure/SM_LPD_Struct_WallCracked_01.prefab";
+                PlaceProp(Lpd + northWall, env, new Vector3(gx, 0f, 22f), new Vector3(0f, 180f, 0f), Vector3.one);
+                string southWall = gx == 0 ? "01_Structure/SM_LPD_Struct_WallDoorway_01.prefab" : "01_Structure/SM_LPD_Struct_WallRubble_01.prefab";
+                PlaceProp(Lpd + southWall, env, new Vector3(gx, 0f, -2f), Vector3.zero, Vector3.one);
+            }
+            for (int gz = 0; gz <= 20; gz += 4)
+            {
+                string wallType = gz < 12 ? "01_Structure/SM_LPD_Struct_WallRubble_01.prefab" : "01_Structure/SM_LPD_Struct_WallCracked_01.prefab";
+                PlaceProp(Lpd + wallType, env, new Vector3(-10f, 0f, gz), new Vector3(0f, 90f, 0f), Vector3.one);
+                PlaceProp(Lpd + wallType, env, new Vector3(10f, 0f, gz), new Vector3(0f, -90f, 0f), Vector3.one);
+            }
+
+            // Rubble heaps & mine timber shoring props along the rough mine walls
+            PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_RubbleHeapAgainst_01.prefab", env, new Vector3(-9.2f, 0f, 2f), new Vector3(0f, 90f, 0f), Vector3.one);
+            PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_RubbleHeapAgainst_01.prefab", env, new Vector3(9.2f, 0f, 7f), new Vector3(0f, -90f, 0f), Vector3.one);
+            PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_RubbleHeapMound_01.prefab", env, new Vector3(-6.5f, 0f, 9.5f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_DebrisScatter_01.prefab", env, new Vector3(3.5f, 0.02f, 3.5f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_ShoringProps_01.prefab", env, new Vector3(-6f, 0f, 4f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_ShoringProps_01.prefab", env, new Vector3(6f, 0f, 4f), new Vector3(0f, 180f, 0f), Vector3.one);
+            PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_PillarBroken_01.prefab", env, new Vector3(-4f, 0f, 16f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_PillarSquare_01.prefab", env, new Vector3(4f, 0f, 16f), Vector3.zero, Vector3.one);
+
+            // Outer mining bay decor (furnace, anvil, mine cart, workbench, dunnage, crates, barrels, torches)
+            PlaceProp(Mfp + "Miscellaneous/furnace.prefab", env, new Vector3(-8.2f, 0f, 5.5f), new Vector3(0f, 90f, 0f), Vector3.one * 1.1f);
+            PlaceProp(Mfp + "Miscellaneous/anvil.prefab", env, new Vector3(7.5f, 0f, 4.5f), new Vector3(0f, -35f, 0f), Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_HandcartLoaded_01.prefab", env, new Vector3(6.8f, 0f, 1.5f), new Vector3(0f, -35f, 0f), Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_HandcartEmpty_01.prefab", env, new Vector3(-4.2f, 0f, 1.2f), new Vector3(0f, 40f, 0f), Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_ChestFlat_01.prefab", env, new Vector3(8.2f, 0f, 7.5f), new Vector3(0f, -90f, 0f), Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_BarrelUpright_01.prefab", env, new Vector3(8.6f, 0f, 9.0f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_BarrelUpright_01.prefab", env, new Vector3(-8.6f, 0f, 9.2f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_BarrelRackSingle_01.prefab", env, new Vector3(-8.4f, 0f, 7.6f), new Vector3(0f, 90f, 0f), Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_FirewoodStack_01.prefab", env, new Vector3(-7.6f, 0f, 1.5f), new Vector3(0f, 25f, 0f), Vector3.one);
+            PlaceProp(Lpd + "06_Furniture/SM_LPD_Furn_DunnagePallet_01.prefab", env, new Vector3(5.2f, 0f, 9.5f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_CrateLarge_01.prefab", env, new Vector3(5.0f, 0.16f, 9.3f), new Vector3(0f, 12f, 0f), Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_CrateBanded_01.prefab", env, new Vector3(5.8f, 0.16f, 9.8f), new Vector3(0f, -20f, 0f), Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_SackUpright_01.prefab", env, new Vector3(4.3f, 0f, 9.9f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_SackSlumped_01.prefab", env, new Vector3(-4.0f, 0f, 10.2f), new Vector3(0f, 25f, 0f), Vector3.one);
+            PlaceProp(Lpd + "06_Furniture/SM_LPD_Furn_TableTrestle_01.prefab", env, new Vector3(7.4f, 0f, 6.2f), new Vector3(0f, 90f, 0f), Vector3.one);
+            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_OilLampBrass_01.prefab", env, new Vector3(7.4f, 0.8f, 6.4f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "06_Furniture/SM_LPD_Furn_StoolRound_01.prefab", env, new Vector3(6.4f, 0f, 6.2f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_BucketIron_01.prefab", env, new Vector3(-6.8f, 0f, 5.2f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_BrazierTripodLit_01.prefab", env, new Vector3(-2.6f, 0f, 2.2f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_BrazierTripodLit_01.prefab", env, new Vector3(2.6f, 0f, 2.2f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_TorchWallLit_01.prefab", env, new Vector3(-9.7f, 2.2f, 4.0f), new Vector3(0f, 90f, 0f), Vector3.one);
+            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_TorchWallLit_01.prefab", env, new Vector3(9.7f, 2.2f, 4.0f), new Vector3(0f, -90f, 0f), Vector3.one);
+            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_TorchWallLit_01.prefab", env, new Vector3(-9.7f, 2.2f, 10.0f), new Vector3(0f, 90f, 0f), Vector3.one);
+            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_TorchWallLit_01.prefab", env, new Vector3(9.7f, 2.2f, 10.0f), new Vector3(0f, -90f, 0f), Vector3.one);
+            PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_ShoringProps_01.prefab", env, new Vector3(-6f, 0f, 8.5f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_ShoringProps_01.prefab", env, new Vector3(6f, 0f, 8.5f), new Vector3(0f, 180f, 0f), Vector3.one);
+
+            // Pre-Cataclysm Sub-Lab decor (z = 12..22): archive shelves, research table, chairs, crystals, chandelier
+            PlaceProp(Dfk + "Furnitures/dfk_shelf_01.prefab", env, new Vector3(-9.0f, 0f, 14.5f), new Vector3(0f, 90f, 0f), Vector3.one);
+            PlaceProp(Dfk + "Furnitures/dfk_shelf_01.prefab", env, new Vector3(-9.0f, 0f, 18.5f), new Vector3(0f, 90f, 0f), Vector3.one);
+            PlaceProp(Dfk + "Furnitures/dfk_shelf_01.prefab", env, new Vector3(9.0f, 0f, 14.5f), new Vector3(0f, -90f, 0f), Vector3.one);
+            PlaceProp(Lpd + "06_Furniture/SM_LPD_Furn_CupboardOpen_01.prefab", env, new Vector3(8.8f, 0f, 18.5f), new Vector3(0f, -90f, 0f), Vector3.one);
+            PlaceProp(Lpd + "06_Furniture/SM_LPD_Furn_TableLong_01.prefab", env, new Vector3(5.8f, 0f, 16.5f), new Vector3(0f, 90f, 0f), Vector3.one);
+            PlaceProp(Dfk + "Furnitures/dfk_chair_01.prefab", env, new Vector3(4.6f, 0f, 16.5f), new Vector3(0f, 90f, 0f), Vector3.one);
+            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_CandleTriple_01.prefab", env, new Vector3(5.8f, 0.8f, 16.2f), Vector3.zero, Vector3.one);
+            PlaceProp(Dfk + "Lightsources/dfk_crystal_01_blue.prefab", env, new Vector3(-2.6f, 0f, 20.5f), Vector3.zero, new Vector3(1.1f, 1.4f, 1.1f));
+            PlaceProp(Dfk + "Lightsources/dfk_crystal_01_blue.prefab", env, new Vector3(2.6f, 0f, 20.5f), Vector3.zero, new Vector3(1.1f, 1.4f, 1.1f));
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_UrnUrn_01.prefab", env, new Vector3(-7.5f, 0f, 20.5f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_UrnUrn_01.prefab", env, new Vector3(7.5f, 0f, 20.5f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_ChandelierRing_01.prefab", env, new Vector3(0f, 3.8f, 16.5f), Vector3.zero, Vector3.one);
+
+            // Steam vents along outer mining bay edges (clear center walkway)
+            var steamL = new GameObject("SteamVent_Left");
+            steamL.transform.SetParent(env, false);
+            steamL.transform.position = new Vector3(-5.8f, 0.2f, 3.8f);
+            AddAmbientMist(steamL.transform, new Color(0.85f, 0.88f, 0.92f, 0.35f));
+            var steamR = new GameObject("SteamVent_Right");
+            steamR.transform.SetParent(env, false);
+            steamR.transform.position = new Vector3(5.8f, 0.2f, 3.8f);
+            AddAmbientMist(steamR.transform, new Color(0.85f, 0.88f, 0.92f, 0.35f));
+
+            // Midway stone partition wall at z=12 separating mining bay from Pre-Cataclysm Sub-Lab (open doorway at x=0)
+            for (int gx = -8; gx <= 8; gx += 4)
+            {
+                string partWall = gx == 0 ? "01_Structure/SM_LPD_Struct_WallDoorway_01.prefab" : "01_Structure/SM_LPD_Struct_WallAshlar_01.prefab";
+                PlaceProp(Lpd + partWall, env, new Vector3(gx, 0f, 12f), Vector3.zero, Vector3.one);
+            }
+            CreateWall("SubLabCollider_West", new Vector3(-5.75f, 2.25f, 12f), new Vector3(8.5f, 4.5f, 0.6f), null, env);
+            CreateWall("SubLabCollider_East", new Vector3(5.75f, 2.25f, 12f), new Vector3(8.5f, 4.5f, 0.6f), null, env);
+
+            // Deep-shaft elevator entrance/exit on South wall (z = -2.0)
+            var elevator = new GameObject("DeepShaftElevator").transform;
+            elevator.SetParent(env, false);
+            PlaceProp(Lpd + "03_Doors/SM_LPD_Door_DoorFrameTimber_01.prefab", elevator, new Vector3(0f, 0f, -1.95f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "03_Doors/SM_LPD_Door_FloorGrate_01.prefab", elevator, new Vector3(0f, 0.03f, -1.2f), Vector3.zero, new Vector3(1.2f, 1f, 1.2f));
+            PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_RopeDescentHanging_01.prefab", elevator, new Vector3(-0.7f, 0f, -1.6f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_LanternFloor_01.prefab", elevator, new Vector3(-1.6f, 0f, -1.3f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_LanternFloor_01.prefab", elevator, new Vector3(1.6f, 0f, -1.3f), Vector3.zero, Vector3.one);
+
+            // Stasis Chamber anchor inside Pre-Cataclysm Sub-Lab (z = 15.5)
+            EnsureSolidBox("StasisChamberDais", new Vector3(-4.2f, 0.2f, 16.5f), new Vector3(3.2f, 0.4f, 3.2f), new Color(0.18f, 0.22f, 0.26f), env);
+            PlaceProp(Dfk + "Lightsources/dfk_crystal_01_blue.prefab", env, new Vector3(-4.2f, 0.45f, 16.5f), Vector3.zero, new Vector3(1.8f, 2.2f, 1.8f));
+
+            // Warm forge lighting in mining bay + cool cyan pre-cataclysm lighting in sub-lab
+            AddPointLight(env, new Vector3(0f, 4.8f, 5f), new Color(1f, 0.68f, 0.42f), 3.0f, 18f);
+            AddPointLight(env, new Vector3(0f, 2.8f, -1.2f), new Color(1f, 0.78f, 0.48f), 2.2f, 10f);
+            AddPointLight(env, new Vector3(0f, 4.8f, 17f), new Color(0.45f, 0.85f, 1f), 2.8f, 16f);
+            AddPointLight(env, new Vector3(-4.2f, 2.5f, 16.5f), new Color(0.35f, 0.92f, 1f), 2.2f, 9f);
 
             var clues = new GameObject("Clues").transform;
             SceneManager.MoveGameObjectToScene(clues.gameObject, scene);
@@ -584,29 +826,42 @@ namespace Morsoul.Editor
                 new Vector3(-4.5f, 1.1f, 6f), new Vector3(1.5f, 1.5f, 1.5f), clues, valve);
 
             // C2_04: Chemically Dissolved Bypass Conduits (center junction) — requires GolemEye
-            var conduit = CreatePrimitiveMarker("DissolvedConduits", PrimitiveType.Cube, new Vector3(0f, 0.6f, 8f),
+            var conduit = CreatePrimitiveMarker("DissolvedConduits", PrimitiveType.Cube, new Vector3(0f, 0.5f, 8f),
                 new Vector3(1.6f, 0.5f, 0.8f), new Color(0.45f, 0.25f, 0.65f), clues, false);
+            AddAmbientMist(conduit.transform, new Color(0.65f, 0.35f, 0.95f, 0.4f));
             CreateClueNode("C2_DissolvedConduits", "C2_04", ClueNode.Kind.Physical, ClueNode.Tool.GolemEye, ClueNode.State.Hidden,
                 "Copper control wiring corroded into slag. Golem Eye confirms the same synthetic mana solvent from Case 1 and Case 3.",
-                new Vector3(0f, 0.8f, 8f), new Vector3(1.8f, 1.2f, 1.4f), clues, conduit);
+                new Vector3(0f, 0.7f, 8f), new Vector3(1.8f, 1.2f, 1.4f), clues, conduit);
 
-            // C3_04: Pre-Cataclysm Sub-Lab Blast Door (midway partition at z=12)
-            var blastDoor = PlaceProp(Dfk + "Doors and Gates/dfk_door_01.prefab", clues, new Vector3(0f, 0f, 12f), Vector3.zero, new Vector3(1.4f, 1.4f, 1.4f));
+            // C3_04: Pre-Cataclysm Sub-Lab Blast Door (stone frame + broken/breached door swung aside at z=12)
+            PlaceProp(Lpd + "03_Doors/SM_LPD_Door_DoorFrameStone_01.prefab", env, new Vector3(0f, 0f, 12f), Vector3.zero, Vector3.one);
+            var blastDoor = PlaceProp(Lpd + "03_Doors/SM_LPD_Door_DoorBroken_01.prefab", clues, new Vector3(-0.75f, 0f, 12.1f), new Vector3(0f, -75f, 0f), Vector3.one);
             CreateClueNode("C3_SubLabBlastDoor", "C3_04", ClueNode.Kind.Physical, ClueNode.Tool.None, ClueNode.State.Revealed,
-                "Massive pre-cataclysm titanium blast door tampered with from outside to force a stasis lockdown over the engineering bay.",
-                new Vector3(0f, 1.2f, 11.7f), new Vector3(2.2f, 2.4f, 1.2f), clues, blastDoor);
+                "Massive pre-cataclysm blast door forced open from outside to breach the engineering bay.",
+                new Vector3(-0.75f, 1.2f, 12.1f), new Vector3(1.8f, 2.4f, 1.4f), clues, blastDoor);
 
             // L4_04: Ancient Primary Terminal inside sub-lab (z=18) — requires Both (AetherSight + GolemEye)
-            var terminal = PlaceProp(Dfk + "Furnitures/dfk_desk_02.prefab", clues, new Vector3(0f, 0f, 18f), Vector3.zero, Vector3.one);
+            var terminal = PlaceProp(Dfk + "Furnitures/dfk_desk_02.prefab", clues, new Vector3(0f, 0f, 18.5f), Vector3.zero, Vector3.one);
+            AddAmbientMist(terminal.transform, new Color(0.35f, 0.85f, 1f, 0.4f));
             CreateClueNode("L4_RunicLog4_Terminal", "L4_04", ClueNode.Kind.Physical, ClueNode.Tool.Both, ClueNode.State.Hidden,
                 "Decrypted pre-cataclysm primary terminal: Planetary Stabilizer Console Blueprints (Runic Log #4).",
-                new Vector3(0f, 1.1f, 18f), new Vector3(1.8f, 1.6f, 1.4f), clues, terminal);
+                new Vector3(0f, 1.1f, 18.5f), new Vector3(1.8f, 1.6f, 1.4f), clues, terminal);
 
             // Exit Shaft Elevator back to Iron Hollow surface
             CreateExitPortal("Exit_ShaftElevator", 4, "Hub_IronHollow",
                 "[L-Click] Ascend Shaft Elevator",
                 "Ride the deep-shaft elevator back to the Iron Hollow surface.",
-                new Vector3(0f, 1.2f, -2.5f), new Vector3(2.2f, 2.4f, 1.4f), clues);
+                new Vector3(0f, 1.2f, -2.0f), new Vector3(2.6f, 2.4f, 1.6f), clues);
+
+            // Dynamic Active Goal controller for Case 4
+            var ctrlGo = new GameObject("Case4ObjectiveController");
+            SceneManager.MoveGameObjectToScene(ctrlGo, scene);
+            var objCtrl = ctrlGo.AddComponent<InvestigationObjectiveController>();
+            objCtrl.caseId = 4;
+            objCtrl.requiredClueIds = new[] { "C1_04", "C2_04", "C3_04" };
+            objCtrl.gatherObjectiveFormat = "Inspect pneumatic valves, scan bypass conduits [Tab], and check the blast door ({0}/{1}).";
+            objCtrl.boardObjective = "Evidence gathered. Open the Deduction Board [H] or ride the Shaft Elevator up.";
+            objCtrl.solvedObjective = "Board solved! Ride the Shaft Elevator to the surface to confront Harlan.";
 
             SaveScene(scene, Case4ScenePath);
         }
@@ -658,7 +913,12 @@ namespace Morsoul.Editor
 
             var sharedPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(SharedRootPath);
             if (sharedPrefab != null)
+            {
+                // SharedRoot already contains Player/Main Camera; remove DefaultGameObjects' static Main Camera
+                var defaultCam = GameObject.Find("Main Camera");
+                if (defaultCam != null) Object.DestroyImmediate(defaultCam);
                 PrefabUtility.InstantiatePrefab(sharedPrefab, scene);
+            }
             else
                 Debug.LogWarning($"InvestigationLevelsBuilder: missing SharedRoot at '{SharedRootPath}'.");
 
@@ -845,6 +1105,11 @@ namespace Morsoul.Editor
             go.transform.SetParent(parent, false);
             go.transform.localPosition = new Vector3(0f, 0.2f, 0f);
             var ps = go.AddComponent<ParticleSystem>();
+            var psr = go.GetComponent<ParticleSystemRenderer>();
+            const string sharedFogDir = "Assets/Art/Environments/Custom/Whisperwood3D";
+            if (!System.IO.Directory.Exists(sharedFogDir)) System.IO.Directory.CreateDirectory(sharedFogDir);
+            var mistMat = AssetDatabase.LoadAssetAtPath<Material>(sharedFogDir + "/BoundaryFog.mat") ?? EnsureFogParticleMaterial(sharedFogDir);
+            if (psr != null && mistMat != null) psr.sharedMaterial = mistMat;
             var main = ps.main;
             main.startLifetime = 2.2f;
             main.startSpeed = 0.25f;
@@ -872,6 +1137,291 @@ namespace Morsoul.Editor
                     list.Add(new EditorBuildSettingsScene(path, true));
             }
             EditorBuildSettings.scenes = list.ToArray();
+        }
+
+        // --- Whisperwood 3D Helpers ------------------------------------------
+
+        static Terrain CreateWhisperwoodTerrain(string customDir, Transform parent)
+        {
+            const float sizeXZ = 60f;
+            const float maxH = 10f;
+            const float originX = -30f;
+            const float originZ = -24f;
+            const int hRes = 129;
+            const int aRes = 128;
+
+            var mossTex = EnsureProceduralNoiseTexture(customDir + "/MossGrass.png", new Color(0.11f, 0.24f, 0.12f), new Color(0.17f, 0.32f, 0.15f), 11);
+            var dirtTex = EnsureProceduralNoiseTexture(customDir + "/ForestDirt.png", new Color(0.38f, 0.25f, 0.15f), new Color(0.50f, 0.34f, 0.21f), 29);
+
+            var mossLayer = EnsureTerrainLayer(customDir + "/MossGrassLayer.terrainlayer", mossTex, 6f);
+            var dirtLayer = EnsureTerrainLayer(customDir + "/ForestDirtLayer.terrainlayer", dirtTex, 5f);
+
+            string tdPath = customDir + "/WhisperwoodTerrain.asset";
+            if (AssetDatabase.LoadAssetAtPath<TerrainData>(tdPath) != null)
+                AssetDatabase.DeleteAsset(tdPath);
+
+            var td = new TerrainData
+            {
+                heightmapResolution = hRes,
+                alphamapResolution = aRes,
+                size = new Vector3(sizeXZ, maxH, sizeXZ)
+            };
+            AssetDatabase.CreateAsset(td, tdPath);
+            td.terrainLayers = new[] { mossLayer, dirtLayer };
+
+            var heights = new float[hRes, hRes];
+            for (int iz = 0; iz < hRes; iz++)
+            {
+                float wz = originZ + (iz / (float)(hRes - 1)) * sizeXZ;
+                for (int ix = 0; ix < hRes; ix++)
+                {
+                    float wx = originX + (ix / (float)(hRes - 1)) * sizeXZ;
+
+                    float dClearing = Vector2.Distance(new Vector2(wx, wz), new Vector2(0f, 7.5f));
+                    float dElder = Vector2.Distance(new Vector2(wx, wz), new Vector2(0f, 16.2f));
+                    float trailBlendZ = (wz >= -11.5f && wz <= 2.5f) ? 0f : Mathf.Min(Mathf.Abs(wz + 11.5f), Mathf.Abs(wz - 2.5f));
+                    float dTrail = Mathf.Sqrt(Mathf.Pow(Mathf.Max(0f, Mathf.Abs(wx) - 2.2f), 2f) + trailBlendZ * trailBlendZ);
+
+                    float flatMask = Mathf.Min(
+                        Mathf.InverseLerp(6.2f, 11.5f, dClearing),
+                        Mathf.Min(
+                            Mathf.InverseLerp(3.2f, 6.8f, dElder),
+                            Mathf.InverseLerp(0.0f, 3.8f, dTrail)));
+                    flatMask = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(flatMask));
+
+                    float n1 = Mathf.PerlinNoise((wx + 100f) * 0.075f, (wz + 100f) * 0.075f);
+                    float n2 = Mathf.PerlinNoise((wx + 240f) * 0.16f, (wz + 240f) * 0.16f) * 0.35f;
+                    float hill = (0.8f + (n1 + n2) * 2.6f) * flatMask;
+                    heights[iz, ix] = Mathf.Clamp01(hill / maxH);
+                }
+            }
+            td.SetHeights(0, 0, heights);
+
+            var alphas = new float[aRes, aRes, 2];
+            for (int iz = 0; iz < aRes; iz++)
+            {
+                float wz = originZ + (iz / (float)(aRes - 1)) * sizeXZ;
+                for (int ix = 0; ix < aRes; ix++)
+                {
+                    float wx = originX + (ix / (float)(aRes - 1)) * sizeXZ;
+                    float dClearing = Vector2.Distance(new Vector2(wx, wz), new Vector2(0f, 7.5f));
+                    float clearingDirt = 1f - Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(5.2f, 6.8f, dClearing));
+
+                    float trailDirt = 0f;
+                    if (wz >= -11.5f && wz <= 2.5f)
+                        trailDirt = 1f - Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(1.5f, 2.5f, Mathf.Abs(wx)));
+
+                    float dirt = Mathf.Clamp01(Mathf.Max(clearingDirt, trailDirt));
+                    alphas[iz, ix, 0] = 1f - dirt;
+                    alphas[iz, ix, 1] = dirt;
+                }
+            }
+            td.SetAlphamaps(0, 0, alphas);
+            EditorUtility.SetDirty(td);
+            AssetDatabase.SaveAssets();
+
+            var terrainGo = Terrain.CreateTerrainGameObject(td);
+            terrainGo.name = "WhisperwoodTerrain";
+            terrainGo.transform.SetParent(parent, false);
+            terrainGo.transform.position = new Vector3(originX, 0f, originZ);
+            return terrainGo.GetComponent<Terrain>();
+        }
+
+        static TerrainLayer EnsureTerrainLayer(string assetPath, Texture2D diffuse, float tileSize)
+        {
+            var existing = AssetDatabase.LoadAssetAtPath<TerrainLayer>(assetPath);
+            if (existing != null) AssetDatabase.DeleteAsset(assetPath);
+            var layer = new TerrainLayer
+            {
+                diffuseTexture = diffuse,
+                tileSize = new Vector2(tileSize, tileSize),
+                smoothness = 0.08f
+            };
+            AssetDatabase.CreateAsset(layer, assetPath);
+            return layer;
+        }
+
+        static Texture2D EnsureProceduralNoiseTexture(string pngPath, Color cA, Color cB, int seed)
+        {
+            const int size = 128;
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            var pixels = new Color[size * size];
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float n = Mathf.PerlinNoise((x + seed * 17) * 0.14f, (y + seed * 31) * 0.14f);
+                    float fine = Mathf.PerlinNoise((x + seed * 7) * 0.45f, (y + seed * 13) * 0.45f) * 0.25f;
+                    pixels[y * size + x] = Color.Lerp(cA, cB, Mathf.Clamp01(n * 0.8f + fine));
+                }
+            }
+            tex.SetPixels(pixels);
+            tex.Apply();
+            System.IO.File.WriteAllBytes(pngPath, tex.EncodeToPNG());
+            Object.DestroyImmediate(tex);
+            AssetDatabase.ImportAsset(pngPath, ImportAssetOptions.ForceUpdate);
+            return AssetDatabase.LoadAssetAtPath<Texture2D>(pngPath);
+        }
+
+        static Material EnsureFogParticleMaterial(string customDir)
+        {
+            const int size = 128;
+            string pngPath = customDir + "/BoundaryFogPuff.png";
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            var pixels = new Color[size * size];
+            float half = size * 0.5f;
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float dx = (x - half) / half;
+                    float dy = (y - half) / half;
+                    float r = Mathf.Sqrt(dx * dx + dy * dy);
+                    float a = Mathf.Clamp01(1f - r);
+                    a = a * a * (3f - 2f * a);
+                    pixels[y * size + x] = new Color(1f, 1f, 1f, a);
+                }
+            }
+            tex.SetPixels(pixels);
+            tex.Apply();
+            System.IO.File.WriteAllBytes(pngPath, tex.EncodeToPNG());
+            Object.DestroyImmediate(tex);
+
+            AssetDatabase.ImportAsset(pngPath, ImportAssetOptions.ForceUpdate);
+            var importer = AssetImporter.GetAtPath(pngPath) as TextureImporter;
+            if (importer != null)
+            {
+                importer.alphaIsTransparency = true;
+                importer.wrapMode = TextureWrapMode.Clamp;
+                importer.SaveAndReimport();
+            }
+            var puffTex = AssetDatabase.LoadAssetAtPath<Texture2D>(pngPath);
+
+            string matPath = customDir + "/BoundaryFog.mat";
+            if (AssetDatabase.LoadAssetAtPath<Material>(matPath) != null)
+                AssetDatabase.DeleteAsset(matPath);
+
+            var shader = Shader.Find("Universal Render Pipeline/Particles/Unlit")
+                      ?? Shader.Find("Universal Render Pipeline/Unlit")
+                      ?? Shader.Find("Sprites/Default");
+            var mat = new Material(shader);
+            mat.mainTexture = puffTex;
+            if (mat.HasProperty("_BaseMap")) mat.SetTexture("_BaseMap", puffTex);
+            if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", Color.white);
+            if (mat.HasProperty("_Surface")) mat.SetFloat("_Surface", 1f);
+            if (mat.HasProperty("_Blend")) mat.SetFloat("_Blend", 0f);
+            if (mat.HasProperty("_SrcBlend")) mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            if (mat.HasProperty("_DstBlend")) mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            if (mat.HasProperty("_ZWrite")) mat.SetInt("_ZWrite", 0);
+            mat.SetOverrideTag("RenderType", "Transparent");
+            mat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            mat.renderQueue = 3000;
+            AssetDatabase.CreateAsset(mat, matPath);
+            return mat;
+        }
+
+        static void AddBoundaryFog(Transform parent, Vector3 pos, Vector3 boxSize, Material fogMat)
+        {
+            var go = new GameObject("BoundaryFogBank");
+            go.transform.SetParent(parent, false);
+            go.transform.position = pos;
+            var ps = go.AddComponent<ParticleSystem>();
+            var psr = go.GetComponent<ParticleSystemRenderer>();
+            if (psr != null && fogMat != null) psr.sharedMaterial = fogMat;
+            var main = ps.main;
+            main.startLifetime = 5.0f;
+            main.startSpeed = 0.12f;
+            main.startSize = new ParticleSystem.MinMaxCurve(2.6f, 4.2f);
+            main.startColor = new Color(0.58f, 0.72f, 0.65f, 0.20f);
+            main.maxParticles = 45;
+            main.prewarm = true;
+            var emission = ps.emission;
+            emission.rateOverTime = 8f;
+            var shape = ps.shape;
+            shape.shapeType = ParticleSystemShapeType.Box;
+            shape.scale = boxSize;
+        }
+
+        static Material EnsureRitualCircleMaterial(string customDir)
+        {
+            const int size = 512;
+            string pngPath = customDir + "/RitualSpellCircle.png";
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            var pixels = new Color[size * size];
+            float half = size * 0.5f;
+            Color glowCol = new Color(0.85f, 0.25f, 0.95f, 1f);
+            Color coreCol = new Color(1.0f, 0.45f, 0.85f, 1f);
+
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float dx = (x - half) / half;
+                    float dy = (y - half) / half;
+                    float r = Mathf.Sqrt(dx * dx + dy * dy);
+                    float ang = Mathf.Atan2(dy, dx);
+
+                    float outerRing = Mathf.Exp(-Mathf.Pow((r - 0.90f) / 0.018f, 2f));
+                    float midRing = Mathf.Exp(-Mathf.Pow((r - 0.78f) / 0.012f, 2f));
+                    float innerRing = Mathf.Exp(-Mathf.Pow((r - 0.42f) / 0.014f, 2f));
+
+                    // Six-pointed ritual star lines (two overlapping triangles)
+                    float hex = 0f;
+                    for (int k = 0; k < 6; k++)
+                    {
+                        float a1 = k * Mathf.PI / 3f;
+                        float a2 = (k + 2) * Mathf.PI / 3f;
+                        Vector2 p1 = new Vector2(Mathf.Cos(a1), Mathf.Sin(a1)) * 0.78f;
+                        Vector2 p2 = new Vector2(Mathf.Cos(a2), Mathf.Sin(a2)) * 0.78f;
+                        Vector2 p = new Vector2(dx, dy);
+                        Vector2 seg = p2 - p1;
+                        float t = Mathf.Clamp01(Vector2.Dot(p - p1, seg) / seg.sqrMagnitude);
+                        float dist = Vector2.Distance(p, p1 + seg * t);
+                        hex = Mathf.Max(hex, Mathf.Exp(-Mathf.Pow(dist / 0.012f, 2f)));
+                    }
+
+                    // Runic radial ticks between outer and mid rings
+                    float tickAngle = Mathf.Abs(Mathf.Sin(ang * 12f));
+                    float ticks = (r > 0.79f && r < 0.89f && tickAngle > 0.94f) ? 0.85f : 0f;
+
+                    float alpha = Mathf.Clamp01(Mathf.Max(Mathf.Max(outerRing, midRing), Mathf.Max(innerRing, Mathf.Max(hex, ticks))));
+                    Color c = Color.Lerp(glowCol, coreCol, Mathf.Clamp01(hex * 0.7f + innerRing * 0.5f));
+                    c.a = alpha * 0.92f;
+                    pixels[y * size + x] = c;
+                }
+            }
+            tex.SetPixels(pixels);
+            tex.Apply();
+            System.IO.File.WriteAllBytes(pngPath, tex.EncodeToPNG());
+            Object.DestroyImmediate(tex);
+
+            AssetDatabase.ImportAsset(pngPath, ImportAssetOptions.ForceUpdate);
+            var importer = AssetImporter.GetAtPath(pngPath) as TextureImporter;
+            if (importer != null)
+            {
+                importer.alphaIsTransparency = true;
+                importer.wrapMode = TextureWrapMode.Clamp;
+                importer.SaveAndReimport();
+            }
+            var circleTex = AssetDatabase.LoadAssetAtPath<Texture2D>(pngPath);
+
+            string matPath = customDir + "/RitualSpellCircle.mat";
+            if (AssetDatabase.LoadAssetAtPath<Material>(matPath) != null)
+                AssetDatabase.DeleteAsset(matPath);
+
+            var shader = Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Sprites/Default");
+            var mat = new Material(shader);
+            mat.mainTexture = circleTex;
+            if (mat.HasProperty("_BaseMap")) mat.SetTexture("_BaseMap", circleTex);
+            if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", Color.white);
+            if (mat.HasProperty("_Surface")) mat.SetFloat("_Surface", 0f);
+            if (mat.HasProperty("_AlphaClip")) mat.SetFloat("_AlphaClip", 1f);
+            if (mat.HasProperty("_Cutoff")) mat.SetFloat("_Cutoff", 0.22f);
+            mat.SetOverrideTag("RenderType", "TransparentCutout");
+            mat.EnableKeyword("_ALPHATEST_ON");
+            mat.renderQueue = 2450;
+            AssetDatabase.CreateAsset(mat, matPath);
+            return mat;
         }
     }
 }
