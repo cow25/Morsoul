@@ -46,18 +46,10 @@ public class InteractionProbe : MonoBehaviour
             }
             else if (hit.collider.TryGetComponent(out LockableInteractable interactable))
             {
-                if (interactable.IsLocked())
+                HUDManager.Instance.ShowInteractionPrompt("[L-Click] Interact", interactable.lockedDescription);
+                if (Mouse.current.leftButton.wasPressedThisFrame)
                 {
-                    HUDManager.Instance.ShowInteractionPrompt("[Locked]", interactable.lockedDescription);
-                }
-                else
-                {
-                    HUDManager.Instance.ShowInteractionPrompt("[L-Click] Interact", interactable.unlockedDescription);
-                    
-                    if (Mouse.current.leftButton.wasPressedThisFrame)
-                    {
-                        interactable.Interact();
-                    }
+                    interactable.Interact();
                 }
             }
         }

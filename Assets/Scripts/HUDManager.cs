@@ -18,6 +18,7 @@ public class HUDManager : MonoBehaviour
     private VisualElement _aetherSightRow;
     private VisualElement _emotionEchoRow;
     private VisualElement _interactionContainer;
+    private VisualElement _hudRoot;
     private VisualElement _objectivePanel;
     private Label _userNameLabel;
     private Label _focusValueLabel;
@@ -100,6 +101,8 @@ public class HUDManager : MonoBehaviour
     {
         if (_uiVersion == version) return;
         _uiVersion = version;
+
+        _hudRoot = root.Q<VisualElement>("HUD-Root"); 
 
         _golemEyeRow = root.Q<VisualElement>("GolemEyeRow");
         _aetherSightRow = root.Q<VisualElement>("AetherSightRow");
@@ -251,6 +254,13 @@ public class HUDManager : MonoBehaviour
             _interactionContainer.style.display = DisplayStyle.None;
     }
 
+    public void SetHUDVisibility(bool isVisible)
+{
+    if (_hudRoot != null)
+    {
+        _hudRoot.style.display = isVisible ? DisplayStyle.Flex : DisplayStyle.None;
+    }
+}
     private void EnsureOverlayPanels()
     {
         var core = CoreRuntime.Ensure();
