@@ -15,6 +15,7 @@ namespace Morsoul.Editor
     public static class InvestigationLevelsBuilder
     {
         const string SharedRootPath = "Assets/Prefabs/3DSharedRoot/SharedRoot.prefab";
+        const string Lpd = "Assets/[Import] LowPolyDungeonFree/Prefabs/";
         const string Mfp = "Assets/Mega Fantasy Props Pack/Prefabs/";
         const string Dfk = "Assets/RunemarkStudio/DarkFantasyKit [Free]/Prefabs/";
         const string Mtp = "Assets/MedievalTavernPack/Prefabs/";
@@ -52,67 +53,177 @@ namespace Morsoul.Editor
         {
             var scene = CreateBaseScene(
                 Case1ScenePath,
-                new Color(0.14f, 0.13f, 0.18f),
+                new Color(0.16f, 0.15f, 0.22f),
                 new Color(0.08f, 0.07f, 0.12f),
-                0.03f,
-                new Vector3(0f, 1.0f, 0f),
+                0.025f,
+                new Vector3(0f, 1.0f, -2.5f),
                 Vector3.zero);
 
             var env = new GameObject("Environment").transform;
             SceneManager.MoveGameObjectToScene(env.gameObject, scene);
 
-            // Subterranean stone vault chamber (20x18)
-            BuildBoxRoom(env, new Vector3(0f, 0f, 5f), new Vector3(20f, 6f, 18f),
-                new Color(0.18f, 0.17f, 0.21f), new Color(0.24f, 0.22f, 0.26f), true);
-            TileFloorProps(env, Dfk + "Floors/dfk_floor_01.prefab", -8f, 8f, -2f, 12f, 4f);
+            // Underground vault: disable default outdoor Directional Light so no sky sunlight leaks through
+            foreach (var l in Object.FindObjectsByType<Light>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (l.type == LightType.Directional) l.gameObject.SetActive(false);
+            }
+            RenderSettings.skybox = null;
 
-            // Vault dressing: potion shelves, barrels, crates, alchemy cauldron, work desk
-            PlaceProp(Mfp + "Storage/shelf.prefab", env, new Vector3(-7.5f, 0f, 8f), new Vector3(0f, 90f, 0f), Vector3.one);
-            PlaceProp(Mfp + "Storage/shelf.prefab", env, new Vector3(7.5f, 0f, 8f), new Vector3(0f, -90f, 0f), Vector3.one);
-            PlaceProp(Mfp + "Complex prefabs/Barrels.prefab", env, new Vector3(-6.5f, 0f, 1.5f), Vector3.zero, Vector3.one);
-            PlaceProp(Mfp + "Complex prefabs/Boxes.prefab", env, new Vector3(6.5f, 0f, 2f), new Vector3(0f, 25f, 0f), Vector3.one);
-            PlaceProp(Mfp + "Miscellaneous/cauldron.prefab", env, new Vector3(5.5f, 0f, 7f), Vector3.zero, Vector3.one);
-            PlaceProp(Mfp + "Columns/Stone/stone_column.prefab", env, new Vector3(-5f, 0f, 6f), Vector3.zero, Vector3.one);
-            PlaceProp(Mfp + "Columns/Stone/stone_column.prefab", env, new Vector3(5f, 0f, 6f), Vector3.zero, Vector3.one);
-            AddPointLight(env, new Vector3(0f, 4.2f, 5f), new Color(0.75f, 0.65f, 1f), 2.8f, 16f);
-            AddPointLight(env, new Vector3(4f, 1.6f, 4f), new Color(0.65f, 0.35f, 0.95f), 2.2f, 8f);
+            // Invisible collision bounds (20x20, height 4.5) so player never clips out
+            CreateWall("FloorCollider", new Vector3(0f, -0.25f, 4f), new Vector3(20f, 0.5f, 20f), null, env);
+            CreateWall("CeilingCollider", new Vector3(0f, 4.3f, 4f), new Vector3(20f, 0.5f, 20f), null, env);
+            BuildPerimeterColliders(env, new Vector3(0f, 0f, 4f), new Vector3(20f, 4.5f, 20f));
+
+            // 4m x 4m LowPolyDungeonFree stone floor tiles (-8..8 in X, -4..12 in Z)
+            for (int gx = -8; gx <= 8; gx += 4)
+            for (int gz = -4; gz <= 12; gz += 4)
+            {
+                string tile = Lpd + "02_Floors/SM_LPD_Floor_PavingFlagstone_01.prefab";
+                if (gx == 4 && gz == 4) tile = Lpd + "02_Floors/SM_LPD_Floor_PavingDrain_01.prefab";
+                else if (gx == 0 && gz == 8) tile = Lpd + "02_Floors/SM_LPD_Floor_PavingHatchLidded_01.prefab";
+                else if (gx == 4 && gz == 0) tile = Lpd + "02_Floors/SM_LPD_Floor_PavingChannelStraight_01.prefab";
+                else if ((gx + gz) % 8 == 0) tile = Lpd + "02_Floors/SM_LPD_Floor_PavingFlagstoneWorn_01.prefab";
+                PlaceProp(tile, env, new Vector3(gx, 0f, gz), Vector3.zero, Vector3.one);
+            }
+
+            // Flat stone roof at Y = 4.0
+            for (int gx = -8; gx <= 8; gx += 4)
+            for (int gz = -4; gz <= 12; gz += 4)
+                PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_CeilFlat_01.prefab", env, new Vector3(gx, 4.0f, gz), Vector3.zero, Vector3.one);
+
+            // Sealed 4m x 4m perimeter stone walls (x = +/-10, z = -6 / +14)
+            for (int gx = -8; gx <= 8; gx += 4)
+            {
+                string northWall = gx == 0 ? "01_Structure/SM_LPD_Struct_WallDoorway_01.prefab" : "01_Structure/SM_LPD_Struct_WallAshlar_01.prefab";
+                PlaceProp(Lpd + northWall, env, new Vector3(gx, 0f, 14f), new Vector3(0f, 180f, 0f), Vector3.one);
+                string southWall = gx == 0 ? "01_Structure/SM_LPD_Struct_WallDoorway_01.prefab" : "01_Structure/SM_LPD_Struct_WallCoursed_01.prefab";
+                PlaceProp(Lpd + southWall, env, new Vector3(gx, 0f, -6f), Vector3.zero, Vector3.one);
+            }
+            for (int gz = -4; gz <= 12; gz += 4)
+            {
+                string wWall = gz == 4 ? "01_Structure/SM_LPD_Struct_WallNiche_01.prefab" : "01_Structure/SM_LPD_Struct_WallAshlar_01.prefab";
+                PlaceProp(Lpd + wWall, env, new Vector3(-10f, 0f, gz), new Vector3(0f, 90f, 0f), Vector3.one);
+                PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_WallCoursed_01.prefab", env, new Vector3(10f, 0f, gz), new Vector3(0f, -90f, 0f), Vector3.one);
+            }
+            // Quoined corners
+            foreach (var cPos in new[] { new Vector3(-10f, 0f, -6f), new Vector3(10f, 0f, -6f), new Vector3(-10f, 0f, 14f), new Vector3(10f, 0f, 14f) })
+                PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_CornerPostQuoined_01.prefab", env, cPos, Vector3.zero, Vector3.one);
+
+            // Structural ornate pillars framing the vault bay
+            foreach (var colPos in new[] { new Vector3(-4f, 0f, 0f), new Vector3(4f, 0f, 0f), new Vector3(-4f, 0f, 8f), new Vector3(4f, 0f, 8f) })
+                PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_PillarOrnate_01.prefab", env, colPos, Vector3.zero, Vector3.one);
+
+            // South entry doorway + closed exit door + compact half-stair step
+            PlaceProp(Lpd + "03_Doors/SM_LPD_Door_DoorFrameStone_01.prefab", env, new Vector3(0f, 0f, -6f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "03_Doors/SM_LPD_Door_DoorPlank_01.prefab", env, new Vector3(0f, 0f, -6f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_StairHalfFlight_01.prefab", env, new Vector3(0f, 0f, -5.2f), Vector3.zero, new Vector3(0.8f, 0.5f, 0.6f));
+            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_SconceIronLit_01.prefab", env, new Vector3(-2.2f, 2.2f, -5.7f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_SconceIronLit_01.prefab", env, new Vector3(2.2f, 2.2f, -5.7f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_ChandelierRing_01.prefab", env, new Vector3(0f, 3.6f, 2.0f), Vector3.zero, Vector3.one);
+            AddPointLight(env, new Vector3(0f, 3.2f, 2.0f), new Color(1f, 0.78f, 0.52f), 3.2f, 16f);
+            AddPointLight(env, new Vector3(0f, 2.6f, -4.5f), new Color(1f, 0.68f, 0.38f), 2.5f, 10f);
+
+            // Dense merchant-alchemist storage vault dressing (keeping central aisle x=-2..2 clear)
+            var storage = new GameObject("VaultStorage").transform;
+            storage.SetParent(env, false);
+
+            // SW Pallet & Shipping Bay (x = -8.8..-5.8, z = -4.2..1.2)
+            PlaceProp(Lpd + "06_Furniture/SM_LPD_Furn_DunnagePallet_01.prefab", storage, new Vector3(-7.5f, 0f, -3.2f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_CrateLarge_01.prefab", storage, new Vector3(-8.0f, 0.16f, -3.5f), new Vector3(0f, 4f, 0f), Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_CrateBanded_01.prefab", storage, new Vector3(-6.8f, 0.16f, -3.2f), new Vector3(0f, -8f, 0f), Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_CrateMedium_01.prefab", storage, new Vector3(-7.9f, 1.15f, -3.4f), new Vector3(0f, 14f, 0f), Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_SackUpright_01.prefab", storage, new Vector3(-5.8f, 0f, -3.8f), new Vector3(0f, 20f, 0f), Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_SackSlumped_01.prefab", storage, new Vector3(-5.3f, 0f, -3.1f), new Vector3(0f, -30f, 0f), Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_HandcartLoaded_01.prefab", storage, new Vector3(-6.2f, 0f, -1.2f), new Vector3(0f, 38f, 0f), Vector3.one);
+            PlaceProp(Lpd + "06_Furniture/SM_LPD_Furn_CupboardClosed_01.prefab", storage, new Vector3(-9.2f, 0f, -0.5f), new Vector3(0f, 90f, 0f), Vector3.one);
+            PlaceProp(Lpd + "06_Furniture/SM_LPD_Furn_CupboardOpen_01.prefab", storage, new Vector3(-9.2f, 0f, 1.8f), new Vector3(0f, 90f, 0f), Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_CrateLarge_01.prefab", storage, new Vector3(-8.2f, 0f, 4.2f), new Vector3(0f, 12f, 0f), Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_CrateSmall_01.prefab", storage, new Vector3(-8.2f, 1.0f, 4.2f), new Vector3(0f, -15f, 0f), Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_PotClay_01.prefab", storage, new Vector3(-7.4f, 0f, 5.4f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_UrnUrn_01.prefab", storage, new Vector3(-8.4f, 0f, 5.8f), Vector3.zero, Vector3.one);
+
+            // SE Barrel & Cask Bay (x = 5.8..9.2, z = -4.2..2.5)
+            PlaceProp(Lpd + "06_Furniture/SM_LPD_Furn_DunnageStillage_01.prefab", storage, new Vector3(7.6f, 0f, -3.5f), new Vector3(0f, -90f, 0f), Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_BarrelRackSingle_01.prefab", storage, new Vector3(8.2f, 0f, -3.8f), new Vector3(0f, -90f, 0f), Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_BarrelRackSingle_01.prefab", storage, new Vector3(8.2f, 0f, -2.2f), new Vector3(0f, -90f, 0f), Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_BarrelUpright_01.prefab", storage, new Vector3(6.4f, 0f, -4.0f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_BarrelUpright_01.prefab", storage, new Vector3(6.4f, 0f, -2.9f), new Vector3(0f, 40f, 0f), Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_BarrelSide_01.prefab", storage, new Vector3(7.8f, 0f, -0.4f), new Vector3(0f, 15f, 0f), Vector3.one);
+            PlaceProp(Mfp + "Complex prefabs/Boxes.prefab", storage, new Vector3(8.0f, 0f, 1.4f), new Vector3(0f, -22f, 0f), Vector3.one);
+            PlaceProp(Mfp + "Storage/crate.001.prefab", storage, new Vector3(6.4f, 0f, 1.8f), new Vector3(0f, 35f, 0f), Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_BarrelCracked_01.prefab", storage, new Vector3(6.0f, 0f, 3.6f), new Vector3(0f, -45f, 0f), Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_CrateOpen_01.prefab", storage, new Vector3(5.8f, 0f, 5.2f), new Vector3(0f, 22f, 0f), Vector3.one);
+            PlaceProp(Mfp + "Miscellaneous/cauldron.prefab", storage, new Vector3(7.2f, 0f, 5.2f), new Vector3(12f, 0f, -18f), Vector3.one);
+
+            // NW & NE Racks, Shelving, Long Tables & Strongboxes (z = 7.5..12.8)
+            PlaceProp(Dfk + "Furnitures/dfk_shelf_01.prefab", storage, new Vector3(-9.0f, 0f, 7.8f), new Vector3(0f, 90f, 0f), Vector3.one);
+            PlaceProp(Mfp + "Storage/shelf.prefab", storage, new Vector3(-9.0f, 0f, 10.6f), new Vector3(0f, 90f, 0f), Vector3.one);
+            PlaceProp(Lpd + "06_Furniture/SM_LPD_Furn_ShelfPlank_01.prefab", storage, new Vector3(-6.8f, 0f, 13.0f), new Vector3(0f, 180f, 0f), Vector3.one);
+            PlaceProp(Lpd + "06_Furniture/SM_LPD_Furn_TableLong_01.prefab", storage, new Vector3(-6.4f, 0f, 10.2f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_CrateSmall_01.prefab", storage, new Vector3(-6.9f, 0.78f, 10.2f), new Vector3(0f, 10f, 0f), Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_PotClay_01.prefab", storage, new Vector3(-5.9f, 0.78f, 10.1f), Vector3.zero, Vector3.one);
+            PlaceProp(Dfk + "Containers/Chests/dfk_chest_02_closed.prefab", storage, new Vector3(-3.0f, 0f, 12.6f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_ChestFlat_01.prefab", storage, new Vector3(-4.6f, 0f, 12.6f), new Vector3(0f, 15f, 0f), Vector3.one);
+
+            PlaceProp(Dfk + "Furnitures/dfk_shelf_01.prefab", storage, new Vector3(9.0f, 0f, 7.8f), new Vector3(0f, -90f, 0f), Vector3.one);
+            PlaceProp(Mfp + "Storage/shelf.prefab", storage, new Vector3(9.0f, 0f, 10.6f), new Vector3(0f, -90f, 0f), Vector3.one);
+            PlaceProp(Lpd + "06_Furniture/SM_LPD_Furn_ShelfPlank_01.prefab", storage, new Vector3(6.8f, 0f, 13.0f), new Vector3(0f, 180f, 0f), Vector3.one);
+            PlaceProp(Lpd + "06_Furniture/SM_LPD_Furn_TableTrestle_01.prefab", storage, new Vector3(6.4f, 0f, 10.2f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_ChestSmall_01.prefab", storage, new Vector3(6.8f, 0.78f, 10.2f), new Vector3(0f, -18f, 0f), Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_SackOpen_01.prefab", storage, new Vector3(5.6f, 0f, 12.2f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_CrateBanded_01.prefab", storage, new Vector3(3.4f, 0f, 12.5f), new Vector3(0f, -10f, 0f), Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_CrateMedium_01.prefab", storage, new Vector3(3.4f, 0.9f, 12.5f), new Vector3(0f, 14f, 0f), Vector3.one);
 
             // Clues from Case_01_Vault.md
             var clues = new GameObject("Clues").transform;
             SceneManager.MoveGameObjectToScene(clues.gameObject, scene);
 
-            // C1_01: Pristine Vault Lock (0, 4) — heavy vault door
-            var lockVisual = PlaceProp(Dfk + "Doors and Gates/dfk_door_01.prefab", clues, new Vector3(0f, 0f, 4.2f), Vector3.zero, Vector3.one);
+            // C1_01: Pristine Vault Lock (0, 14) — Sealed into the North wall doorway
+            PlaceProp(Lpd + "03_Doors/SM_LPD_Door_DoorFrameStone_01.prefab", env, new Vector3(0f, 0f, 14f), new Vector3(0f, 180f, 0f), Vector3.one);
+            var lockVisual = PlaceProp(Lpd + "03_Doors/SM_LPD_Door_DoorStudded_01.prefab", clues, new Vector3(0f, 0f, 14f), new Vector3(0f, 180f, 0f), Vector3.one);
+            PlaceProp(Lpd + "03_Doors/SM_LPD_Door_DoorFittingPadlock_01.prefab", clues, new Vector3(-0.35f, 1.15f, 13.82f), new Vector3(0f, 180f, 0f), Vector3.one * 1.4f);
+            AddPointLight(env, new Vector3(0f, 2.8f, 12.6f), new Color(0.72f, 0.86f, 1f), 2.4f, 9f);
             CreateClueNode("C1_PristineVaultLock", "C1_01", ClueNode.Kind.Physical, ClueNode.Tool.None, ClueNode.State.Revealed,
                 "Heavy Dwarven multi-pin cylinder lock. Tumblers and pins are pristine with zero tool marks, shearing, or acid burns.",
-                new Vector3(0f, 1.2f, 4.0f), new Vector3(1.5f, 2.2f, 1.0f), clues, lockVisual);
+                new Vector3(0f, 1.2f, 13.7f), new Vector3(1.8f, 2.4f, 1.0f), clues, lockVisual);
 
-            // C2_01: Vaporized Solvent Residue (4, 4) — requires GolemEye
+            // C2_01: Vaporized Solvent Residue (4, 4) — drainage floor tile + purple puddle + ambient vapor
             var puddle = CreatePrimitiveMarker("SolventPuddle", PrimitiveType.Cylinder, new Vector3(4f, 0.04f, 4f),
-                new Vector3(1.6f, 0.04f, 1.6f), new Color(0.55f, 0.25f, 0.85f), clues, false);
+                new Vector3(1.5f, 0.02f, 1.5f), new Color(0.58f, 0.22f, 0.92f), clues, false);
+            AddAmbientMist(puddle.transform, new Color(0.65f, 0.28f, 0.98f, 0.45f));
+            AddPointLight(env, new Vector3(4f, 1.2f, 4f), new Color(0.68f, 0.28f, 1f), 2.6f, 7f);
             CreateClueNode("C2_SolventResidue", "C2_01", ClueNode.Kind.Physical, ClueNode.Tool.GolemEye, ClueNode.State.Hidden,
                 "Pungent, rapid-sublimating synthetic solvent pooling in the drainage gutter — harmless purple vapor, not dark magic.",
-                new Vector3(4f, 0.35f, 4f), new Vector3(1.6f, 1.0f, 1.6f), clues, puddle);
+                new Vector3(4f, 0.4f, 4f), new Vector3(1.8f, 1.1f, 1.8f), clues, puddle);
 
-            // C3_01: Altered Cargo Ledger (-4, 4) — Work Desk
-            PlaceProp(Dfk + "Furnitures/dfk_desk_02.prefab", clues, new Vector3(-4f, 0f, 4f), Vector3.zero, Vector3.one);
-            var scroll = PlaceProp(Mfp + "Miscellaneous/scrolls.prefab", clues, new Vector3(-4f, 0.85f, 4f), Vector3.zero, Vector3.one);
+            // C3_01: Altered Cargo Ledger (-4.5, 3.8) — Alchemist's Work Desk + candlelight
+            PlaceProp(Dfk + "Furnitures/dfk_desk_02.prefab", env, new Vector3(-4.5f, 0f, 3.8f), new Vector3(0f, 15f, 0f), Vector3.one);
+            PlaceProp(Mfp + "Chairs/chair.001.prefab", env, new Vector3(-4.5f, 0f, 2.7f), new Vector3(0f, 195f, 0f), Vector3.one);
+            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_CandleTriple_01.prefab", env, new Vector3(-5.0f, 0.85f, 4.0f), Vector3.zero, Vector3.one);
+            AddPointLight(env, new Vector3(-4.5f, 1.8f, 3.8f), new Color(1f, 0.72f, 0.36f), 2.4f, 8f);
+            var scroll = PlaceProp(Mfp + "Miscellaneous/scrolls.prefab", clues, new Vector3(-4.3f, 0.86f, 3.7f), new Vector3(0f, -20f, 0f), Vector3.one);
             CreateClueNode("C3_AlteredCargoLedger", "C3_01", ClueNode.Kind.Physical, ClueNode.Tool.None, ClueNode.State.Revealed,
                 "Shipment #408 ledger: 200 crates of Greater Restoration Draughts logged, yet zero Moon-Lily extract was ever purchased.",
-                new Vector3(-4f, 1.0f, 4f), new Vector3(1.4f, 1.0f, 1.2f), clues, scroll);
+                new Vector3(-4.4f, 1.0f, 3.7f), new Vector3(1.6f, 1.1f, 1.3f), clues, scroll);
 
-            // L1_01: Sub-floor potion rack alcove (0, 8) — requires AetherSight
-            PlaceProp(Mfp + "Storage/crate.prefab", clues, new Vector3(0f, 0f, 8.8f), Vector3.zero, Vector3.one);
+            // L1_01: Sub-floor potion rack alcove (0, 8) — lidded hatch tile, requires AetherSight post-Case 4
+            AddPointLight(env, new Vector3(0f, 1.2f, 8f), new Color(0.25f, 0.85f, 0.95f), 1.4f, 5.5f);
             CreateClueNode("L1_RunicLog1_Alcove", "L1_01", ClueNode.Kind.Physical, ClueNode.Tool.AetherSight, ClueNode.State.Hidden,
                 "Sub-floor alcove etching: pre-cataclysm equations for synthetic mana solvent volatility (Runic Log #1).",
-                new Vector3(0f, 0.8f, 8.2f), new Vector3(1.6f, 1.4f, 1.6f), clues);
+                new Vector3(0f, 0.4f, 8f), new Vector3(1.8f, 1.2f, 1.8f), clues);
 
             // Exit stairwell back to Lower Market
-            PlaceProp(Mfp + "Stairs/stone_stairs.prefab", env, new Vector3(0f, 0f, -3.2f), new Vector3(0f, 180f, 0f), Vector3.one);
             CreateExitPortal("Exit_VaultStairwell", 1, "Hub_LowerMarket",
                 "[L-Click] Ascend to Lower Market",
                 "Return up the vault stairwell to Asterveil's Lower Market.",
-                new Vector3(0f, 1.2f, -3.2f), new Vector3(2.2f, 2.4f, 1.6f), clues);
+                new Vector3(0f, 1.2f, -5.0f), new Vector3(2.4f, 2.4f, 1.8f), clues);
+
+            // Dynamic Active Goal controller for Case 1
+            var ctrlGo = new GameObject("Case1ObjectiveController");
+            SceneManager.MoveGameObjectToScene(ctrlGo, scene);
+            var objCtrl = ctrlGo.AddComponent<InvestigationObjectiveController>();
+            objCtrl.caseId = 1;
+            objCtrl.requiredClueIds = new[] { "C1_01", "C2_01", "C3_01" };
 
             SaveScene(scene, Case1ScenePath);
         }
@@ -575,6 +686,25 @@ namespace Morsoul.Editor
             light.color = color;
             light.intensity = intensity;
             light.range = range;
+        }
+
+        static void AddAmbientMist(Transform parent, Color color)
+        {
+            var go = new GameObject("AmbientMist");
+            go.transform.SetParent(parent, false);
+            go.transform.localPosition = new Vector3(0f, 0.2f, 0f);
+            var ps = go.AddComponent<ParticleSystem>();
+            var main = ps.main;
+            main.startLifetime = 2.2f;
+            main.startSpeed = 0.25f;
+            main.startSize = 0.35f;
+            main.startColor = color;
+            main.maxParticles = 40;
+            var emission = ps.emission;
+            emission.rateOverTime = 12f;
+            var shape = ps.shape;
+            shape.shapeType = ParticleSystemShapeType.Circle;
+            shape.radius = 0.7f;
         }
 
         static void RegisterBuildScenes(params string[] scenePaths)
