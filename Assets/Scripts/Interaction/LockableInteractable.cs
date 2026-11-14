@@ -8,6 +8,8 @@ public class LockableInteractable : MonoBehaviour
     public string requiredItemId = "C3_00"; 
     public string lockedDescription = "Sealed hydraulic blast door. Requires the Ancient Chamber Key and a solved Deduction Board [H].";
     public string unlockedDescription = "Manual override calibrated. Unlock the gate and collect the nearby traveler's robe before exiting.";
+    public string lockedPromptAction = "[Locked] Sealed Stone Gate";
+    public string unlockedPromptAction = "[L-Click] Unlock & Exit Ruins";
     public bool requireBoardSolved = false;
     public int boardCaseId = 0;
 
@@ -39,11 +41,13 @@ public class LockableInteractable : MonoBehaviour
 
     public string GetPromptAction()
     {
-        return IsLocked() ? "[Locked] Sealed Stone Gate" : "[L-Click] Unlock & Exit Ruins";
+        return IsLocked() ? lockedPromptAction : unlockedPromptAction;
     }
 
     public string GetPromptDescription()
     {
+        if (boardCaseId != 0)
+            return IsLocked() ? lockedDescription : unlockedDescription;
         if (!HasRequiredItem() && requireBoardSolved && !IsBoardReady())
             return "Failsafe lockdown active. Recover the Ancient Chamber Key and solve the Deduction Board [H].";
         if (!HasRequiredItem())

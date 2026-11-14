@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &5146706472909920955
+--- !u!1 &5744213269435095441
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,9 +8,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 8005999984472490752}
-  - component: {fileID: 6610075799198861092}
-  - component: {fileID: 6502981872316411851}
+  - component: {fileID: 3453441421648130585}
+  - component: {fileID: 8533427273417736873}
+  - component: {fileID: 7146914558339752618}
   m_Layer: 0
   m_Name: CeilGroinRibbed_HoleCenter
   m_TagString: Untagged
@@ -18,13 +18,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &8005999984472490752
+--- !u!4 &3453441421648130585
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5146706472909920955}
+  m_GameObject: {fileID: 5744213269435095441}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -33,21 +33,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &6610075799198861092
+--- !u!33 &8533427273417736873
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5146706472909920955}
+  m_GameObject: {fileID: 5744213269435095441}
   m_Mesh: {fileID: 4300000, guid: 79975f87dc2ae2d4890f59c1c35a5214, type: 2}
---- !u!23 &6502981872316411851
+--- !u!23 &7146914558339752618
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5146706472909920955}
+  m_GameObject: {fileID: 5744213269435095441}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
