@@ -1,4 +1,4 @@
-@import url("project://database/Assets/HUD.uss");
+@import url("project://database/Assets/Panels/3D/HUD.uss");
 
 .hub-hud-root {
     position: absolute;

@@ -79,6 +79,8 @@ namespace Morsoul.Board
         int _uiVersion;
 
         public bool IsOpen => _isOpen;
+        public VisualElement Root => _root;
+        public event Action<VisualElement> BoardLoaded;
         /// <summary>Last frame the panel closed; lets callers avoid same-frame ESC overlap.</summary>
         public int LastCloseFrame { get; private set; } = -1;
         /// <summary>The headless session (null until SetCase builds one). Exposed for GameFlow/tests.</summary>
@@ -778,6 +780,7 @@ namespace Morsoul.Board
             if (_root != null)
                 _root.style.display = _isOpen ? DisplayStyle.Flex : DisplayStyle.None;
             RefreshAll();
+            BoardLoaded?.Invoke(_root);
         }
     }
 }

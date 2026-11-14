@@ -12,6 +12,10 @@ using UnityEngine.UIElements;
 public class HUDManager : MonoBehaviour
 {
     public static HUDManager Instance { get; private set; }
+    public VisualElement HudRoot => _hudRoot;
+    public event Action<VisualElement> HudLoaded;
+    public bool IsJournalOpen => _journalController != null && _journalController.IsOpen;
+    public bool IsBoardOpen => (_weightedBoard != null && _weightedBoard.IsOpen) || (_legacyBoard != null && _legacyBoard.IsOpen);
     private PanelRenderer panelRenderer; 
 
     private VisualElement _golemEyeRow;
@@ -135,6 +139,7 @@ public class HUDManager : MonoBehaviour
         ApplyFocusToUI();
         ApplyObjectiveToUI();
         SyncSessionState();
+        HudLoaded?.Invoke(_hudRoot);
     }
 
     private void SyncSessionState()

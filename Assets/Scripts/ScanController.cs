@@ -3,17 +3,48 @@ using UnityEngine.InputSystem;
 
 public class ScanController : MonoBehaviour
 {
-    public float maxFocus = 120f;
-    public float currentFocus = 120f; 
+    public float maxFocus = 100f;
+    public float currentFocus = 100f; 
     public float focusDrainPerSecond = 15f;
 
     [Header("Scan Effect")]
     public float scanTransitionSpeed = 2f; 
     private float _currentScanProgress = 0f;
     private bool _isScanning = false;
+    private float _forcedScanTimer = 0f;
+
+    public bool IsScanning => _isScanning;
+
+    public void TriggerAccidentalScan(float duration = 1.6f)
+    {
+        _forcedScanTimer = Mathf.Max(_forcedScanTimer, duration);
+    }
+
+    public void RefillFocusToMax()
+    {
+        var core = Morsoul.Core.CoreRuntime.Instance;
+        if (core != null)
+        {
+            maxFocus = core.Focus.Maximum;
+            currentFocus = maxFocus;
+            core.Focus.Sync(currentFocus, maxFocus);
+        }
+        else
+        {
+            currentFocus = maxFocus;
+        }
+        if (HUDManager.Instance != null)
+            HUDManager.Instance.UpdateFocus(Mathf.RoundToInt(currentFocus), Mathf.RoundToInt(maxFocus));
+    }
 
     private void Start()
     {
+        var core = Morsoul.Core.CoreRuntime.Instance;
+        if (core != null)
+        {
+            maxFocus = core.Focus.Maximum;
+            currentFocus = core.Focus.Percent;
+        }
         if (HUDManager.Instance != null)
         {
             HUDManager.Instance.UpdateFocus(Mathf.RoundToInt(currentFocus), Mathf.RoundToInt(maxFocus));
@@ -27,15 +58,23 @@ public class ScanController : MonoBehaviour
             Morsoul.Dev.DevMenuOverlay.IsOpen)
             return;
 
-        // 1. Check for Hold Input
-        bool wantsToScan = Keyboard.current != null && Keyboard.current.tabKey.isPressed;
+        if (_forcedScanTimer > 0f)
+            _forcedScanTimer = Mathf.Max(0f, _forcedScanTimer - Time.deltaTime);
+
+        // 1. Check for Hold Input or Accidental Tutorial Pulse
+        bool manualScan = Keyboard.current != null && Keyboard.current.tabKey.isPressed;
+        bool forcedScan = _forcedScanTimer > 0f;
 
         // 2. Check for Focus
-        if (wantsToScan && currentFocus > 0)
+        if ((manualScan && currentFocus > 0f) || forcedScan)
         {
             _isScanning = true;
-            currentFocus -= focusDrainPerSecond * Time.deltaTime;
-            HUDManager.Instance.UpdateFocus(Mathf.RoundToInt(currentFocus), Mathf.RoundToInt(maxFocus));
+            if (manualScan && !forcedScan)
+            {
+                currentFocus = Mathf.Max(0f, currentFocus - focusDrainPerSecond * Time.deltaTime);
+                Morsoul.Core.CoreRuntime.Instance?.Focus.Sync(currentFocus, maxFocus);
+                HUDManager.Instance?.UpdateFocus(Mathf.RoundToInt(currentFocus), Mathf.RoundToInt(maxFocus));
+            }
         }
         else
         {
@@ -71,6 +110,9 @@ public class ScanController : MonoBehaviour
 
                 if (isOnScreen && clue.state != ClueNode.State.Collected)
                 {
+                    if (clue.state == ClueNode.State.Hidden)
+                        clue.state = ClueNode.State.Revealed;
+
                     // Turn on particles
                     if (clue.scanParticles != null && !clue.scanParticles.isPlaying) 
                         clue.scanParticles.Play();

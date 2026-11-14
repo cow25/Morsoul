@@ -69,7 +69,7 @@ public class InspectManager : MonoBehaviour
         if (_isInspecting) return;
         _isInspecting = true;
 
-        _inspectDescription.text = clue.defaultDescription;
+        _inspectDescription.text = $"{clue.defaultDescription}\n\n[Drag] Rotate   |   [Scroll] Zoom   |   [ESC] Close";
         _inspectRoot.style.display = DisplayStyle.Flex;
 
         Time.timeScale = 0f; 

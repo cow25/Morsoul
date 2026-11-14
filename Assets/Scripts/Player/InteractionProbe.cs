@@ -33,11 +33,25 @@ public class InteractionProbe : MonoBehaviour
         {
             if (hit.collider.TryGetComponent(out ClueNode clue))
             {
-                HUDManager.Instance.ShowInteractionPrompt("[L-Click] Inspect Clue", clue.defaultDescription);
-                
-                if (Mouse.current.leftButton.wasPressedThisFrame)
+                bool needsScan = clue.requiredTool == ClueNode.Tool.GolemEye && clue.state == ClueNode.State.Hidden;
+                if (needsScan)
                 {
-                    InspectManager.Instance.OpenInspect(clue);
+                    HUDManager.Instance.ShowInteractionPrompt("[Hold Tab / L-Click] Scan with Golem Eye", "Unreadable modern script. Scan with Golem Eye [Tab] to decipher.");
+                    if (Mouse.current.leftButton.wasPressedThisFrame)
+                    {
+                        var scanner = FindAnyObjectByType<ScanController>();
+                        if (scanner != null) scanner.TriggerAccidentalScan(1.8f);
+                        clue.state = ClueNode.State.Revealed;
+                        InspectManager.Instance.OpenInspect(clue);
+                    }
+                }
+                else
+                {
+                    HUDManager.Instance.ShowInteractionPrompt("[L-Click] Inspect Clue", clue.defaultDescription);
+                    if (Mouse.current.leftButton.wasPressedThisFrame)
+                    {
+                        InspectManager.Instance.OpenInspect(clue);
+                    }
                 }
             }
             else if (hit.collider.TryGetComponent(out DialogueTrigger dialogue))
@@ -46,7 +60,7 @@ public class InteractionProbe : MonoBehaviour
             }
             else if (hit.collider.TryGetComponent(out LockableInteractable interactable))
             {
-                HUDManager.Instance.ShowInteractionPrompt("[L-Click] Interact", interactable.lockedDescription);
+                HUDManager.Instance.ShowInteractionPrompt(interactable.GetPromptAction(), interactable.GetPromptDescription());
                 if (Mouse.current.leftButton.wasPressedThisFrame)
                 {
                     interactable.Interact();
