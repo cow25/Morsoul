@@ -233,52 +233,119 @@ namespace Morsoul.Editor
         {
             var scene = CreateBaseScene(
                 Case2ScenePath,
-                new Color(0.16f, 0.18f, 0.24f),
-                new Color(0.10f, 0.11f, 0.18f),
+                new Color(0.16f, 0.18f, 0.26f),
+                new Color(0.09f, 0.10f, 0.17f),
                 0.02f,
-                new Vector3(0f, 1.0f, 0f),
+                new Vector3(0f, 1.0f, -1.5f),
                 Vector3.zero);
 
             var env = new GameObject("Environment").transform;
             SceneManager.MoveGameObjectToScene(env.gameObject, scene);
 
-            // Lower Belfry landing + Upper Belfry platform (vertical POI)
-            BuildBoxRoom(env, new Vector3(0f, 0f, 6f), new Vector3(18f, 12f, 18f),
-                new Color(0.22f, 0.21f, 0.26f), new Color(0.27f, 0.26f, 0.32f), false);
-            PlaceProp(Mfp + "Castle walls/Tower/tower_floor.prefab", env, new Vector3(0f, 0f, 6f), Vector3.zero, new Vector3(1.4f, 1f, 1.4f));
+            // Cool twilight directional moonlight angling through lancet windows
+            foreach (var l in Object.FindObjectsByType<Light>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (l.type == LightType.Directional)
+                {
+                    l.color = new Color(0.55f, 0.68f, 0.95f);
+                    l.intensity = 0.7f;
+                }
+            }
 
-            // Upper Rafters / Bell platform at Y = 4.2
-            EnsureSolidBox("UpperBelfryPlatform", new Vector3(0f, 4.0f, 8f), new Vector3(14f, 0.4f, 10f), new Color(0.32f, 0.24f, 0.18f), env);
-            PlaceProp(Mfp + "Columns/wood_column.001.prefab", env, new Vector3(-5f, 0f, 4f), Vector3.zero, new Vector3(1f, 1.5f, 1f));
-            PlaceProp(Mfp + "Columns/wood_column.001.prefab", env, new Vector3(5f, 0f, 4f), Vector3.zero, new Vector3(1f, 1.5f, 1f));
+            // Invisible collision bounds (20x16, height 8.5)
+            CreateWall("FloorCollider", new Vector3(0f, -0.25f, 4f), new Vector3(20f, 0.5f, 16f), null, env);
+            CreateWall("CeilingCollider", new Vector3(0f, 8.3f, 4f), new Vector3(20f, 0.5f, 16f), null, env);
+            BuildPerimeterColliders(env, new Vector3(0f, 0f, 4f), new Vector3(20f, 8.5f, 16f));
 
-            // Collapsed spiral stairway + Maintenance Ladder bypass
-            PlaceProp(Mfp + "Castle walls/Tower/Stairs/tower_stair_stone.prefab", env, new Vector3(-2.5f, 0f, 4.5f), Vector3.zero, Vector3.one);
+            // 4m x 4m Lower Floor (-8..8 in X, -2..10 in Z -> 5x4 grid centered on x=0)
+            for (int gx = -8; gx <= 8; gx += 4)
+            for (int gz = -2; gz <= 10; gz += 4)
+            {
+                string tile = (gx + gz) % 8 == 0
+                    ? Lpd + "02_Floors/SM_LPD_Floor_PavingFlagstoneWorn_01.prefab"
+                    : Lpd + "02_Floors/SM_LPD_Floor_PavingFlagstone_01.prefab";
+                PlaceProp(tile, env, new Vector3(gx, 0f, gz), Vector3.zero, Vector3.one);
+                PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_CeilFlat_01.prefab", env, new Vector3(gx, 8.0f, gz), Vector3.zero, Vector3.one);
+            }
+
+            // Two-story 4m x 4m stone tower walls (x = +/-10, z = -4 / +12)
+            for (int gx = -8; gx <= 8; gx += 4)
+            {
+                PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_WallAshlar_01.prefab", env, new Vector3(gx, 0f, 12f), new Vector3(0f, 180f, 0f), Vector3.one);
+                PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_WallWindowLancet_01.prefab", env, new Vector3(gx, 4f, 12f), new Vector3(0f, 180f, 0f), Vector3.one);
+
+                string southLower = gx == 0 ? "01_Structure/SM_LPD_Struct_WallDoorway_01.prefab" : "01_Structure/SM_LPD_Struct_WallCoursed_01.prefab";
+                PlaceProp(Lpd + southLower, env, new Vector3(gx, 0f, -4f), Vector3.zero, Vector3.one);
+                PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_WallWindowTwin_01.prefab", env, new Vector3(gx, 4f, -4f), Vector3.zero, Vector3.one);
+            }
+            for (int gz = -2; gz <= 10; gz += 4)
+            {
+                PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_WallCoursed_01.prefab", env, new Vector3(-10f, 0f, gz), new Vector3(0f, 90f, 0f), Vector3.one);
+                PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_WallWindowLancet_01.prefab", env, new Vector3(-10f, 4f, gz), new Vector3(0f, 90f, 0f), Vector3.one);
+                PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_WallCoursed_01.prefab", env, new Vector3(10f, 0f, gz), new Vector3(0f, -90f, 0f), Vector3.one);
+                PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_WallWindowLancet_01.prefab", env, new Vector3(10f, 4f, gz), new Vector3(0f, -90f, 0f), Vector3.one);
+            }
+            foreach (var cPos in new[] { new Vector3(-10f, 0f, -4f), new Vector3(10f, 0f, -4f), new Vector3(-10f, 0f, 12f), new Vector3(10f, 0f, 12f) })
+            {
+                PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_CornerPostQuoined_01.prefab", env, cPos, Vector3.zero, Vector3.one);
+                PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_CornerPostQuoined_01.prefab", env, cPos + Vector3.up * 4f, Vector3.zero, Vector3.one);
+            }
+
+            // South Cathedral Exit Doorway (centered cleanly at x=0, z=-4)
+            PlaceProp(Lpd + "03_Doors/SM_LPD_Door_DoorFrameStone_01.prefab", env, new Vector3(0f, 0f, -4f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "03_Doors/SM_LPD_Door_DoorPlank_01.prefab", env, new Vector3(0f, 0f, -4f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_StairHalfFlight_01.prefab", env, new Vector3(0f, 0f, -3.3f), Vector3.zero, new Vector3(0.8f, 0.45f, 0.55f));
+            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_SconceIronLit_01.prefab", env, new Vector3(-2.2f, 2.2f, -3.7f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_SconceIronLit_01.prefab", env, new Vector3(2.2f, 2.2f, -3.7f), Vector3.zero, Vector3.one);
+
+            // Upper Belfry Bell & Rafters Platform (Y = 4.4, x = -8..8, z = 2..12)
+            CreateWall("UpperPlatformCollider", new Vector3(0f, 4.2f, 7f), new Vector3(18f, 0.4f, 10f), null, env);
+            for (int gx = -8; gx <= 8; gx += 4)
+            for (int gz = 4; gz <= 10; gz += 4)
+                PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_CeilTimberBoarded_01.prefab", env, new Vector3(gx, 4.4f, gz), Vector3.zero, Vector3.one);
+
+            // Heavy timber support columns & balcony railing (open gap at x = 3.5..6.5 for ladder arrival)
+            foreach (var col in new[] { new Vector3(-7.0f, 0f, 2.4f), new Vector3(7.0f, 0f, 2.4f), new Vector3(-7.0f, 0f, 9.5f), new Vector3(7.0f, 0f, 9.5f) })
+                PlaceProp(Mfp + "Columns/wood_column.001.prefab", env, col, Vector3.zero, new Vector3(1.1f, 1.55f, 1.1f));
+            foreach (float fx in new[] { -6.5f, -4.0f, -1.5f, 1.0f })
+                PlaceProp(Mfp + "Fences/Small/fence.001.prefab", env, new Vector3(fx, 4.4f, 2.2f), Vector3.zero, Vector3.one);
+
+            // Collapsed stone stairway (stops below the upper deck) + Rubble heap
+            PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_StairHalfFlight_01.prefab", env, new Vector3(-6.8f, 0f, 0.2f), new Vector3(0f, 90f, -8f), Vector3.one);
+            PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_RubbleHeapMound_01.prefab", env, new Vector3(-5.2f, 0f, 1.0f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_RubbleHeapAgainst_01.prefab", env, new Vector3(-7.2f, 0f, 1.4f), new Vector3(0f, 90f, 0f), Vector3.one);
+
+            // Maintenance Ladder bypass (aligned with the open railing gap at x = 4.5, z = 2.0)
             var upperLanding = new GameObject("UpperBelfryLanding").transform;
             upperLanding.SetParent(env, false);
-            upperLanding.position = new Vector3(3.5f, 5.2f, 4.5f);
+            upperLanding.position = new Vector3(4.5f, 5.4f, 3.4f);
 
-            var ladderGo = CreatePrimitiveMarker("MaintenanceLadder", PrimitiveType.Cube, new Vector3(3.5f, 2.0f, 3.3f),
-                new Vector3(0.8f, 4.0f, 0.35f), new Color(0.45f, 0.32f, 0.2f), env, true);
-            ladderGo.layer = InteractableLayer;
-            var tp = ladderGo.AddComponent<PlayerTeleportPoint>();
+            PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_LadderTimber_01.prefab", env, new Vector3(4.5f, 0f, 1.85f), Vector3.zero, new Vector3(1.1f, 1.38f, 1.1f));
+            var ladderTrigger = new GameObject("MaintenanceLadder");
+            ladderTrigger.layer = InteractableLayer;
+            ladderTrigger.transform.SetParent(env, false);
+            ladderTrigger.transform.position = new Vector3(4.5f, 1.8f, 1.8f);
+            ladderTrigger.AddComponent<BoxCollider>().size = new Vector3(1.4f, 3.6f, 0.9f);
+            var tp = ladderTrigger.AddComponent<PlayerTeleportPoint>();
             tp.destination = upperLanding;
-            var ladderLock = ladderGo.AddComponent<LockableInteractable>();
+            var ladderLock = ladderTrigger.AddComponent<LockableInteractable>();
             ladderLock.requiredItemId = "";
             ladderLock.lockedPromptAction = "[L-Click] Climb Maintenance Ladder";
             ladderLock.unlockedPromptAction = "[L-Click] Climb Maintenance Ladder";
-            ladderLock.unlockedDescription = "Bypass the collapsed spiral stair via the maintenance ladder.";
+            ladderLock.unlockedDescription = "Bypass the collapsed stairway via the maintenance ladder.";
             ladderLock.boardCaseId = 2;
             ladderLock.onInteractSuccess ??= new UnityEngine.Events.UnityEvent();
             UnityEventTools.AddPersistentListener(ladderLock.onInteractSuccess, tp.TeleportPlayer);
 
-            // Return ladder from upper platform
+            // Return ladder at top of the opening
             var lowerLanding = new GameObject("LowerBelfryLanding").transform;
             lowerLanding.SetParent(env, false);
-            lowerLanding.position = new Vector3(3.5f, 1.0f, 2.0f);
-            var downLadder = CreatePrimitiveMarker("UpperReturnLadder", PrimitiveType.Cube, new Vector3(5.5f, 4.8f, 4.5f),
-                new Vector3(0.7f, 1.4f, 0.5f), new Color(0.45f, 0.32f, 0.2f), env, true);
+            lowerLanding.position = new Vector3(4.5f, 1.0f, 0.2f);
+            var downLadder = new GameObject("UpperReturnLadder");
             downLadder.layer = InteractableLayer;
+            downLadder.transform.SetParent(env, false);
+            downLadder.transform.position = new Vector3(4.5f, 4.9f, 2.0f);
+            downLadder.AddComponent<BoxCollider>().size = new Vector3(1.4f, 1.5f, 0.9f);
             var tpDown = downLadder.AddComponent<PlayerTeleportPoint>();
             tpDown.destination = lowerLanding;
             var downLock = downLadder.AddComponent<LockableInteractable>();
@@ -289,40 +356,124 @@ namespace Morsoul.Editor
             downLock.onInteractSuccess ??= new UnityEngine.Events.UnityEvent();
             UnityEventTools.AddPersistentListener(downLock.onInteractSuccess, tpDown.TeleportPlayer);
 
-            AddPointLight(env, new Vector3(0f, 9f, 7f), new Color(0.75f, 0.85f, 1f), 3.0f, 20f);
+            // Lower & Upper Cathedral Belfry Decor
+            var decor = new GameObject("BelfryDecor").transform;
+            decor.SetParent(env, false);
+
+            // Central runner carpet & wall banners
+            PlaceProp(Dfk + "Decoration/Textiles/dfk_carpet_black_small.prefab", decor, new Vector3(0f, 0.02f, 0.5f), Vector3.zero, new Vector3(1.2f, 1f, 2.2f));
+            PlaceProp(Dfk + "Decoration/Flags/dfk_flag_02_a.prefab", decor, new Vector3(-9.7f, 2.4f, 0f), new Vector3(0f, 90f, 0f), Vector3.one);
+            PlaceProp(Dfk + "Decoration/Flags/dfk_flag_02_a.prefab", decor, new Vector3(-9.7f, 2.4f, 8f), new Vector3(0f, 90f, 0f), Vector3.one);
+            PlaceProp(Dfk + "Decoration/Flags/dfk_flag_02_a.prefab", decor, new Vector3(9.7f, 2.4f, 0f), new Vector3(0f, -90f, 0f), Vector3.one);
+            PlaceProp(Dfk + "Decoration/Flags/dfk_flag_02_a.prefab", decor, new Vector3(9.7f, 2.4f, 8f), new Vector3(0f, -90f, 0f), Vector3.one);
+
+            // Lower floor: pews, bell-ringer's desk, braziers, cupboards, crates, rope coils & debris
+            PlaceProp(Lpd + "06_Furniture/SM_LPD_Furn_BenchBacked_01.prefab", decor, new Vector3(3.4f, 0f, -1.6f), new Vector3(0f, -90f, 0f), Vector3.one);
+            PlaceProp(Lpd + "06_Furniture/SM_LPD_Furn_BenchBacked_01.prefab", decor, new Vector3(3.4f, 0f, 0.2f), new Vector3(0f, -90f, 0f), Vector3.one);
+            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_BrazierTripodLit_01.prefab", decor, new Vector3(-2.6f, 0f, -1.8f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_BrazierTripodLit_01.prefab", decor, new Vector3(2.6f, 0f, -1.8f), Vector3.zero, Vector3.one);
+
+            // SE corner: Accord's bell-ringer desk & supply cupboards
+            PlaceProp(Dfk + "Furnitures/dfk_desk_02.prefab", decor, new Vector3(7.4f, 0f, -1.5f), new Vector3(0f, -90f, 0f), Vector3.one);
+            PlaceProp(Lpd + "06_Furniture/SM_LPD_Furn_ChairPlain_01.prefab", decor, new Vector3(6.3f, 0f, -1.5f), new Vector3(0f, 90f, 0f), Vector3.one);
+            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_OilLampBrass_01.prefab", decor, new Vector3(7.4f, 0.85f, -1.2f), Vector3.zero, Vector3.one);
+            PlaceProp(Mfp + "Miscellaneous/scrolls.prefab", decor, new Vector3(7.3f, 0.85f, -1.9f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "06_Furniture/SM_LPD_Furn_CupboardClosed_01.prefab", decor, new Vector3(9.0f, 0f, 2.2f), new Vector3(0f, -90f, 0f), Vector3.one);
+            PlaceProp(Lpd + "06_Furniture/SM_LPD_Furn_ShelfPlank_01.prefab", decor, new Vector3(9.0f, 0f, 4.6f), new Vector3(0f, -90f, 0f), Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_CrateBanded_01.prefab", decor, new Vector3(7.8f, 0f, 6.2f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_CrateMedium_01.prefab", decor, new Vector3(7.8f, 0.9f, 6.2f), new Vector3(0f, 18f, 0f), Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_BarrelUpright_01.prefab", decor, new Vector3(8.2f, 0f, 7.8f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_BarrelUpright_01.prefab", decor, new Vector3(8.2f, 0f, 9.0f), new Vector3(0f, 30f, 0f), Vector3.one);
+            PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_RopeDescentCoil_01.prefab", decor, new Vector3(6.2f, 0f, 2.8f), Vector3.zero, Vector3.one);
+
+            // Lower North & West: collapsed stair rubble, chests, urns, lanterns
+            PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_DebrisScatter_01.prefab", decor, new Vector3(-5.0f, 0.02f, 2.6f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_LanternFloor_01.prefab", decor, new Vector3(-3.3f, 0f, 5.4f), Vector3.zero, Vector3.one);
+            PlaceProp(Dfk + "Containers/Chests/dfk_chest_02_closed.prefab", decor, new Vector3(-8.4f, 0f, 9.5f), new Vector3(0f, 90f, 0f), Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_UrnUrn_01.prefab", decor, new Vector3(-2.5f, 0f, 10.6f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_UrnUrn_01.prefab", decor, new Vector3(2.5f, 0f, 10.6f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_PotClay_01.prefab", decor, new Vector3(0f, 0f, 10.8f), Vector3.zero, Vector3.one);
+
+            // Upper Bell & Rafters Platform (y = 4.4): scaffolding, maintenance bench, cressets, rope coils, rafters
+            PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_ShoringProps_01.prefab", decor, new Vector3(-5.8f, 4.4f, 8.2f), new Vector3(0f, 35f, 0f), Vector3.one);
+            PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_ShoringProps_01.prefab", decor, new Vector3(6.4f, 4.4f, 8.6f), new Vector3(0f, -35f, 0f), Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_CrateMedium_01.prefab", decor, new Vector3(-4.4f, 4.4f, 8.8f), new Vector3(0f, 12f, 0f), Vector3.one);
+            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_CandleTriple_01.prefab", decor, new Vector3(-4.6f, 5.2f, 8.5f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "06_Furniture/SM_LPD_Furn_TableTrestle_01.prefab", decor, new Vector3(5.6f, 4.4f, 6.5f), new Vector3(0f, -90f, 0f), Vector3.one);
+            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_LanternHooded_01.prefab", decor, new Vector3(5.5f, 5.18f, 6.0f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_BucketIron_01.prefab", decor, new Vector3(5.7f, 5.18f, 7.0f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_CrateLarge_01.prefab", decor, new Vector3(-7.4f, 4.4f, 4.2f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_SackUpright_01.prefab", decor, new Vector3(-7.0f, 4.4f, 5.5f), new Vector3(0f, 25f, 0f), Vector3.one);
+            PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_RopeDescentCoil_01.prefab", decor, new Vector3(-2.6f, 4.4f, 6.2f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_CressetLit_01.prefab", decor, new Vector3(-2.6f, 4.4f, 4.8f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_CressetLit_01.prefab", decor, new Vector3(2.6f, 4.4f, 4.8f), Vector3.zero, Vector3.one);
+
+            AddPointLight(env, new Vector3(0f, 3.2f, 2.0f), new Color(0.75f, 0.84f, 1f), 2.8f, 14f);
+            AddPointLight(env, new Vector3(0f, 7.2f, 6.5f), new Color(0.85f, 0.78f, 1f), 3.0f, 15f);
 
             var clues = new GameObject("Clues").transform;
             SceneManager.MoveGameObjectToScene(clues.gameObject, scene);
 
             // C1_02: Fractured Resonance Crystal (lower floor)
-            var crystal = PlaceProp(Dfk + "Lightsources/dfk_crystal_01_blue.prefab", clues, new Vector3(-4f, 0.2f, 7f), Vector3.zero, new Vector3(1.3f, 1.3f, 1.3f));
+            PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_PillarBroken_01.prefab", env, new Vector3(-4.5f, 0f, 6.5f), Vector3.zero, new Vector3(0.7f, 0.45f, 0.7f));
+            var crystal = PlaceProp(Dfk + "Lightsources/dfk_crystal_01_blue.prefab", clues, new Vector3(-4.5f, 0.85f, 6.5f), new Vector3(12f, 20f, -10f), new Vector3(1.3f, 1.3f, 1.3f));
+            AddPointLight(env, new Vector3(-4.5f, 1.6f, 6.5f), new Color(0.35f, 0.78f, 1f), 2.2f, 7f);
             CreateClueNode("C1_FracturedCrystal", "C1_02", ClueNode.Kind.Physical, ClueNode.Tool.None, ClueNode.State.Revealed,
                 "Shattered acoustic focus crystal beneath the Great Bell. Radial shear fractures prove internal harmonic overload.",
-                new Vector3(-4f, 0.8f, 7f), new Vector3(1.4f, 1.4f, 1.4f), clues, crystal);
+                new Vector3(-4.5f, 1.1f, 6.5f), new Vector3(1.5f, 1.6f, 1.5f), clues, crystal);
 
-            // C2_02: Dark Mana Dust on Clapper (upper platform Great Bell) — requires GolemEye
-            var bell = CreatePrimitiveMarker("GreatBell", PrimitiveType.Cylinder, new Vector3(0f, 6.2f, 8.5f),
-                new Vector3(2.2f, 1.4f, 2.2f), new Color(0.62f, 0.48f, 0.22f), clues, false);
+            // C2_02: Dark Mana Dust on Clapper (upper platform Great Bell in timber belfry frame) — requires GolemEye
+            var bellFrame = new GameObject("GreatBellHousing").transform;
+            bellFrame.SetParent(env, false);
+            PlaceProp(Mfp + "Columns/wood_column.001.prefab", bellFrame, new Vector3(-1.8f, 4.4f, 6.8f), Vector3.zero, new Vector3(1f, 1.25f, 1f));
+            PlaceProp(Mfp + "Columns/wood_column.001.prefab", bellFrame, new Vector3(1.8f, 4.4f, 6.8f), Vector3.zero, new Vector3(1f, 1.25f, 1f));
+            CreatePrimitiveMarker("BellCrossbeam", PrimitiveType.Cube, new Vector3(0f, 7.65f, 6.8f),
+                new Vector3(4.2f, 0.3f, 0.35f), new Color(0.28f, 0.19f, 0.12f), bellFrame, false);
+
+            var bellRoot = new GameObject("GreatBell").transform;
+            bellRoot.SetParent(clues, false);
+            bellRoot.position = new Vector3(0f, 6.2f, 6.8f);
+            CreatePrimitiveMarker("BellCrown", PrimitiveType.Sphere, new Vector3(0f, 7.05f, 6.8f),
+                new Vector3(1.35f, 0.9f, 1.35f), new Color(0.64f, 0.49f, 0.22f), bellRoot, false);
+            CreatePrimitiveMarker("BellBody", PrimitiveType.Cylinder, new Vector3(0f, 6.45f, 6.8f),
+                new Vector3(1.45f, 0.55f, 1.45f), new Color(0.60f, 0.46f, 0.20f), bellRoot, false);
+            CreatePrimitiveMarker("BellRim", PrimitiveType.Cylinder, new Vector3(0f, 5.95f, 6.8f),
+                new Vector3(1.85f, 0.18f, 1.85f), new Color(0.68f, 0.53f, 0.24f), bellRoot, false);
+            var clapper = CreatePrimitiveMarker("BellClapper", PrimitiveType.Sphere, new Vector3(0f, 5.55f, 6.8f),
+                new Vector3(0.42f, 0.42f, 0.42f), new Color(0.22f, 0.14f, 0.32f), bellRoot, false);
+            AddAmbientMist(clapper.transform, new Color(0.48f, 0.20f, 0.75f, 0.45f));
+            AddPointLight(env, new Vector3(0f, 5.6f, 6.8f), new Color(0.58f, 0.28f, 0.92f), 2.2f, 6f);
             CreateClueNode("C2_BellClapperDust", "C2_02", ClueNode.Kind.Physical, ClueNode.Tool.GolemEye, ClueNode.State.Hidden,
                 "Black metallic soot on the bell clapper's strike face. Spectral scan reads an unnatural acoustic muting field.",
-                new Vector3(0f, 5.2f, 8.5f), new Vector3(2.0f, 2.0f, 2.0f), clues, bell);
+                new Vector3(0f, 5.8f, 6.8f), new Vector3(2.0f, 2.0f, 2.0f), clues, bellRoot.gameObject);
 
-            // C3_02: Blackmailer's Coercion Note (upper rafters)
-            var note = PlaceProp(Mfp + "Miscellaneous/scroll.prefab", clues, new Vector3(-3.5f, 4.4f, 10f), Vector3.zero, new Vector3(1.5f, 1.5f, 1.5f));
+            // C3_02: Blackmailer's Coercion Note (on crate behind timber shoring)
+            var note = PlaceProp(Mfp + "Miscellaneous/scroll.prefab", clues, new Vector3(-4.2f, 5.22f, 8.9f), new Vector3(0f, 25f, 0f), new Vector3(1.4f, 1.4f, 1.4f));
             CreateClueNode("C3_CoercionNote", "C3_02", ClueNode.Kind.Physical, ClueNode.Tool.None, ClueNode.State.Revealed,
                 "Crumpled letter addressed to Accord, sealed with the Veiled Circle's veil sigil. Threatens his sister Marian's asylum.",
-                new Vector3(-3.5f, 4.6f, 10f), new Vector3(1.3f, 1.2f, 1.3f), clues, note);
+                new Vector3(-4.2f, 5.35f, 8.9f), new Vector3(1.4f, 1.2f, 1.4f), clues, note);
 
             // L2_02: Rear foundation beam (upper rear) — requires AetherSight
+            AddPointLight(env, new Vector3(0f, 5.2f, 11.2f), new Color(0.25f, 0.85f, 0.95f), 1.4f, 5f);
             CreateClueNode("L2_RunicLog2_Beam", "L2_02", ClueNode.Kind.Physical, ClueNode.Tool.AetherSight, ClueNode.State.Hidden,
                 "Ancient harmonic rune etched into the rear masonry beam: Acoustic Stabilization equations (Runic Log #2).",
-                new Vector3(0f, 5.0f, 12.2f), new Vector3(2.0f, 1.8f, 1.2f), clues);
+                new Vector3(0f, 5.2f, 11.3f), new Vector3(2.0f, 1.8f, 1.2f), clues);
 
-            // Exit stairway down to Cathedral Nave
+            // Exit stairway down to Cathedral Courtyard / Nave
             CreateExitPortal("Exit_BelfryStair", 2, "Hub_CathedralCourtyard",
                 "[L-Click] Descend to Cathedral",
                 "Return down the belfry stairs to the Cathedral of Saint Althea.",
-                new Vector3(0f, 1.2f, -2.2f), new Vector3(2.2f, 2.4f, 1.4f), clues);
+                new Vector3(0f, 1.2f, -3.4f), new Vector3(2.2f, 2.4f, 1.6f), clues);
+
+            // Dynamic Active Goal controller for Case 2
+            var ctrlGo = new GameObject("Case2ObjectiveController");
+            SceneManager.MoveGameObjectToScene(ctrlGo, scene);
+            var objCtrl = ctrlGo.AddComponent<InvestigationObjectiveController>();
+            objCtrl.caseId = 2;
+            objCtrl.requiredClueIds = new[] { "C1_02", "C2_02", "C3_02" };
+            objCtrl.gatherObjectiveFormat = "Inspect chime crystal, climb ladder to Great Bell [Tab], and search rafters ({0}/{1}).";
+            objCtrl.boardObjective = "Evidence gathered. Open the Deduction Board [H] or descend to the Cathedral.";
+            objCtrl.solvedObjective = "Board solved! Descend the belfry stairs to confront Accord.";
 
             SaveScene(scene, Case2ScenePath);
         }

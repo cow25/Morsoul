@@ -17,6 +17,17 @@ namespace Morsoul.Interaction
 
         string _lastText;
 
+        void Awake()
+        {
+            var core = CoreRuntime.Ensure();
+            if (core.Session.InvestigationCaseId < 0)
+                core.Session.InvestigationCaseId = caseId;
+            if (core.Session.CurrentCase < caseId)
+                core.Session.CurrentCase = caseId;
+            core.Session.SetSceneContext(SceneMode.Mode3D,
+                UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
+        }
+
         void Start() => Refresh();
         void Update() => Refresh();
 
