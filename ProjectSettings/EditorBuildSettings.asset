@@ -53,5 +53,20 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Hub_CathedralCourtyard.unity
     guid: 2de24083251161948b461a56d7c29234
+  - enabled: 1
+    path: Assets/Scenes/3D/Case1UndegroundStorageVault.unity
+    guid: e1d3e509833baf24999e4b6ba2d1742b
+  - enabled: 1
+    path: Assets/Scenes/3D/Case2CathedralBelfry.unity
+    guid: 24b017c681c37c340981dd056a08f668
+  - enabled: 1
+    path: Assets/Scenes/3D/Case3WhisperwoodGrove.unity
+    guid: 0860105b19a9eb64b9417a8a517a0e41
+  - enabled: 1
+    path: Assets/Scenes/3D/Case4IronHollowSubFacility.unity
+    guid: b44b894371756a349bf0d88a09eb31e0
+  - enabled: 1
+    path: Assets/Scenes/3D/Case5SanctumCore.unity
+    guid: 6c0224a2f512adc47ac49e9026dff49d
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}

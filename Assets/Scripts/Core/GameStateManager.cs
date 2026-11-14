@@ -398,7 +398,10 @@ namespace Morsoul.Core
             Seed(RouteKeys.Opening, "PrologueRuins"); // Integration catalog guards the 3D opening
             Seed(RouteKeys.PrologueWilderness, SessionState.PrologueWildernessSceneId);
             Seed(RouteKeys.CaseLoop, "CaseLoop");
-            // Investigation routes are registered only when their real levels are delivered.
+            Seed(RouteKeys.Investigation(1), "Case1UndegroundStorageVault");
+            Seed(RouteKeys.Investigation(2), "Case2CathedralBelfry");
+            Seed(RouteKeys.Investigation(3), "Case3WhisperwoodGrove");
+            Seed(RouteKeys.Investigation(4), "Case4IronHollowSubFacility");
             Seed(RouteKeys.Hub(0), "Hub_LowerMarket");   // tutorial case shares the market hub
             Seed(RouteKeys.Hub(1), "Hub_LowerMarket");
             Seed(RouteKeys.Hub(2), "Hub_CathedralCourtyard"); // Cathedral of Saint Althea (Exterior Drop-off)

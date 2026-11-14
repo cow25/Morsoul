@@ -553,10 +553,10 @@ namespace Morsoul.Tests
             Assert.AreEqual("Hub_IronHollow", gsm.routes.Resolve(Core.RouteKeys.Hub(4)));
             Assert.IsNull(gsm.routes.Resolve(Core.RouteKeys.Hub(5)));
             Assert.AreEqual("PrologueRuins", gsm.routes.Resolve(Core.RouteKeys.Opening));
-            Assert.IsNull(gsm.routes.Resolve(Core.RouteKeys.Investigation(1)));
-            Assert.IsNull(gsm.routes.Resolve(Core.RouteKeys.Investigation(2)));
-            Assert.IsNull(gsm.routes.Resolve(Core.RouteKeys.Investigation(3)));
-            Assert.IsNull(gsm.routes.Resolve(Core.RouteKeys.Investigation(4)));
+            Assert.AreEqual("Case1UndegroundStorageVault", gsm.routes.Resolve(Core.RouteKeys.Investigation(1)));
+            Assert.AreEqual("Case2CathedralBelfry", gsm.routes.Resolve(Core.RouteKeys.Investigation(2)));
+            Assert.AreEqual("Case3WhisperwoodGrove", gsm.routes.Resolve(Core.RouteKeys.Investigation(3)));
+            Assert.AreEqual("Case4IronHollowSubFacility", gsm.routes.Resolve(Core.RouteKeys.Investigation(4)));
         }
 
         [Test]

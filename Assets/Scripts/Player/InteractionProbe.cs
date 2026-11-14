@@ -1,3 +1,4 @@
+using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem; 
 
@@ -33,6 +34,15 @@ public class InteractionProbe : MonoBehaviour
         {
             if (hit.collider.TryGetComponent(out ClueNode clue))
             {
+                bool needsAether = clue.requiredTool == ClueNode.Tool.AetherSight || clue.requiredTool == ClueNode.Tool.Both;
+                var session = Morsoul.Core.CoreRuntime.Instance?.Session;
+                bool hasAether = session != null && session.Tools.Contains(Morsoul.Data.Tool.AetherSight);
+                if (needsAether && !hasAether)
+                {
+                    HUDManager.Instance.ShowInteractionPrompt("[Locked] Dormant Runic Inscription", "Requires Aether Sight (unlocked after Case 4) to decipher.");
+                    return;
+                }
+
                 bool needsScan = clue.requiredTool == ClueNode.Tool.GolemEye && clue.state == ClueNode.State.Hidden;
                 if (needsScan)
                 {
@@ -67,7 +77,7 @@ public class InteractionProbe : MonoBehaviour
                 }
             }
         }
-        else
+        else if (HUDManager.Instance != null)
         {
             HUDManager.Instance.HideInteractionPrompt();
         }
