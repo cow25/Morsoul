@@ -89,7 +89,7 @@ namespace Morsoul.Tests
         [Test]
         public void UnifiedHudAndOverlayUxml_ContainAllRequiredNamedElements()
         {
-            AssertUxmlElements("Assets/HUD.uxml",
+            AssertUxmlElements("Assets/Panels/3D/HUD.uxml",
                 "HUD-Root", "UserNameLabel", "EscKeyButton", "FocusValueLabel", "FocusBarFill",
                 "ObjectivePanel", "ActiveGoalTitle", "ObjectiveLabel", "CaseLabel",
                 "GolemEyeRow", "AetherSightRow", "EmotionEchoRow", "DeskKeyButton", "BoardKeyButton",
@@ -193,7 +193,7 @@ namespace Morsoul.Tests
         [Test]
         public void HudUxml_AndPauseMenuConfig_ExposeJournalAndBoardOverlays()
         {
-            AssertUxmlElements("Assets/HUD.uxml",
+            AssertUxmlElements("Assets/Panels/3D/HUD.uxml",
                 "DeskKeyButton", "BoardKeyButton", "EscKeyButton");
 
             var config = Resources.Load<PauseMenuAssets>("PauseMenuConfig");
