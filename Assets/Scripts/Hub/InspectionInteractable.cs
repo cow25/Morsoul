@@ -32,7 +32,7 @@ namespace Morsoul.Hub
                     int caseId = core.Session.CurrentCase;
                     core.Session.SetFlag($"Guild.CheckBoard.{caseId}", false);
                     core.Session.SetFlag(ElizaCompanionFollower.JoinedFlag);
-                    if (caseId <= 4)
+                    if (caseId == 2)
                         core.Session.SetFlag(ElizaCarrierGuideController.PendingFlag(caseId));
                     if (ctx != null) ctx.PlayDialogue(BuildGuildBoardDialogue(caseId));
                     ElizaCompanionFollower.AttachIfJoined(ctx);

@@ -264,7 +264,7 @@ namespace Morsoul.Hub
                     : "Examine Mother Lyra and secure the Belfry Key.";
                 case 3: return "Receive Kaelen's briefing and acquire the Elder Grove Perimeter Seal.";
                 case 4: return "Present Guild authority to Overseer Thrun and reach Drift 09.";
-                case 5: return "Investigate the Sanctum Core.";
+                case 5: return "Speak with Guildmaster Ovan when you're ready to proceed to Case 5.";
                 default: return "Explore the area.";
             }
         }

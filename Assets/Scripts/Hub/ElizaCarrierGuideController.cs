@@ -27,7 +27,7 @@ namespace Morsoul.Hub
             if (core == null) return;
 
             int caseId = core.Session.CurrentCase;
-            if (caseId < 2 || caseId > 4 || !core.Session.HasFlag(PendingFlag(caseId)))
+            if (caseId != 2 || !core.Session.HasFlag(PendingFlag(caseId)))
                 return;
 
             var carrier = FindAnyObjectByType<CarrierInteractable>();

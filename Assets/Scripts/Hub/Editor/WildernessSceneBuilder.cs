@@ -197,11 +197,11 @@ namespace Morsoul.Hub.Editor
                 PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Camp_Crate_SW", supplyCrate, new Vector2(-9.4f, -4.2f), colliderSize: new Vector2(0.85f, 0.65f), colliderOffset: new Vector2(0f, 0.33f));
                 PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Camp_Tent_Crate", supplyCrate, new Vector2(-6.7f, 1.9f), colliderSize: new Vector2(0.85f, 0.65f), colliderOffset: new Vector2(0f, 0.33f));
             }
-            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Camp_LogSeat", logPlank, new Vector2(-5.6f, -3.9f), colliderSize: new Vector2(1.8f, 0.45f), colliderOffset: new Vector2(0f, 0.22f));
-            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Camp_Supply_Log", logPlank, new Vector2(-8.3f, -4.3f), colliderSize: new Vector2(1.8f, 0.45f), colliderOffset: new Vector2(0f, 0.22f));
+            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Camp_LogSeat", logPlank, new Vector2(-5.5f, -3.75f), colliderSize: new Vector2(1.7f, 0.45f), colliderOffset: new Vector2(0f, 0.22f));
+            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Camp_Supply_Log", logPlank, new Vector2(-3.55f, -2.75f), colliderSize: new Vector2(1.7f, 0.45f), colliderOffset: new Vector2(0f, 0.22f));
             if (oakBench != null)
-                PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Camp_Prep_Bench", oakBench, new Vector2(-3.2f, -3.6f), colliderSize: new Vector2(1.7f, 0.55f), colliderOffset: new Vector2(0f, 0.25f));
-            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Camp_Prep_Crate", crateAlt, new Vector2(-3.2f, -4.7f), colliderSize: new Vector2(0.85f, 0.65f), colliderOffset: new Vector2(0f, 0.33f));
+                PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Camp_Prep_Bench", oakBench, new Vector2(5.8f, -2.2f), colliderSize: new Vector2(1.7f, 0.55f), colliderOffset: new Vector2(0f, 0.25f));
+            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Camp_Prep_Crate", crateAlt, new Vector2(-7.6f, -3.9f), colliderSize: new Vector2(0.85f, 0.65f), colliderOffset: new Vector2(0f, 0.33f));
 
             // BlightBark corrupted clearing (around (1.2, -2.5)) with blighted ground patch & withered flora.
             PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Blight_GroundPatch", blightPatch, new Vector2(1.2f, -2.25f), zBias: 0.05f, sortingOrder: -8);
@@ -342,7 +342,18 @@ namespace Morsoul.Hub.Editor
                     PixelCrawlerHubToolkit.BindStaticProp(scene, "BlightBark", "Wild_BlightStump", BlightStumpPath, "Blight_Stump");
                 }
 
-                EnsureSolidBody(scene, "RestSpot", new Vector2(1.35f, 0.9f), new Vector2(0f, 0.55f));
+                EnsureSolidBody(scene, "RestSpot", new Vector2(1.0f, 0.65f), new Vector2(0f, 0.35f));
+                var restGo = PixelCrawlerHubToolkit.FindRoot(scene, "RestSpot");
+                if (restGo != null)
+                {
+                    foreach (var c in restGo.GetComponents<BoxCollider2D>())
+                    {
+                        if (!c.isTrigger) continue;
+                        c.size = new Vector2(2.4f, 2.2f);
+                        c.offset = new Vector2(0f, 0.4f);
+                        break;
+                    }
+                }
                 EnsureSolidBody(scene, "ForestOutpost", new Vector2(0.9f, 0.7f), new Vector2(0f, 0.35f));
                 EnsureSolidBody(scene, "BlightBark", new Vector2(0.95f, 0.65f), new Vector2(0f, 0.35f));
 

@@ -81,6 +81,10 @@ namespace Morsoul.Hub
                 }
                 elizaGo.SetActive(true);
                 ElizaCompanionFollower.AttachIfJoined(context, forceAttach: true);
+                var oldTalk = elizaGo.GetComponent<ElizaTalkInteractable>();
+                if (oldTalk != null) oldTalk.enabled = false;
+                var oldPrompt = elizaGo.transform.Find("Prompt");
+                if (oldPrompt != null) oldPrompt.gameObject.SetActive(false);
             }
             else
             {
@@ -88,9 +92,9 @@ namespace Morsoul.Hub
                 if (follower != null) follower.enabled = false;
                 elizaGo.transform.position = ResolveStationPosition(sceneName, caseId);
                 elizaGo.SetActive(true);
+                AttachTalkInteractable(elizaGo, sceneName, blocksMovement: true);
             }
 
-            AttachTalkInteractable(elizaGo, sceneName, blocksMovement: !followMode);
             _staged = true;
         }
 

@@ -151,6 +151,41 @@ namespace Morsoul.Tests
         }
 
         [Test]
+        public void SceneEntryPoint_DoesNotRestorePositionFromOtherScene()
+        {
+            var core = CoreRuntime.Ensure();
+            var playerGo = new GameObject("Player");
+            playerGo.tag = "Player";
+            var spawn = new GameObject("PlayerSpawn");
+            spawn.tag = "PlayerSpawn";
+            spawn.transform.position = new Vector3(-6.2f, -0.3f, 0f);
+            var entryGo = new GameObject("SceneEntryPoint");
+            var entry = entryGo.AddComponent<SceneEntryPoint>();
+            entry.player = playerGo.transform;
+            try
+            {
+                string activeScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+                var expectedSpawn = GameObject.FindWithTag("PlayerSpawn").transform.position;
+                core.Session.Reset();
+                core.Session.SetPlayerContext(SceneMode.Mode2D, activeScene + "_Other",
+                    new Vector3(-20.25f, -2.84f, 0f), PlayerFacing2D.Left);
+                typeof(SceneEntryPoint).GetMethod("Start",
+                        System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                    .Invoke(entry, null);
+
+                Assert.AreEqual(expectedSpawn, playerGo.transform.position,
+                    "Player must spawn at PlayerSpawn instead of inheriting another scene's coordinates.");
+                Assert.AreEqual(activeScene, core.Session.CurrentSceneId);
+            }
+            finally
+            {
+                core.Session.SetSceneContext(SceneMode.Mode2D, "");
+                foreach (var go in new[] { entryGo, playerGo, spawn, core.gameObject })
+                    Object.DestroyImmediate(go);
+            }
+        }
+
+        [Test]
         public void NpcInteractable_BlocksMovementWithSolidCollider()
         {
             // NPCs get a second, non-trigger collider so the player walks up

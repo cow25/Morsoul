@@ -148,7 +148,8 @@ namespace Morsoul.Hub
             yield return Play(BuildCaseDebriefDialogue(nextCaseId));
 
             session.SetFlag(GuildIntroRules.BriefingPendingFlag(nextCaseId), false);
-            session.SetFlag($"Guild.CheckBoard.{nextCaseId}");
+            if (nextCaseId < 5)
+                session.SetFlag($"Guild.CheckBoard.{nextCaseId}");
             _introRunning = false;
             if (player != null) player.enabled = true;
         }
@@ -168,8 +169,12 @@ namespace Morsoul.Hub
                       "Check the Quest Board downstairs—Overseer Thrun's Union sent a priority Drift 09 request from Iron Hollow."),
                 _ => ("Ovan, Harlan's sabotage is exposed and Chief Engineer Brokk is safe. Worse—Brokk saw the Grand Overseer descend straight into the Sanctum Core beneath Drift 09.",
                       "Then every regional thread converges beneath Asterveil. With your new Aether Sight active, walk the earlier districts via the Carrier if you sense any hidden First-Age inscriptions left unread.",
-                      "Check the Quest Board downstairs before heading back to Iron Hollow's deep freight lift—everything rests on you two now.")
+                      "Speak with me again whenever you're ready to proceed to Case 5 and have nothing else left to take care of.")
             };
+
+            string closingLine = nextCaseId >= 5
+                ? "Let's wrap up anything we still need, or speak with Ovan again when we're ready for Case 5."
+                : "Let's check the Quest Board downstairs when you're ready.";
 
             var data = ScriptableObject.CreateInstance<DialogueData>();
             data.hideFlags = HideFlags.DontSave;
@@ -179,7 +184,7 @@ namespace Morsoul.Hub
             {
                 new DialogueNodeData { id = "n1", speakerName = "Eliza", text = elizaReport, nextNodeId = "n2" },
                 new DialogueNodeData { id = "n2", speakerName = "Guildmaster Ovan", text = $"{ovanReply} {boardHint}", nextNodeId = "n3" },
-                new DialogueNodeData { id = "n3", speakerName = "Eliza", text = "Let's check the Quest Board downstairs when you're ready." }
+                new DialogueNodeData { id = "n3", speakerName = "Eliza", text = closingLine }
             };
             return data;
         }

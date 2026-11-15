@@ -161,9 +161,11 @@ namespace Morsoul.Hub.Editor
                 hud.objectiveCaseId = 0;
                 hud.postInvestigationObjective = "";
                 EnsureCaseDoor(scene);
-                EnsureRestSpot(scene);
                 if (spec.scenePath != CathedralPath)
+                {
+                    EnsureRestSpot(scene);
                     EnsureCarrier(scene);
+                }
                 ConfigureJournal(scene, spec.journalCaseId);
                 ConfigureCamera(scene, spec);
                 if (spec.interludeDialoguePath != null)
@@ -255,7 +257,8 @@ namespace Morsoul.Hub.Editor
                 camera.backgroundColor = spec.cameraBgColor;
             }
             var cameraFollow = camera != null ? camera.GetComponent<CameraFollow2D>() : null;
-            if (cameraFollow != null)
+            if (cameraFollow != null &&
+                cameraFollow.boundsMin == Vector2.zero && cameraFollow.boundsMax == Vector2.zero)
             {
                 cameraFollow.useBounds = true;
                 cameraFollow.boundsMin = new Vector2(-10f, -5.5f);

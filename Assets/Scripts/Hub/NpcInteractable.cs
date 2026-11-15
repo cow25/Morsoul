@@ -1,3 +1,4 @@
+using Morsoul.Core;
 using Morsoul.Data;
 using Morsoul.Dialogue;
 using UnityEngine;
@@ -19,6 +20,18 @@ namespace Morsoul.Hub
         /// <summary>NPCs are solid: the player walks up to them, not through.</summary>
         protected override bool BlocksMovement => true;
 
+        void Start()
+        {
+            if (interrogationCaseId < 1 || interrogationCaseId > 4) return;
+            var session = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session : null;
+            if (session != null &&
+                (session.CurrentCase > interrogationCaseId ||
+                 (session.Grades.TryGetValue(interrogationCaseId, out var g) && g != Grade.Ungraded)))
+            {
+                gameObject.SetActive(false);
+            }
+        }
+
         public override void Interact(HubContext ctx)
         {
             base.Interact(ctx);
@@ -37,6 +50,11 @@ namespace Morsoul.Hub
             if (core != null && gameObject.name == "Ovan")
             {
                 int caseId = core.Session.CurrentCase;
+                if (caseId >= 5)
+                {
+                    StartOvanCase5Prompt(ctx, core, dialogue?.portraits);
+                    return;
+                }
                 if (GuildIntroRules.IsBriefingPending(core.Session, caseId))
                 {
                     core.Session.SetFlag(GuildIntroRules.BriefingPendingFlag(caseId), false);
@@ -56,6 +74,59 @@ namespace Morsoul.Hub
             }
 
             ctx.PlayDialogue(dialogue);
+        }
+
+        static void StartOvanCase5Prompt(HubContext ctx, CoreRuntime core, SpeakerPortraitData[] portraits)
+        {
+            const string confirmFlag = "Guild.Case5Confirmed";
+            core.Session.SetFlag(confirmFlag, false);
+
+            var data = ScriptableObject.CreateInstance<DialogueData>();
+            data.hideFlags = HideFlags.DontSave;
+            data.id = "OvanCase5Prompt";
+            data.startNodeId = "n1";
+            data.portraits = portraits;
+            data.nodes = new[]
+            {
+                new DialogueNodeData
+                {
+                    id = "n1",
+                    speakerName = "Guildmaster Ovan",
+                    text = "The Sanctum Core beneath Drift 09 awaits. Once you descend, there's no turning back until it's finished. Are you ready to continue to Case 5, and have you nothing else left to take care of?",
+                    options = new[]
+                    {
+                        new DialogueOptionData { label = "I'm ready — continue to Case 5.", nextNodeId = "proceed" },
+                        new DialogueOptionData { label = "Not yet — I still have things to take care of.", nextNodeId = "wait" }
+                    }
+                },
+                new DialogueNodeData
+                {
+                    id = "proceed",
+                    speakerName = "Guildmaster Ovan",
+                    text = "Then go with everything you've got. May Asterveil endure.",
+                    setsFlag = confirmFlag
+                },
+                new DialogueNodeData
+                {
+                    id = "wait",
+                    speakerName = "Guildmaster Ovan",
+                    text = "Take whatever time you need. Talk to me again whenever you're ready for Case 5."
+                }
+            };
+
+            var dlg = ctx.dialogue;
+            if (dlg != null)
+            {
+                void OnEnded()
+                {
+                    dlg.DialogueEnded -= OnEnded;
+                    if (!core.Session.HasFlag(confirmFlag)) return;
+                    core.Session.SetFlag(confirmFlag, false);
+                    core.Bus.Publish(new SceneLoadRequestedEvent { SceneName = "Case5SanctumCore" });
+                }
+                dlg.DialogueEnded += OnEnded;
+            }
+            ctx.PlayDialogue(data);
         }
 
         static DialogueData BuildOvanBriefing(int caseId, SpeakerPortraitData[] portraits)

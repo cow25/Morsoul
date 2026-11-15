@@ -162,10 +162,10 @@ namespace Morsoul.Hub.Editor
             if (settings != null && travelUxml != null)
             {
                 var go = new GameObject("TravelMenuPanel");
-                var doc = go.AddComponent<UIDocument>();
-                doc.panelSettings = settings;
-                doc.visualTreeAsset = travelUxml;
-                doc.sortingOrder = 20;
+                var renderer = go.AddComponent<PanelRenderer>();
+                renderer.panelSettings = settings;
+                renderer.visualTreeAsset = travelUxml;
+                renderer.sortingOrder = 60;
                 context.travelMenu = go.AddComponent<TravelMenuController>();
             }
 

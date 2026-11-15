@@ -107,17 +107,28 @@ namespace Morsoul.Hub
 
             yield return Play(BuildArrestDialogue(caseId));
 
-            // Guards drag the culprit away together.
-            Vector3 exitDelta = new Vector3(10.0f, 0f, 0f);
+            // Guards drag the culprit away together along a clear exit route.
             const float escortSpeed = 2.6f;
-            var dragL = StartCoroutine(MoveAtSpeed(guardL, guardL.position + exitDelta, escortSpeed));
-            var dragS = suspectNpc != null
-                ? StartCoroutine(MoveAtSpeed(suspectNpc.transform, suspectPos + exitDelta, escortSpeed))
-                : null;
-            var dragR = StartCoroutine(MoveAtSpeed(guardR, guardR.position + exitDelta, escortSpeed));
-            yield return dragL;
-            if (dragS != null) yield return dragS;
-            yield return dragR;
+            if (caseId == 2)
+            {
+                // Cathedral Nave: walk west to the center aisle (x = 0.5), then south out CathedralExit (y = -10.8).
+                yield return EscortTrioTo(guardL, suspectNpc != null ? suspectNpc.transform : null, guardR,
+                    new Vector3(0.5f, suspectPos.y, 0f), escortSpeed);
+                yield return EscortTrioTo(guardL, suspectNpc != null ? suspectNpc.transform : null, guardR,
+                    new Vector3(0.5f, -10.8f, 0f), escortSpeed);
+            }
+            else if (caseId == 3)
+            {
+                // Whisperwood: walk west down the trail toward the Asterveil road (away from BriarGate).
+                yield return EscortTrioTo(guardL, suspectNpc != null ? suspectNpc.transform : null, guardR,
+                    new Vector3(-11.5f, 0.0f, 0f), escortSpeed);
+            }
+            else
+            {
+                Vector3 exitDelta = new Vector3(10.0f, 0f, 0f);
+                yield return EscortTrioTo(guardL, suspectNpc != null ? suspectNpc.transform : null, guardR,
+                    suspectPos + exitDelta, escortSpeed);
+            }
 
             if (suspectNpc != null) suspectNpc.gameObject.SetActive(false);
             if (guardL != null) guardL.gameObject.SetActive(false);
@@ -135,6 +146,19 @@ namespace Morsoul.Hub
             yield return FadeTo(dialogue, 1f, 0.5f);
             core.Session.SetFlag(PendingFlag(caseId), false);
             core.Bus.Publish(new CaseCompletedEvent { CaseId = caseId, Ending = 0 });
+        }
+
+        IEnumerator EscortTrioTo(Transform guardL, Transform suspect, Transform guardR,
+            Vector3 centerDest, float speed)
+        {
+            var dragL = StartCoroutine(MoveAtSpeed(guardL, centerDest + new Vector3(-0.75f, 0f, 0f), speed));
+            var dragS = suspect != null
+                ? StartCoroutine(MoveAtSpeed(suspect, centerDest, speed))
+                : null;
+            var dragR = StartCoroutine(MoveAtSpeed(guardR, centerDest + new Vector3(0.75f, 0f, 0f), speed));
+            yield return dragL;
+            if (dragS != null) yield return dragS;
+            yield return dragR;
         }
 
         IEnumerator RunPreArrestAction(int caseId, Transform suspect, Vector3 suspectPos,
