@@ -718,6 +718,7 @@ namespace Morsoul.Title
                         CoreRuntime.Instance.Bus.Publish(new NewGameEvent());
                 }
                 player.CutsceneEnded += OnDone;
+                if (_uitRoot != null) _uitRoot.style.display = DisplayStyle.None;
                 player.Play(openingCutscene != null ? openingCutscene : BuildStandstillOpeningCutscene());
                 return;
             }

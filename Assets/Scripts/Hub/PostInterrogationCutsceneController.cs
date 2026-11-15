@@ -81,8 +81,9 @@ namespace Morsoul.Hub
             Transform kaelen = caseId == 3 ? FindActor("Kaelen") : null;
             if (kaelen != null) kaelen.position = playerPos + new Vector3(-2.8f, -1.8f, 0f);
             Transform sylvan = caseId == 2 ? FindActor("Sylvan") : null;
-            Transform valerius = caseId == 2 ? FindActor("ValeriusAltar") : null;
-            if (valerius != null) valerius.position = suspectPos + new Vector3(-1.8f, 1.3f, 0f);
+            Transform valerius = caseId == 2
+                ? SpawnTempGuard("CaptainValerius", suspectPos + new Vector3(-1.8f, 1.3f, 0f))
+                : null;
 
             // Stage two knights/guards flanking the suspect from off-side.
             Transform guardL = SpawnTempGuard("ArrestGuard_L", suspectPos + new Vector3(-4.0f, 0.5f, 0f));
@@ -106,6 +107,17 @@ namespace Morsoul.Hub
             if (kaelenIn != null) yield return kaelenIn;
 
             yield return Play(BuildArrestDialogue(caseId));
+
+            // Step player, Eliza, and bystanders aside so the guards and culprit pass cleanly without pushing them.
+            Vector3 asideOffset = caseId == 2 ? new Vector3(-1.6f, 0f, 0f) : new Vector3(0f, -1.8f, 0f);
+            Vector3 asidePlayerPos = playerPos + asideOffset;
+            var stepPlayer = _player != null ? StartCoroutine(MoveAtSpeed(_player.transform, asidePlayerPos, 2.8f)) : null;
+            var stepEliza = eliza != null ? StartCoroutine(MoveAtSpeed(eliza, asidePlayerPos + new Vector3(-1.2f, 0f, 0f), 2.8f)) : null;
+            var stepKaelen = kaelen != null ? StartCoroutine(MoveAtSpeed(kaelen, asidePlayerPos + new Vector3(1.2f, 0f, 0f), 2.8f)) : null;
+            if (stepPlayer != null) yield return stepPlayer;
+            if (stepEliza != null) yield return stepEliza;
+            if (stepKaelen != null) yield return stepKaelen;
+            playerPos = asidePlayerPos;
 
             // Guards drag the culprit away together along a clear exit route.
             const float escortSpeed = 2.6f;
@@ -354,8 +366,8 @@ namespace Morsoul.Hub
                 go.name = actorName;
                 var npc = go.GetComponent<NpcInteractable>();
                 if (npc != null) Destroy(npc);
-                var col = go.GetComponent<Collider2D>();
-                if (col != null) Destroy(col);
+                foreach (var c in go.GetComponentsInChildren<Collider2D>(true))
+                    Destroy(c);
                 var stroller = go.GetComponent<AmbientStroller2D>();
                 if (stroller != null) Destroy(stroller);
                 go.SetActive(true);

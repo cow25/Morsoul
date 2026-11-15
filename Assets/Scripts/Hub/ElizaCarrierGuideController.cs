@@ -91,8 +91,8 @@ namespace Morsoul.Hub
             core.Session.SetFlag(PendingFlag(caseId), false);
             if (_player != null) _player.enabled = true;
 
-            if (follower != null) follower.SetPaused(false);
-            else ElizaCompanionFollower.AttachIfJoined(context);
+            ElizaHubPresenceController.NotifyGuideCompleted(
+                eliza.gameObject, UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
         }
 
         static Transform FindEliza()

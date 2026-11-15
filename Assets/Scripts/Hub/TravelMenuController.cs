@@ -52,6 +52,7 @@ namespace Morsoul.Hub
         int _selected;
         bool _isOpen;
         int _uiVersion;
+        int _openFrame = -1;
 
         /// <summary>True while the menu is displayed (blocks hub movement).</summary>
         public bool IsOpen => _isOpen;
@@ -79,7 +80,7 @@ namespace Morsoul.Hub
 
         void Update()
         {
-            if (!_isOpen) return;
+            if (!_isOpen || Time.frameCount == _openFrame) return;
             var keyboard = Keyboard.current;
             if (keyboard == null) return;
 
@@ -117,6 +118,7 @@ namespace Morsoul.Hub
             _destinations.AddRange(destinations);
             _selected = 0;
             _isOpen = true;
+            _openFrame = Time.frameCount;
             if (_root != null) _root.style.display = DisplayStyle.Flex;
             RebuildList();
         }

@@ -7447,7 +7447,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 137c28ff82b044345bbbf74813b9b286, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.NpcInteractable
-  promptText: '[E] Talk'
+  promptText: '[E] Inspect'
   promptIndicator: {fileID: 842255941}
   blocksMovement: 0
   blockSize: {x: 0.55, y: 0.5}

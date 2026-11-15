@@ -25,6 +25,7 @@ namespace Morsoul.Hub
             if (interrogationCaseId < 1 || interrogationCaseId > 4) return;
             var session = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session : null;
             if (session != null &&
+                !session.HasFlag(PostInterrogationCutsceneController.PendingFlag(interrogationCaseId)) &&
                 (session.CurrentCase > interrogationCaseId ||
                  (session.Grades.TryGetValue(interrogationCaseId, out var g) && g != Grade.Ungraded)))
             {
@@ -122,7 +123,7 @@ namespace Morsoul.Hub
                     dlg.DialogueEnded -= OnEnded;
                     if (!core.Session.HasFlag(confirmFlag)) return;
                     core.Session.SetFlag(confirmFlag, false);
-                    core.Bus.Publish(new SceneLoadRequestedEvent { SceneName = "Case5SanctumCore" });
+                    GameStateManager.Ensure().GoToRoute(RouteKeys.CaseLoop, GameFlowState.Board);
                 }
                 dlg.DialogueEnded += OnEnded;
             }

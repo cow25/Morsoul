@@ -54,6 +54,8 @@ namespace Morsoul.Hub
                     session.HasFlag(PostInterrogationCutsceneController.PendingFlag(caseId));
                 if (!postInterrogation && GetComponent<ElizaHubPresenceController>() == null)
                     gameObject.AddComponent<ElizaHubPresenceController>().context = this;
+                if (!postInterrogation && GetComponent<AmbientNpcShuffler2D>() == null)
+                    gameObject.AddComponent<AmbientNpcShuffler2D>();
 
                 if (postInterrogation && GetComponent<PostInterrogationCutsceneController>() == null)
                 {

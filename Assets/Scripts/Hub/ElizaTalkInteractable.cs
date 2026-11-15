@@ -104,6 +104,13 @@ namespace Morsoul.Hub
                     ("Eliza", "Holler—or keep your Crystal close—if anything beneath the grate smells wrong."));
             }
 
+            if (currentCase >= 2 && currentCase <= 4 &&
+                session.HasFlag(ElizaHubPresenceController.RaceToCarrierFlag))
+            {
+                return MakeChain($"D_Eliza_Market_BeatToCart_C{currentCase}",
+                    ("Eliza", "(Leaning against the Carrier's wagon with a grin) \"Beat you to the cart! What took you so long, {PlayerName}? Talk to the Carrier whenever you're ready to roll out.\""));
+            }
+
             if (currentCase >= 5)
             {
                 return MakeChain("D_Eliza_Market_Revisit",

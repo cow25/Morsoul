@@ -76,6 +76,8 @@ namespace Morsoul.Hub
                     {
                         menu.DestinationSelected -= OnSelected;
                         menu.Cancelled -= OnCancelled;
+                        if (ElizaHubPresenceController.TryCatchUpBeforeTravel(ctx, () => TravelTo(d.sceneName)))
+                            return;
                         TravelTo(d.sceneName);
                     }
                     void OnCancelled()
@@ -128,6 +130,7 @@ namespace Morsoul.Hub
                 return;
             }
             CheckpointRequested?.Invoke(checkpointReason);
+            CoreRuntime.Instance?.Session.SetFlag(ElizaHubPresenceController.RaceToCarrierFlag, false);
             // Single load authority: the GSM guards missing scenes and stamps
             // the checkpoint; direct load only without Core.
             if (CoreRuntime.Instance != null)

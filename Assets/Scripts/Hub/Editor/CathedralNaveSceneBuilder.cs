@@ -396,6 +396,8 @@ namespace Morsoul.Hub.Editor
                             grandAltar.name, null, new Vector2(0f, 1.35f));
                         PixelCrawlerHubToolkit.BindActorVisual(altarGo, altarProf, addYSort: true);
                         EnsureSolidCollider(altarGo, new Vector2(4.4f, 1.4f), new Vector2(0f, 0.55f));
+                        var altarNpc = altarGo.GetComponent<NpcInteractable>();
+                        if (altarNpc != null) altarNpc.promptText = "[E] Inspect";
                     }
                 }
                 else

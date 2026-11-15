@@ -33,9 +33,29 @@ namespace Morsoul.Hub
                     core.Session.SetFlag($"Guild.CheckBoard.{caseId}", false);
                     core.Session.SetFlag(ElizaCompanionFollower.JoinedFlag);
                     if (caseId == 2)
+                    {
                         core.Session.SetFlag(ElizaCarrierGuideController.PendingFlag(caseId));
-                    if (ctx != null) ctx.PlayDialogue(BuildGuildBoardDialogue(caseId));
-                    ElizaCompanionFollower.AttachIfJoined(ctx);
+                        if (ctx != null) ctx.PlayDialogue(BuildGuildBoardDialogue(caseId));
+                        ElizaCompanionFollower.AttachIfJoined(ctx);
+                    }
+                    else
+                    {
+                        bool race = UnityEngine.Random.value < 0.5f;
+                        core.Session.SetFlag(ElizaHubPresenceController.RaceToCarrierFlag, race);
+                        if (ctx != null && ctx.dialogue != null)
+                        {
+                            if (race)
+                            {
+                                void OnBoardDone()
+                                {
+                                    ctx.dialogue.DialogueEnded -= OnBoardDone;
+                                    ElizaHubPresenceController.StartRaceOutOfGuild(ctx);
+                                }
+                                ctx.dialogue.DialogueEnded += OnBoardDone;
+                            }
+                            ctx.PlayDialogue(BuildGuildBoardDialogue(caseId));
+                        }
+                    }
                     return;
                 }
                 // Flavor-only inspection (notice boards and the like): no

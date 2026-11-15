@@ -341,7 +341,7 @@ namespace Morsoul.Flow
         {
             if (caseData == null) return;
             var core = Core.CoreRuntime.Instance;
-            if (core != null && core.AutoCompleteCasesEnabled)
+            if (core != null && core.AutoCompleteCasesEnabled && caseData.caseId != 5)
             {
                 InvestigationCompletion.ForceCompleteCase(core, caseData.caseId);
                 if (weighted && weightedBoard != null)
@@ -386,6 +386,18 @@ namespace Morsoul.Flow
             {
                 foreach (var clue in preloaded)
                     if (clue != null) result.Add(clue);
+                if (caseData.caseId == 5 && session != null && Core.CoreRuntime.Instance != null)
+                {
+                    for (int c = 1; c <= 4; c++)
+                    {
+                        if (c - 1 >= session.RunicLogs.Count || !session.RunicLogs[c - 1]) continue;
+                        var prev = Core.CoreRuntime.Instance.ResolveCase(c);
+                        if (prev == null || prev.clues == null) continue;
+                        foreach (var clue in prev.clues)
+                            if (clue != null && clue.type == ClueType.Latent && !result.Contains(clue))
+                                result.Add(clue);
+                    }
+                }
                 return result;
             }
             if (caseData.clues == null) return result;

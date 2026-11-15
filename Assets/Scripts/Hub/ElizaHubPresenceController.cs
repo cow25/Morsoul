@@ -18,11 +18,14 @@ namespace Morsoul.Hub
     public class ElizaHubPresenceController : MonoBehaviour
     {
         public const string SanctumWarningFlag = "Sanctum.WarningShown";
+        public const string RaceToCarrierFlag = "LowerMarket.ElizaRacedToCarrier";
 
         public HubContext context;
 
         bool _staged;
         bool _monitorRunning;
+        bool _waitingToCatchUpOnTravel;
+        Coroutine _raceCoroutine;
 
         void Start()
         {
@@ -86,6 +89,41 @@ namespace Morsoul.Hub
                 var oldPrompt = elizaGo.transform.Find("Prompt");
                 if (oldPrompt != null) oldPrompt.gameObject.SetActive(false);
             }
+            else if (string.Equals(sceneName, "Hub_Guild", StringComparison.OrdinalIgnoreCase) &&
+                     caseId >= 2 && caseId <= 4 && session.HasFlag(RaceToCarrierFlag))
+            {
+                var follower = elizaGo.GetComponent<ElizaCompanionFollower>();
+                if (follower != null) follower.enabled = false;
+                elizaGo.SetActive(false);
+            }
+            else if (string.Equals(sceneName, "Hub_LowerMarket", StringComparison.OrdinalIgnoreCase) &&
+                     caseId >= 2 && caseId <= 4)
+            {
+                var follower = elizaGo.GetComponent<ElizaCompanionFollower>();
+                if (follower != null) follower.enabled = false;
+
+                if (caseId == 2)
+                {
+                    _waitingToCatchUpOnTravel = false;
+                    var carrier = FindAnyObjectByType<CarrierInteractable>();
+                    Vector3 cartPos = carrier != null
+                        ? carrier.transform.position + new Vector3(1.4f, 0.5f, 0f)
+                        : new Vector3(-20.8f, -1.5f, 0f);
+                    elizaGo.transform.position = cartPos;
+                    elizaGo.SetActive(true);
+                    AttachTalkInteractable(elizaGo, sceneName, blocksMovement: true);
+                }
+                else if (session.HasFlag(RaceToCarrierFlag))
+                {
+                    _waitingToCatchUpOnTravel = false;
+                    _raceCoroutine = StartCoroutine(RaceAheadToCarrier(elizaGo, sceneName));
+                }
+                else
+                {
+                    _waitingToCatchUpOnTravel = true;
+                    elizaGo.SetActive(false);
+                }
+            }
             else
             {
                 var follower = elizaGo.GetComponent<ElizaCompanionFollower>();
@@ -107,7 +145,7 @@ namespace Morsoul.Hub
                 return new Vector3(3.6f, 4.8f, 0f);
             if (string.Equals(sceneName, "Hub_LowerMarket", StringComparison.OrdinalIgnoreCase))
                 return caseId >= 2 && caseId <= 4
-                    ? new Vector3(-20.8f, -1.5f, 0f)
+                    ? new Vector3(-1.5f, 10.8f, 0f)
                     : new Vector3(-7.0f, 7.2f, 0f);
             if (string.Equals(sceneName, "Hub_CathedralNave", StringComparison.OrdinalIgnoreCase))
                 return new Vector3(-2.0f, 1.5f, 0f);
@@ -364,6 +402,141 @@ namespace Morsoul.Hub
                 ("Eliza", $"\"Your Aether Sight has only recovered {session.RunicLogCount} of 4 dormant First-Age Runic Logs across Asterveil. If you want the full truth from the Lower Market, Cathedral, or Whisperwood first, take the Carrier back.\""),
                 ("Eliza", "\"Otherwise, step up to the cage again whenever you're ready—and we'll end this together.\"")));
             return true;
+        }
+
+        public static void NotifyGuideCompleted(GameObject elizaGo, string sceneName)
+        {
+            var ctrl = FindAnyObjectByType<ElizaHubPresenceController>();
+            if (ctrl != null)
+            {
+                ctrl._staged = true;
+                ctrl._waitingToCatchUpOnTravel = false;
+            }
+            if (elizaGo != null)
+            {
+                elizaGo.SetActive(true);
+                AttachTalkInteractable(elizaGo, sceneName, blocksMovement: true);
+            }
+        }
+
+        public static void StartRaceOutOfGuild(HubContext ctx)
+        {
+            var ctrl = FindAnyObjectByType<ElizaHubPresenceController>();
+            if (ctrl != null) ctrl.StartCoroutine(ctrl.RaceOutOfGuildRoutine(ctx));
+        }
+
+        IEnumerator RaceOutOfGuildRoutine(HubContext ctx)
+        {
+            var elizaGo = FindOrCreateEliza(ctx ?? context);
+            var activeCtx = ctx ?? context;
+            if (activeCtx != null && activeCtx.dialogue != null &&
+                activeCtx.PlayDialogue(MakeDialogue("D_Eliza_RaceOut",
+                    ("Eliza", "First one to the Carrier picks the seat—race you there, {PlayerName}!"))))
+            {
+                while (activeCtx.dialogue.IsPlaying) yield return null;
+            }
+            if (elizaGo != null && elizaGo.activeInHierarchy)
+            {
+                // Walk south past the front desk, west onto the center carpet aisle, then south out the Guild door.
+                Vector3 pos = elizaGo.transform.position;
+                Vector3 clearSouth = new Vector3(pos.x, 1.5f, 0f);
+                Vector3 centerAisle = new Vector3(0.2f, 1.5f, 0f);
+                Vector3 guildExit = new Vector3(0.2f, -10.5f, 0f);
+                const float jogSpeed = 3.8f;
+                yield return MoveElizaAlong(elizaGo.transform, pos, clearSouth, jogSpeed);
+                yield return MoveElizaAlong(elizaGo.transform, clearSouth, centerAisle, jogSpeed);
+                yield return MoveElizaAlong(elizaGo.transform, centerAisle, guildExit, jogSpeed);
+                elizaGo.SetActive(false);
+            }
+        }
+
+        public static bool TryCatchUpBeforeTravel(HubContext ctx, Action onComplete)
+        {
+            var ctrl = FindAnyObjectByType<ElizaHubPresenceController>();
+            if (ctrl == null || !ctrl._waitingToCatchUpOnTravel) return false;
+            ctrl._waitingToCatchUpOnTravel = false;
+            ctrl.StartCoroutine(ctrl.CatchUpAndTravel(ctx, onComplete));
+            return true;
+        }
+
+        IEnumerator RaceAheadToCarrier(GameObject elizaGo, string sceneName)
+        {
+            var carrier = FindAnyObjectByType<CarrierInteractable>();
+            if (elizaGo == null || carrier == null) yield break;
+
+            Vector3 startPos = new Vector3(0.2f, 8.2f, 0f);
+            elizaGo.transform.position = startPos;
+            elizaGo.SetActive(true);
+
+            Vector3 carrierPos = carrier.transform.position;
+            Vector3 stopPos = new Vector3(carrierPos.x + 1.4f, carrierPos.y + 0.5f, 0f);
+            const float northRingY = 7.5f;
+            const float westRingX = -7.8f;
+            const float raceSpeed = 4.2f;
+
+            yield return MoveElizaAlong(elizaGo.transform, startPos, new Vector3(startPos.x, northRingY, 0f), raceSpeed);
+            yield return MoveElizaAlong(elizaGo.transform, new Vector3(startPos.x, northRingY, 0f), new Vector3(westRingX, northRingY, 0f), raceSpeed);
+            yield return MoveElizaAlong(elizaGo.transform, new Vector3(westRingX, northRingY, 0f), new Vector3(westRingX, stopPos.y, 0f), raceSpeed);
+            yield return MoveElizaAlong(elizaGo.transform, new Vector3(westRingX, stopPos.y, 0f), stopPos, raceSpeed);
+
+            AttachTalkInteractable(elizaGo, sceneName, blocksMovement: true);
+        }
+
+        IEnumerator CatchUpAndTravel(HubContext ctx, Action onComplete)
+        {
+            var playerCtrl = FindAnyObjectByType<HubPlayerController>();
+            if (playerCtrl != null) playerCtrl.enabled = false;
+
+            var carrier = FindAnyObjectByType<CarrierInteractable>();
+            var elizaGo = FindOrCreateEliza(ctx ?? context);
+            if (elizaGo != null && carrier != null)
+            {
+                Vector3 carrierPos = carrier.transform.position;
+                Vector3 startPos = new Vector3(carrierPos.x + 9.5f, carrierPos.y + 0.4f, 0f);
+                Vector3 stopPos = new Vector3(carrierPos.x + 1.4f, carrierPos.y + 0.4f, 0f);
+                elizaGo.transform.position = startPos;
+                elizaGo.SetActive(true);
+                yield return MoveElizaAlong(elizaGo.transform, startPos, stopPos, 5.8f);
+
+                var activeCtx = ctx ?? context;
+                if (activeCtx != null && activeCtx.dialogue != null &&
+                    activeCtx.PlayDialogue(MakeDialogue("D_Eliza_CatchUpCarrier",
+                        ("Eliza", "(Hurries up beside the wagon) \"Wait up, {PlayerName}! I'm coming with you.\""))))
+                {
+                    while (activeCtx.dialogue.IsPlaying) yield return null;
+                }
+            }
+
+            if (playerCtrl != null) playerCtrl.enabled = true;
+            onComplete?.Invoke();
+        }
+
+        IEnumerator MoveElizaAlong(Transform target, Vector3 from, Vector3 to, float speed)
+        {
+            if (target == null) yield break;
+            float dist = Mathf.Abs(to.x - from.x) + Mathf.Abs(to.y - from.y);
+            float duration = Mathf.Max(0.15f, dist / Mathf.Max(0.5f, speed));
+            yield return AxisMove.Move(target, to, duration, (legTo, legDuration) => MoveElizaLeg(target, legTo, legDuration));
+        }
+
+        static IEnumerator MoveElizaLeg(Transform target, Vector3 destination, float duration)
+        {
+            if (target == null) yield break;
+            Vector3 start = target.position;
+            Vector2 dir = (Vector2)(destination - start);
+            var anim = target.GetComponent<HubCharacterAnimator>();
+            if (dir.sqrMagnitude > 0.0001f) anim?.Tick(dir.normalized);
+            float elapsed = 0f;
+            duration = Mathf.Max(0.01f, duration);
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                if (dir.sqrMagnitude > 0.0001f) anim?.Tick(dir.normalized);
+                target.position = Vector3.Lerp(start, destination, Mathf.Clamp01(elapsed / duration));
+                yield return null;
+            }
+            target.position = destination;
+            anim?.Tick(Vector2.zero);
         }
 
         static bool HasUnlockedTool(SessionState session, Tool tool)
