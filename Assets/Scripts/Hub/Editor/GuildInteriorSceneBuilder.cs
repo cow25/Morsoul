@@ -71,7 +71,9 @@ namespace Morsoul.Hub.Editor
             if (context.hud != null)
             {
                 context.hud.caseText = "";
-                context.hud.objectiveText = "Follow Eliza to meet Guildmaster Ovan.";
+                context.hud.objectiveText = "";
+                context.hud.objectiveCaseId = 0;
+                context.hud.postInvestigationObjective = "";
             }
             HubSceneFactory.WirePlayer(player, cameraFollow, context);
 

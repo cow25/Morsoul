@@ -57,10 +57,10 @@ namespace Morsoul.Hub.Editor
                 BuildNaveTilemaps(scene);
                 BuildNaveProps(scene);
                 PixelCrawlerHubToolkit.RebuildBounds(scene, "CathedralBounds",
-                    ("Bound_North", new Vector2(0f, 5.8f), new Vector2(28f, 1.4f)),
-                    ("Bound_South", new Vector2(0f, -7.2f), new Vector2(28f, 1.4f)),
-                    ("Bound_West", new Vector2(-12.2f, 0f), new Vector2(1.4f, 15f)),
-                    ("Bound_East", new Vector2(12.2f, 0f), new Vector2(1.4f, 15f)));
+                    ("Bound_North", new Vector2(0f, 9.6f), new Vector2(36f, 1.4f)),
+                    ("Bound_South", new Vector2(0f, -11.4f), new Vector2(36f, 1.4f)),
+                    ("Bound_West", new Vector2(-16.2f, 0f), new Vector2(1.4f, 24f)),
+                    ("Bound_East", new Vector2(16.2f, 0f), new Vector2(1.4f, 24f)));
 
                 EditorSceneManager.MarkSceneDirty(scene);
                 EditorSceneManager.SaveScene(scene, ArtScenePath);
@@ -83,49 +83,58 @@ namespace Morsoul.Hub.Editor
             var wallsMap = PixelCrawlerHubToolkit.EnsureTilemapLayer(grid.transform, "NaveWalls", -6, 1.95f);
             var windowMap = PixelCrawlerHubToolkit.EnsureTilemapLayer(grid.transform, "StainedGlassWindows", -5, 1.94f);
 
-            // Expanded 25x13 slate cathedral flagstones (x=-12..12, y=-6..6).
-            PixelCrawlerHubToolkit.FillRandomStaticBlock(floorMap, DungeonSheet, -13, -7, 13, 6, 0, 2, 4, 7);
+            // Expanded 33x22 slate cathedral flagstones (x=-16..16, y=-11..10).
+            PixelCrawlerHubToolkit.FillRandomStaticBlock(floorMap, DungeonSheet, -17, -12, 17, 10, 0, 2, 4, 7);
 
-            // Northern Gothic colonnade walls (x=-12..12, y=6..8, slate ashlar cols 1..2).
-            for (int x = -12; x <= 12; x++)
+            // Raised Chancel dais in the northern sanctuary (x=-5..6, y=5..9).
+            var daisTile = PixelCrawlerHubToolkit.LoadStaticTile(DungeonSheet, $"{DungeonSheet}_0_4");
+            if (daisTile != null)
+            {
+                for (int x = -5; x <= 6; x++)
+                    for (int y = 5; y <= 9; y++)
+                        floorMap.SetTile(new Vector3Int(x, y, 0), daisTile);
+            }
+
+            // Northern Gothic colonnade walls (x=-16..16, y=10..12, slate ashlar cols 1..2).
+            for (int x = -16; x <= 16; x++)
             {
                 for (int dy = 0; dy < 3; dy++)
                 {
                     int r = 2 - dy;
                     int c = 1 + (Mathf.Abs(x) % 2);
                     var wt = PixelCrawlerHubToolkit.LoadStaticTile(DungeonSheet, $"{DungeonSheet}_{r}_{c}");
-                    if (wt != null) wallsMap.SetTile(new Vector3Int(x, 6 + dy, 0), wt);
+                    if (wt != null) wallsMap.SetTile(new Vector3Int(x, 10 + dy, 0), wt);
                 }
             }
 
-            // West & East perimeter stone walls enclosing the nave (x=-13..-12 and x=12..13, y=-7..8).
-            for (int y = -7; y <= 8; y++)
+            // West & East perimeter stone walls enclosing the nave (x=-17..-16 and x=16..17, y=-11..12).
+            for (int y = -11; y <= 12; y++)
             {
-                int r = y >= 7 ? 0 : (Mathf.Abs(y) % 2 == 0 ? 2 : 1);
+                int r = y >= 11 ? 0 : (Mathf.Abs(y) % 2 == 0 ? 2 : 1);
                 var westTile = PixelCrawlerHubToolkit.LoadStaticTile(DungeonSheet, $"{DungeonSheet}_{r}_1");
                 var eastTile = PixelCrawlerHubToolkit.LoadStaticTile(DungeonSheet, $"{DungeonSheet}_{r}_2");
                 if (westTile != null)
                 {
-                    wallsMap.SetTile(new Vector3Int(-13, y, 0), westTile);
-                    wallsMap.SetTile(new Vector3Int(-12, y, 0), eastTile ?? westTile);
+                    wallsMap.SetTile(new Vector3Int(-17, y, 0), westTile);
+                    wallsMap.SetTile(new Vector3Int(-16, y, 0), eastTile ?? westTile);
                 }
                 if (eastTile != null)
                 {
-                    wallsMap.SetTile(new Vector3Int(12, y, 0), westTile ?? eastTile);
-                    wallsMap.SetTile(new Vector3Int(13, y, 0), eastTile);
+                    wallsMap.SetTile(new Vector3Int(16, y, 0), westTile ?? eastTile);
+                    wallsMap.SetTile(new Vector3Int(17, y, 0), eastTile);
                 }
             }
 
-            // South stone wall framing the South Cathedral Exit doorway (x=-11..-2 and x=2..11, y=-7).
-            for (int x = -11; x <= 11; x++)
+            // South stone wall framing the South Cathedral Exit doorway (x=-15..-2 and x=2..15, y=-11).
+            for (int x = -15; x <= 15; x++)
             {
                 if (x >= -1 && x <= 1) continue; // Keep center 3-tile entrance doorway open.
                 int c = 1 + (Mathf.Abs(x) % 2);
                 var wt = PixelCrawlerHubToolkit.LoadStaticTile(DungeonSheet, $"{DungeonSheet}_1_{c}");
-                if (wt != null) wallsMap.SetTile(new Vector3Int(x, -7, 0), wt);
+                if (wt != null) wallsMap.SetTile(new Vector3Int(x, -11, 0), wt);
             }
 
-            // Three glowing stained-glass windows (Red at x=-6, Blue at x=0, Green at x=6) layered cleanly over wallsMap.
+            // Three glowing stained-glass floor light shafts (Red at x=-6, Blue at x=0, Green at x=6) at y=7..9.
             StampStainedGlassBay(windowMap, glowMap, centerX: -6, colBase: 0);
             StampStainedGlassBay(windowMap, glowMap, centerX: 0, colBase: 3);
             StampStainedGlassBay(windowMap, glowMap, centerX: 6, colBase: 6);
@@ -139,17 +148,14 @@ namespace Morsoul.Hub.Editor
 
         static void StampStainedGlassBay(Tilemap windowMap, Tilemap glowMap, int centerX, int colBase)
         {
-            // Window arch sits on windowMap (y=6, r=18) over the solid stone wall, casting colored light at y=3..5.
-            var win = PixelCrawlerHubToolkit.LoadStaticTile(DungeonSheet, $"{DungeonSheet}_18_{colBase + 1}");
-            if (win != null) windowMap.SetTile(new Vector3Int(centerX, 6, 0), win);
-
+            // Colored stained-glass light shafts cast across the Chancel floor at y=7..9.
             for (int dx = -1; dx <= 1; dx++)
             {
                 for (int dy = 0; dy < 3; dy++)
                 {
                     int gr = 21 - dy;
                     var g = PixelCrawlerHubToolkit.LoadStaticTile(DungeonSheet, $"{DungeonSheet}_{gr}_{colBase + dx + 1}");
-                    if (g != null) glowMap.SetTile(new Vector3Int(centerX + dx, 3 + dy, 0), g);
+                    if (g != null) glowMap.SetTile(new Vector3Int(centerX + dx, 7 + dy, 0), g);
                 }
             }
         }
@@ -160,8 +166,11 @@ namespace Morsoul.Hub.Editor
 
             var carpetRunner = EnsureSingleSprite(CarpetRunnerPath, 16f);
             if (carpetRunner != null)
-                PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Nave_Carpet_Runner", carpetRunner,
-                    new Vector2(0.5f, -1.0f), zBias: 0f, sortingOrder: -8);
+            {
+                var runner = PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Nave_Carpet_Runner", carpetRunner,
+                    new Vector2(0.5f, -2.0f), zBias: 0f, sortingOrder: -8);
+                if (runner != null) runner.transform.localScale = new Vector3(1f, 1.42f, 1f);
+            }
 
             var stonePew = PixelCrawlerHubToolkit.LoadSprite(ExtPropsPath, "Ext_Props_09");
             var oakBench = PixelCrawlerHubToolkit.LoadSprite(IntPropsPath, "Int_Interior_Props_01_99");
@@ -173,10 +182,10 @@ namespace Morsoul.Hub.Editor
             var plantBroad = AssetDatabase.LoadAssetAtPath<Sprite>(VillagePropsRoot + "plants_1.png");
             var plantLush = AssetDatabase.LoadAssetAtPath<Sprite>(VillagePropsRoot + "plants_17.png");
 
-            // 8 Nave Pews (2 aisles x 4 rows) flanking the crimson ceremonial carpet.
-            foreach (float x in new[] { -3.5f, 4.5f })
+            // 12 Nave Pews (2 aisles x 6 rows) flanking the crimson ceremonial carpet.
+            foreach (float x in new[] { -3.0f, 4.0f })
             {
-                foreach (float y in new[] { -3.8f, -1.8f, 0.2f, 2.2f })
+                foreach (float y in new[] { -7.5f, -5.5f, -3.5f, -1.5f, 0.5f, 2.5f })
                 {
                     PixelCrawlerHubToolkit.PlaceSpriteProp(root, $"Nave_Pew_{x:F0}_{y:F1}",
                         stonePew ?? oakBench, new Vector2(x, y),
@@ -187,43 +196,62 @@ namespace Morsoul.Hub.Editor
             // Choir & Nave Banners hung along the north stone wall between the stained-glass bays.
             if (bannerRed != null && bannerBlue != null)
             {
-                PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Nave_Banner_WW", bannerBlue, new Vector2(-9.0f, 6.6f), zBias: 0f, sortingOrder: -2);
-                PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Nave_Banner_NW", bannerRed, new Vector2(-3.0f, 6.6f), zBias: 0f, sortingOrder: -2);
-                PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Nave_Banner_NE", bannerRed, new Vector2(3.0f, 6.6f), zBias: 0f, sortingOrder: -2);
-                PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Nave_Banner_EE", bannerBlue, new Vector2(9.0f, 6.6f), zBias: 0f, sortingOrder: -2);
+                PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Nave_Banner_WW", bannerBlue, new Vector2(-11.5f, 10.6f), zBias: 0f, sortingOrder: -2);
+                PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Nave_Banner_NW", bannerRed, new Vector2(-2.5f, 10.6f), zBias: 0f, sortingOrder: -2);
+                PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Nave_Banner_NE", bannerRed, new Vector2(3.5f, 10.6f), zBias: 0f, sortingOrder: -2);
+                PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Nave_Banner_EE", bannerBlue, new Vector2(12.5f, 10.6f), zBias: 0f, sortingOrder: -2);
             }
 
-            // Three tall Gothic stained-glass lancet windows & floor light shafts (Red at x=-6, Blue at x=0, Green at x=6).
-            var lancet = PixelCrawlerHubToolkit.LoadCustomSprite("Assets/Art/Environments/Custom/Cathedral_Lancet_Window.png", 16f);
+            // Three Gothic stained-glass lancet windows recessed into the 3-tile north wall.
+            var lancet = EnsureSingleSprite("Assets/Art/Environments/Custom/Cathedral_Lancet_Window.png", 16f);
             if (lancet != null)
             {
-                var wLancet = PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Nave_Lancet_W", lancet, new Vector2(-6.0f, 5.2f), zBias: 0f, sortingOrder: -3);
-                var cLancet = PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Nave_Lancet_C", lancet, new Vector2(0.0f, 5.2f), zBias: 0f, sortingOrder: -3);
-                var eLancet = PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Nave_Lancet_E", lancet, new Vector2(6.0f, 5.2f), zBias: 0f, sortingOrder: -3);
-                wLancet.transform.localScale = Vector3.one * 0.75f;
-                cLancet.transform.localScale = Vector3.one * 0.75f;
-                eLancet.transform.localScale = Vector3.one * 0.75f;
-                PixelCrawlerHubToolkit.PlaceSoftGlow(root, "Nave_LightBeam_W", new Vector2(-6.0f, 3.8f), new Color(1.0f, 0.30f, 0.28f, 0.22f), scale: 3.6f, sortingOrder: -7);
-                PixelCrawlerHubToolkit.PlaceSoftGlow(root, "Nave_LightBeam_C", new Vector2(0.5f, 3.8f), new Color(0.35f, 0.65f, 1.0f, 0.24f), scale: 4.0f, sortingOrder: -7);
-                PixelCrawlerHubToolkit.PlaceSoftGlow(root, "Nave_LightBeam_E", new Vector2(6.0f, 3.8f), new Color(0.35f, 0.95f, 0.50f, 0.22f), scale: 3.6f, sortingOrder: -7);
+                PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Nave_Lancet_W", lancet, new Vector2(-5.5f, 9.55f), zBias: 0f, sortingOrder: -3);
+                PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Nave_Lancet_C", lancet, new Vector2(0.5f, 9.55f), zBias: 0f, sortingOrder: -3);
+                PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Nave_Lancet_E", lancet, new Vector2(6.5f, 9.55f), zBias: 0f, sortingOrder: -3);
+                PixelCrawlerHubToolkit.PlaceSoftGlow(root, "Nave_LightBeam_W", new Vector2(-5.5f, 8.2f), new Color(1.0f, 0.30f, 0.28f, 0.22f), scale: 3.6f, sortingOrder: -7);
+                PixelCrawlerHubToolkit.PlaceSoftGlow(root, "Nave_LightBeam_C", new Vector2(0.5f, 8.2f), new Color(0.35f, 0.65f, 1.0f, 0.24f), scale: 4.0f, sortingOrder: -7);
+                PixelCrawlerHubToolkit.PlaceSoftGlow(root, "Nave_LightBeam_E", new Vector2(6.5f, 8.2f), new Color(0.35f, 0.95f, 0.50f, 0.22f), scale: 3.6f, sortingOrder: -7);
             }
 
-            // West Prayer/Archive Pedestal & East Alms Chest.
+            // Twin colonnades of carved slate stone pillars separating the central nave from the side aisles.
+            var pillarSprite = EnsureSingleSprite("Assets/Art/Environments/Custom/Cathedral_Stone_Pillar.png", 16f);
+            if (pillarSprite != null)
+            {
+                var pillarProf = PixelCrawlerHubToolkit.EnsureCharacterProfile(
+                    "Cath_Stone_Pillar", "Assets/Art/Environments/Custom/Cathedral_Stone_Pillar.png",
+                    pillarSprite.name, null, new Vector2(0f, 1.45f));
+                foreach (float px in new[] { -5.5f, 6.5f })
+                {
+                    foreach (float py in new[] { -7.0f, -2.5f, 2.0f, 6.5f })
+                    {
+                        var pillarGo = new GameObject($"Nave_Pillar_{px:F0}_{py:F1}");
+                        pillarGo.transform.SetParent(root, false);
+                        pillarGo.transform.position = new Vector3(px, py, 0f);
+                        var col = pillarGo.AddComponent<BoxCollider2D>();
+                        col.size = new Vector2(1.1f, 0.7f);
+                        col.offset = new Vector2(0f, 0.35f);
+                        PixelCrawlerHubToolkit.BindActorVisual(pillarGo, pillarProf, addYSort: true);
+                    }
+                }
+            }
+
+            // West Archive Pedestal & East Alms Chest in the wide side aisles.
             if (sideTable != null)
-                PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Nave_Archive_W", sideTable, new Vector2(-10.0f, 2.0f),
+                PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Nave_Archive_W", sideTable, new Vector2(-13.5f, 7.5f),
                     colliderSize: new Vector2(1.8f, 0.75f), colliderOffset: new Vector2(0f, 0.45f));
             if (almsChest != null)
-                PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Nave_AlmsChest_E", almsChest, new Vector2(10.0f, -1.4f),
+                PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Nave_AlmsChest_E", almsChest, new Vector2(13.5f, -2.0f),
                     colliderSize: new Vector2(1.5f, 0.7f), colliderOffset: new Vector2(0f, 0.35f));
             if (plantBroad != null)
             {
-                PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Nave_Plant_SW", plantBroad, new Vector2(-2.3f, -5.8f));
-                PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Nave_Plant_ChancelW", plantBroad, new Vector2(-2.0f, 4.4f));
+                PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Nave_Plant_SW", plantBroad, new Vector2(-2.3f, -9.8f));
+                PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Nave_Plant_ChancelW", plantBroad, new Vector2(-3.2f, 8.4f));
             }
             if (plantLush != null)
             {
-                PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Nave_Plant_SE", plantLush, new Vector2(3.3f, -5.8f));
-                PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Nave_Plant_ChancelE", plantLush, new Vector2(3.0f, 4.4f));
+                PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Nave_Plant_SE", plantLush, new Vector2(3.3f, -9.8f));
+                PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Nave_Plant_ChancelE", plantLush, new Vector2(4.2f, 8.4f));
             }
         }
 
@@ -247,12 +275,12 @@ namespace Morsoul.Hub.Editor
                 BuildNaveTilemaps(scene);
                 BuildNaveProps(scene);
                 PixelCrawlerHubToolkit.RebuildBounds(scene, "CathedralBounds",
-                    ("Bound_North", new Vector2(0f, 5.8f), new Vector2(28f, 1.4f)),
-                    ("Bound_South", new Vector2(0f, -7.2f), new Vector2(28f, 1.4f)),
-                    ("Bound_West", new Vector2(-12.2f, 0f), new Vector2(1.4f, 15f)),
-                    ("Bound_East", new Vector2(12.2f, 0f), new Vector2(1.4f, 15f)));
+                    ("Bound_North", new Vector2(0f, 9.6f), new Vector2(36f, 1.4f)),
+                    ("Bound_South", new Vector2(0f, -11.4f), new Vector2(36f, 1.4f)),
+                    ("Bound_West", new Vector2(-16.2f, 0f), new Vector2(1.4f, 24f)),
+                    ("Bound_East", new Vector2(16.2f, 0f), new Vector2(1.4f, 24f)));
                 PixelCrawlerHubToolkit.ConfigureCamera(
-                    scene, new Vector2(-12.5f, -7.2f), new Vector2(12.5f, 7.2f),
+                    scene, new Vector2(-16.5f, -11.5f), new Vector2(16.5f, 11.5f),
                     5.4f, new Color(0.06f, 0.06f, 0.09f, 1f));
 
                 var playerProf = PixelCrawlerHubToolkit.EnsureCharacterProfile(
@@ -284,14 +312,14 @@ namespace Morsoul.Hub.Editor
 
                 // Spawn inside the South Cathedral entrance when arriving from Hub_CathedralCourtyard.
                 var spawn = GameObject.FindGameObjectWithTag("PlayerSpawn");
-                if (spawn != null) spawn.transform.position = new Vector3(0.5f, -4.8f, 0f);
+                if (spawn != null) spawn.transform.position = new Vector3(0.5f, -8.8f, 0f);
                 var entryMarker = PixelCrawlerHubToolkit.FindRoot(scene, "Spawn_CathedralDoor");
                 if (entryMarker == null)
                 {
                     entryMarker = new GameObject("Spawn_CathedralDoor");
                     entryMarker.AddComponent<SceneSpawnMarker>().entryId = "cathedral_door";
                 }
-                entryMarker.transform.position = new Vector3(0.5f, -4.8f, 0f);
+                entryMarker.transform.position = new Vector3(0.5f, -8.8f, 0f);
 
                 // South Cathedral Exit Doorway returning to Hub_CathedralCourtyard (flush in South wall gap).
                 var exitGo = PixelCrawlerHubToolkit.FindRoot(scene, "CathedralExit");
@@ -299,26 +327,39 @@ namespace Morsoul.Hub.Editor
                 if (exitGate == null)
                 {
                     HubSceneFactory.CreateInteractable("CathedralExit",
-                        new Color(0.55f, 0.4f, 0.25f), new Vector3(0.5f, -6.7f, 0f), out exitGate);
+                        new Color(0.55f, 0.4f, 0.25f), new Vector3(0.5f, -10.8f, 0f), out exitGate);
                 }
                 else
                 {
-                    exitGate.transform.position = new Vector3(0.5f, -6.7f, 0f);
+                    exitGate.transform.position = new Vector3(0.5f, -10.8f, 0f);
                 }
                 exitGate.promptText = "[E] Exit Courtyard";
                 exitGate.requiredFlag = "";
                 exitGate.targetScene = "Hub_CathedralCourtyard";
                 exitGate.entryId = "courtyard_door";
-                PixelCrawlerHubToolkit.HideTriggerVisual(scene, "CathedralExit");
+                var exitMr = exitGate.GetComponent<MeshRenderer>();
+                if (exitMr != null) exitMr.enabled = false;
+                var exitGateSprite = EnsureSingleSprite("Assets/Art/Environments/Custom/Cathedral_Exit_Gate.png", 16f);
+                if (exitGateSprite != null)
+                {
+                    var exitProf = PixelCrawlerHubToolkit.EnsureCharacterProfile(
+                        "Cath_Exit_Gate", "Assets/Art/Environments/Custom/Cathedral_Exit_Gate.png",
+                        exitGateSprite.name, null, new Vector2(0f, -0.25f));
+                    PixelCrawlerHubToolkit.BindActorVisual(exitGate.gameObject, exitProf, addYSort: true);
+                }
+                else
+                {
+                    PixelCrawlerHubToolkit.HideTriggerVisual(scene, "CathedralExit");
+                }
 
                 // Reposition key characters and interactables into the grander Nave layout.
-                SetPos(scene, "Player", new Vector3(0.5f, -4.8f, 0f));
-                SetPos(scene, "Sylvan", new Vector3(-6.0f, 3.2f, 0f));
-                SetPos(scene, "Accord", new Vector3(6.5f, 2.0f, 0f));
-                SetPos(scene, "NaveCrowd", new Vector3(-2.0f, -3.0f, 0f));
-                SetPos(scene, "ValeriusAltar", new Vector3(0.5f, 3.8f, 0f));
-                SetPos(scene, "TuningFork", new Vector3(-7.8f, 2.95f, 0f));
-                SetPos(scene, "BelfryStair", new Vector3(9.8f, 4.2f, 0f));
+                SetPos(scene, "Player", new Vector3(0.5f, -8.8f, 0f));
+                SetPos(scene, "Sylvan", new Vector3(-9.8f, 5.8f, 0f));
+                SetPos(scene, "Accord", new Vector3(10.0f, 3.5f, 0f));
+                SetPos(scene, "NaveCrowd", new Vector3(-7.8f, -4.5f, 0f));
+                SetPos(scene, "ValeriusAltar", new Vector3(0.5f, 6.8f, 0f));
+                SetPos(scene, "TuningFork", new Vector3(-11.5f, 5.5f, 0f));
+                SetPos(scene, "BelfryStair", new Vector3(13.0f, 7.2f, 0f));
 
                 PixelCrawlerHubToolkit.BindRoot(scene, "Player", playerProf);
                 PixelCrawlerHubToolkit.BindRoot(scene, "Sylvan", sylvanProf);
@@ -333,16 +374,16 @@ namespace Morsoul.Hub.Editor
 
                 // Additional ambient clergy/guards in the expanded Nave.
                 var barkDialogue = AssetDatabase.LoadAssetAtPath<DialogueData>(BarksPath);
-                EnsureAmbientNpc(scene, "Nave_Acolyte_W", new Vector3(-7.4f, -3.4f, 0f), crowdProf, barkDialogue);
-                EnsureAmbientNpc(scene, "Nave_Guard_S", new Vector3(-3.4f, -5.6f, 0f), guardProf, barkDialogue);
+                EnsureAmbientNpc(scene, "Nave_Acolyte_W", new Vector3(-10.5f, -6.4f, 0f), crowdProf, barkDialogue);
+                EnsureAmbientNpc(scene, "Nave_Guard_S", new Vector3(-3.4f, -9.2f, 0f), guardProf, barkDialogue);
 
-                // Mother Lyra beside the sanctuary altar.
+                // Mother Lyra beside & in front of the sanctuary altar's front base (y=6.8f).
                 var lyraProf = PixelCrawlerHubToolkit.EnsureCharacterProfile(
                     "MotherLyra", "Assets/Art/Characters/NPCs/Named/MotherLyra/Idle/Idle-Sheet.png",
                     "Idle-Sheet_0", null, new Vector2(0f, -0.35f));
                 var lyraDialogue = AssetDatabase.LoadAssetAtPath<DialogueData>(
                     "Assets/Data/Dialogue/Case02/D_Valerius_Lyra_02.asset");
-                EnsureAmbientNpc(scene, "MotherLyra", new Vector3(-1.3f, 3.8f, 0f), lyraProf, lyraDialogue);
+                EnsureAmbientNpc(scene, "MotherLyra", new Vector3(-2.0f, 6.2f, 0f), lyraProf, lyraDialogue);
 
                 var grandAltar = PixelCrawlerHubToolkit.LoadCustomSprite("Assets/Art/Environments/Custom/Cathedral_GrandAltar.png", 16f);
                 if (grandAltar != null)
@@ -352,8 +393,9 @@ namespace Morsoul.Hub.Editor
                     {
                         var altarProf = PixelCrawlerHubToolkit.EnsureCharacterProfile(
                             "Cath_GrandAltar", "Assets/Art/Environments/Custom/Cathedral_GrandAltar.png",
-                            grandAltar.name, null, Vector2.zero);
+                            grandAltar.name, null, new Vector2(0f, 1.35f));
                         PixelCrawlerHubToolkit.BindActorVisual(altarGo, altarProf, addYSort: true);
+                        EnsureSolidCollider(altarGo, new Vector2(4.4f, 1.4f), new Vector2(0f, 0.55f));
                     }
                 }
                 else
@@ -371,6 +413,7 @@ namespace Morsoul.Hub.Editor
                             "Cath_TuningPedestal", "Assets/Art/Environments/Custom/Cathedral_TuningFork_Pedestal.png",
                             tuningPedestal.name, null, Vector2.zero);
                         PixelCrawlerHubToolkit.BindActorVisual(tfGo, tfProf, addYSort: true);
+                        EnsureSolidCollider(tfGo, new Vector2(1.2f, 0.9f), new Vector2(0f, -0.25f));
                     }
                 }
                 else
@@ -427,6 +470,23 @@ namespace Morsoul.Hub.Editor
                 imp.SaveAndReimport();
             }
             return AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
+        }
+
+        static void EnsureSolidCollider(GameObject root, Vector2 size, Vector2 offset)
+        {
+            if (root == null) return;
+            var existing = root.transform.Find("SolidCollider");
+            var go = existing != null ? existing.gameObject : new GameObject("SolidCollider");
+            if (existing == null)
+            {
+                go.transform.SetParent(root.transform, false);
+                go.layer = root.layer;
+            }
+            var col = go.GetComponent<BoxCollider2D>();
+            if (col == null) col = go.AddComponent<BoxCollider2D>();
+            col.isTrigger = false;
+            col.size = size;
+            col.offset = offset;
         }
 
         static void SetPos(Scene scene, string rootName, Vector3 pos)

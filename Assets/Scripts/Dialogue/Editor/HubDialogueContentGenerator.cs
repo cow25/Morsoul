@@ -392,7 +392,7 @@ namespace Morsoul.Dialogue.Editor
                     "his leather vest with an indifferent smirk) \"Simple as a snapped pick, " +
                     "automaton. Old Brokk was pushing the drilling rigs past " +
                     "maximum tolerance to hit his safety bonuses. He ignored the " +
-                    "safety valves and triggered a steam surge. It was " +
+                    "pressure relief-seals and triggered a steam surge. It was " +
                     "<color=#E5A93C>reckless operator error. Open and shut.</color>\"",
                     clue: contractorDefense,
                     next: "eliza_contractor"),
@@ -439,7 +439,7 @@ namespace Morsoul.Dialogue.Editor
             Dialogue(InterludesFolder, "D_Interlude_Market_01", "ovan_greeting",
                 Node("ovan_greeting", "Guildmaster Ovan",
                     "\"Ah\u2014the Guild's own miracle worker. I had new audit " +
-                    "protocols bound this morning, {PlayerName}. No vault ledger " +
+                    "ledgers bound this morning, {PlayerName}. No vault manifest " +
                     "moves a single crate without two signatures ever again.\"",
                     next: "ovan_fraud"),
                 Node("ovan_fraud", "Guildmaster Ovan",

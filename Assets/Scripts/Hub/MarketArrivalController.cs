@@ -75,18 +75,41 @@ namespace Morsoul.Hub
             }
             yield return FadeTo(dialogue, 0f, 0.6f);
 
-            // She leads a few steps in and turns back to the Golem.
-            yield return MoveTo(eliza, elizaLead, 1.6f);
+            // She leads the player in down the street at a matching walking pace,
+            // staying just a step ahead, then turns back for the welcome beat.
+            const float walkSpeed = 3.5f;
+            Vector3 leadOffset = playerEntry - elizaEntry;
+            if (leadOffset.sqrMagnitude < 0.25f) leadOffset = new Vector3(-1.4f, 0f, 0f);
+            Vector3 playerLead = elizaLead + leadOffset;
+
+            var leadEliza = StartCoroutine(MoveAtSpeed(eliza, elizaEntry, elizaLead, walkSpeed));
+            yield return Wait(0.15f);
+            var leadPlayer = StartCoroutine(MoveAtSpeed(
+                player != null ? player.transform : null, playerEntry, playerLead, walkSpeed));
+            yield return leadEliza;
+            yield return leadPlayer;
             yield return Play(entryDialogue);
 
             // Down the street to the Guild hall's bannered door: same lane,
-            // the Golem trailing a step behind at matching speed.
-            var escort = StartCoroutine(MoveTo(eliza, elizaDoor, 4f));
-            yield return Wait(0.5f);
-            var follow = StartCoroutine(MoveTo(
-                player != null ? player.transform : null, playerDoor, 5.4f));
-            yield return escort;
-            yield return follow;
+            // the Golem trailing a step behind at the exact same walking speed.
+            if (elizaDoor.y > 4f && elizaLead.x < -7.5f)
+            {
+                // Route along the cobblestone West & North park ring around Park_TownWell (0, -0.3).
+                Vector3 elizaWest = new Vector3(-7.8f, elizaLead.y, 0f);
+                Vector3 playerWest = new Vector3(-8.3f, playerLead.y, 0f);
+                Vector3 elizaNorth = new Vector3(-7.8f, 7.5f, 0f);
+                Vector3 playerNorth = new Vector3(-7.2f, 7.5f, 0f);
+                Vector3 elizaForecourt = new Vector3(elizaDoor.x, 7.5f, 0f);
+                Vector3 playerForecourt = new Vector3(playerDoor.x, 7.0f, 0f);
+                yield return WalkPair(eliza, elizaLead, elizaWest, playerLead, playerWest, walkSpeed);
+                yield return WalkPair(eliza, elizaWest, elizaNorth, playerWest, playerNorth, walkSpeed);
+                yield return WalkPair(eliza, elizaNorth, elizaForecourt, playerNorth, playerForecourt, walkSpeed);
+                yield return WalkPair(eliza, elizaForecourt, elizaDoor, playerForecourt, playerDoor, walkSpeed);
+            }
+            else
+            {
+                yield return WalkPair(eliza, elizaLead, elizaDoor, playerLead, playerDoor, walkSpeed);
+            }
             yield return Play(doorDialogue);
 
             // She steps inside; the Golem follows — the Guild scene takes over.
@@ -123,6 +146,24 @@ namespace Morsoul.Hub
         {
             if (dialogue != null) yield return dialogue.FadeTo(target, seconds / timingScale);
             else yield return Wait(seconds);
+        }
+
+        IEnumerator WalkPair(Transform elizaTarget, Vector3 elizaFrom, Vector3 elizaTo,
+            Vector3 playerFrom, Vector3 playerTo, float walkSpeed)
+        {
+            var escort = StartCoroutine(MoveAtSpeed(elizaTarget, elizaFrom, elizaTo, walkSpeed));
+            yield return Wait(0.15f);
+            var follow = StartCoroutine(MoveAtSpeed(
+                player != null ? player.transform : null, playerFrom, playerTo, walkSpeed));
+            yield return escort;
+            yield return follow;
+        }
+
+        IEnumerator MoveAtSpeed(Transform target, Vector3 from, Vector3 destination, float unitsPerSecond)
+        {
+            float dist = Mathf.Abs(destination.x - from.x) + Mathf.Abs(destination.y - from.y);
+            float duration = Mathf.Max(0.25f, dist / Mathf.Max(0.5f, unitsPerSecond));
+            yield return MoveTo(target, destination, duration);
         }
 
         /// <summary>Axis-aligned only: diagonal destinations run as an L-path

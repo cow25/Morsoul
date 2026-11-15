@@ -17,7 +17,7 @@ MonoBehaviour:
   - id: ovan_greeting
     speakerName: Guildmaster Ovan
     speakerPortrait: {fileID: 0}
-    text: "\"Ah\u2014the Guild's own miracle worker. I had new audit protocols bound this morning, {PlayerName}. No vault ledger moves a single crate without two signatures ever again.\""
+    text: "\"Ah\u2014the Guild's own miracle worker. I had new audit ledgers bound this morning, {PlayerName}. No vault manifest moves a single crate without two signatures ever again.\""
     registersClue: {fileID: 0}
     setsFlag: 
     requiresFlag: 

@@ -22,8 +22,11 @@ namespace Morsoul.Flow
             core.InterrogationEntryHandler = caseId =>
             {
                 var data = core.ResolveCase(caseId);
-                return data != null && data.hasInterrogation && data.interrogation != null &&
-                    GameStateManager.Ensure().GoToRoute(RouteKeys.CaseLoop, GameFlowState.Interrogation);
+                if (data == null || !data.hasInterrogation || data.interrogation == null)
+                    return false;
+                if (core.AutoCompleteCasesEnabled)
+                    return InvestigationCompletion.CompleteInterrogationAndTriggerCutscene(core, caseId);
+                return GameStateManager.Ensure().GoToRoute(RouteKeys.CaseLoop, GameFlowState.Interrogation);
             };
         }
 
@@ -49,11 +52,15 @@ namespace Morsoul.Flow
             try
             {
                 if (kind == InvestigationEntryKind.Load)
+                {
+                    if (core.AutoCompleteCasesEnabled)
+                        InvestigationCompletion.ForceCompleteCase(core, area.caseId);
                     return new InvestigationEntryResult
                     {
                         Success = gsm.EnterInvestigationRoute(route, area.caseId),
                         Message = "Entering integrated investigation: " + route,
                     };
+                }
                 var data = core.ResolveCase(area.caseId);
                 if (area.caseId == 0)
                 {

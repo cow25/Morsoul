@@ -58,6 +58,8 @@ namespace Morsoul.Hub
                     Debug.Log("Speak to the case's suspect after completing its investigation.", this);
                     return;
                 }
+                if (ElizaHubPresenceController.TryWarnBeforeSanctumDescent(ctx))
+                    return;
             }
 
             // Destination picker: unlocked hubs from the route table. Only

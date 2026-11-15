@@ -172,6 +172,7 @@ namespace Morsoul.Title
 
         void Update()
         {
+            if (_startingNewGameCutscene) return;
             var kb = Keyboard.current;
             if (kb == null) return;
 
@@ -742,15 +743,40 @@ namespace Morsoul.Title
                 {
                     image = backdrop,
                     waitForInput = true,
+                    captionSpeaker = "",
+                    caption = "In the lightless expanse of the Mana Abyss, a lone consciousness drifts across an endless sea of silence\u2014stripped of name, stripped of flesh, stripped of time."
+                },
+                new CutsceneShotData
+                {
+                    image = backdrop,
+                    waitForInput = true,
+                    captionSpeaker = "",
+                    caption = "From the dark, scattered incandescent fragments\u2014shards of instinct, logic, and an unyielding vow\u2014draw together around the drifting core."
+                },
+                new CutsceneShotData
+                {
+                    image = backdrop,
+                    waitForInput = true,
                     captionSpeaker = "???",
-                    caption = "A fractured soul drifts through the silent ruins of an ancient observatory—drawn toward an empty stone vessel."
+                    caption = "(A distant, unplaced warmth echoes through the void\u2014a phantom hand bracing against yours before the dark closes in.)"
+                },
+                new CutsceneShotData
+                {
+                    image = backdrop,
+                    waitForInput = true,
+                    captionSpeaker = "",
+                    caption = "Pulled by an unseen gravity, the converged soul plummets from the astral tide into cold, ancient stone."
                 },
                 new CutsceneShotData
                 {
                     image = backdrop,
                     waitForInput = true,
                     captionSpeaker = "System",
-                    caption = ">> VESSEL BINDING INITIATED. CHASSIS AWAKENING IN PROGRESS..."
+                    caption = ">> CORE RE-INITIALIZATION: OK.\n" +
+                              ">> PRIMARY DIRECTIVE: UNKNOWN.\n" +
+                              ">> WARNING: MEMORY SECTORS 01 THROUGH 99 CORRUPTED OR MISSING.\n" +
+                              ">> BIOLOGICAL SIGNATURE: NULL. CHASSIS INTEGRITY: 84%.\n" +
+                              ">> OPTICAL SENSORS: ONLINE."
                 }
             };
             return data;

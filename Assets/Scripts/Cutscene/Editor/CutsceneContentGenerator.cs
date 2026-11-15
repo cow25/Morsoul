@@ -58,13 +58,28 @@ namespace Morsoul.Cutscene.Editor
         {
             var still = EnsurePlaceholderStill();
 
-            // --- Entry: "Echoes of the Past" (deep lift -> Sanctum Core) ------
+            // --- Entry: "Echoes of the Past" (deep lift -> Sanctum Core + Threshold + C5 Briefing) ------
             Cutscene(Case05Folder, "D_EchoesOfThePast", "",
                 // Still #2.1 - narrative caption. VERBATIM.
                 Shot(still, "",
                     "Below the bedrock of Asterveil lies the scar that never " +
                     "closed—the point where modern history began, and ancient " +
                     "truth was drowned."),
+                // §4.5.1 - Threshold sensory + resonance.
+                Shot(still, "Eliza",
+                    "(Hand clamped over her temples, breathing heavily) The air down here... " +
+                    "It doesn't smell like earth or sulfur. It smells like ozone and burnt copper. " +
+                    "{PlayerName}, my head is screaming with memories that aren't mine."),
+                Shot(still, "Eliza",
+                    "Look at those inverted towers... They're funneling every stolen piece right " +
+                    "into the fissure—the solvent from the vault, the tuning from Saint Althea's, " +
+                    "twelve thousand gallons of Elder sap, and the drilling conduits from Iron Hollow."),
+                Shot(still, "Golem",
+                    "Analysis: The four preparatory cases were not separate crimes. They were modular " +
+                    "components of a single bypass array built to shatter the First-Age containment seal."),
+                Shot(still, "Grand Overseer",
+                    "You arrive at the eleventh hour, relics of a broken world! Come forward! " +
+                    "Step onto the dais and witness the dawn of uncorrupted mankind!"),
                 // Still #2.2 - Eliza. VERBATIM.
                 Shot(still, "Eliza",
                     "{PlayerName}! Steady—what's happening to your core?! " +
@@ -77,108 +92,214 @@ namespace Morsoul.Cutscene.Editor
                 // Still #2.4 - Golem resolve + Eliza (two speakers, split). VERBATIM.
                 Shot(still, "Golem",
                     "Core interference stabilized. The ambient frequency does " +
-                    "not threaten my systems... it recognizes them. " +
-                    "Proceeding to confrontation."),
+                    "not threaten my chassis... it recognizes it. " +
+                    "Proceeding to the dais."),
                 Shot(still, "Eliza",
-                    "Good. Draw your breath, partner. The Overseer is right ahead."));
+                    "(Draws both daggers with a sharp metallic hiss) Good. Draw your breath, partner. " +
+                    "One last case."),
+                // §4.5.2 - Briefing Montage (pre-loads C5_C1 .. C5_C3 before Deduction Board).
+                Shot(still, "Golem",
+                    "[CORE TELEMETRY: Spectral Mana Flow] Feed 01 carries synthetic solvent; Feed 02 " +
+                    "dampens harmonic shockwaves; Feed 03 injects 12,000 gallons of Elder sap; Feed 04 " +
+                    "draws tectonic pressure from the dwarven fault."),
+                Shot(still, "Eliza",
+                    "They're using the Elder sap as volatile fuel to force the planetary rift open " +
+                    "like an over-pressured boiler."),
+                Shot(still, "Golem",
+                    "[FORENSIC CUT-MARK SCAN] The primary copper grounding cable is severed cleanly at " +
+                    "its base—less than thirty minutes old. Without that ground loop, any surge " +
+                    "channeled through the console inverts into a runaway tectonic collapse."),
+                Shot(still, "Eliza",
+                    "He didn't just rig the pylons to drain mana... He cut the line holding the core " +
+                    "steady so it would tear the whole continent down with it."),
+                Shot(still, "Golem",
+                    "[ARCHIVAL CROSS-REFERENCE] Recovered folio in the Overseer's hand: \"Mana is the " +
+                    "planetary circulatory fluid maintaining equilibrium. Yet the modern world must not " +
+                    "thrive as an impure mockery. Even if it extinguishes the earth, true humanity must be avenged.\""),
+                Shot(still, "Eliza",
+                    "He read the First-Age archives and knew mana wasn't an alien poison... He's doing " +
+                    "this purely out of hatred for the modern races. Tie his scheme together, {PlayerName}!"));
 
             // --- Ending 1: "The Collapsed Rift" (bad ending) ------------------
             Cutscene(Case05Folder, "D_CollapsedRift", "",
-                // Still #3A.1 - red telemetry. VERBATIM.
-                Shot(still, "System",
-                    ">> FATAL CALIBRATION ERROR: INVERTED FLUX DETECTED\n" +
-                    ">> CONTAINMENT FIELD: COLLAPSED\n" +
-                    ">> TECTONIC INTEGRITY: 0%"),
-                // Still #3A.2 - Eliza. VERBATIM.
-                Shot(still, "Eliza",
-                    "{PlayerName}! Let go of the console! {PlayerName}—!"),
-                // Still #3A.3 - narrative caption (doc line breaks kept). VERBATIM.
-                Shot(still, "",
-                    "When truth is obscured by error, history repeats its oldest tragedy.\n" +
-                    "The rift collapsed. Asterveil fell into the deep.\n" +
-                    "And in the cold silence between ages, a shattered consciousness " +
-                    "drifted back to sleep... waiting for another dawn."));
+                ConcatShots(
+                    OverseerConfrontationShots(still),
+                    new[]
+                    {
+                        // Still #3A.1 - red telemetry. VERBATIM.
+                        Shot(still, "System",
+                            ">> FATAL CALIBRATION ERROR: INVERTED FLUX DETECTED\n" +
+                            ">> CONTAINMENT FIELD: COLLAPSED\n" +
+                            ">> TECTONIC INTEGRITY: 0%"),
+                        // Still #3A.2 - Eliza. VERBATIM.
+                        Shot(still, "Eliza",
+                            "{PlayerName}! Let go of the console! {PlayerName}—!"),
+                        // Still #3A.3 - narrative caption (doc line breaks kept). VERBATIM.
+                        Shot(still, "",
+                            "When truth is obscured by error, history repeats its oldest tragedy.\n" +
+                            "The rift collapsed. Asterveil fell into the deep.\n" +
+                            "And in the cold silence between ages, a shattered consciousness " +
+                            "drifted back to sleep... waiting for another dawn.")
+                    }));
 
             // --- Ending 2: "The Silent Sentinel" (normal ending) --------------
             Cutscene(Case05Folder, "D_SilentSentinel", "",
-                // Sprite seq #3B.1 - Guildmaster commendation. VERBATIM.
-                Shot(still, "Guildmaster",
-                    "By decree of the High Council and the Investigator's Guild, " +
-                    "the conspiracy that threatened our realm has been dismantled! " +
-                    "Praise be to our keenest minds — hailed as Asterveil's " +
-                    "finest investigators!"),
-                // Sprite seq #3B.2 - the quiet reflection (4 lines). VERBATIM.
-                Shot(still, "Eliza",
-                    "We saved them all, {PlayerName}. The mines are secure, the " +
-                    "acolyte is free, and the Council is rewriting the trade laws. " +
-                    "The gate holds... but the tremor hasn't stopped."),
-                Shot(still, "Eliza",
-                    "(Gently) Still no memories, huh? Not a single clue about " +
-                    "who made you... or who you used to be?"),
-                Shot(still, "Golem",
-                    "Diagnostic check complete. Memory banks remain permanently " +
-                    "unreadable. I am an automaton of the Investigator's Guild. " +
-                    "That is sufficient."),
-                Shot(still, "Eliza",
-                    "Yeah. I guess it has to be. Come on, partner. Night patrol " +
-                    "starts in an hour."),
-                // Still #3B.3 - closing caption (doc line breaks kept). VERBATIM.
-                Shot(still, "",
-                    "Justice was defended, and the realm endured.\n" +
-                    "Yet beneath the stone faceplate, the past remained an unread " +
-                    "book—a faithful sentinel guarding a world whose origins he " +
-                    "would never know.\n" +
-                    "And far below, the sealed Mana Gate slept: safe for now, but " +
-                    "never truly still."));
+                ConcatShots(
+                    OverseerConfrontationShots(still),
+                    new[]
+                    {
+                        Shot(still, "Golem",
+                            "Bypassing neural link. Engaging emergency mechanical breaker. It will hold " +
+                            "the inversion... though the sealing frequency remains incomplete."),
+                        // Sprite seq #3B.1 - Guildmaster commendation. VERBATIM.
+                        Shot(still, "Guildmaster",
+                            "By decree of the High Council and the Investigator's Guild, " +
+                            "the conspiracy that threatened our realm has been dismantled! " +
+                            "Praise be to our keenest minds — hailed as Asterveil's " +
+                            "finest investigators!"),
+                        // Sprite seq #3B.2 - the quiet reflection (4 lines). VERBATIM.
+                        Shot(still, "Eliza",
+                            "We saved them all, {PlayerName}. The mines are secure, the " +
+                            "acolyte is free, and the Council is rewriting the trade laws. " +
+                            "The gate holds... but the tremor hasn't stopped."),
+                        Shot(still, "Eliza",
+                            "(Gently) Still no memories, huh? Not a single clue about " +
+                            "who made you... or who you used to be?"),
+                        Shot(still, "Golem",
+                            "Diagnostic check complete. Memory banks remain permanently " +
+                            "unreadable. I am an automaton of the Investigator's Guild. " +
+                            "That is sufficient."),
+                        Shot(still, "Eliza",
+                            "Yeah. I guess it has to be. Come on, partner. Night patrol " +
+                            "starts in an hour."),
+                        // Still #3B.3 - closing caption (doc line breaks kept). VERBATIM.
+                        Shot(still, "",
+                            "Justice was defended, and the realm endured.\n" +
+                            "Yet beneath the stone faceplate, the past remained an unread " +
+                            "book—a faithful sentinel guarding a world whose origins he " +
+                            "would never know.\n" +
+                            "And far below, the sealed Mana Gate slept: safe for now, but " +
+                            "never truly still.")
+                    }));
 
             // --- Ending 3: "The Hologram in the Dust" (true ending) -----------
             Cutscene(Case05Folder, "D_Ending3_HologramInTheDust", "",
-                // Still #3C.1 - cyan telemetry. VERBATIM.
-                Shot(still, "System",
-                    ">> AUTHORIZATION VERIFIED: DETECTIVE ARTHUR C. DAYLE\n" +
-                    ">> STABILIZATION FORMULA: RECONSTRUCTED\n" +
-                    ">> MANUAL OVERRIDE REQUIRED: DIRECT NEURAL / CORE ENGAGEMENT"),
-                // Still #3C.2 - Eliza then Golem/Arthur (two speakers). VERBATIM.
-                Shot(still, "Eliza",
-                    "Arthur, no! The voltage will burn out your core! Break the link!"),
-                Shot(still, "Arthur",
-                    "The containment seal cannot hold without a conscious anchor, " +
-                    "Eliza... It was never a machine's duty. It was mine."),
-                // Still #3C.3 - memory unveiling monologue. VERBATIM.
-                Shot(still, "Arthur",
-                    "Three thousand years in the dark... and I remembered the " +
-                    "cases, the evidence, the laws...\n" +
-                    "But I had forgotten the only truth that ever mattered.\n" +
-                    "I remember you, Elise."),
-                // Still #3C.4 - optic handoff (two speakers). VERBATIM.
-                Shot(still, "Arthur",
-                    "Keep this safe... partner. I love you."),
-                Shot(still, "Eliza",
-                    "I've got it, Arthur. Rest now. The case is closed."),
-                // Stills #3C.5-#3C.6 - stage direction only. CONDENSED.
-                Shot(still, "",
-                    "(Five years later. The Investigator's Guild Historical " +
-                    "Archive. On the Chief Investigator's desk, the dormant " +
-                    "brass optic core begins to pulse with a warm, steady " +
-                    "golden light.)"),
-                // Still #3C.7 - hologram exchange (three lines). VERBATIM.
-                Shot(still, "Holo-Arthur",
-                    "Case file logged, Operative Cochran. Ready to submit to " +
-                    "the magistrate?"),
-                Shot(still, "Holo-Elise",
-                    "Only if you're buying coffee on the way back, Detective."),
-                Shot(still, "Holo-Arthur",
-                    "(Laughing) Deal."),
-                // Still #3C.7 - final caption (doc line breaks kept). VERBATIM.
-                Shot(still, "",
-                    "Empires fall to ash, and memory fades into myth.\n" +
-                    "Yet through catastrophe, stone, and time...\n" +
-                    "The soul remembers."));
+                ConcatShots(
+                    OverseerConfrontationShots(still),
+                    new[]
+                    {
+                        Shot(still, "Golem",
+                            "All four Runic Ciphers aligned. Primary soul matrix unlocking... I do not " +
+                            "need the Guild's breaker. I remember the oath we swore in Section Zero."),
+                        // Still #3C.1 - cyan telemetry. VERBATIM.
+                        Shot(still, "System",
+                            ">> AUTHORIZATION VERIFIED: DETECTIVE ARTHUR C. DAYLE\n" +
+                            ">> STABILIZATION FORMULA: RECONSTRUCTED\n" +
+                            ">> MANUAL OVERRIDE REQUIRED: DIRECT NEURAL / CORE ENGAGEMENT"),
+                        // Still #3C.2 - Eliza then Golem/Arthur (two speakers). VERBATIM.
+                        Shot(still, "Eliza",
+                            "Arthur, no! The voltage will burn out your core! Break the link!"),
+                        Shot(still, "Arthur",
+                            "The containment seal cannot hold without a conscious anchor, " +
+                            "Eliza... It was never a machine's duty. It was mine."),
+                        // Still #3C.3 - memory unveiling monologue. VERBATIM.
+                        Shot(still, "Arthur",
+                            "Three thousand years in the dark... and I remembered the " +
+                            "cases, the evidence, the laws...\n" +
+                            "But I had forgotten the only truth that ever mattered.\n" +
+                            "I remember you, Elise."),
+                        // Still #3C.4 - optic handoff (two speakers). VERBATIM.
+                        Shot(still, "Arthur",
+                            "Keep this safe... partner. I love you."),
+                        Shot(still, "Eliza",
+                            "I've got it, Arthur. Rest now. The case is closed."),
+                        // Stills #3C.5-#3C.6 - stage direction only. CONDENSED.
+                        Shot(still, "",
+                            "(Five years later. The Investigator's Guild Historical " +
+                            "Archive. On the Chief Investigator's desk, the dormant " +
+                            "brass optic core begins to pulse with a warm, steady " +
+                            "golden light.)"),
+                        // Still #3C.7 - hologram exchange (three lines). VERBATIM.
+                        Shot(still, "Holo-Arthur",
+                            "Case file logged, Operative Cochran. Ready to submit to " +
+                            "the magistrate?"),
+                        Shot(still, "Holo-Elise",
+                            "Only if you're buying coffee on the way back, Detective."),
+                        Shot(still, "Holo-Arthur",
+                            "(Laughing) Deal."),
+                        // Still #3C.7 - final caption (doc line breaks kept). VERBATIM.
+                        Shot(still, "",
+                            "Empires fall to ash, and memory fades into myth.\n" +
+                            "Yet through catastrophe, stone, and time...\n" +
+                            "The soul remembers.")
+                    }));
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             Debug.Log("CutsceneContentGenerator: wrote finale cutscenes to " +
                       $"'{Case05Folder}' (entry + endings 1-3).");
+        }
+
+        static CutsceneShotData[] OverseerConfrontationShots(Sprite still)
+        {
+            return new[]
+            {
+                // Beat 1 — Merciful Purification (§4.5.3)
+                Shot(still, "Grand Overseer",
+                    "Do you think you can bind me with paper warrants, machine?! Magic is a parasitic " +
+                    "tumor! When the mana tides drain, the beastfolk and spirits dissolve—and our " +
+                    "ritual is merciful purification!"),
+                Shot(still, "Golem",
+                    "Falsehood. Your own private journal proved mana is the planetary circulatory fluid " +
+                    "maintaining tectonic stability. Purging it will collapse the crust and extinguish all life."),
+                Shot(still, "Eliza",
+                    "You're not a doctor curing an infection. You're an arsonist burning down the house " +
+                    "because you despise the children living inside it."),
+                // Beat 2 — Hypocrisy of Dark Magic (§4.5.3)
+                Shot(still, "Grand Overseer",
+                    "You dare lecture me?! Everything we wield is cold First-Age mechanics! Brass " +
+                    "conduits, extraction pylons—there is no witchcraft in steel!"),
+                Shot(still, "Golem",
+                    "Your staff burns with the exact dark mana signature forged into Saint Althea's " +
+                    "bell clapper. Humanity caused the First-Age catastrophe; your entire operation " +
+                    "runs on corrupted mana."),
+                Shot(still, "Eliza",
+                    "You wrapped yourself in First-Age science because you couldn't admit to your own " +
+                    "disciples that you're just another warlock drinking stolen power."),
+                // Beat 3 — Scorched-Earth Nihilism (§4.5.3)
+                Shot(still, "Grand Overseer",
+                    "It does not matter! The grounding is gone! When the core reaches saturation, the " +
+                    "tectonic plates shatter—and we all burn together!"),
+                Shot(still, "Golem",
+                    "Your collapse is preventable. The central console holds an emergency stabilization " +
+                    "shunt: a conscious analytical soul core can bridge the polarity circuit directly."),
+                Shot(still, "Eliza",
+                    "You built your cult on the lie that humanity was weak, Overseer. Three thousand " +
+                    "years ago, two humans gave everything to protect this earth. And we are still standing here."),
+                // §4.5.4 — Stabilizer Console pre-choice
+                Shot(still, "",
+                    "(Eliza kicks the Grand Overseer's ceremonial staff over the chasm brink as sirens " +
+                    "shriek across the dais.)"),
+                ShotTimed(still, "System",
+                    ">> WARNING: PRIMARY GROUND SEVERED\n" +
+                    ">> POLARITY INVERSION AT 94%\n" +
+                    ">> MANUAL CORE BRIDGING REQUIRED WITHIN 15 SECONDS", 1.8f),
+                Shot(still, "Golem",
+                    "It requires a conscious mana core to absorb the polarity backlash and lock the seal " +
+                    "permanently."),
+                Shot(still, "Eliza",
+                    "(Eyes wide with terror, seizing the Golem's arm) {PlayerName}, wait... If you " +
+                    "absorb that charge, your chassis won't survive the feedback!")
+            };
+        }
+
+        static CutsceneShotData[] ConcatShots(params CutsceneShotData[][] groups)
+        {
+            var list = new List<CutsceneShotData>();
+            foreach (var group in groups)
+                if (group != null)
+                    list.AddRange(group);
+            return list.ToArray();
         }
 
         [MenuItem("Morsoul/Data/Validate Cutscene Assets")]

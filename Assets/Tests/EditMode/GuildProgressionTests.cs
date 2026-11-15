@@ -304,6 +304,12 @@ namespace Morsoul.Tests
                 hud.RefreshObjective();
                 Assert.AreEqual("Case 1: The Poisoned Vault", hud.AppliedCaseText);
                 Assert.AreEqual("Investigate the poisoned vault via the cellar grate.", hud.AppliedObjective);
+
+                core.Session.CurrentCase = 2;
+                core.Session.SetFlag("Guild.CheckBoard.2");
+                hud.RefreshObjective();
+                Assert.AreEqual("Case 2: The Muted Belfry", hud.AppliedCaseText);
+                Assert.AreEqual("Check the Quest Board downstairs in the Investigator's Guild for potential cases.", hud.AppliedObjective);
             }
             finally
             {

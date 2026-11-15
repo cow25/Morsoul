@@ -149,15 +149,17 @@ namespace Morsoul.Hub.Editor
             {
                 SceneManager.SetActiveScene(scene);
                 var context = EnsureContext(scene, spec);
+                if (context.elizaProfile == null)
+                    context.elizaProfile = AssetDatabase.LoadAssetAtPath<VisualProfile>("Assets/Art/Profiles/Eliza.asset");
                 EnsurePanel<TravelMenuController>(scene, "TravelMenuPanel", TravelMenuUxmlPath,
                     out var menu);
                 if (context.travelMenu != menu) context.travelMenu = menu;
                 EnsurePanel<HubHudController>(scene, "HubHudPanel", HubHudUxmlPath,
                     out var hud);
-                hud.caseText = spec.caseText;
-                hud.objectiveText = spec.objectiveText;
-                hud.objectiveCaseId = spec.journalCaseId;
-                hud.postInvestigationObjective = spec.postInvestigationObjective;
+                hud.caseText = "";
+                hud.objectiveText = "";
+                hud.objectiveCaseId = 0;
+                hud.postInvestigationObjective = "";
                 EnsureCaseDoor(scene);
                 EnsureRestSpot(scene);
                 if (spec.scenePath != CathedralPath)

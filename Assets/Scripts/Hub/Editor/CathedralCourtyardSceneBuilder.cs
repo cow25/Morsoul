@@ -178,10 +178,10 @@ namespace Morsoul.Hub.Editor
                 doc.visualTreeAsset = hudUxml;
                 doc.sortingOrder = 10;
                 var hud = go.AddComponent<HubHudController>();
-                hud.caseText = "Case 2: The Muted Belfry";
-                hud.objectiveText = "Enter the Cathedral of Saint Althea.";
-                hud.objectiveCaseId = 2;
-                hud.postInvestigationObjective = "The deduction is accepted - confront Accord inside the Cathedral.";
+                hud.caseText = "";
+                hud.objectiveText = "";
+                hud.objectiveCaseId = 0;
+                hud.postInvestigationObjective = "";
                 context.hud = hud;
             }
         }

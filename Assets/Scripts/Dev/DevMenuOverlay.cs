@@ -77,11 +77,29 @@ namespace Morsoul.Dev
         void Update()
         {
             var keyboard = Keyboard.current;
-            if (keyboard == null) return;
-            if (keyboard.f1Key.wasPressedThisFrame)
-                SetMenuVisible(!_visible);
-            if (keyboard.f2Key.wasPressedThisFrame)
-                DevHintsEnabled = !DevHintsEnabled;
+            if (keyboard != null)
+            {
+                if (keyboard.f1Key.wasPressedThisFrame)
+                    SetMenuVisible(!_visible);
+                if (keyboard.f2Key.wasPressedThisFrame)
+                    DevHintsEnabled = !DevHintsEnabled;
+                if (keyboard.f3Key.wasPressedThisFrame)
+                {
+                    var ensured = CoreRuntime.Ensure();
+                    ensured.AutoCompleteCasesEnabled = !ensured.AutoCompleteCasesEnabled;
+                }
+            }
+
+            var core = CoreRuntime.Instance;
+            if (core != null && core.AutoCompleteCasesEnabled &&
+                core.Session.CurrentSceneMode == SceneMode.Mode3D)
+            {
+                int activeCase = core.Session.InvestigationCaseId >= 0
+                    ? core.Session.InvestigationCaseId
+                    : core.Session.CurrentCase;
+                if (!core.Session.GetOrCreateBoardState(activeCase).BoardSolved)
+                    InvestigationCompletion.ForceCompleteCase(core, activeCase);
+            }
         }
 
         void SetMenuVisible(bool visible)
@@ -179,9 +197,20 @@ namespace Morsoul.Dev
         void OnGUI()
         {
             if (DevHintsEnabled) DrawDevHintsOverlay();
+            if (CoreRuntime.Instance != null && CoreRuntime.Instance.AutoCompleteCasesEnabled)
+                DrawAutoCompleteBanner();
             if (!_visible) return;
             _window = GUILayout.Window(987654, _window, DrawWindow,
                 "Morsoul Dev Menu  [F1]");
+        }
+
+        static void DrawAutoCompleteBanner()
+        {
+            var prev = GUI.color;
+            GUI.color = Color.green;
+            GUI.Box(new Rect(Screen.width * 0.5f - 135f, 8f, 270f, 24f),
+                "CASE COMPLETE MODE: ON  [F3]");
+            GUI.color = prev;
         }
 
         void DrawWindow(int id)
@@ -193,6 +222,9 @@ namespace Morsoul.Dev
                 : $"Scene: {SceneManager.GetActiveScene().name}   " +
                   $"Case: {core.Session.CurrentCase}   " +
                   $"Focus: {core.Focus.Percent:0}/{core.Focus.Maximum:0}");
+            if (core != null)
+                core.AutoCompleteCasesEnabled = GUILayout.Toggle(
+                    core.AutoCompleteCasesEnabled, "Case Complete [F3]", GUILayout.Width(145));
             DevHintsEnabled = GUILayout.Toggle(DevHintsEnabled, "Dev Hints [F2]", GUILayout.Width(120));
             GUILayout.EndHorizontal();
 
@@ -252,6 +284,28 @@ namespace Morsoul.Dev
             if (core == null) { NeedCore(); return; }
             var s = core.Session;
             var gsm = GameStateManager.Instance;
+
+            Section("Fast Narrative / Case Complete Mode");
+            core.AutoCompleteCasesEnabled = GUILayout.Toggle(
+                core.AutoCompleteCasesEnabled,
+                "Auto-complete clues & board on entering case areas + instant interrogation win [F3]");
+            int targetCase = s.InvestigationCaseId >= 0 ? s.InvestigationCaseId : s.CurrentCase;
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button($"Complete Case {targetCase} Clues & Board Now", GUILayout.Width(265)))
+            {
+                bool ok = InvestigationCompletion.ForceCompleteCase(core, targetCase);
+                Debug.Log(ok
+                    ? $"[DevMenu] Completed clues & solved board for Case {targetCase}."
+                    : $"[DevMenu] Could not complete Case {targetCase}.");
+            }
+            GUI.enabled = s.CurrentCase >= 1 && s.CurrentCase <= 4;
+            if (GUILayout.Button($"Finish Interrogation Now (Case {Mathf.Clamp(s.CurrentCase, 1, 4)})", GUILayout.Width(270)))
+            {
+                SetMenuVisible(false);
+                InvestigationCompletion.CompleteInterrogationAndTriggerCutscene(core, s.CurrentCase);
+            }
+            GUI.enabled = true;
+            GUILayout.EndHorizontal();
 
             Section("Investigation development fallback");
             core.DevelopmentInvestigationFallbackEnabled = GUILayout.Toggle(

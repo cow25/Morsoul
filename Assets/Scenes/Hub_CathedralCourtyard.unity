@@ -1723,10 +1723,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1df5777e8522b3b4e886f5d2a8375bfd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Morsoul.Hub::Morsoul.Hub.HubHudController
-  objectiveText: Enter the Cathedral of Saint Althea.
-  postInvestigationObjective: The deduction is accepted - confront Accord inside the Cathedral.
-  objectiveCaseId: 2
-  caseText: 'Case 2: The Muted Belfry'
+  objectiveText: 
+  postInvestigationObjective: 
+  objectiveCaseId: 0
+  caseText: 
   footerText: '[WASD] Move | [Shift] Brisk Walk | [E] Interact | [G] Desk/Journal'
 --- !u!114 &379934837
 MonoBehaviour:

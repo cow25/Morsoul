@@ -47,10 +47,21 @@ namespace Morsoul.Hub
             _playerBody = player != null ? player.GetComponent<Rigidbody2D>() : null;
 
             var session = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session : null;
-            if (!GuildIntroRules.CanPlayGuildIntro(session)) return;
-            _introRunning = true;
-            if (player != null) player.enabled = false;
-            StartCoroutine(Run(session));
+            if (GuildIntroRules.CanPlayGuildIntro(session))
+            {
+                _introRunning = true;
+                if (player != null) player.enabled = false;
+                StartCoroutine(Run(session));
+                return;
+            }
+
+            if (session != null && session.CurrentCase >= 2 &&
+                GuildIntroRules.IsBriefingPending(session, session.CurrentCase))
+            {
+                _introRunning = true;
+                if (player != null) player.enabled = false;
+                StartCoroutine(RunCaseDebrief(session, session.CurrentCase));
+            }
         }
 
         void Update()
@@ -117,6 +128,60 @@ namespace Morsoul.Hub
             session.SetFlag(GuildIntroRules.IntroPendingFlag, false);
             _introRunning = false;
             if (player != null) player.enabled = true;
+        }
+
+        IEnumerator RunCaseDebrief(SessionState session, int nextCaseId)
+        {
+            var dialogue = context != null ? context.dialogue : null;
+
+            yield return FadeTo(dialogue, 1f, 0f);
+            Teleport(player != null ? player.transform : null, officePlayer);
+            var cam = FindAnyObjectByType<CameraFollow2D>();
+            if (cam != null && player != null) cam.SnapToTarget(player.transform);
+            if (eliza != null)
+            {
+                eliza.position = officeEliza;
+                eliza.gameObject.SetActive(true);
+            }
+            yield return FadeTo(dialogue, 0f, 0.5f);
+
+            yield return Play(BuildCaseDebriefDialogue(nextCaseId));
+
+            session.SetFlag(GuildIntroRules.BriefingPendingFlag(nextCaseId), false);
+            session.SetFlag($"Guild.CheckBoard.{nextCaseId}");
+            _introRunning = false;
+            if (player != null) player.enabled = true;
+        }
+
+        static DialogueData BuildCaseDebriefDialogue(int nextCaseId)
+        {
+            (string elizaReport, string ovanReply, string boardHint) = nextCaseId switch
+            {
+                2 => ("Guildmaster, Ignatius folded and the Lower Market vault is sealed. But his reagent came from an off-book broker nobody in the district can name.",
+                      "Clean work—though a phantom alchemical broker sets my teeth on edge. Our wardens will tear that paper trail apart.",
+                      "Meanwhile, keep an eye out on the Quest Board downstairs—the Cathedral of Saint Althea just flagged an urgent dispatch that fits your skills."),
+                3 => ("Ovan, Accord confessed. Mother Lyra's chalk slate links the Lower Market broker and Accord's blackmailers to one seal: the Veiled Circle.",
+                      "The Veiled Circle... I'd hoped that name stayed buried in ink. Good thing you cleared the Spirit-folk boy before the Templars hanged an innocent.",
+                      "Check the Quest Board downstairs—an emergency dispatch just arrived from the Whisperwood Rangers."),
+                4 => ("Vane is in Ranger custody, Guildmaster. He wasn't studying blight—he was pumping Elder sap out of Whisperwood straight down Iron Hollow cargo lines.",
+                      "So all three cases are arteries feeding one dark engine. You two are the only investigators seeing the whole pattern.",
+                      "Check the Quest Board downstairs—Overseer Thrun's Union sent a priority Drift 09 request from Iron Hollow."),
+                _ => ("Ovan, Harlan's sabotage is exposed and Chief Engineer Brokk is safe. Worse—Brokk saw the Grand Overseer descend straight into the Sanctum Core beneath Drift 09.",
+                      "Then every regional thread converges beneath Asterveil. With your new Aether Sight active, walk the earlier districts via the Carrier if you sense any hidden First-Age inscriptions left unread.",
+                      "Check the Quest Board downstairs before heading back to Iron Hollow's deep freight lift—everything rests on you two now.")
+            };
+
+            var data = ScriptableObject.CreateInstance<DialogueData>();
+            data.hideFlags = HideFlags.DontSave;
+            data.id = $"D_Guild_Debrief_C{nextCaseId}";
+            data.startNodeId = "n1";
+            data.nodes = new[]
+            {
+                new DialogueNodeData { id = "n1", speakerName = "Eliza", text = elizaReport, nextNodeId = "n2" },
+                new DialogueNodeData { id = "n2", speakerName = "Guildmaster Ovan", text = $"{ovanReply} {boardHint}", nextNodeId = "n3" },
+                new DialogueNodeData { id = "n3", speakerName = "Eliza", text = "Let's check the Quest Board downstairs when you're ready." }
+            };
+            return data;
         }
 
         IEnumerator RunCrystalHandoff(SessionState session)

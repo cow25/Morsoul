@@ -340,6 +340,21 @@ namespace Morsoul.Flow
         void OpenCaseBoard(bool weighted, CaseData caseData)
         {
             if (caseData == null) return;
+            var core = Core.CoreRuntime.Instance;
+            if (core != null && core.AutoCompleteCasesEnabled)
+            {
+                InvestigationCompletion.ForceCompleteCase(core, caseData.caseId);
+                if (weighted && weightedBoard != null)
+                {
+                    weightedBoard.SetCase(caseData, core.Session.GetOrCreateBoardState(caseData.caseId));
+                    weightedBoard.SetClues(ResolveBoardClues(caseData, core.Session));
+                }
+                if (!caseData.hasInterrogation)
+                {
+                    HandleWeightedBoardSolved(default);
+                    return;
+                }
+            }
             bool solvedWeighted = weighted && weightedBoard.Session != null &&
                                   weightedBoard.Session.State.BoardSolved;
             if (solvedWeighted && caseData.hasInterrogation &&
@@ -425,6 +440,12 @@ namespace Morsoul.Flow
         public void HandleInterrogationUnlocked(InterrogationData data)
         {
             if (interrogation == null || data == null) return;
+            if (Core.CoreRuntime.Instance != null && Core.CoreRuntime.Instance.AutoCompleteCasesEnabled)
+            {
+                HandleInterrogationEnded(InterrogationStatus.Confessed);
+                if (Application.isPlaying) HandleResolutionDismissed();
+                return;
+            }
             int caseId = _session != null ? _session.Case.caseId
                 : activeCase != null ? activeCase.caseId : 0;
             // Guided first phase for the tutorial case; Emotion Echo auras
@@ -685,13 +706,36 @@ namespace Morsoul.Flow
             }
             var caseData = _session != null ? _session.Case : activeCase;
             int caseId = caseData != null ? caseData.caseId : 0;
-            if (Application.isPlaying && cutscenePlayer != null && !_punishmentPlayed &&
-                caseId >= 1 && caseId <= 4)
+            if (Application.isPlaying && caseId >= 1 && caseId <= 4)
             {
-                _punishmentPlayed = true;
-                _punishmentPending = true;
-                cutscenePlayer.Play(BuildPunishmentCutscene(caseId));
-                return;
+                var core = Core.CoreRuntime.Instance;
+                var gsm = core != null ? Core.GameStateManager.Ensure() : null;
+                string hubRoute = Core.RouteKeys.Hub(caseId);
+                string hubScene = caseId == 2 && Application.CanStreamedLevelBeLoaded("Hub_CathedralNave")
+                    ? "Hub_CathedralNave"
+                    : (gsm != null ? gsm.routes.Resolve(hubRoute) : null);
+                if (core != null && !string.IsNullOrEmpty(hubScene) &&
+                    Application.CanStreamedLevelBeLoaded(hubScene))
+                {
+                    core.Session.SetFlag(PostInterrogationCutsceneController.PendingFlag(caseId));
+                    if (caseId == 2 && hubScene == "Hub_CathedralNave")
+                    {
+                        gsm.Advance(Core.GameFlowState.Hub);
+                        core.Bus.Publish(new Core.SceneLoadRequestedEvent { SceneName = hubScene });
+                    }
+                    else
+                    {
+                        gsm.GoToRoute(hubRoute, Core.GameFlowState.Hub);
+                    }
+                    return;
+                }
+                if (cutscenePlayer != null && !_punishmentPlayed)
+                {
+                    _punishmentPlayed = true;
+                    _punishmentPending = true;
+                    cutscenePlayer.Play(BuildPunishmentCutscene(caseId));
+                    return;
+                }
             }
             Core.CoreRuntime.Instance?.Bus.Publish(new Core.CaseCompletedEvent
             {

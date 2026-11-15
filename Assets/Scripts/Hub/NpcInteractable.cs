@@ -34,13 +34,20 @@ namespace Morsoul.Hub
                 Debug.LogWarning($"NpcInteractable '{name}': no HubContext supplied.", this);
                 return;
             }
-            if (core != null && gameObject.name == "Ovan" &&
-                GuildIntroRules.IsBriefingPending(core.Session, core.Session.CurrentCase))
+            if (core != null && gameObject.name == "Ovan")
             {
                 int caseId = core.Session.CurrentCase;
-                core.Session.SetFlag(GuildIntroRules.BriefingPendingFlag(caseId), false);
-                ctx.PlayDialogue(BuildOvanBriefing(caseId, dialogue?.portraits));
-                return;
+                if (GuildIntroRules.IsBriefingPending(core.Session, caseId))
+                {
+                    core.Session.SetFlag(GuildIntroRules.BriefingPendingFlag(caseId), false);
+                    ctx.PlayDialogue(BuildOvanBriefing(caseId, dialogue?.portraits));
+                    return;
+                }
+                if (caseId >= 2)
+                {
+                    ctx.PlayDialogue(BuildOvanBriefing(caseId, dialogue?.portraits));
+                    return;
+                }
             }
             if (dialogue == null)
             {

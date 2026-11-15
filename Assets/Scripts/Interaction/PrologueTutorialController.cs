@@ -85,6 +85,8 @@ public class PrologueTutorialController : MonoBehaviour
 
             var t1 = core.ResolveClue(DiagnosticClueId);
             if (t1 != null) core.Session.RegisterClue(t1);
+            if (core.AutoCompleteCasesEnabled)
+                Morsoul.Flow.InvestigationCompletion.ForceCompleteCase(core, 0);
             _lastClueCount = core.Session.ClueIds.Count;
         }
 
@@ -326,6 +328,14 @@ public class PrologueTutorialController : MonoBehaviour
         _dialogueIndex++;
         if (_dialogueIndex >= AwakeningLines.Length)
         {
+            if (CoreRuntime.Instance != null && CoreRuntime.Instance.AutoCompleteCasesEnabled)
+            {
+                Morsoul.Flow.InvestigationCompletion.ForceCompleteCase(CoreRuntime.Instance, 0);
+                _phase = Phase.Investigation;
+                SetGameplayControl(true, unlockCursor: false);
+                RefreshOverlays();
+                return;
+            }
             _phase = Phase.FreeExploreBeforeScan;
             _exploreTimer = 0f;
             SetGameplayControl(true, unlockCursor: false);
@@ -336,6 +346,14 @@ public class PrologueTutorialController : MonoBehaviour
     private void UpdateBeforeScan()
     {
         if (PauseMenuController.AnyModalOrPauseOpen || Time.timeScale == 0f) return;
+        if (CoreRuntime.Instance != null && CoreRuntime.Instance.AutoCompleteCasesEnabled)
+        {
+            Morsoul.Flow.InvestigationCompletion.ForceCompleteCase(CoreRuntime.Instance, 0);
+            _phase = Phase.Investigation;
+            SetGameplayControl(true, unlockCursor: false);
+            RefreshOverlays();
+            return;
+        }
 
         _exploreTimer += Time.deltaTime;
         bool nearDesk = _deskLogsNode != null && _playerTransform != null &&

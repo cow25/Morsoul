@@ -26,6 +26,18 @@ namespace Morsoul.Hub
             base.Interact(ctx);
             if (clue == null)
             {
+                var core = Morsoul.Core.CoreRuntime.Instance;
+                if (core != null && gameObject.name == "GuildBoard" && core.Session.CurrentCase >= 2)
+                {
+                    int caseId = core.Session.CurrentCase;
+                    core.Session.SetFlag($"Guild.CheckBoard.{caseId}", false);
+                    core.Session.SetFlag(ElizaCompanionFollower.JoinedFlag);
+                    if (caseId <= 4)
+                        core.Session.SetFlag(ElizaCarrierGuideController.PendingFlag(caseId));
+                    if (ctx != null) ctx.PlayDialogue(BuildGuildBoardDialogue(caseId));
+                    ElizaCompanionFollower.AttachIfJoined(ctx);
+                    return;
+                }
                 // Flavor-only inspection (notice boards and the like): no
                 // clue to register, just re-readable text.
                 if (inspectionDialogue != null)
@@ -47,6 +59,62 @@ namespace Morsoul.Hub
                 ctx.PlayDialogue(inspectionDialogue);
             else
                 ctx.PlayDialogue(BuildFallbackDialogue(clue, newlyRegistered));
+        }
+
+        static Morsoul.Dialogue.DialogueData BuildGuildBoardDialogue(int caseId)
+        {
+            string posting = caseId switch
+            {
+                2 => "[REQUEST — CATHEDRAL OF SAINT ALTHEA]\n" +
+                     "Mother Lyra was silenced before delivering her ledger. " +
+                     "Investigators cleared for Tier-II Arcane Inquiry: take the Carrier from Lower Market to the Cathedral Courtyard.",
+                3 => "[URGENT DISPATCH — WHISPERWOOD GROVE]\n" +
+                     "Unexplained blight is spreading from the elder grove. " +
+                     "Qualified investigators: meet Ranger Kaelen via the Carrier and secure the Perimeter Seal.",
+                4 => "[PRIORITY CONTRACT — IRON HOLLOW]\n" +
+                     "Unauthorized Veiled Circle activity reported near Drift 09. " +
+                     "Take the Carrier to Iron Hollow and present Guild authority to Overseer Thrun.",
+                _ => "[SEALED DOSSIER — SANCTUM CORE]\n" +
+                     "All regional inquiries converge beneath Asterveil. " +
+                     "Review your Deduction Board [H] to reconstruct the final truth."
+            };
+
+            var data = ScriptableObject.CreateInstance<Morsoul.Dialogue.DialogueData>();
+            data.hideFlags = HideFlags.DontSave;
+            data.id = $"GuildBoard_C{caseId}";
+            data.startNodeId = "n1";
+            if (caseId <= 4)
+            {
+                data.nodes = new[]
+                {
+                    new Morsoul.Dialogue.DialogueNodeData
+                    {
+                        id = "n1",
+                        speakerName = "Guild Quest Board",
+                        text = posting,
+                        nextNodeId = "n2"
+                    },
+                    new Morsoul.Dialogue.DialogueNodeData
+                    {
+                        id = "n2",
+                        speakerName = "Eliza",
+                        text = "I'm joining you on this one, {PlayerName}. Let's head out to the Lower Market—I'll guide you straight to the Carrier."
+                    }
+                };
+            }
+            else
+            {
+                data.nodes = new[]
+                {
+                    new Morsoul.Dialogue.DialogueNodeData
+                    {
+                        id = "n1",
+                        speakerName = "Guild Quest Board",
+                        text = posting
+                    }
+                };
+            }
+            return data;
         }
 
         static Morsoul.Dialogue.DialogueData BuildFallbackDialogue(ClueData target, bool newlyRegistered)

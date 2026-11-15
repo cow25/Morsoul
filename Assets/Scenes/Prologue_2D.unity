@@ -642,6 +642,7 @@ MonoBehaviour:
   hud: {fileID: 0}
   travelMenu: {fileID: 0}
   boardPanel: {fileID: 0}
+  elizaProfile: {fileID: 0}
 --- !u!114 &358778241
 MonoBehaviour:
   m_ObjectHideFlags: 0

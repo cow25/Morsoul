@@ -1,8 +1,10 @@
 using System.IO;
+using Morsoul.Cutscene;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.UIElements;
+using UnityEngine.Video;
 
 namespace Morsoul.Title.Editor
 {
@@ -16,6 +18,8 @@ namespace Morsoul.Title.Editor
         const string ScenePath = "Assets/Scenes/Title.unity";
         const string PanelSettingsPath = "Assets/UI Toolkit/MainPanelSettings.asset";
         const string TitleUxmlPath = "Assets/Title.uxml";
+        const string CutscenePrefabPath = "Assets/Prefabs/UI/CutscenePanel.prefab";
+        const string CutsceneUxmlPath = "Assets/Cutscene.uxml";
 
         [MenuItem("Morsoul/Scenes/Title Scene", priority = 10)]
         public static void CreateTitleScene()
@@ -46,11 +50,34 @@ namespace Morsoul.Title.Editor
             camGo.AddComponent<AudioListener>();
 
             // UI Toolkit Title Menu
+            var panelSettings = AssetDatabase.LoadAssetAtPath<PanelSettings>(PanelSettingsPath);
             var menuGo = new GameObject("TitleMenu");
             var pr = menuGo.AddComponent<PanelRenderer>();
-            pr.panelSettings = AssetDatabase.LoadAssetAtPath<PanelSettings>(PanelSettingsPath);
+            pr.panelSettings = panelSettings;
             pr.visualTreeAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(TitleUxmlPath);
-            menuGo.AddComponent<TitleMenuController>();
+            var menuCtrl = menuGo.AddComponent<TitleMenuController>();
+
+            // Opening Cutscene Panel (renders above TitleMenu)
+            CutscenePlayerController cutsceneCtrl = null;
+            var cutscenePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(CutscenePrefabPath);
+            if (cutscenePrefab != null)
+            {
+                var cutsceneGo = (GameObject)PrefabUtility.InstantiatePrefab(cutscenePrefab);
+                cutsceneCtrl = cutsceneGo.GetComponent<CutscenePlayerController>();
+                var cutsceneRenderer = cutsceneGo.GetComponent<PanelRenderer>();
+                if (cutsceneRenderer != null) cutsceneRenderer.sortingOrder = 10;
+            }
+            else
+            {
+                var cutsceneGo = new GameObject("CutscenePanel");
+                var cutsceneRenderer = cutsceneGo.AddComponent<PanelRenderer>();
+                cutsceneRenderer.panelSettings = panelSettings;
+                cutsceneRenderer.visualTreeAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(CutsceneUxmlPath);
+                cutsceneRenderer.sortingOrder = 10;
+                cutsceneGo.AddComponent<VideoPlayer>();
+                cutsceneCtrl = cutsceneGo.AddComponent<CutscenePlayerController>();
+            }
+            menuCtrl.openingCutscenePlayer = cutsceneCtrl;
 
             if (!AssetDatabase.IsValidFolder("Assets/Scenes"))
                 AssetDatabase.CreateFolder("Assets", "Scenes");
