@@ -20,6 +20,11 @@ namespace Morsoul.Hub
         /// <summary>Latched when Ovan grants the vault entry warrant.</summary>
         public const string WarrantFlag = "C1_WarrantGranted";
 
+        public static string BriefingPendingFlag(int caseId) => $"Guild.BriefingPending.{caseId}";
+
+        public static bool IsBriefingPending(SessionState session, int caseId) =>
+            session != null && session.HasFlag(BriefingPendingFlag(caseId));
+
         /// <summary>
         /// True when Case 1 mission has formally been briefed or accepted.
         /// Before this, Lower Market and Guild introduction beats are active.

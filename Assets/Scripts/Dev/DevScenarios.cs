@@ -35,6 +35,7 @@ namespace Morsoul.Dev
             public string[] setFlags;
             public string[] clearFlags;
             public bool resetSession;
+            public System.Action<SessionState> configure;
         }
 
         public static readonly List<Scenario> All = new List<Scenario>
@@ -44,6 +45,39 @@ namespace Morsoul.Dev
                 name = "Fresh session",
                 description = "Reset SessionState entirely (flags, clues, case, logs).",
                 resetSession = true,
+            },
+            new Scenario
+            {
+                name = "C0: Prologue all clues",
+                description = "Case 0, registers all Prologue clues in place (solve board).",
+                currentCase = 0, collectCaseClues = true,
+            },
+            new Scenario
+            {
+                name = "C0: Prologue wilderness (Eliza)",
+                description = "Case 0, clues + gate/robe/exit set → Prologue_Wilderness.",
+                currentCase = 0, routeKey = RouteKeys.PrologueWilderness, collectCaseClues = true,
+                configure = s =>
+                {
+                    s.PrologueGateUnlocked = true;
+                    s.PrologueRobeCollected = true;
+                    s.PrologueExitLoaded = true;
+                },
+            },
+            new Scenario
+            {
+                name = "C0: Skip Prologue → Hub 1",
+                description = "Marks Prologue + Eliza intro complete, advances to Case 1 Hub.",
+                currentCase = 1, routeKey = "hub.1",
+                configure = s =>
+                {
+                    s.PrologueGateUnlocked = true;
+                    s.PrologueRobeCollected = true;
+                    s.PrologueExitLoaded = true;
+                    s.PrologueCompleted = true;
+                    s.ElizaIntroTriggered = true;
+                    s.ElizaIntroSeen = true;
+                },
             },
             new Scenario
             {
@@ -129,6 +163,7 @@ namespace Morsoul.Dev
                 foreach (var f in s.setFlags) session.SetFlag(f);
             if (s.clearFlags != null)
                 foreach (var f in s.clearFlags) session.SetFlag(f, false);
+            s.configure?.Invoke(session);
 
             if (!string.IsNullOrEmpty(s.routeKey))
             {

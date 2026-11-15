@@ -61,6 +61,7 @@ namespace Morsoul.Hub.Editor
             SceneManager.MoveGameObjectToScene(go, scene);
             var grid = go.AddComponent<Grid>();
             grid.cellSize = Vector3.one;
+            grid.cellGap = Vector3.zero;
             grid.cellLayout = GridLayout.CellLayout.Rectangle;
             return grid;
         }
@@ -148,6 +149,12 @@ namespace Morsoul.Hub.Editor
             sr.flipX = flipX;
             sr.sortingOrder = sortingOrder;
             if (tint.HasValue) sr.color = tint.Value;
+
+            if (sortingOrder == 0)
+            {
+                var ysort = go.AddComponent<YSort2D>();
+                ysort.bias = zBias;
+            }
 
             if (colliderSize.HasValue)
             {
@@ -338,6 +345,78 @@ namespace Morsoul.Hub.Editor
             int slash = normalized.LastIndexOf('/');
             EnsureFolder(normalized.Substring(0, slash));
             AssetDatabase.CreateFolder(normalized.Substring(0, slash), normalized.Substring(slash + 1));
+        }
+
+        public static Sprite LoadCustomSprite(string path, float ppu = 16f)
+        {
+            var ti = AssetImporter.GetAtPath(path) as TextureImporter;
+            if (ti != null)
+            {
+                bool dirty = ti.textureType != TextureImporterType.Sprite
+                             || ti.spriteImportMode != SpriteImportMode.Single
+                             || ti.filterMode != FilterMode.Point
+                             || Mathf.Abs(ti.spritePixelsToUnits - ppu) > 0.01f
+                             || ti.textureCompression != TextureImporterCompression.Uncompressed;
+                if (dirty)
+                {
+                    ti.textureType = TextureImporterType.Sprite;
+                    ti.spriteImportMode = SpriteImportMode.Single;
+                    ti.filterMode = FilterMode.Point;
+                    ti.spritePixelsToUnits = ppu;
+                    ti.textureCompression = TextureImporterCompression.Uncompressed;
+                    var settings = new TextureImporterSettings();
+                    ti.ReadTextureSettings(settings);
+                    settings.spriteAlignment = (int)SpriteAlignment.BottomCenter;
+                    settings.spritePivot = new Vector2(0.5f, 0f);
+                    ti.SetTextureSettings(settings);
+                    ti.SaveAndReimport();
+                }
+            }
+            return AssetDatabase.LoadAssetAtPath<Sprite>(path);
+        }
+
+        public static void DisableArtSceneLoader(Scene scene)
+        {
+            var loader = FindInScene<HubArtSceneLoader>(scene);
+            if (loader != null) UnityEngine.Object.DestroyImmediate(loader.gameObject);
+        }
+
+        public static void PaintOrganicPath(Tilemap map, TileBase tile, Vector2[] points, float radius)
+        {
+            if (map == null || tile == null || points == null || points.Length == 0) return;
+            for (int i = 0; i < points.Length - 1; i++)
+            {
+                Vector2 a = points[i];
+                Vector2 b = points[i + 1];
+                int steps = Mathf.Max(1, Mathf.CeilToInt(Vector2.Distance(a, b) * 2f));
+                for (int s = 0; s <= steps; s++)
+                {
+                    Vector2 c = Vector2.Lerp(a, b, s / (float)steps);
+                    int x0 = Mathf.FloorToInt(c.x - radius);
+                    int x1 = Mathf.CeilToInt(c.x + radius);
+                    int y0 = Mathf.FloorToInt(c.y - radius);
+                    int y1 = Mathf.CeilToInt(c.y + radius);
+                    for (int x = x0; x <= x1; x++)
+                    {
+                        for (int y = y0; y <= y1; y++)
+                        {
+                            float dx = x + 0.5f - c.x;
+                            float dy = y + 0.5f - c.y;
+                            if (dx * dx + dy * dy <= radius * radius)
+                                map.SetTile(new Vector3Int(x, y, 0), tile);
+                        }
+                    }
+                }
+            }
+        }
+
+        public static GameObject PlaceSoftGlow(Transform parent, string name, Vector2 pos, Color color, float scale = 3.5f, int sortingOrder = -7)
+        {
+            var sp = LoadCustomSprite("Assets/Art/Environments/Custom/Glow_Soft.png", 16f);
+            if (sp == null) return null;
+            var go = PlaceSpriteProp(parent, name, sp, pos, zBias: 0f, sortingOrder: sortingOrder, tint: color);
+            go.transform.localScale = new Vector3(scale, scale, 1f);
+            return go;
         }
     }
 }

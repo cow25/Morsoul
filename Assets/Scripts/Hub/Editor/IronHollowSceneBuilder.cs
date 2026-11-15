@@ -44,10 +44,9 @@ namespace Morsoul.Hub.Editor
         public static void Rebuild()
         {
             PixelCrawlerHubToolkit.ClearCache();
-            RebuildArtOverlay();
             RebuildMainSceneBindings();
             AssetDatabase.SaveAssets();
-            Debug.Log("IronHollowSceneBuilder: rebuilt Hub_IronHollow and Hub_IronHollow_Art (Pixel Crawler).");
+            Debug.Log("IronHollowSceneBuilder: rebuilt unified Hub_IronHollow (Pixel Crawler).");
         }
 
         static void RebuildArtOverlay()
@@ -251,6 +250,30 @@ namespace Morsoul.Hub.Editor
                     PixelCrawlerHubToolkit.PlaceSpriteProp(root, $"Iron_Cluster_{pos.x:F0}_{pos.y:F0}", rockCluster, pos,
                         colliderSize: new Vector2(0.9f, 0.6f), colliderOffset: new Vector2(0f, 0.3f));
             }
+
+            var carrierWagon = PixelCrawlerHubToolkit.LoadCustomSprite("Assets/Art/Environments/Custom/Carrier_Wagon.png", 16f);
+            if (carrierWagon != null)
+                PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Carrier_Wagon", carrierWagon,
+                    new Vector2(-16.2f, 4.3f), colliderSize: new Vector2(4.2f, 1.4f), colliderOffset: new Vector2(0f, 0.7f));
+
+            var minecart = PixelCrawlerHubToolkit.LoadCustomSprite("Assets/Art/Environments/Custom/IronHollow_Minecart_Track.png", 16f);
+            if (minecart != null)
+            {
+                PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Iron_Minecart_Center", minecart,
+                    new Vector2(-1.0f, 0.8f), colliderSize: new Vector2(2.6f, 1.1f), colliderOffset: new Vector2(0f, 0.55f));
+                PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Iron_Minecart_East", minecart,
+                    new Vector2(6.5f, 0.8f), colliderSize: new Vector2(2.6f, 1.1f), colliderOffset: new Vector2(0f, 0.55f));
+            }
+
+            var pipeArch = PixelCrawlerHubToolkit.LoadCustomSprite("Assets/Art/Environments/Custom/IronHollow_SteamPipe_Arch.png", 16f);
+            if (pipeArch != null)
+            {
+                PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Iron_SteamArch_W", pipeArch, new Vector2(-12.5f, 4.8f), zBias: 0f, sortingOrder: -2);
+                PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Iron_SteamArch_E", pipeArch, new Vector2(13.0f, 5.2f), zBias: 0f, sortingOrder: -2);
+            }
+
+            PixelCrawlerHubToolkit.PlaceSoftGlow(root, "Iron_ForgeGlow", new Vector2(0f, 5.2f), new Color(1.0f, 0.55f, 0.18f, 0.34f), scale: 4.8f);
+            PixelCrawlerHubToolkit.PlaceSoftGlow(root, "Iron_CampGlow", new Vector2(-10.5f, -4.8f), new Color(1.0f, 0.65f, 0.25f, 0.32f), scale: 3.6f);
         }
 
         static void RebuildMainSceneBindings()
@@ -265,6 +288,18 @@ namespace Morsoul.Hub.Editor
             try
             {
                 SceneManager.SetActiveScene(scene);
+                PixelCrawlerHubToolkit.DisableArtSceneLoader(scene);
+                var oldEnv = PixelCrawlerHubToolkit.FindRoot(scene, "Environment");
+                if (oldEnv != null) Object.DestroyImmediate(oldEnv);
+                var oldGrid = PixelCrawlerHubToolkit.FindRoot(scene, "EnvironmentGrid");
+                if (oldGrid != null) Object.DestroyImmediate(oldGrid);
+                BuildMineTilemaps(scene);
+                BuildMineProps(scene);
+                PixelCrawlerHubToolkit.RebuildBounds(scene, "IronHollowBounds",
+                    ("Bound_North", new Vector2(0f, 7.2f), new Vector2(40f, 1.4f)),
+                    ("Bound_South", new Vector2(0f, -7.8f), new Vector2(40f, 1.4f)),
+                    ("Bound_West", new Vector2(-18.0f, -0.6f), new Vector2(1.6f, 17.5f)),
+                    ("Bound_East", new Vector2(17.8f, -0.6f), new Vector2(1.6f, 17.5f)));
                 PixelCrawlerHubToolkit.ConfigureCamera(
                     scene, new Vector2(-19.0f, -9.0f), new Vector2(19.0f, 8.0f),
                     5.5f, new Color(0.06f, 0.06f, 0.08f, 1f));
@@ -328,7 +363,22 @@ namespace Morsoul.Hub.Editor
                 EnsureAmbientNpc(scene, "Miner_East_M", new Vector3(11.6f, -2.6f, 0f),
                     MinerMSheet, "Idle_Side-Sheet_0", MinerMCtrl, false, barkDialogue);
 
-                PixelCrawlerHubToolkit.BindStaticProp(scene, "DrillBit", "Iron_DrillBlade", ToolsPath, "Tools_25");
+                var toolCart = PixelCrawlerHubToolkit.LoadCustomSprite("Assets/Art/Environments/Custom/IronHollow_ToolCart_Drill.png", 16f);
+                if (toolCart != null)
+                {
+                    var dbGo = PixelCrawlerHubToolkit.FindRoot(scene, "DrillBit");
+                    if (dbGo != null)
+                    {
+                        var dbProf = PixelCrawlerHubToolkit.EnsureCharacterProfile(
+                            "Iron_ToolCartDrill", "Assets/Art/Environments/Custom/IronHollow_ToolCart_Drill.png",
+                            toolCart.name, null, Vector2.zero);
+                        PixelCrawlerHubToolkit.BindActorVisual(dbGo, dbProf, addYSort: true);
+                    }
+                }
+                else
+                {
+                    PixelCrawlerHubToolkit.BindStaticProp(scene, "DrillBit", "Iron_DrillBlade", ToolsPath, "Tools_25");
+                }
                 PixelCrawlerHubToolkit.BindStaticProp(scene, "RestSpot", "Iron_RestCampfire", BonfirePath, "Bonfire_01-Sheet_0");
                 AttachCampfireFlame(scene, "RestSpot");
                 PixelCrawlerHubToolkit.BindStaticProp(scene, "DeepShaftLift", "Iron_ShaftLiftGate", CustomLiftPath, "DeepShaftLift");

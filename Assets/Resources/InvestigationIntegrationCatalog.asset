@@ -16,27 +16,27 @@ MonoBehaviour:
   areas:
   - caseId: 0
     routeKey: opening
-    status: 0
+    status: 1
     allowDevelopmentFallback: 1
     requiredEntryFlag:
   - caseId: 1
     routeKey: investigation.1
-    status: 0
+    status: 1
     allowDevelopmentFallback: 1
     requiredEntryFlag: C1_WarrantGranted
   - caseId: 2
     routeKey: investigation.2
-    status: 0
+    status: 1
     allowDevelopmentFallback: 1
     requiredEntryFlag: C2_BelfryKeyGranted
   - caseId: 3
     routeKey: investigation.3
-    status: 0
+    status: 1
     allowDevelopmentFallback: 1
     requiredEntryFlag: C3_PerimeterSealGranted
   - caseId: 4
     routeKey: investigation.4
-    status: 0
+    status: 1
     allowDevelopmentFallback: 1
     requiredEntryFlag: C4_OverrideClearance
   - caseId: 5

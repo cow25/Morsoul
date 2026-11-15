@@ -105,7 +105,8 @@ namespace Morsoul.Hub
             if (gsm == null || session == null) return new List<TravelDestination>();
             return TravelRules.CollectDestinations(
                 gsm.routes, hubCaseIds, LabelMap(), session.CurrentCase, currentScene,
-                Application.CanStreamedLevelBeLoaded);
+                Application.CanStreamedLevelBeLoaded,
+                caseId => !GuildIntroRules.IsBriefingPending(session, caseId));
         }
 
         /// <summary>Opens the menu with the given destinations (no-op when empty).</summary>

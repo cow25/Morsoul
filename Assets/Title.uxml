@@ -11,7 +11,7 @@
         <ui:VisualElement name="MenuStack" class="title-menu-stack">
             <ui:VisualElement name="StartGameRow" class="title-menu-row title-menu-row--active">
                 <ui:VisualElement class="title-menu-btn-line">
-                    <ui:Button name="StartGameButton" text="Start Game" class="title-menu-btn"/>
+                    <ui:Button name="StartGameButton" text="Continue" class="title-menu-btn"/>
                     <ui:VisualElement class="title-menu-diamond" picking-mode="Ignore"/>
                 </ui:VisualElement>
                 <ui:VisualElement class="title-menu-underline" picking-mode="Ignore"/>

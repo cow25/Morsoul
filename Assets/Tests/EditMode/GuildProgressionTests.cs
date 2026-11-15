@@ -282,6 +282,37 @@ namespace Morsoul.Tests
         }
 
         [Test]
+        public void HubObjective_DoesNotLeakFutureHubGoalWhenCurrentCaseIsEarlier()
+        {
+            var core = CoreRuntime.Ensure();
+            var hudGo = new GameObject("HudPanel");
+            var hud = hudGo.AddComponent<HubHudController>();
+            hud.caseText = "Case 2: The Muted Belfry";
+            hud.objectiveText = "Examine Mother Lyra and secure the Belfry Key.";
+            hud.objectiveCaseId = 2;
+
+            try
+            {
+                core.Session.Reset();
+                core.Session.CurrentCase = 0;
+                hud.RefreshObjective();
+                Assert.AreEqual("Prologue", hud.AppliedCaseText);
+                Assert.AreNotEqual(hud.objectiveText, hud.AppliedObjective);
+
+                core.Session.CurrentCase = 1;
+                core.Session.SetFlag(GuildIntroRules.WarrantFlag);
+                hud.RefreshObjective();
+                Assert.AreEqual("Case 1: The Poisoned Vault", hud.AppliedCaseText);
+                Assert.AreEqual("Investigate the poisoned vault via the cellar grate.", hud.AppliedObjective);
+            }
+            finally
+            {
+                Object.DestroyImmediate(hudGo);
+                Object.DestroyImmediate(core.gameObject);
+            }
+        }
+
+        [Test]
         public void IgnatiusDialogue_HasWorkingConversationAndClaim()
         {
             var data = UnityEditor.AssetDatabase.LoadAssetAtPath<Morsoul.Dialogue.DialogueData>(

@@ -24,7 +24,6 @@ namespace Morsoul.Hub
         public override void Interact(HubContext ctx)
         {
             base.Interact(ctx);
-            if (_inspected) return;
             if (clue == null)
             {
                 // Flavor-only inspection (notice boards and the like): no
@@ -42,9 +41,34 @@ namespace Morsoul.Hub
                 Debug.LogWarning($"InspectionInteractable '{name}': no HubContext.journal wired.", this);
                 return;
             }
-            if (!ctx.journal.Register(clue)) return;
+            bool newlyRegistered = !_inspected && ctx.journal.Register(clue);
             _inspected = true;
-            if (inspectionDialogue != null) ctx.PlayDialogue(inspectionDialogue);
+            if (inspectionDialogue != null)
+                ctx.PlayDialogue(inspectionDialogue);
+            else
+                ctx.PlayDialogue(BuildFallbackDialogue(clue, newlyRegistered));
+        }
+
+        static Morsoul.Dialogue.DialogueData BuildFallbackDialogue(ClueData target, bool newlyRegistered)
+        {
+            string title = string.IsNullOrEmpty(target.displayName) ? target.id : target.displayName;
+            string desc = string.IsNullOrEmpty(target.description) ? "" : $"\n{target.description}";
+            string suffix = newlyRegistered ? "\n\n[Clue added to Journal]" : "";
+
+            var data = ScriptableObject.CreateInstance<Morsoul.Dialogue.DialogueData>();
+            data.hideFlags = HideFlags.DontSave;
+            data.id = $"Inspect_{target.id}";
+            data.startNodeId = "n1";
+            data.nodes = new[]
+            {
+                new Morsoul.Dialogue.DialogueNodeData
+                {
+                    id = "n1",
+                    speakerName = "Observation",
+                    text = $"{title}{desc}{suffix}"
+                }
+            };
+            return data;
         }
     }
 }

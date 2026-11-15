@@ -37,16 +37,37 @@ namespace Morsoul.Hub
         public Vector3 officePlayer = new Vector3(-0.6f, 26.5f, 0f);
 
         Rigidbody2D _playerBody;
+        bool _introRunning;
+        bool _crystalRunning;
 
         void Start()
         {
-            var session = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session : null;
-            if (!GuildIntroRules.CanPlayGuildIntro(session)) return;
             if (context == null) context = FindAnyObjectByType<HubContext>();
             if (player == null) player = FindAnyObjectByType<HubPlayerController>();
             _playerBody = player != null ? player.GetComponent<Rigidbody2D>() : null;
+
+            var session = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session : null;
+            if (!GuildIntroRules.CanPlayGuildIntro(session)) return;
+            _introRunning = true;
             if (player != null) player.enabled = false;
             StartCoroutine(Run(session));
+        }
+
+        void Update()
+        {
+            if (_introRunning || _crystalRunning || player == null) return;
+            var session = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session : null;
+            if (session == null || !GuildIntroRules.IsCaseOneActive(session)) return;
+            if (session.HasFlag("Guild.CrystalReceived")) return;
+
+            // Trigger before descending from Ovan's 2F floor toward StairsDown (x=10.5, y=24.5).
+            Vector3 p = player.transform.position;
+            if (p.y > 18f && p.x >= 6.0f)
+            {
+                _crystalRunning = true;
+                player.enabled = false;
+                StartCoroutine(RunCrystalHandoff(session));
+            }
         }
 
         IEnumerator Run(SessionState session)
@@ -69,11 +90,17 @@ namespace Morsoul.Hub
             yield return playerFollow;
             yield return Play(receptionDialogue);
 
-            // Up the stairs to the Guildmaster's office.
-            var playerToStairs = StartCoroutine(MoveTo(
-                player != null ? player.transform : null, playerStairs, 2.8f));
-            yield return MoveTo(eliza, elizaStairs, 2.6f);
-            yield return playerToStairs;
+            // Up the stairs to the Guildmaster's office: align at the bottom entrance, then climb North up the carpet.
+            var playerFoot = StartCoroutine(MoveTo(
+                player != null ? player.transform : null, new Vector3(11.15f, 2.35f, 0f), 2.4f));
+            yield return MoveTo(eliza, new Vector3(11.85f, 2.45f, 0f), 2.2f);
+            yield return playerFoot;
+
+            var playerClimb = StartCoroutine(MoveTo(
+                player != null ? player.transform : null, new Vector3(11.15f, 5.05f, 0f), 1.0f));
+            yield return MoveTo(eliza, new Vector3(11.85f, 5.15f, 0f), 1.0f);
+            yield return playerClimb;
+
             yield return FadeTo(dialogue, 1f, 0.4f);
             Teleport(eliza, upstairsEliza);
             Teleport(player != null ? player.transform : null, upstairsPlayer);
@@ -88,7 +115,51 @@ namespace Morsoul.Hub
 
             session.SetFlag(GuildIntroRules.IntroSeenFlag);
             session.SetFlag(GuildIntroRules.IntroPendingFlag, false);
+            _introRunning = false;
             if (player != null) player.enabled = true;
+        }
+
+        IEnumerator RunCrystalHandoff(SessionState session)
+        {
+            if (eliza != null && player != null)
+            {
+                if (eliza.position.y < 18f) eliza.position = officeEliza;
+                eliza.gameObject.SetActive(true);
+                Vector3 dest = player.transform.position + new Vector3(-1.3f, 0f, 0f);
+                yield return MoveTo(eliza, dest, 1.1f);
+            }
+
+            yield return Play(BuildCrystalDialogue());
+            session.SetFlag("Guild.CrystalReceived");
+            _crystalRunning = false;
+            if (player != null) player.enabled = true;
+        }
+
+        static DialogueData BuildCrystalDialogue()
+        {
+            var data = ScriptableObject.CreateInstance<DialogueData>();
+            data.hideFlags = HideFlags.DontSave;
+            data.id = "D_Guild_CrystalHandoff";
+            data.startNodeId = "n1";
+            data.nodes = new[]
+            {
+                new DialogueNodeData
+                {
+                    id = "n1",
+                    speakerName = "Eliza",
+                    text = "(Rushes up to you, holding out a glowing blue shard) " +
+                           "\"Wait—before you head downstairs! Take this Communicator Crystal. " +
+                           "If we get separated during an investigation, we can still reach each other from afar.\"",
+                    nextNodeId = "n2"
+                },
+                new DialogueNodeData
+                {
+                    id = "n2",
+                    speakerName = "Eliza",
+                    text = "\"Keep it safe. Now let's head down and get to work.\""
+                }
+            };
+            return data;
         }
 
         void Teleport(Transform target, Vector3 position)

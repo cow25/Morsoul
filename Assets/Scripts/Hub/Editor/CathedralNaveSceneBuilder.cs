@@ -33,10 +33,9 @@ namespace Morsoul.Hub.Editor
         public static void Rebuild()
         {
             PixelCrawlerHubToolkit.ClearCache();
-            RebuildArtOverlay();
             RebuildMainSceneBindings();
             AssetDatabase.SaveAssets();
-            Debug.Log("CathedralNaveSceneBuilder: rebuilt Hub_CathedralNave and Hub_CathedralNave_Art (Pixel Crawler).");
+            Debug.Log("CathedralNaveSceneBuilder: rebuilt unified Hub_CathedralNave (Pixel Crawler).");
         }
 
         static void RebuildArtOverlay()
@@ -194,16 +193,28 @@ namespace Morsoul.Hub.Editor
                 PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Nave_Banner_EE", bannerBlue, new Vector2(9.0f, 6.6f), zBias: 0f, sortingOrder: -2);
             }
 
+            // Three tall Gothic stained-glass lancet windows & floor light shafts (Red at x=-6, Blue at x=0, Green at x=6).
+            var lancet = PixelCrawlerHubToolkit.LoadCustomSprite("Assets/Art/Environments/Custom/Cathedral_Lancet_Window.png", 16f);
+            if (lancet != null)
+            {
+                var wLancet = PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Nave_Lancet_W", lancet, new Vector2(-6.0f, 5.2f), zBias: 0f, sortingOrder: -3);
+                var cLancet = PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Nave_Lancet_C", lancet, new Vector2(0.0f, 5.2f), zBias: 0f, sortingOrder: -3);
+                var eLancet = PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Nave_Lancet_E", lancet, new Vector2(6.0f, 5.2f), zBias: 0f, sortingOrder: -3);
+                wLancet.transform.localScale = Vector3.one * 0.75f;
+                cLancet.transform.localScale = Vector3.one * 0.75f;
+                eLancet.transform.localScale = Vector3.one * 0.75f;
+                PixelCrawlerHubToolkit.PlaceSoftGlow(root, "Nave_LightBeam_W", new Vector2(-6.0f, 3.8f), new Color(1.0f, 0.30f, 0.28f, 0.22f), scale: 3.6f, sortingOrder: -7);
+                PixelCrawlerHubToolkit.PlaceSoftGlow(root, "Nave_LightBeam_C", new Vector2(0.5f, 3.8f), new Color(0.35f, 0.65f, 1.0f, 0.24f), scale: 4.0f, sortingOrder: -7);
+                PixelCrawlerHubToolkit.PlaceSoftGlow(root, "Nave_LightBeam_E", new Vector2(6.0f, 3.8f), new Color(0.35f, 0.95f, 0.50f, 0.22f), scale: 3.6f, sortingOrder: -7);
+            }
+
             // West Prayer/Archive Pedestal & East Alms Chest.
             if (sideTable != null)
-                PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Nave_Archive_W", sideTable, new Vector2(-7.8f, 2.0f),
+                PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Nave_Archive_W", sideTable, new Vector2(-10.0f, 2.0f),
                     colliderSize: new Vector2(1.8f, 0.75f), colliderOffset: new Vector2(0f, 0.45f));
             if (almsChest != null)
                 PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Nave_AlmsChest_E", almsChest, new Vector2(10.0f, -1.4f),
                     colliderSize: new Vector2(1.5f, 0.7f), colliderOffset: new Vector2(0f, 0.35f));
-            if (archiveCabinet != null)
-                PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Nave_Archive_NW", archiveCabinet, new Vector2(-10.2f, 5.2f),
-                    colliderSize: new Vector2(1.8f, 0.8f), colliderOffset: new Vector2(0f, 0.4f));
             if (plantBroad != null)
             {
                 PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Nave_Plant_SW", plantBroad, new Vector2(-2.3f, -5.8f));
@@ -228,6 +239,18 @@ namespace Morsoul.Hub.Editor
             try
             {
                 SceneManager.SetActiveScene(scene);
+                PixelCrawlerHubToolkit.DisableArtSceneLoader(scene);
+                var oldEnv = PixelCrawlerHubToolkit.FindRoot(scene, "Environment");
+                if (oldEnv != null) Object.DestroyImmediate(oldEnv);
+                var oldGrid = PixelCrawlerHubToolkit.FindRoot(scene, "EnvironmentGrid");
+                if (oldGrid != null) Object.DestroyImmediate(oldGrid);
+                BuildNaveTilemaps(scene);
+                BuildNaveProps(scene);
+                PixelCrawlerHubToolkit.RebuildBounds(scene, "CathedralBounds",
+                    ("Bound_North", new Vector2(0f, 5.8f), new Vector2(28f, 1.4f)),
+                    ("Bound_South", new Vector2(0f, -7.2f), new Vector2(28f, 1.4f)),
+                    ("Bound_West", new Vector2(-12.2f, 0f), new Vector2(1.4f, 15f)),
+                    ("Bound_East", new Vector2(12.2f, 0f), new Vector2(1.4f, 15f)));
                 PixelCrawlerHubToolkit.ConfigureCamera(
                     scene, new Vector2(-12.5f, -7.2f), new Vector2(12.5f, 7.2f),
                     5.4f, new Color(0.06f, 0.06f, 0.09f, 1f));
@@ -313,8 +336,47 @@ namespace Morsoul.Hub.Editor
                 EnsureAmbientNpc(scene, "Nave_Acolyte_W", new Vector3(-7.4f, -3.4f, 0f), crowdProf, barkDialogue);
                 EnsureAmbientNpc(scene, "Nave_Guard_S", new Vector3(-3.4f, -5.6f, 0f), guardProf, barkDialogue);
 
-                PixelCrawlerHubToolkit.BindStaticProp(scene, "ValeriusAltar", "Cath_Altar", IntPropsPath, "Int_Interior_Props_01_05");
-                PixelCrawlerHubToolkit.BindStaticProp(scene, "TuningFork", "Cath_Tuning", EsotericPath, "Esoteric_41");
+                // Mother Lyra beside the sanctuary altar.
+                var lyraProf = PixelCrawlerHubToolkit.EnsureCharacterProfile(
+                    "MotherLyra", "Assets/Art/Characters/NPCs/Named/MotherLyra/Idle/Idle-Sheet.png",
+                    "Idle-Sheet_0", null, new Vector2(0f, -0.35f));
+                var lyraDialogue = AssetDatabase.LoadAssetAtPath<DialogueData>(
+                    "Assets/Data/Dialogue/Case02/D_Valerius_Lyra_02.asset");
+                EnsureAmbientNpc(scene, "MotherLyra", new Vector3(-1.3f, 3.8f, 0f), lyraProf, lyraDialogue);
+
+                var grandAltar = PixelCrawlerHubToolkit.LoadCustomSprite("Assets/Art/Environments/Custom/Cathedral_GrandAltar.png", 16f);
+                if (grandAltar != null)
+                {
+                    var altarGo = PixelCrawlerHubToolkit.FindRoot(scene, "ValeriusAltar");
+                    if (altarGo != null)
+                    {
+                        var altarProf = PixelCrawlerHubToolkit.EnsureCharacterProfile(
+                            "Cath_GrandAltar", "Assets/Art/Environments/Custom/Cathedral_GrandAltar.png",
+                            grandAltar.name, null, Vector2.zero);
+                        PixelCrawlerHubToolkit.BindActorVisual(altarGo, altarProf, addYSort: true);
+                    }
+                }
+                else
+                {
+                    PixelCrawlerHubToolkit.BindStaticProp(scene, "ValeriusAltar", "Cath_Altar", IntPropsPath, "Int_Interior_Props_01_05");
+                }
+
+                var tuningPedestal = PixelCrawlerHubToolkit.LoadCustomSprite("Assets/Art/Environments/Custom/Cathedral_TuningFork_Pedestal.png", 16f);
+                if (tuningPedestal != null)
+                {
+                    var tfGo = PixelCrawlerHubToolkit.FindRoot(scene, "TuningFork");
+                    if (tfGo != null)
+                    {
+                        var tfProf = PixelCrawlerHubToolkit.EnsureCharacterProfile(
+                            "Cath_TuningPedestal", "Assets/Art/Environments/Custom/Cathedral_TuningFork_Pedestal.png",
+                            tuningPedestal.name, null, Vector2.zero);
+                        PixelCrawlerHubToolkit.BindActorVisual(tfGo, tfProf, addYSort: true);
+                    }
+                }
+                else
+                {
+                    PixelCrawlerHubToolkit.BindStaticProp(scene, "TuningFork", "Cath_Tuning", EsotericPath, "Esoteric_41");
+                }
 
                 // Use custom stone-and-crimson Cathedral_Stairs_Up for the Belfry stairwell.
                 var stairGo = PixelCrawlerHubToolkit.FindRoot(scene, "BelfryStair");

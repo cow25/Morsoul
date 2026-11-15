@@ -10,6 +10,7 @@ namespace Morsoul.Hub
     /// same rule holds while they walk. Z is only a render depth here — it has
     /// no effect on 2D physics.
     /// </summary>
+    [ExecuteAlways]
     [DisallowMultipleComponent]
     public class YSort2D : MonoBehaviour
     {

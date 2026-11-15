@@ -77,6 +77,8 @@ namespace Morsoul.Flow
         bool _endingCompleted;
         bool _mistrialHandled;
         bool _entryCutscenePending;
+        bool _punishmentPlayed;
+        bool _punishmentPending;
         int _lastEnding;
         int _reportedStrikes;
 
@@ -682,9 +684,18 @@ namespace Morsoul.Flow
                 return;
             }
             var caseData = _session != null ? _session.Case : activeCase;
+            int caseId = caseData != null ? caseData.caseId : 0;
+            if (Application.isPlaying && cutscenePlayer != null && !_punishmentPlayed &&
+                caseId >= 1 && caseId <= 4)
+            {
+                _punishmentPlayed = true;
+                _punishmentPending = true;
+                cutscenePlayer.Play(BuildPunishmentCutscene(caseId));
+                return;
+            }
             Core.CoreRuntime.Instance?.Bus.Publish(new Core.CaseCompletedEvent
             {
-                CaseId = caseData != null ? caseData.caseId : 0,
+                CaseId = caseId,
                 Ending = _lastEnding
             });
         }
@@ -729,6 +740,17 @@ namespace Morsoul.Flow
             if (_endingRequested)
             {
                 CompleteEnding();
+                return;
+            }
+            if (_punishmentPending)
+            {
+                _punishmentPending = false;
+                var caseData = _session != null ? _session.Case : activeCase;
+                Core.CoreRuntime.Instance?.Bus.Publish(new Core.CaseCompletedEvent
+                {
+                    CaseId = caseData != null ? caseData.caseId : 0,
+                    Ending = _lastEnding
+                });
                 return;
             }
             if (_entryCutscenePending)
@@ -841,14 +863,21 @@ namespace Morsoul.Flow
             }
 
             var caseData = _session != null ? _session.Case : activeCase;
+            bool BelongsToActiveCase(ClueData clue) =>
+                clue != null && (caseData == null ||
+                    clue.caseId == caseData.caseId ||
+                    (caseData.clues != null && Array.IndexOf(caseData.clues, clue) >= 0));
+
             var session = Core.CoreRuntime.Instance != null
                 ? Core.CoreRuntime.Instance.Session : null;
             if (session != null && caseData != null && caseData.clues != null)
                 foreach (var clue in caseData.clues)
                     if (clue != null && session.HasClue(clue.id)) Add(clue);
             if (hubJournal != null)
-                foreach (var clue in hubJournal.Collected) Add(clue);
-            foreach (var clue in _collectedClues) Add(clue);
+                foreach (var clue in hubJournal.Collected)
+                    if (BelongsToActiveCase(clue)) Add(clue);
+            foreach (var clue in _collectedClues)
+                if (BelongsToActiveCase(clue)) Add(clue);
             if (caseData != null && caseData.evidenceGraph == null && board != null && board.Premises != null)
                 foreach (var premise in board.Premises) Add(premise);
             // Weighted boards don't mint PremiseData at runtime — an
@@ -895,6 +924,53 @@ namespace Morsoul.Flow
                 CaseId = caseData != null ? caseData.caseId : 0,
                 Ending = _lastEnding
             });
+        }
+
+        static CutsceneData BuildPunishmentCutscene(int caseId)
+        {
+            var backdrop = Sprite.Create(Texture2D.blackTexture,
+                new Rect(0f, 0f, Texture2D.blackTexture.width, Texture2D.blackTexture.height),
+                new Vector2(0.5f, 0.5f));
+            backdrop.hideFlags = HideFlags.DontSave;
+
+            (string speaker, string line1, string line2) = caseId switch
+            {
+                1 => ("Guild Wardens",
+                      "Master Alchemist Ignatius is placed in brass restraints as Guild Wardens seal the Lower Market vault.",
+                      "The poisoned grain stores are quarantined, and Magistrate Corvo strips Ignatius of his Guild license pending sentencing."),
+                2 => ("Orthodoxy Tribunal",
+                      "Templar Captain Valerius escorts Accord from the belfry in irons as the muted bell is silenced for purification.",
+                      "Mother Lyra's ledger is secured by the Guild, and Accord faces the Cathedral Tribunal for attempted murder."),
+                3 => ("Whisperwood Rangers",
+                      "Ranger Kaelen binds Vane in runic shackles at the edge of the dying grove.",
+                      "With the blight catalyst confiscated, the Circle operative is remanded to Asterveil for interrogation."),
+                _ => ("Iron Hollow Guard",
+                      "Overseer Thrun's guards disarm Harlan and lock down the Drift 09 shaft.",
+                      "Harlan is hauled away under heavy guard as the Guild seizes the Veiled Circle's subterranean records.")
+            };
+
+            var data = ScriptableObject.CreateInstance<CutsceneData>();
+            data.hideFlags = HideFlags.DontSave;
+            data.id = $"CS_Punishment_C{caseId}";
+            data.skipToScene = false;
+            data.shots = new[]
+            {
+                new CutsceneShotData
+                {
+                    image = backdrop,
+                    waitForInput = true,
+                    captionSpeaker = speaker,
+                    caption = line1
+                },
+                new CutsceneShotData
+                {
+                    image = backdrop,
+                    waitForInput = true,
+                    captionSpeaker = "Eliza",
+                    caption = line2 + " Let's head back to the Guild and report to Ovan."
+                }
+            };
+            return data;
         }
     }
 }

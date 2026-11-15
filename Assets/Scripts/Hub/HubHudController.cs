@@ -105,17 +105,21 @@ namespace Morsoul.Hub
         {
             var session = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session : null;
             var sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-            int caseId = objectiveCaseId > 0 ? objectiveCaseId
-                : session != null ? session.CurrentCase : 0;
+            int caseId = session != null ? session.CurrentCase : objectiveCaseId;
 
-            string effectiveCaseText = caseText ?? "";
-            string effectiveObjective = objectiveText ?? "";
+            bool sceneMatchesSessionCase = session == null || objectiveCaseId <= 0 || objectiveCaseId == caseId;
+            string effectiveCaseText = sceneMatchesSessionCase ? (caseText ?? "") : "";
+            string effectiveObjective = sceneMatchesSessionCase ? (objectiveText ?? "") : "";
 
-            // A. Prologue progression
-            if (sceneName.Contains("Prologue"))
+            // A. Prologue progression (or dev-warped to a hub before Prologue finishes)
+            if (sceneName.Contains("Prologue") || (session != null && caseId == 0))
             {
                 effectiveCaseText = "Prologue";
-                if (session != null && (session.ElizaIntroSeen || session.HasFlag("Prologue_Completed")))
+                if (!sceneName.Contains("Prologue"))
+                {
+                    effectiveObjective = "Complete the prologue and follow Eliza toward Asterveil.";
+                }
+                else if (session != null && (session.ElizaIntroSeen || session.HasFlag("Prologue_Completed")))
                 {
                     effectiveObjective = "Follow Eliza Astra toward Asterveil Lower Market.";
                 }
@@ -196,22 +200,61 @@ namespace Morsoul.Hub
                     }
                 }
             }
-            // C. Fallbacks for other cases, hubs, or standalone testing
+            // C. Fallbacks for Cases 2-5, cross-hub visits, or standalone tests
             else
             {
-                bool unlocked = session != null && session.CanStartInterrogation(caseId);
-                effectiveObjective = unlocked
-                    ? (string.IsNullOrEmpty(postInvestigationObjective)
-                        ? DefaultPostInvestigationObjective : postInvestigationObjective)
-                    : (string.IsNullOrEmpty(objectiveText) ? GetCaseFallbackObjective(caseId) : objectiveText);
-
                 if (string.IsNullOrEmpty(effectiveCaseText) && caseId > 0)
-                {
                     effectiveCaseText = GetCaseFallbackTitle(caseId);
-                }
+                effectiveObjective = GetDynamicCaseObjective(session, caseId, effectiveObjective,
+                    sceneMatchesSessionCase ? postInvestigationObjective : null);
             }
 
             ApplyObjective(effectiveCaseText, effectiveObjective);
+        }
+
+        static string GetDynamicCaseObjective(SessionState session, int caseId,
+            string baseObjective, string postObjective)
+        {
+            if (GuildIntroRules.IsBriefingPending(session, caseId))
+                return "Report to Guildmaster Ovan at the Investigator's Guild for your next assignment.";
+
+            if (session != null && session.CanStartInterrogation(caseId))
+            {
+                if (!string.IsNullOrEmpty(postObjective)) return postObjective;
+                switch (caseId)
+                {
+                    case 1: return "The deduction is accepted - confront Master Alchemist Ignatius.";
+                    case 2: return "The deduction is accepted - confront Accord the Bell-Ringer.";
+                    case 3: return "The deduction is accepted - confront Vane the Veiled Circle Operative.";
+                    case 4: return "The deduction is accepted - confront Harlan, the Veiled Circle Infiltrator.";
+                    default: return DefaultPostInvestigationObjective;
+                }
+            }
+
+            if (session != null)
+            {
+                switch (caseId)
+                {
+                    case 1:
+                        if (session.HasFlag(GuildIntroRules.WarrantFlag))
+                            return "Investigate the poisoned vault via the cellar grate.";
+                        break;
+                    case 2:
+                        if (session.HasFlag("C2_BelfryKeyGranted"))
+                            return "Investigate the Cathedral Belfry.";
+                        break;
+                    case 3:
+                        if (session.HasFlag("C3_PerimeterSealGranted"))
+                            return "Investigate Whisperwood Grove.";
+                        break;
+                    case 4:
+                        if (session.HasFlag("C4_OverrideClearance"))
+                            return "Investigate Iron Hollow Drift 09.";
+                        break;
+                }
+            }
+
+            return string.IsNullOrEmpty(baseObjective) ? GetCaseFallbackObjective(caseId) : baseObjective;
         }
 
         static string GetCaseFallbackTitle(int caseId)

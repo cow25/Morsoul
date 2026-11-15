@@ -85,6 +85,8 @@ namespace Morsoul.Board
         public int LastCloseFrame { get; private set; } = -1;
         /// <summary>The headless session (null until SetCase builds one). Exposed for GameFlow/tests.</summary>
         public WeightedBoardSession Session => _session;
+        public string GetClueDisplayName(string id) =>
+            id != null && _clueNames.TryGetValue(id, out var name) ? name : id;
 
         void OnEnable()
         {
