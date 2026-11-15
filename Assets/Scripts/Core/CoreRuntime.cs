@@ -50,6 +50,7 @@ namespace Morsoul.Core
         }
 
         public bool DevelopmentInvestigationFallbackEnabled { get; set; }
+        public bool AutoCompleteCasesEnabled { get; set; }
         public string InvestigationStatusMessage { get; set; } = "";
         public System.Func<string, InvestigationEntryResult> InvestigationEntryHandler { get; set; }
         public System.Func<int, bool> InterrogationEntryHandler { get; set; }

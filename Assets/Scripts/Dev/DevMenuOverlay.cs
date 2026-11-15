@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Morsoul.Board;
 using Morsoul.Core;
 using Morsoul.Data;
+using Morsoul.Engine;
 using Morsoul.Flow;
 using Morsoul.Hub;
 using Morsoul.Interrogation;
@@ -25,6 +26,7 @@ namespace Morsoul.Dev
         static DevMenuOverlay _instance;
         bool _visible;
         public static bool IsOpen => _instance != null && _instance._visible;
+        public static bool DevHintsEnabled { get; set; }
         Vector2 _scroll;
         int _tab;
         Rect _window = new Rect(20, 20, 660, 560);
@@ -75,8 +77,29 @@ namespace Morsoul.Dev
         void Update()
         {
             var keyboard = Keyboard.current;
-            if (keyboard != null && keyboard.f1Key.wasPressedThisFrame)
-                SetMenuVisible(!_visible);
+            if (keyboard != null)
+            {
+                if (keyboard.f1Key.wasPressedThisFrame)
+                    SetMenuVisible(!_visible);
+                if (keyboard.f2Key.wasPressedThisFrame)
+                    DevHintsEnabled = !DevHintsEnabled;
+                if (keyboard.f3Key.wasPressedThisFrame)
+                {
+                    var ensured = CoreRuntime.Ensure();
+                    ensured.AutoCompleteCasesEnabled = !ensured.AutoCompleteCasesEnabled;
+                }
+            }
+
+            var core = CoreRuntime.Instance;
+            if (core != null && core.AutoCompleteCasesEnabled &&
+                core.Session.CurrentSceneMode == SceneMode.Mode3D)
+            {
+                int activeCase = core.Session.InvestigationCaseId >= 0
+                    ? core.Session.InvestigationCaseId
+                    : core.Session.CurrentCase;
+                if (!core.Session.GetOrCreateBoardState(activeCase).BoardSolved)
+                    InvestigationCompletion.ForceCompleteCase(core, activeCase);
+            }
         }
 
         void SetMenuVisible(bool visible)
@@ -173,19 +196,37 @@ namespace Morsoul.Dev
 
         void OnGUI()
         {
+            if (DevHintsEnabled) DrawDevHintsOverlay();
+            if (CoreRuntime.Instance != null && CoreRuntime.Instance.AutoCompleteCasesEnabled)
+                DrawAutoCompleteBanner();
             if (!_visible) return;
             _window = GUILayout.Window(987654, _window, DrawWindow,
                 "Morsoul Dev Menu  [F1]");
         }
 
+        static void DrawAutoCompleteBanner()
+        {
+            var prev = GUI.color;
+            GUI.color = Color.green;
+            GUI.Box(new Rect(Screen.width * 0.5f - 135f, 8f, 270f, 24f),
+                "CASE COMPLETE MODE: ON  [F3]");
+            GUI.color = prev;
+        }
+
         void DrawWindow(int id)
         {
             var core = CoreRuntime.Instance;
+            GUILayout.BeginHorizontal();
             GUILayout.Label(core == null
                 ? "CoreRuntime: ABSENT (limited tools)"
                 : $"Scene: {SceneManager.GetActiveScene().name}   " +
                   $"Case: {core.Session.CurrentCase}   " +
                   $"Focus: {core.Focus.Percent:0}/{core.Focus.Maximum:0}");
+            if (core != null)
+                core.AutoCompleteCasesEnabled = GUILayout.Toggle(
+                    core.AutoCompleteCasesEnabled, "Case Complete [F3]", GUILayout.Width(145));
+            DevHintsEnabled = GUILayout.Toggle(DevHintsEnabled, "Dev Hints [F2]", GUILayout.Width(120));
+            GUILayout.EndHorizontal();
 
             _tab = GUILayout.Toolbar(_tab, Tabs);
             _scroll = GUILayout.BeginScrollView(_scroll);
@@ -244,6 +285,28 @@ namespace Morsoul.Dev
             var s = core.Session;
             var gsm = GameStateManager.Instance;
 
+            Section("Fast Narrative / Case Complete Mode");
+            core.AutoCompleteCasesEnabled = GUILayout.Toggle(
+                core.AutoCompleteCasesEnabled,
+                "Auto-complete clues & board on entering case areas + instant interrogation win [F3]");
+            int targetCase = s.InvestigationCaseId >= 0 ? s.InvestigationCaseId : s.CurrentCase;
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button($"Complete Case {targetCase} Clues & Board Now", GUILayout.Width(265)))
+            {
+                bool ok = InvestigationCompletion.ForceCompleteCase(core, targetCase);
+                Debug.Log(ok
+                    ? $"[DevMenu] Completed clues & solved board for Case {targetCase}."
+                    : $"[DevMenu] Could not complete Case {targetCase}.");
+            }
+            GUI.enabled = s.CurrentCase >= 1 && s.CurrentCase <= 4;
+            if (GUILayout.Button($"Finish Interrogation Now (Case {Mathf.Clamp(s.CurrentCase, 1, 4)})", GUILayout.Width(270)))
+            {
+                SetMenuVisible(false);
+                InvestigationCompletion.CompleteInterrogationAndTriggerCutscene(core, s.CurrentCase);
+            }
+            GUI.enabled = true;
+            GUILayout.EndHorizontal();
+
             Section("Investigation development fallback");
             core.DevelopmentInvestigationFallbackEnabled = GUILayout.Toggle(
                 core.DevelopmentInvestigationFallbackEnabled,
@@ -281,6 +344,14 @@ namespace Morsoul.Dev
             if (GUILayout.Button("Reset SessionState (flags/clues/case/logs)",
                     GUILayout.Width(320)))
                 s.Reset();
+
+            Section("Prologue / Tutorial state");
+            s.PrologueGateUnlocked = GUILayout.Toggle(s.PrologueGateUnlocked, "PrologueGateUnlocked");
+            s.PrologueRobeCollected = GUILayout.Toggle(s.PrologueRobeCollected, "PrologueRobeCollected");
+            s.PrologueExitLoaded = GUILayout.Toggle(s.PrologueExitLoaded, "PrologueExitLoaded");
+            s.PrologueCompleted = GUILayout.Toggle(s.PrologueCompleted, "PrologueCompleted");
+            s.ElizaIntroSeen = GUILayout.Toggle(s.ElizaIntroSeen, "ElizaIntroSeen");
+            s.EasternRouteUnlocked = GUILayout.Toggle(s.EasternRouteUnlocked, "EasternRouteUnlocked");
 
             Section("State dump");
             GUILayout.Label($"Flags: {s.Flags.Count}  Clues: {s.ClueIds.Count}  " +
@@ -333,6 +404,36 @@ namespace Morsoul.Dev
         {
             if (core == null) { NeedCore(); return; }
             var s = core.Session;
+
+            Section("Register all clues by case (0 = Prologue)");
+            GUILayout.BeginHorizontal();
+            for (int c = 0; c <= 5; c++)
+            {
+                if (GUILayout.Button($"All Case {c}", GUILayout.Width(82)))
+                    RegisterCaseClues(core, c);
+            }
+            GUILayout.EndHorizontal();
+
+            var currentData = core.ResolveCase(s.CurrentCase);
+            if (currentData != null && currentData.clues != null && currentData.clues.Length > 0)
+            {
+                Section($"Case {s.CurrentCase} clues ({currentData.clues.Length})");
+                foreach (var clue in currentData.clues)
+                {
+                    if (clue == null || string.IsNullOrEmpty(clue.id)) continue;
+                    bool has = s.HasClue(clue.id);
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label($"{clue.id}  ({clue.displayName})", GUILayout.Width(340));
+                    GUI.enabled = !has;
+                    if (GUILayout.Button(has ? "✓ Owned" : "Register", GUILayout.Width(90)))
+                    {
+                        if (clue.type == ClueType.Latent) s.RegisterLatentClue(clue);
+                        else s.RegisterClue(clue);
+                    }
+                    GUI.enabled = true;
+                    GUILayout.EndHorizontal();
+                }
+            }
 
             Section("Register clue by ID");
             GUILayout.BeginHorizontal();
@@ -884,6 +985,162 @@ namespace Morsoul.Dev
             _running = null;
             Debug.Log($"[DevMenu] sequence finished: " +
                       $"{_report.passCount} pass / {_report.failCount} fail");
+        }
+
+        // --- Dev Hints Overlay -------------------------------------------------
+
+        void DrawDevHintsOverlay()
+        {
+            WeightedBoardController wb = null;
+            foreach (var c in Object.FindObjectsByType<WeightedBoardController>())
+                if (c != null && c.IsOpen && c.Session != null) { wb = c; break; }
+
+            BoardController bc = null;
+            if (wb == null)
+                foreach (var c in Object.FindObjectsByType<BoardController>())
+                    if (c != null && c.IsOpen && c.caseData != null) { bc = c; break; }
+
+            InterrogationController ic = null;
+            foreach (var c in Object.FindObjectsByType<InterrogationController>())
+                if (c != null && c.IsOpen && c.Engine != null) { ic = c; break; }
+
+            if (wb == null && bc == null && ic == null) return;
+
+            var rect = new Rect(Mathf.Max(16f, Screen.width - 436f), 16f, 420f, 360f);
+            GUILayout.BeginArea(rect, "DEV HINTS  [F2 to hide]", GUI.skin.window);
+
+            if (wb != null) DrawWeightedBoardHints(wb);
+            else if (bc != null) DrawLegacyBoardHints(bc);
+
+            if (ic != null)
+            {
+                if (wb != null || bc != null) GUILayout.Space(8);
+                DrawInterrogationHints(ic.Engine);
+            }
+
+            GUILayout.EndArea();
+        }
+
+        static void DrawWeightedBoardHints(WeightedBoardController wb)
+        {
+            var graph = wb.Session.Graph;
+            var state = wb.Session.State;
+            Section("Deduction Board — Required Links (S*)");
+
+            var drawn = new HashSet<DirectedEdge>(state.Links);
+            var collected = new HashSet<string>(state.CollectedClueIds, System.StringComparer.Ordinal);
+            var edges = new List<DirectedEdge>(graph.SolutionEdges);
+            edges.Sort((a, b) =>
+            {
+                int cmp = string.CompareOrdinal(a.sourceId, b.sourceId);
+                return cmp != 0 ? cmp : string.CompareOrdinal(a.targetId, b.targetId);
+            });
+
+            var prev = GUI.color;
+            foreach (var edge in edges)
+            {
+                bool isDrawn = drawn.Contains(edge);
+                bool hasBoth = collected.Contains(edge.sourceId) && collected.Contains(edge.targetId);
+                GUI.color = isDrawn ? Color.green : hasBoth ? Color.yellow : Color.gray;
+                string tag = isDrawn ? "[✓]" : hasBoth ? "[ ]" : "[missing clue]";
+                string src = wb.GetClueDisplayName(edge.sourceId);
+                string dst = wb.GetClueDisplayName(edge.targetId);
+                GUILayout.Label($"{tag} {src}  →  {dst}");
+            }
+            GUI.color = prev;
+
+            var complete = graph.GetConclusion(graph.CompleteConclusionId);
+            if (complete != null)
+            {
+                bool ready = graph.HasAllSolutionLinks(state.Links);
+                GUILayout.Space(4);
+                GUI.color = ready ? Color.green : Color.white;
+                GUILayout.Label($"Target Conclusion {(ready ? "(READY)" : "(complete links first)")}: {complete.text}");
+                GUI.color = prev;
+            }
+        }
+
+        static void DrawLegacyBoardHints(BoardController bc)
+        {
+            Section("Deduction Board — Inquiry Pairs");
+            if (bc.caseData.inquiryNodes == null) return;
+            foreach (var node in bc.caseData.inquiryNodes)
+            {
+                if (node == null) continue;
+                string a = node.slotA != null ? node.slotA.displayName : "?";
+                string b = node.slotB != null ? node.slotB.displayName : "?";
+                string ans = node.prompt != null && node.prompt.options != null &&
+                             node.prompt.correctIndex >= 0 &&
+                             node.prompt.correctIndex < node.prompt.options.Length
+                    ? node.prompt.options[node.prompt.correctIndex]
+                    : "?";
+                GUILayout.Label($"• {a}  +  {b}");
+                GUILayout.Label($"   → {ans}");
+            }
+        }
+
+        static void DrawInterrogationHints(InterrogationEngine engine)
+        {
+            if (engine.Status != InterrogationStatus.InProgress || engine.CurrentPhase == null)
+            {
+                GUILayout.Label($"Interrogation: {engine.Status}");
+                return;
+            }
+
+            var phase = engine.CurrentPhase;
+            Section($"Interrogation — Phase {engine.PhaseIndex + 1}/{engine.Data.phases.Length}");
+
+            var prev = GUI.color;
+            if (!engine.IsCoreContradictUnlocked)
+            {
+                GUI.color = Color.yellow;
+                string kws = phase.keywords != null && phase.keywords.Length > 0
+                    ? string.Join(", ", phase.keywords)
+                    : "any keyword";
+                GUILayout.Label($"1) PRESS [1] keyword first: {kws}");
+                GUI.color = prev;
+            }
+
+            if (engine.ShieldActive)
+                GUILayout.Label("(Falsehood Shield active on this phase)");
+
+            bool anyMove = false;
+            if (phase.validMoves != null)
+            {
+                foreach (var move in phase.validMoves)
+                {
+                    if (move == null || !move.breaksComposureSegment) continue;
+                    anyMove = true;
+                    string verb = move.verb == Verb.Contradict ? "Contradict [2]" : "Present Evidence [3]";
+                    string ev = FormatEvidenceName(move.evidence);
+                    string coreNote = move.isCoreContradiction && !engine.IsCoreContradictUnlocked
+                        ? " (unlock via Press)" : "";
+                    GUI.color = Color.green;
+                    GUILayout.Label($"→ {verb}: {ev}{coreNote}");
+                }
+            }
+            GUI.color = prev;
+            if (!anyMove) GUILayout.Label("(No composure-breaking moves authored in this phase)");
+        }
+
+        static string FormatEvidenceName(EvidenceData ev)
+        {
+            if (ev == null) return "(none)";
+            if (ev is ClueData c && !string.IsNullOrEmpty(c.displayName)) return c.displayName;
+            if (ev is PremiseData p && !string.IsNullOrEmpty(p.title)) return p.title;
+            return string.IsNullOrEmpty(ev.id) ? ev.name : ev.id;
+        }
+
+        static void RegisterCaseClues(CoreRuntime core, int caseId)
+        {
+            var data = core.ResolveCase(caseId);
+            if (data == null || data.clues == null) return;
+            foreach (var clue in data.clues)
+            {
+                if (clue == null || clue.isBacktrackingOnly) continue;
+                if (clue.type == ClueType.Latent) core.Session.RegisterLatentClue(clue);
+                else core.Session.RegisterClue(clue);
+            }
         }
 
         // --- helpers ------------------------------------------------------------

@@ -65,8 +65,7 @@ namespace Morsoul.Hub
             }
 
             bool isResumeScene = session != null && session.HasPlayerPosition &&
-                ((save != null && save.checkpointSceneName == sceneName) ||
-                 session.CurrentSceneId == sceneName);
+                session.CurrentSceneId == sceneName;
             if (isResumeScene)
             {
                 target.position = session.PlayerPosition;

@@ -205,6 +205,32 @@ namespace Morsoul.Hub.Editor
             grassMap.RefreshAllTiles();
             cobbleMap.RefreshAllTiles();
             waterMap.RefreshAllTiles();
+
+            // Solid dirt-toned backdrop behind GroundDirt so sub-pixel Game View scaling never shows dark background seams.
+            const string solidPath = "Assets/Art/Environments/Custom/Solid_Pixel.png";
+            if (!File.Exists(solidPath))
+            {
+                var tex = new Texture2D(4, 4, TextureFormat.RGBA32, false);
+                var pixels = new Color[16];
+                for (int i = 0; i < 16; i++) pixels[i] = Color.white;
+                tex.SetPixels(pixels);
+                tex.Apply();
+                File.WriteAllBytes(solidPath, tex.EncodeToPNG());
+                Object.DestroyImmediate(tex);
+                AssetDatabase.ImportAsset(solidPath, ImportAssetOptions.ForceUpdate);
+            }
+            var bgSprite = PixelCrawlerHubToolkit.LoadCustomSprite(solidPath, 4f);
+            if (bgSprite != null)
+            {
+                var bgGo = new GameObject("DirtSeamBackdrop");
+                bgGo.transform.SetParent(grid.transform, false);
+                bgGo.transform.localPosition = new Vector3(8f, -12f, 2.1f);
+                bgGo.transform.localScale = new Vector3(60f, 24f, 1f);
+                var bgSr = bgGo.AddComponent<SpriteRenderer>();
+                bgSr.sprite = bgSprite;
+                bgSr.color = new Color(0.545f, 0.388f, 0.235f, 1f);
+                bgSr.sortingOrder = -11;
+            }
         }
 
         static void BuildEnvironmentProps(Scene scene)
@@ -256,8 +282,6 @@ namespace Morsoul.Hub.Editor
             var stonePile = PixelCrawlerHubToolkit.LoadSprite(ResourcesPath, "Resources_02");
             var supplyCrate = PixelCrawlerHubToolkit.LoadSprite(ResourcesPath, "Resources_34");
             var crateAlt = PixelCrawlerHubToolkit.LoadSprite(ResourcesPath, "Resources_35");
-            var woodenBench = PixelCrawlerHubToolkit.LoadSprite(ExtPropsPath, "Ext_Props_14");
-            var planterBox = PixelCrawlerHubToolkit.LoadSprite(ExtPropsPath, "Ext_Props_12");
 
             // Ruins gate framing (West) — monoliths, carved steles, tattered banners & azure mana crystals.
             PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Ruin_Monolith_N", greyPillar, new Vector2(-10.4f, 1.45f));
@@ -301,12 +325,9 @@ namespace Morsoul.Hub.Editor
                 }
             }
 
-            // Roadside rest stop & settlement trail props.
-            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Trail_Bench", woodenBench, new Vector2(-2.1f, 1.95f));
-            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Trail_Planter", planterBox, new Vector2(-0.15f, 1.8f));
+            // Ancient wilderness trail props & settlement approach markers (no artificial benches).
             PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Trail_FelledLog_W", logPlank, new Vector2(5.45f, 1.75f));
             PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Trail_Stele_Mid", runeSteleC, new Vector2(6.5f, 2.05f));
-            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Trail_Bench_E", woodenBench, new Vector2(19.6f, 1.95f));
             PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Trail_Crate_E1", supplyCrate, new Vector2(21.45f, 1.75f));
             PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Trail_Crate_E2", crateAlt, new Vector2(22.25f, 1.7f));
             PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Trail_Banner_Guild", bannerGreen, new Vector2(23.15f, 1.95f));

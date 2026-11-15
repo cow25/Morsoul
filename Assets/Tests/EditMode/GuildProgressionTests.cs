@@ -151,6 +151,41 @@ namespace Morsoul.Tests
         }
 
         [Test]
+        public void SceneEntryPoint_DoesNotRestorePositionFromOtherScene()
+        {
+            var core = CoreRuntime.Ensure();
+            var playerGo = new GameObject("Player");
+            playerGo.tag = "Player";
+            var spawn = new GameObject("PlayerSpawn");
+            spawn.tag = "PlayerSpawn";
+            spawn.transform.position = new Vector3(-6.2f, -0.3f, 0f);
+            var entryGo = new GameObject("SceneEntryPoint");
+            var entry = entryGo.AddComponent<SceneEntryPoint>();
+            entry.player = playerGo.transform;
+            try
+            {
+                string activeScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+                var expectedSpawn = GameObject.FindWithTag("PlayerSpawn").transform.position;
+                core.Session.Reset();
+                core.Session.SetPlayerContext(SceneMode.Mode2D, activeScene + "_Other",
+                    new Vector3(-20.25f, -2.84f, 0f), PlayerFacing2D.Left);
+                typeof(SceneEntryPoint).GetMethod("Start",
+                        System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                    .Invoke(entry, null);
+
+                Assert.AreEqual(expectedSpawn, playerGo.transform.position,
+                    "Player must spawn at PlayerSpawn instead of inheriting another scene's coordinates.");
+                Assert.AreEqual(activeScene, core.Session.CurrentSceneId);
+            }
+            finally
+            {
+                core.Session.SetSceneContext(SceneMode.Mode2D, "");
+                foreach (var go in new[] { entryGo, playerGo, spawn, core.gameObject })
+                    Object.DestroyImmediate(go);
+            }
+        }
+
+        [Test]
         public void NpcInteractable_BlocksMovementWithSolidCollider()
         {
             // NPCs get a second, non-trigger collider so the player walks up
@@ -273,6 +308,43 @@ namespace Morsoul.Tests
                 hud.RefreshObjective();
                 Assert.AreEqual("Case 1: The Poisoned Vault", hud.AppliedCaseText);
                 Assert.AreEqual("Confront Master Alchemist Ignatius.", hud.AppliedObjective);
+            }
+            finally
+            {
+                Object.DestroyImmediate(hudGo);
+                Object.DestroyImmediate(core.gameObject);
+            }
+        }
+
+        [Test]
+        public void HubObjective_DoesNotLeakFutureHubGoalWhenCurrentCaseIsEarlier()
+        {
+            var core = CoreRuntime.Ensure();
+            var hudGo = new GameObject("HudPanel");
+            var hud = hudGo.AddComponent<HubHudController>();
+            hud.caseText = "Case 2: The Muted Belfry";
+            hud.objectiveText = "Examine Mother Lyra and secure the Belfry Key.";
+            hud.objectiveCaseId = 2;
+
+            try
+            {
+                core.Session.Reset();
+                core.Session.CurrentCase = 0;
+                hud.RefreshObjective();
+                Assert.AreEqual("Prologue", hud.AppliedCaseText);
+                Assert.AreNotEqual(hud.objectiveText, hud.AppliedObjective);
+
+                core.Session.CurrentCase = 1;
+                core.Session.SetFlag(GuildIntroRules.WarrantFlag);
+                hud.RefreshObjective();
+                Assert.AreEqual("Case 1: The Poisoned Vault", hud.AppliedCaseText);
+                Assert.AreEqual("Investigate the poisoned vault via the cellar grate.", hud.AppliedObjective);
+
+                core.Session.CurrentCase = 2;
+                core.Session.SetFlag("Guild.CheckBoard.2");
+                hud.RefreshObjective();
+                Assert.AreEqual("Case 2: The Muted Belfry", hud.AppliedCaseText);
+                Assert.AreEqual("Check the Quest Board downstairs in the Investigator's Guild for potential cases.", hud.AppliedObjective);
             }
             finally
             {

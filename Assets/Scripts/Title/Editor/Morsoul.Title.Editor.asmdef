@@ -3,6 +3,7 @@
     "rootNamespace": "Morsoul.Title.Editor",
     "references": [
         "Morsoul.Title",
+        "Morsoul.Cutscene",
         "Morsoul.Data",
         "UnityEngine.UI",
         "Unity.TextMeshPro",

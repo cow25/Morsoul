@@ -54,6 +54,7 @@ namespace Morsoul.Engine
         public bool ContainsConclusion(string id) => id != null && _conclusionsById.ContainsKey(id);
         public bool IsAuthoredLink(DirectedEdge edge) => _authoredEdges.ContainsKey(edge);
         public bool IsSolutionLink(DirectedEdge edge) => _solutionEdges.Contains(edge);
+        public IReadOnlyCollection<DirectedEdge> SolutionEdges => _solutionEdges;
 
         /// <summary>True when every authored solution link is present in L.</summary>
         public bool HasAllSolutionLinks(IEnumerable<DirectedEdge> drawnLinks)

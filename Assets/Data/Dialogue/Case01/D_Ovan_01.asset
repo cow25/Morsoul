@@ -17,7 +17,7 @@ MonoBehaviour:
   - id: ovan_has_warrant
     speakerName: Guildmaster Ovan
     speakerPortrait: {fileID: 0}
-    text: (Waves a hurried hand) "You already have the storage clearance warrant, Astra! The lower cellar grate in the Lower Market is unlocked. Go investigate the vault before Ignatius causes any more trouble!"
+    text: (Waves a hurried hand) "You already have the Guild storage clearance warrant, Eliza! The lower cellar grate in the Lower Market is yours to unseal. Check the vault before Ignatius turns the street upside down."
     registersClue: {fileID: 0}
     setsFlag: 
     requiresFlag: C1_WarrantGranted
@@ -26,7 +26,7 @@ MonoBehaviour:
   - id: ovan_repeat_briefed
     speakerName: Guildmaster Ovan
     speakerPortrait: {fileID: 0}
-    text: '"Have you decided what you need from me, Astra? That subterranean storage vault won''t inspect itself."'
+    text: '"Everything from the Consortium report is on my desk. What do you still need before heading down to the Lower Market?"'
     registersClue: {fileID: 0}
     setsFlag: 
     requiresFlag: C1_BriefingSeen
@@ -37,14 +37,14 @@ MonoBehaviour:
     - label: Ask about Master Ignatius
       nextNodeId: ovan_ignatius
       requiresFlag: 
-    - label: Demand storage clearance (Forensic Entry Warrant)
+    - label: Request storage clearance (Forensic Entry Warrant)
       nextNodeId: ovan_warrant
       requiresFlag: 
     nextNodeId: ovan_greeting
   - id: ovan_greeting
     speakerName: Eliza
     speakerPortrait: {fileID: 0}
-    text: Step aside, Ovan. The Investigator's Guild is taking jurisdiction over the vault incident.
+    text: "All right, Ovan\u2014we're ready for the full dossier on the Lower Market vault incident."
     registersClue: {fileID: 0}
     setsFlag: 
     requiresFlag: 
@@ -53,7 +53,7 @@ MonoBehaviour:
   - id: ovan_challenge
     speakerName: Guildmaster Ovan
     speakerPortrait: {fileID: 0}
-    text: "(Wiping sweat from his brow with an embroidered handkerchief) \"Astra? The Council sent their surveyor? And what in Saint Althea\u2019s name is that... that walking boulder behind you?\""
+    text: (Rubbing his temples over a stack of wax-sealed dispatches) "Good. The Merchant Consortium is demanding answers by noon, and this makes a clean first field contract for your new partner here."
     registersClue: {fileID: 0}
     setsFlag: 
     requiresFlag: 
@@ -62,7 +62,7 @@ MonoBehaviour:
   - id: golem_scan
     speakerName: Golem
     speakerPortrait: {fileID: 0}
-    text: '[OPTICAL SCAN: Subject heart rate elevated. Cortisol perspiration detected. Unit status: Non-hostile.] "I am an analytical construct licensed under Guild charter. State the parameters of the vault breach, Guildmaster."'
+    text: "[OPTICAL SCAN: Guildmaster respiration elevated. Dispatches stamped 'URGENT \u2014 MUNICIPAL TREASURY'.] \"Unit ready, Guildmaster. State the parameters of the Lower Market vault breach.\""
     registersClue: {fileID: 0}
     setsFlag: 
     requiresFlag: 
@@ -71,7 +71,7 @@ MonoBehaviour:
   - id: ovan_briefing
     speakerName: Guildmaster Ovan
     speakerPortrait: {fileID: 0}
-    text: "It\u2019s financial ruin, that's what it is! Master Ignatius\u2019 subterranean storage vault\u2014the one holding the seasonal reserve of Greater Restoration Draughts\u2014was breached three hours before dawn. Ten thousand gold ducats worth of inventory, dissolved into thin air! Ignatius claims dark cultists used forbidden volatile magic!"
+    text: "Master Alchemist Ignatius\u2019 subterranean storage vault\u2014the one holding the seasonal reserve of Greater Restoration Draughts\u2014was breached three hours before dawn. Ten thousand gold ducats worth of inventory, dissolved into thin air! Ignatius claims dark cultists used forbidden volatile magic!"
     registersClue: {fileID: 0}
     setsFlag: C1_BriefingSeen
     requiresFlag: 
@@ -80,7 +80,7 @@ MonoBehaviour:
   - id: ovan_options
     speakerName: Guildmaster Ovan
     speakerPortrait: {fileID: 0}
-    text: What else does the Investigator's Guild require of me?
+    text: Review the Consortium's file and tell me what else you need.
     registersClue: {fileID: 0}
     setsFlag: 
     requiresFlag: 
@@ -91,14 +91,14 @@ MonoBehaviour:
     - label: Ask about Master Ignatius
       nextNodeId: ovan_ignatius
       requiresFlag: 
-    - label: Demand storage clearance (Forensic Entry Warrant)
+    - label: Request storage clearance (Forensic Entry Warrant)
       nextNodeId: ovan_warrant
       requiresFlag: 
     nextNodeId: 
   - id: ovan_security
     speakerName: Guildmaster Ovan
     speakerPortrait: {fileID: 0}
-    text: "It\u2019s a masterwork Dwarven cylinder! Four tumblers, reinforced cold-iron plating, fitted into bedrock. You couldn't crack it with a siege ram. There are only two keys in existence: Master Ignatius carries one on his personal brass chain, and the second is sealed in my office archives under wax. The archives were never touched!"
+    text: "According to the Consortium registry, it\u2019s a masterwork Dwarven cylinder\u2014four tumblers, reinforced cold-iron plating, fitted into bedrock. You couldn't crack it with a siege ram. Only two keys exist: Master Ignatius carries one on his personal brass chain, and the duplicate stays sealed in Consortium archives under wax. The archive seal was never touched!"
     registersClue: {fileID: 0}
     setsFlag: 
     requiresFlag: 
@@ -107,7 +107,7 @@ MonoBehaviour:
   - id: golem_conclusion
     speakerName: Golem
     speakerPortrait: {fileID: 0}
-    text: 'Conclusion: The perimeter requires an authentic physical key for non-destructive ingress.'
+    text: 'Conclusion: Entry through the perimeter door requires an authentic physical key for non-destructive ingress.'
     registersClue: {fileID: 0}
     setsFlag: 
     requiresFlag: 
@@ -116,7 +116,7 @@ MonoBehaviour:
   - id: eliza_registry
     speakerName: Eliza
     speakerPortrait: {fileID: 0}
-    text: "(Smirks) \"Locked from the outside without a scratch on the door... Sounds cozy. We\u2019ll take the key registry record for our file.\""
+    text: "(Smirks) \"Locked from the outside without a scratch on the door... Sounds cozy. We\u2019ll take a copy of the key registry record for our file.\""
     registersClue: {fileID: 11400000, guid: d0bad7376d47ec54d996f4a33840af2c, type: 2}
     setsFlag: 
     requiresFlag: 
@@ -125,7 +125,7 @@ MonoBehaviour:
   - id: ovan_ignatius
     speakerName: Guildmaster Ovan
     speakerPortrait: {fileID: 0}
-    text: "He\u2019s in his parlor inside, practically having apoplexy! Demanding emergency compensation from the City Commercial Treasury before the noon bell! If the Council doesn't reimburse him, he threatens to pull all pharmaceutical trade from Asterveil."
+    text: "He\u2019s barricaded in his parlor down in the Lower Market, practically having apoplexy and demanding emergency compensation from the City Commercial Treasury before the noon bell! If the Council doesn't reimburse him, he threatens to pull all apothecary trade from Asterveil."
     registersClue: {fileID: 0}
     setsFlag: 
     requiresFlag: 
@@ -134,7 +134,7 @@ MonoBehaviour:
   - id: eliza_hurry
     speakerName: Eliza
     speakerPortrait: {fileID: 0}
-    text: "He\u2019s quick to demand municipal gold for a crime that barely cooled down. {PlayerName}, we need to inspect that crime scene before his alchemists 'clean up' the evidence."
+    text: "He\u2019s quick to demand municipal gold for a crime that barely cooled down. {PlayerName}, once we grab the warrant, we need to inspect that vault before his apprentices sweep away the truth."
     registersClue: {fileID: 0}
     setsFlag: 
     requiresFlag: 
@@ -143,7 +143,7 @@ MonoBehaviour:
   - id: ovan_warrant
     speakerName: Guildmaster Ovan
     speakerPortrait: {fileID: 0}
-    text: '(Sighs, stamping a parchment seal) "Take it. The lower cellar grate is unlocked. But be warned: the vault still reeks of that purple sorcery. Don''t touch anything you can''t pay for!"'
+    text: "(Sighs, stamping a Guild parchment with his heavy bronze seal) \"Take the Forensic Entry Warrant. Bailiff at the cellar grate will let you down into the Lower Market vault\u2014but watch your step, the whole alley still reeks of strange smoke.\""
     registersClue: {fileID: 0}
     setsFlag: C1_WarrantGranted
     requiresFlag: 
@@ -152,7 +152,7 @@ MonoBehaviour:
   - id: warrant_close
     speakerName: Eliza
     speakerPortrait: {fileID: 0}
-    text: "Warrant in hand. Come on, {PlayerName} \u2014 let's see what that vault is really hiding."
+    text: "Warrant stamped and sealed. Head downstairs when you're ready, {PlayerName}\u2014let's see what Ignatius' vault is really hiding."
     registersClue: {fileID: 0}
     setsFlag: 
     requiresFlag: 

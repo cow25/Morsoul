@@ -116,7 +116,7 @@ namespace Morsoul.Hub.Editor
             var barkDialogue = AssetDatabase.LoadAssetAtPath<DialogueData>(BarksPath);
             var npcSpecs = new (string name, Vector3 pos, string sheet, string sprite, string ctrl, bool flip)[]
             {
-                ("Courtyard_Guard", new Vector3(6.8f, 1.3f, 0f),
+                ("Courtyard_Guard", new Vector3(4.6f, 1.2f, 0f),
                     "Assets/Art/Characters/NPCs/Citizen_M/Guard_A/Idle/Idle_Side-Sheet.png",
                     "Idle_Side-Sheet_0", "Assets/Animations/NPCs/NPC_CitizenM_GuardA.controller", true),
                 ("Courtyard_Novice", new Vector3(3.0f, -0.6f, 0f),
@@ -162,10 +162,10 @@ namespace Morsoul.Hub.Editor
             if (settings != null && travelUxml != null)
             {
                 var go = new GameObject("TravelMenuPanel");
-                var doc = go.AddComponent<UIDocument>();
-                doc.panelSettings = settings;
-                doc.visualTreeAsset = travelUxml;
-                doc.sortingOrder = 20;
+                var renderer = go.AddComponent<PanelRenderer>();
+                renderer.panelSettings = settings;
+                renderer.visualTreeAsset = travelUxml;
+                renderer.sortingOrder = 60;
                 context.travelMenu = go.AddComponent<TravelMenuController>();
             }
 
@@ -178,10 +178,10 @@ namespace Morsoul.Hub.Editor
                 doc.visualTreeAsset = hudUxml;
                 doc.sortingOrder = 10;
                 var hud = go.AddComponent<HubHudController>();
-                hud.caseText = "Case 2: The Muted Belfry";
-                hud.objectiveText = "Enter the Cathedral of Saint Althea.";
-                hud.objectiveCaseId = 2;
-                hud.postInvestigationObjective = "The deduction is accepted - confront Accord inside the Cathedral.";
+                hud.caseText = "";
+                hud.objectiveText = "";
+                hud.objectiveCaseId = 0;
+                hud.postInvestigationObjective = "";
                 context.hud = hud;
             }
         }
@@ -222,6 +222,17 @@ namespace Morsoul.Hub.Editor
             PaintStoneBand(wallsMap, xMin: 6, xMax: 11, yBottom: -4, rowsHigh: 3);
             PaintStoneBand(wallsMap, xMin: 9, xMax: 11, yBottom: -1, rowsHigh: 3);
             wallsMap.RefreshAllTiles();
+            PixelCrawlerHubToolkit.PlaceSoftGlow(propsRoot, "Cathedral_Portal_Glow",
+                new Vector2(8.8f, -0.3f), new Color(1.0f, 0.85f, 0.55f, 0.28f), scale: 3.6f);
+
+            var carrierWagon = PixelCrawlerHubToolkit.LoadCustomSprite("Assets/Art/Environments/Custom/Carrier_Wagon.png", 16f);
+            if (carrierWagon != null)
+            {
+                PixelCrawlerHubToolkit.PlaceSpriteProp(propsRoot, "Carrier_Wagon", carrierWagon,
+                    new Vector2(-8.6f, 0.7f), colliderSize: new Vector2(4.2f, 1.4f), colliderOffset: new Vector2(0f, 0.7f));
+                PixelCrawlerHubToolkit.PlaceSoftGlow(propsRoot, "Carrier_Lantern_Glow",
+                    new Vector2(-7.0f, 1.4f), new Color(1.0f, 0.78f, 0.4f, 0.25f), scale: 2.6f);
+            }
 
             var bannerBlue = PixelCrawlerHubToolkit.LoadSprite(DungeonPropsPath, "Dungeon_Props_15");
             var bannerRed = PixelCrawlerHubToolkit.LoadSprite(DungeonPropsPath, "Dungeon_Props_14");

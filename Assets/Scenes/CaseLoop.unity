@@ -991,10 +991,10 @@ MonoBehaviour:
   latentLogCollected: 0
   endingCutscenes:
   - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  entryCutscene: {fileID: 0}
+  - {fileID: 11400000, guid: e9ce71a1c59be7c459635cbb93f1f862, type: 2}
+  - {fileID: 11400000, guid: 44f8bfb67fdd24a428627695bbce6a82, type: 2}
+  - {fileID: 11400000, guid: 55106e2fe1ca6474b9a18022eed8dfa4, type: 2}
+  entryCutscene: {fileID: 11400000, guid: a104844b785b582478d0ba97fa146396, type: 2}
   board: {fileID: 199816357}
   weightedBoard: {fileID: 50254671}
   interrogation: {fileID: 802475710}

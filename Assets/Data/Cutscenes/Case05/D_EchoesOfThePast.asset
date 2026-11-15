@@ -24,6 +24,30 @@ MonoBehaviour:
     video: {fileID: 0}
     durationSeconds: 6
     waitForInput: 1
+    caption: (Hand clamped over her temples, breathing heavily) The air down here... It doesn't smell like earth or sulfur. It smells like ozone and burnt copper. {PlayerName}, my head is screaming with memories that aren't mine.
+    captionSpeaker: Eliza
+  - image: {fileID: 21300000, guid: 8c889eebdea7e514b99d349204bb85de, type: 3}
+    video: {fileID: 0}
+    durationSeconds: 6
+    waitForInput: 1
+    caption: "Look at those inverted towers... They're funneling every stolen piece right into the fissure\u2014the solvent from the vault, the tuning from Saint Althea's, twelve thousand gallons of Elder sap, and the drilling conduits from Iron Hollow."
+    captionSpeaker: Eliza
+  - image: {fileID: 21300000, guid: 8c889eebdea7e514b99d349204bb85de, type: 3}
+    video: {fileID: 0}
+    durationSeconds: 6
+    waitForInput: 1
+    caption: 'Analysis: The four preparatory cases were not separate crimes. They were modular components of a single bypass array built to shatter the First-Age containment seal.'
+    captionSpeaker: Golem
+  - image: {fileID: 21300000, guid: 8c889eebdea7e514b99d349204bb85de, type: 3}
+    video: {fileID: 0}
+    durationSeconds: 6
+    waitForInput: 1
+    caption: You arrive at the eleventh hour, relics of a broken world! Come forward! Step onto the dais and witness the dawn of uncorrupted mankind!
+    captionSpeaker: Grand Overseer
+  - image: {fileID: 21300000, guid: 8c889eebdea7e514b99d349204bb85de, type: 3}
+    video: {fileID: 0}
+    durationSeconds: 6
+    waitForInput: 1
     caption: "{PlayerName}! Steady\u2014what's happening to your core?! The ambient mana down here is tearing you apart!"
     captionSpeaker: Eliza
   - image: {fileID: 21300000, guid: 8c889eebdea7e514b99d349204bb85de, type: 3}
@@ -40,13 +64,49 @@ MonoBehaviour:
     video: {fileID: 0}
     durationSeconds: 6
     waitForInput: 1
-    caption: Core interference stabilized. The ambient frequency does not threaten my systems... it recognizes them. Proceeding to confrontation.
+    caption: Core interference stabilized. The ambient frequency does not threaten my chassis... it recognizes it. Proceeding to the dais.
     captionSpeaker: Golem
   - image: {fileID: 21300000, guid: 8c889eebdea7e514b99d349204bb85de, type: 3}
     video: {fileID: 0}
     durationSeconds: 6
     waitForInput: 1
-    caption: Good. Draw your breath, partner. The Overseer is right ahead.
+    caption: (Draws both daggers with a sharp metallic hiss) Good. Draw your breath, partner. One last case.
+    captionSpeaker: Eliza
+  - image: {fileID: 21300000, guid: 8c889eebdea7e514b99d349204bb85de, type: 3}
+    video: {fileID: 0}
+    durationSeconds: 6
+    waitForInput: 1
+    caption: '[CORE TELEMETRY: Spectral Mana Flow] Feed 01 carries synthetic solvent; Feed 02 dampens harmonic shockwaves; Feed 03 injects 12,000 gallons of Elder sap; Feed 04 draws tectonic pressure from the dwarven fault.'
+    captionSpeaker: Golem
+  - image: {fileID: 21300000, guid: 8c889eebdea7e514b99d349204bb85de, type: 3}
+    video: {fileID: 0}
+    durationSeconds: 6
+    waitForInput: 1
+    caption: They're using the Elder sap as volatile fuel to force the planetary rift open like an over-pressured boiler.
+    captionSpeaker: Eliza
+  - image: {fileID: 21300000, guid: 8c889eebdea7e514b99d349204bb85de, type: 3}
+    video: {fileID: 0}
+    durationSeconds: 6
+    waitForInput: 1
+    caption: "[FORENSIC CUT-MARK SCAN] The primary copper grounding cable is severed cleanly at its base\u2014less than thirty minutes old. Without that ground loop, any surge channeled through the console inverts into a runaway tectonic collapse."
+    captionSpeaker: Golem
+  - image: {fileID: 21300000, guid: 8c889eebdea7e514b99d349204bb85de, type: 3}
+    video: {fileID: 0}
+    durationSeconds: 6
+    waitForInput: 1
+    caption: He didn't just rig the pylons to drain mana... He cut the line holding the core steady so it would tear the whole continent down with it.
+    captionSpeaker: Eliza
+  - image: {fileID: 21300000, guid: 8c889eebdea7e514b99d349204bb85de, type: 3}
+    video: {fileID: 0}
+    durationSeconds: 6
+    waitForInput: 1
+    caption: '[ARCHIVAL CROSS-REFERENCE] Recovered folio in the Overseer''s hand: "Mana is the planetary circulatory fluid maintaining equilibrium. Yet the modern world must not thrive as an impure mockery. Even if it extinguishes the earth, true humanity must be avenged."'
+    captionSpeaker: Golem
+  - image: {fileID: 21300000, guid: 8c889eebdea7e514b99d349204bb85de, type: 3}
+    video: {fileID: 0}
+    durationSeconds: 6
+    waitForInput: 1
+    caption: He read the First-Age archives and knew mana wasn't an alien poison... He's doing this purely out of hatred for the modern races. Tie his scheme together, {PlayerName}!
     captionSpeaker: Eliza
   nextSceneName: 
   skipToScene: 1

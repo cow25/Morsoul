@@ -13,7 +13,10 @@ namespace Morsoul.Flow.Editor
         public static void RunAll()
         {
             Morsoul.Data.Editor.CaseDatabaseGenerator.Rebuild();
+            Morsoul.Dialogue.Editor.GuildIntroContentGenerator.Generate();
+            Morsoul.Dialogue.Editor.DialogueContentGenerator.Generate();
             Morsoul.Dialogue.Editor.HubDialogueContentGenerator.Generate();
+            Morsoul.Cutscene.Editor.CutsceneContentGenerator.GenerateFinaleCutscenes();
             Morsoul.Hub.Editor.HubContentSetup.Install();
             Morsoul.Hub.Editor.HubCaseLoopSetup.Install();
         }

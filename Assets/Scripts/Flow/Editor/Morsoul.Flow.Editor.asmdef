@@ -17,7 +17,8 @@
         "Morsoul.Journal",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
-        "Morsoul.Dialogue.Editor"
+        "Morsoul.Dialogue.Editor",
+        "Morsoul.Cutscene.Editor"
     ],
     "includePlatforms": [
         "Editor"

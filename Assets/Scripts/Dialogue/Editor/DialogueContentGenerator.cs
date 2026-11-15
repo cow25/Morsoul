@@ -97,105 +97,104 @@ namespace Morsoul.Dialogue.Editor
                 // Repeat interaction after warrant is already granted:
                 // If warrant not yet granted, GoTo skips to nextNodeId ("ovan_repeat_briefed").
                 Node("ovan_has_warrant", "Guildmaster Ovan",
-                    "(Waves a hurried hand) \"You already have the storage clearance warrant, Astra! " +
-                    "The lower cellar grate in the Lower Market is unlocked. Go investigate the vault before Ignatius causes any more trouble!\"",
+                    "(Waves a hurried hand) \"You already have the Guild storage clearance warrant, Eliza! " +
+                    "The lower cellar grate in the Lower Market is yours to unseal. Check the vault before Ignatius turns the street upside down.\"",
                     requiresFlag: WarrantFlag,
                     next: "ovan_repeat_briefed"),
 
                 // Repeat interaction after briefing seen but before warrant granted:
                 // If briefing not yet seen, GoTo skips to nextNodeId ("ovan_greeting").
                 Node("ovan_repeat_briefed", "Guildmaster Ovan",
-                    "\"Have you decided what you need from me, Astra? That subterranean storage vault won't inspect itself.\"",
+                    "\"Everything from the Consortium report is on my desk. What do you still need before heading down to the Lower Market?\"",
                     requiresFlag: "C1_BriefingSeen",
                     options: new[]
                     {
                         Option("Inquire about the vault's security", "ovan_security"),
                         Option("Ask about Master Ignatius", "ovan_ignatius"),
-                        Option("Demand storage clearance (Forensic Entry Warrant)", "ovan_warrant"),
+                        Option("Request storage clearance (Forensic Entry Warrant)", "ovan_warrant"),
                     },
                     next: "ovan_greeting"),
 
                 Node("ovan_greeting", "Eliza",
-                    "Step aside, Ovan. The Investigator's Guild is taking jurisdiction over the vault incident.",
+                    "All right, Ovan\u2014we're ready for the full dossier on the Lower Market vault incident.",
                     next: "ovan_challenge"),
                 Node("ovan_challenge", "Guildmaster Ovan",
-                    "(Wiping sweat from his brow with an embroidered handkerchief) " +
-                    "\"Astra? The Council sent their surveyor? And what in " +
-                    "Saint Althea\u2019s name is that... that walking boulder behind you?\"",
+                    "(Rubbing his temples over a stack of wax-sealed dispatches) " +
+                    "\"Good. The Merchant Consortium is demanding answers by noon, and " +
+                    "this makes a clean first field contract for your new partner here.\"",
                     next: "golem_scan"),
                 Node("golem_scan", "Golem",
-                    "[OPTICAL SCAN: Subject heart rate elevated. Cortisol perspiration " +
-                    "detected. Unit status: Non-hostile.] \"I am an analytical construct " +
-                    "licensed under Guild charter. State the parameters of the vault " +
-                    "breach, Guildmaster.\"",
+                    "[OPTICAL SCAN: Guildmaster respiration elevated. Dispatches " +
+                    "stamped 'URGENT \u2014 MUNICIPAL TREASURY'.] \"Unit ready, " +
+                    "Guildmaster. State the parameters of the Lower Market vault " +
+                    "breach.\"",
                     next: "ovan_briefing"),
                 Node("ovan_briefing", "Guildmaster Ovan",
-                    "It\u2019s financial ruin, that's what it is! Master Ignatius\u2019 " +
-                    "subterranean storage vault\u2014the one holding the seasonal reserve " +
-                    "of Greater Restoration Draughts\u2014was breached three hours before " +
-                    "dawn. Ten thousand gold ducats worth of inventory, dissolved into " +
-                    "thin air! Ignatius claims dark cultists used forbidden volatile magic!",
+                    "Master Alchemist Ignatius\u2019 subterranean storage vault\u2014the one " +
+                    "holding the seasonal reserve of Greater Restoration Draughts\u2014was " +
+                    "breached three hours before dawn. Ten thousand gold ducats worth of " +
+                    "inventory, dissolved into thin air! Ignatius claims dark cultists " +
+                    "used forbidden volatile magic!",
                     setsFlag: "C1_BriefingSeen",
                     next: "ovan_options"),
 
-                // Hub node. INVENTED prompt line (the doc gives no "anything else?"
-                // text); the three options and branch structure are per the doc.
+                // Hub node.
                 Node("ovan_options", "Guildmaster Ovan",
-                    "What else does the Investigator's Guild require of me?",
+                    "Review the Consortium's file and tell me what else you need.",
                     options: new[]
                     {
                         Option("Inquire about the vault's security", "ovan_security"),
                         Option("Ask about Master Ignatius", "ovan_ignatius"),
-                        Option("Demand storage clearance (Forensic Entry Warrant)", "ovan_warrant"),
+                        Option("Request storage clearance (Forensic Entry Warrant)", "ovan_warrant"),
                     }),
 
                 // Branch 1: vault security -> registers T1_01 (Guildmaster's Key
                 // Registry) on Eliza's closing line, then returns to the hub.
                 Node("ovan_security", "Guildmaster Ovan",
-                    "It\u2019s a masterwork Dwarven cylinder! Four tumblers, reinforced " +
-                    "cold-iron plating, fitted into bedrock. You couldn't crack it with " +
-                    "a siege ram. There are only two keys in existence: Master Ignatius " +
-                    "carries one on his personal brass chain, and the second is sealed " +
-                    "in my office archives under wax. The archives were never touched!",
+                    "According to the Consortium registry, it\u2019s a masterwork Dwarven " +
+                    "cylinder\u2014four tumblers, reinforced cold-iron plating, fitted into " +
+                    "bedrock. You couldn't crack it with a siege ram. Only two keys " +
+                    "exist: Master Ignatius carries one on his personal brass chain, " +
+                    "and the duplicate stays sealed in Consortium archives under wax. " +
+                    "The archive seal was never touched!",
                     next: "golem_conclusion"),
                 Node("golem_conclusion", "Golem",
-                    "Conclusion: The perimeter requires an authentic physical key for " +
-                    "non-destructive ingress.",
+                    "Conclusion: Entry through the perimeter door requires an " +
+                    "authentic physical key for non-destructive ingress.",
                     next: "eliza_registry"),
                 Node("eliza_registry", "Eliza",
                     "(Smirks) \"Locked from the outside without a scratch on the door... " +
-                    "Sounds cozy. We\u2019ll take the key registry record for our file.\"",
+                    "Sounds cozy. We\u2019ll take a copy of the key registry record for our file.\"",
                     clue: keyRegistry,
                     next: "ovan_options"),
 
                 // Branch 2: Ignatius' status -> Eliza pushes to the crime scene,
                 // then returns to the hub.
                 Node("ovan_ignatius", "Guildmaster Ovan",
-                    "He\u2019s in his parlor inside, practically having apoplexy! " +
-                    "Demanding emergency compensation from the City Commercial Treasury " +
-                    "before the noon bell! If the Council doesn't reimburse him, he " +
-                    "threatens to pull all pharmaceutical trade from Asterveil.",
+                    "He\u2019s barricaded in his parlor down in the Lower Market, " +
+                    "practically having apoplexy and demanding emergency compensation " +
+                    "from the City Commercial Treasury before the noon bell! If the " +
+                    "Council doesn't reimburse him, he threatens to pull all " +
+                    "apothecary trade from Asterveil.",
                     next: "eliza_hurry"),
                 Node("eliza_hurry", "Eliza",
                     "He\u2019s quick to demand municipal gold for a crime that barely " +
-                    "cooled down. {PlayerName}, we need to inspect that crime scene " +
-                    "before his alchemists 'clean up' the evidence.",
+                    "cooled down. {PlayerName}, once we grab the warrant, we need to " +
+                    "inspect that vault before his apprentices sweep away the truth.",
                     next: "ovan_options"),
 
                 // Branch 3: warrant demand -> grants C1_WarrantGranted (unlocks the
-                // VaultGate cellar grate), then a closing line and the dialogue
-                // ends - the doc shows no return to the choice menu after this.
+                // VaultGate cellar grate) and ends the conversation.
                 Node("ovan_warrant", "Guildmaster Ovan",
-                    "(Sighs, stamping a parchment seal) \"Take it. The lower cellar " +
-                    "grate is unlocked. But be warned: the vault still reeks of that " +
-                    "purple sorcery. Don't touch anything you can't pay for!\"",
+                    "(Sighs, stamping a Guild parchment with his heavy bronze seal) " +
+                    "\"Take the Forensic Entry Warrant. Bailiff at the cellar grate " +
+                    "will let you down into the Lower Market vault\u2014but watch your step, " +
+                    "the whole alley still reeks of strange smoke.\"",
                     setsFlag: WarrantFlag,
                     next: "warrant_close"),
-                // INVENTED closing line (doc records only the "[Item Acquired:
-                // Forensic Entry Warrant]" system note, not spoken dialogue).
                 Node("warrant_close", "Eliza",
-                    "Warrant in hand. Come on, {PlayerName} \u2014 let's see what that " +
-                    "vault is really hiding."));
+                    "Warrant stamped and sealed. Head downstairs when you're ready, " +
+                    "{PlayerName}\u2014let's see what Ignatius' vault is really hiding."));
         }
 
         /// <summary>

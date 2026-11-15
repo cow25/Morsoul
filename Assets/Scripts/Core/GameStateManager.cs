@@ -398,6 +398,7 @@ namespace Morsoul.Core
             Seed(RouteKeys.Opening, "PrologueRuins"); // Integration catalog guards the 3D opening
             Seed(RouteKeys.PrologueWilderness, SessionState.PrologueWildernessSceneId);
             Seed(RouteKeys.CaseLoop, "CaseLoop");
+            Seed(RouteKeys.Guild, "Hub_Guild");
             Seed(RouteKeys.Investigation(1), "Case1UndegroundStorageVault");
             Seed(RouteKeys.Investigation(2), "Case2CathedralBelfry");
             Seed(RouteKeys.Investigation(3), "Case3WhisperwoodGrove");
@@ -445,9 +446,12 @@ namespace Morsoul.Core
             // Session.CurrentCase. Route chain: next hub -> current hub ->
             // title, so an unregistered route never strands the run.
             _core.Session.CurrentCase = e.CaseId + 1;
+            _core.Session.SetFlag($"Guild.BriefingPending.{_core.Session.CurrentCase}");
             var nextCase = _core.ResolveCase(_core.Session.CurrentCase);
             if (nextCase != null && nextCase.toolUnlocked != Morsoul.Data.Tool.None)
                 _core.Session.UnlockTool(nextCase.toolUnlocked);
+            if (GoToRoute(RouteKeys.Guild, GameFlowState.Hub)) return;
+            if (GoToRoute(RouteKeys.Hub(1), GameFlowState.Hub)) return;
             if (GoToRoute(RouteKeys.Hub(e.CaseId + 1), GameFlowState.Hub)) return;
             if (GoToRoute(RouteKeys.Hub(e.CaseId), GameFlowState.Hub)) return;
             GoToRoute(RouteKeys.Title, GameFlowState.Title);

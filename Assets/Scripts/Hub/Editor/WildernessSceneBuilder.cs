@@ -38,10 +38,9 @@ namespace Morsoul.Hub.Editor
         public static void Rebuild()
         {
             PixelCrawlerHubToolkit.ClearCache();
-            RebuildArtOverlay();
             RebuildMainSceneBindings();
             AssetDatabase.SaveAssets();
-            Debug.Log("WildernessSceneBuilder: rebuilt Hub_Wilderness and Hub_Wilderness_Art (Pixel Crawler).");
+            Debug.Log("WildernessSceneBuilder: rebuilt unified Hub_Wilderness (Pixel Crawler).");
         }
 
         static void RebuildArtOverlay()
@@ -63,10 +62,10 @@ namespace Morsoul.Hub.Editor
                 BuildTerrain(scene);
                 BuildProps(scene);
                 PixelCrawlerHubToolkit.RebuildBounds(scene, "WildernessBounds",
-                    ("Bound_North", new Vector2(0f, 5.2f), new Vector2(24f, 1.6f)),
-                    ("Bound_South", new Vector2(0f, -5.2f), new Vector2(24f, 1.6f)),
-                    ("Bound_West", new Vector2(-11.0f, 0f), new Vector2(1.6f, 12.5f)),
-                    ("Bound_East", new Vector2(11.0f, 0f), new Vector2(1.6f, 12.5f)));
+                    ("Bound_North", new Vector2(0f, 5.2f), new Vector2(26f, 1.6f)),
+                    ("Bound_South", new Vector2(0f, -6.4f), new Vector2(26f, 1.6f)),
+                    ("Bound_West", new Vector2(-11.8f, 0f), new Vector2(1.6f, 14f)),
+                    ("Bound_East", new Vector2(11.0f, 0f), new Vector2(1.6f, 14f)));
 
                 EditorSceneManager.MarkSceneDirty(scene);
                 EditorSceneManager.SaveScene(scene, ArtScenePath);
@@ -95,9 +94,10 @@ namespace Morsoul.Hub.Editor
 
             PixelCrawlerHubToolkit.FillRect(grassMap, grassTile, -22, -14, 22, 14);
 
-            // Whisperwood east-west trail from TrailExit (-9.5,0) to BriarGate (8.8,0.2) + ranger camp pad.
+            // Whisperwood east-west trail from TrailExit (-9.5,0) to BriarGate (9.6,0) + expanded ranger outpost pads.
             PixelCrawlerHubToolkit.FillRect(dirtMap, dirtTile, -16, -1, 15, 1);
-            PixelCrawlerHubToolkit.FillRect(dirtMap, dirtTile, -9, -4, -4, -1);
+            PixelCrawlerHubToolkit.FillRect(dirtMap, dirtTile, -11, -6, -2, -1);
+            PixelCrawlerHubToolkit.FillRect(dirtMap, dirtTile, -7, 1, -2, 3);
             // Short southern spur to BlightBark inspection clearing.
             PixelCrawlerHubToolkit.FillRect(dirtMap, dirtTile, 0, -3, 2, -1);
 
@@ -168,10 +168,40 @@ namespace Morsoul.Hub.Editor
             foreach (float x in new[] { -10.5f, -7.5f, -4.5f, -1.5f, 1.5f })
                 PixelCrawlerHubToolkit.PlaceSpriteProp(root, $"Tree_S_{x:F0}", x < -3f ? pineTeal : oakGreen, new Vector2(x, -8.5f), colliderSize: treeCol, colliderOffset: treeOff);
 
-            // Western trailhead & Ranger camp outpost (SW pad, clear of Carrier at (-8.2,-0.4) & RestSpot at (-4.8,-2.4)).
+            // Western trailhead & expanded Ranger camp outpost (NW shelter + SW campfire, supply & prep zones).
+            var carrierWagon = PixelCrawlerHubToolkit.LoadCustomSprite("Assets/Art/Environments/Custom/Carrier_Wagon.png", 16f);
+            if (carrierWagon != null)
+            {
+                PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Carrier_Wagon", carrierWagon,
+                    new Vector2(-9.2f, 0.8f), colliderSize: new Vector2(4.2f, 1.4f), colliderOffset: new Vector2(0f, 0.7f));
+            }
+            AssetDatabase.ImportAsset("Assets/Art/Environments/Custom/Whisperwood_RangerTent.png",
+                ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ForceUpdate);
+            var rangerTent = PixelCrawlerHubToolkit.LoadCustomSprite("Assets/Art/Environments/Custom/Whisperwood_RangerTent.png", 16f);
+            if (rangerTent != null)
+            {
+                PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Ranger_Outpost_Tent", rangerTent,
+                    new Vector2(-4.2f, 2.3f), colliderSize: new Vector2(3.6f, 1.5f), colliderOffset: new Vector2(0f, 0.75f));
+                PixelCrawlerHubToolkit.PlaceSoftGlow(root, "Wild_Tent_Glow", new Vector2(-4.2f, 1.6f), new Color(1.0f, 0.78f, 0.42f, 0.22f), scale: 2.8f);
+            }
+            PixelCrawlerHubToolkit.PlaceSoftGlow(root, "Wild_Campfire_Glow", new Vector2(-5.5f, -2.5f), new Color(1.0f, 0.65f, 0.25f, 0.32f), scale: 3.8f);
+            PixelCrawlerHubToolkit.PlaceSoftGlow(root, "Wild_Blight_Glow", new Vector2(1.2f, -2.2f), new Color(0.62f, 0.32f, 0.90f, 0.28f), scale: 3.2f);
             PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Trailhead_Rock", smallRock, new Vector2(-9.8f, 1.35f), colliderSize: new Vector2(0.8f, 0.55f), colliderOffset: new Vector2(0f, 0.28f));
-            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Camp_Crate_W", crateAlt, new Vector2(-8.0f, -2.6f), colliderSize: new Vector2(0.85f, 0.65f), colliderOffset: new Vector2(0f, 0.33f));
-            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Camp_LogSeat", logPlank, new Vector2(-4.8f, -3.25f), colliderSize: new Vector2(1.8f, 0.45f), colliderOffset: new Vector2(0f, 0.22f));
+
+            // Supply & Storage area (West of campfire) + Work/Prep area (SE of campfire).
+            var supplyCrate = PixelCrawlerHubToolkit.LoadSprite(ResourcesPath, "Resources_34");
+            var oakBench = PixelCrawlerHubToolkit.LoadSprite("Assets/Art/Environments/Buildings/Interior/Interior_Props_01.png", "Int_Interior_Props_01_99");
+            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Camp_Crate_W", crateAlt, new Vector2(-9.6f, -2.4f), colliderSize: new Vector2(0.85f, 0.65f), colliderOffset: new Vector2(0f, 0.33f));
+            if (supplyCrate != null)
+            {
+                PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Camp_Crate_SW", supplyCrate, new Vector2(-9.4f, -4.2f), colliderSize: new Vector2(0.85f, 0.65f), colliderOffset: new Vector2(0f, 0.33f));
+                PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Camp_Tent_Crate", supplyCrate, new Vector2(-6.7f, 1.9f), colliderSize: new Vector2(0.85f, 0.65f), colliderOffset: new Vector2(0f, 0.33f));
+            }
+            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Camp_LogSeat", logPlank, new Vector2(-5.5f, -3.75f), colliderSize: new Vector2(1.7f, 0.45f), colliderOffset: new Vector2(0f, 0.22f));
+            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Camp_Supply_Log", logPlank, new Vector2(-3.55f, -2.75f), colliderSize: new Vector2(1.7f, 0.45f), colliderOffset: new Vector2(0f, 0.22f));
+            if (oakBench != null)
+                PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Camp_Prep_Bench", oakBench, new Vector2(5.8f, -2.2f), colliderSize: new Vector2(1.7f, 0.55f), colliderOffset: new Vector2(0f, 0.25f));
+            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Camp_Prep_Crate", crateAlt, new Vector2(-7.6f, -3.9f), colliderSize: new Vector2(0.85f, 0.65f), colliderOffset: new Vector2(0f, 0.33f));
 
             // BlightBark corrupted clearing (around (1.2, -2.5)) with blighted ground patch & withered flora.
             PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Blight_GroundPatch", blightPatch, new Vector2(1.2f, -2.25f), zBias: 0.05f, sortingOrder: -8);
@@ -188,32 +218,29 @@ namespace Morsoul.Hub.Editor
             PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Pond_Bush_NE", bushMed, new Vector2(9.6f, -3.2f), colliderSize: bushCol, colliderOffset: bushOff);
             PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Pond_Flower_W", flower, new Vector2(4.1f, -4.45f));
 
-            // East trailhead framing around BriarGate walk-in trigger (9.6, 0.0) — no gate visual or random flag.
+            // East trailhead framing around BriarGate walk-in trigger (9.6, 0.0) — clean & unobstructed (no briar vines).
             PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Briar_Tree_N", oakDeadA ?? pineDark, new Vector2(10.0f, 2.65f), colliderSize: treeCol, colliderOffset: treeOff);
             PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Briar_Boulder_N", boulder, new Vector2(7.0f, 1.5f), colliderSize: rockCol, colliderOffset: rockOff);
-            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Briar_Thorn_N", thornyBush, new Vector2(9.8f, 1.35f), colliderSize: bushCol, colliderOffset: bushOff);
-            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Briar_Thorn_S", thornyBush, new Vector2(8.1f, -1.4f), colliderSize: bushCol, colliderOffset: bushOff);
 
-            // Trailside bushes, ferns, wildflowers & boulders (clear of main path y in [-1.1, 1.1]).
+            // Trailside bushes, ferns, wildflowers & boulders (clear of main path & expanded camp pads).
             var bushes = new (Vector2 pos, Sprite spr)[]
             {
                 (new Vector2(-7.8f, 2.7f), bushMed),
-                (new Vector2(-4.2f, 3.2f), bushSmall),
                 (new Vector2(-0.8f, 2.8f), bushMed),
                 (new Vector2(2.6f, 3.1f), bushSmall),
                 (new Vector2(6.0f, 2.9f), bushMed),
-                (new Vector2(-9.8f, -2.2f), bushSmall),
-                (new Vector2(-2.1f, -3.3f), bushMed),
+                (new Vector2(-11.4f, -2.6f), bushSmall),
+                (new Vector2(-1.2f, -4.8f), bushMed),
             };
             for (int i = 0; i < bushes.Length; i++)
                 PixelCrawlerHubToolkit.PlaceSpriteProp(root, $"Wild_Bush_{i}", bushes[i].spr, bushes[i].pos, colliderSize: bushCol, colliderOffset: bushOff);
 
-            foreach (var pos in new[] { new Vector2(-3.1f, 2.2f), new Vector2(0.8f, 2.3f), new Vector2(5.1f, 2.3f), new Vector2(-2.8f, -2.3f), new Vector2(3.1f, -2.4f) })
+            foreach (var pos in new[] { new Vector2(-1.6f, 2.2f), new Vector2(0.8f, 2.3f), new Vector2(5.1f, 2.3f), new Vector2(-2.2f, -2.3f), new Vector2(3.1f, -2.4f) })
                 PixelCrawlerHubToolkit.PlaceSpriteProp(root, $"Wild_Flower_{pos.x:F0}_{pos.y:F0}", flower, pos);
 
-            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Wild_Fern_NW", fern, new Vector2(-6.2f, 2.4f));
-            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Wild_Fern_SW", fern, new Vector2(-8.9f, -4.1f));
-            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Wild_Boulder_NW", boulder, new Vector2(-5.4f, 3.6f), colliderSize: rockCol, colliderOffset: rockOff);
+            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Wild_Fern_NW", fern, new Vector2(-6.4f, 3.4f));
+            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Wild_Fern_SW", fern, new Vector2(-11.2f, -4.8f));
+            PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Wild_Boulder_NW", boulder, new Vector2(-5.4f, 4.0f), colliderSize: rockCol, colliderOffset: rockOff);
             PixelCrawlerHubToolkit.PlaceSpriteProp(root, "Wild_Boulder_N", boulder, new Vector2(1.4f, 3.6f), colliderSize: rockCol, colliderOffset: rockOff);
         }
 
@@ -229,8 +256,20 @@ namespace Morsoul.Hub.Editor
             try
             {
                 SceneManager.SetActiveScene(scene);
+                PixelCrawlerHubToolkit.DisableArtSceneLoader(scene);
+                var oldEnv = PixelCrawlerHubToolkit.FindRoot(scene, "Environment");
+                if (oldEnv != null) Object.DestroyImmediate(oldEnv);
+                var oldGrid = PixelCrawlerHubToolkit.FindRoot(scene, "EnvironmentGrid");
+                if (oldGrid != null) Object.DestroyImmediate(oldGrid);
+                BuildTerrain(scene);
+                BuildProps(scene);
+                PixelCrawlerHubToolkit.RebuildBounds(scene, "WildernessBounds",
+                    ("Bound_North", new Vector2(0f, 5.2f), new Vector2(26f, 1.6f)),
+                    ("Bound_South", new Vector2(0f, -6.4f), new Vector2(26f, 1.6f)),
+                    ("Bound_West", new Vector2(-11.8f, 0f), new Vector2(1.6f, 14f)),
+                    ("Bound_East", new Vector2(11.0f, 0f), new Vector2(1.6f, 14f)));
                 PixelCrawlerHubToolkit.ConfigureCamera(
-                    scene, new Vector2(-11.5f, -5.8f), new Vector2(11.5f, 5.8f),
+                    scene, new Vector2(-12.5f, -7.0f), new Vector2(11.5f, 5.8f),
                     5.0f, new Color(0.06f, 0.11f, 0.06f, 1f));
 
                 var playerProf = PixelCrawlerHubToolkit.EnsureCharacterProfile(
@@ -253,9 +292,11 @@ namespace Morsoul.Hub.Editor
                 var trailExit = PixelCrawlerHubToolkit.FindRoot(scene, "TrailExit");
                 if (trailExit != null) Object.DestroyImmediate(trailExit);
 
+                SetRootPos(scene, "Player", new Vector3(-6.2f, -0.4f, 0f));
+                SetRootPos(scene, "PlayerSpawn", new Vector3(-6.2f, -0.4f, 0f));
                 SetRootPos(scene, "Carrier", new Vector3(-8.2f, -0.4f, 0f));
-                SetRootPos(scene, "RestSpot", new Vector3(-4.8f, -2.4f, 0f));
-                SetRootPos(scene, "ForestOutpost", new Vector3(-7.2f, -2.5f, 0f));
+                SetRootPos(scene, "RestSpot", new Vector3(-5.5f, -2.8f, 0f));
+                SetRootPos(scene, "ForestOutpost", new Vector3(-8.5f, -2.2f, 0f));
                 SetRootPos(scene, "Kaelen", new Vector3(-2.2f, 1.3f, 0f));
                 SetRootPos(scene, "BlightBark", new Vector3(1.2f, -2.5f, 0f));
                 SetRootPos(scene, "Vane", new Vector3(4.2f, 1.4f, 0f));
@@ -273,7 +314,7 @@ namespace Morsoul.Hub.Editor
                 PixelCrawlerHubToolkit.BindRoot(scene, "Carrier", carrierProf);
 
                 var barkDialogue = AssetDatabase.LoadAssetAtPath<DialogueData>(BarksPath);
-                EnsureAmbientNpc(scene, "Wild_Ranger", new Vector3(-6.0f, -1.8f, 0f),
+                EnsureAmbientNpc(scene, "Wild_Ranger", new Vector3(-6.8f, -2.4f, 0f),
                     "Assets/Art/Characters/NPCs/Citizen_M/Adventurer_A/Idle/Idle_Side-Sheet.png",
                     "Idle_Side-Sheet_0", "Assets/Animations/NPCs/NPC_CitizenM_AdventurerA.controller",
                     false, barkDialogue);
@@ -284,9 +325,35 @@ namespace Morsoul.Hub.Editor
 
                 PixelCrawlerHubToolkit.BindStaticProp(scene, "RestSpot", "Wild_Campfire", BonfirePath, "Bonfire_00");
                 PixelCrawlerHubToolkit.BindStaticProp(scene, "ForestOutpost", "Wild_OutpostCrates", ResourcesPath, "Resources_34");
-                PixelCrawlerHubToolkit.BindStaticProp(scene, "BlightBark", "Wild_BlightStump", BlightStumpPath, "Blight_Stump");
+                var fallenLog = PixelCrawlerHubToolkit.LoadCustomSprite("Assets/Art/Environments/Custom/Whisperwood_FallenBlightLog.png", 16f);
+                if (fallenLog != null)
+                {
+                    var bbGo = PixelCrawlerHubToolkit.FindRoot(scene, "BlightBark");
+                    if (bbGo != null)
+                    {
+                        var bbProf = PixelCrawlerHubToolkit.EnsureCharacterProfile(
+                            "Wild_FallenBlightLog", "Assets/Art/Environments/Custom/Whisperwood_FallenBlightLog.png",
+                            fallenLog.name, null, Vector2.zero);
+                        PixelCrawlerHubToolkit.BindActorVisual(bbGo, bbProf, addYSort: true);
+                    }
+                }
+                else
+                {
+                    PixelCrawlerHubToolkit.BindStaticProp(scene, "BlightBark", "Wild_BlightStump", BlightStumpPath, "Blight_Stump");
+                }
 
-                EnsureSolidBody(scene, "RestSpot", new Vector2(1.35f, 0.9f), new Vector2(0f, 0.55f));
+                EnsureSolidBody(scene, "RestSpot", new Vector2(1.0f, 0.65f), new Vector2(0f, 0.35f));
+                var restGo = PixelCrawlerHubToolkit.FindRoot(scene, "RestSpot");
+                if (restGo != null)
+                {
+                    foreach (var c in restGo.GetComponents<BoxCollider2D>())
+                    {
+                        if (!c.isTrigger) continue;
+                        c.size = new Vector2(2.4f, 2.2f);
+                        c.offset = new Vector2(0f, 0.4f);
+                        break;
+                    }
+                }
                 EnsureSolidBody(scene, "ForestOutpost", new Vector2(0.9f, 0.7f), new Vector2(0f, 0.35f));
                 EnsureSolidBody(scene, "BlightBark", new Vector2(0.95f, 0.65f), new Vector2(0f, 0.35f));
 

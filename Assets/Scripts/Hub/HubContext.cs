@@ -30,6 +30,8 @@ namespace Morsoul.Hub
         /// <summary>Optional carrier travel menu; opened by CarrierInteractable.</summary>
         public TravelMenuController travelMenu;
         public WeightedBoardController boardPanel;
+        /// <summary>Optional Eliza visual profile for runtime companion/cutscene spawning.</summary>
+        public VisualProfile elizaProfile;
 
         readonly List<Func<bool>> _uiBlockers = new List<Func<bool>>();
         DialogueController _boundDialogue;
@@ -43,6 +45,37 @@ namespace Morsoul.Hub
                 (travelMenu != null && travelMenu.IsOpen) ||
                 (ResolveBoardPanel() != null && boardPanel.IsOpen);
             PauseMenuController.RegisterExternalModal(_pauseModalPredicate);
+
+            if (Application.isPlaying && CoreRuntime.Instance != null)
+            {
+                var session = CoreRuntime.Instance.Session;
+                int caseId = session.CurrentCase;
+                bool postInterrogation = caseId >= 1 && caseId <= 4 &&
+                    session.HasFlag(PostInterrogationCutsceneController.PendingFlag(caseId));
+                if (!postInterrogation && GetComponent<ElizaHubPresenceController>() == null)
+                    gameObject.AddComponent<ElizaHubPresenceController>().context = this;
+                if (!postInterrogation && GetComponent<AmbientNpcShuffler2D>() == null)
+                    gameObject.AddComponent<AmbientNpcShuffler2D>();
+
+                if (postInterrogation && GetComponent<PostInterrogationCutsceneController>() == null)
+                {
+                    gameObject.AddComponent<PostInterrogationCutsceneController>().context = this;
+                }
+                else if (caseId >= 2 && caseId <= 4 &&
+                    session.HasFlag(ElizaCarrierGuideController.PendingFlag(caseId)) &&
+                    FindAnyObjectByType<CarrierInteractable>() != null &&
+                    GetComponent<ElizaCarrierGuideController>() == null)
+                {
+                    gameObject.AddComponent<ElizaCarrierGuideController>().context = this;
+                }
+                else if (!postInterrogation &&
+                    !GuildIntroRules.CanPlayMarketArrival(session) &&
+                    !GuildIntroRules.CanPlayGuildIntro(session) &&
+                    !GuildIntroRules.IsBriefingPending(session, caseId))
+                {
+                    ElizaCompanionFollower.AttachIfJoined(this);
+                }
+            }
         }
 
         void OnDisable()

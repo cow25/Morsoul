@@ -18,6 +18,88 @@ MonoBehaviour:
     video: {fileID: 0}
     durationSeconds: 6
     waitForInput: 1
+    caption: "Do you think you can bind me with paper warrants, machine?! Magic is a parasitic tumor! When the mana tides drain, the beastfolk and spirits dissolve\u2014and our ritual is merciful purification!"
+    captionSpeaker: Grand Overseer
+  - image: {fileID: 21300000, guid: 8c889eebdea7e514b99d349204bb85de, type: 3}
+    video: {fileID: 0}
+    durationSeconds: 6
+    waitForInput: 1
+    caption: Falsehood. Your own private journal proved mana is the planetary circulatory fluid maintaining tectonic stability. Purging it will collapse the crust and extinguish all life.
+    captionSpeaker: Golem
+  - image: {fileID: 21300000, guid: 8c889eebdea7e514b99d349204bb85de, type: 3}
+    video: {fileID: 0}
+    durationSeconds: 6
+    waitForInput: 1
+    caption: You're not a doctor curing an infection. You're an arsonist burning down the house because you despise the children living inside it.
+    captionSpeaker: Eliza
+  - image: {fileID: 21300000, guid: 8c889eebdea7e514b99d349204bb85de, type: 3}
+    video: {fileID: 0}
+    durationSeconds: 6
+    waitForInput: 1
+    caption: "You dare lecture me?! Everything we wield is cold First-Age mechanics! Brass conduits, extraction pylons\u2014there is no witchcraft in steel!"
+    captionSpeaker: Grand Overseer
+  - image: {fileID: 21300000, guid: 8c889eebdea7e514b99d349204bb85de, type: 3}
+    video: {fileID: 0}
+    durationSeconds: 6
+    waitForInput: 1
+    caption: Your staff burns with the exact dark mana signature forged into Saint Althea's bell clapper. Humanity caused the First-Age catastrophe; your entire operation runs on corrupted mana.
+    captionSpeaker: Golem
+  - image: {fileID: 21300000, guid: 8c889eebdea7e514b99d349204bb85de, type: 3}
+    video: {fileID: 0}
+    durationSeconds: 6
+    waitForInput: 1
+    caption: You wrapped yourself in First-Age science because you couldn't admit to your own disciples that you're just another warlock drinking stolen power.
+    captionSpeaker: Eliza
+  - image: {fileID: 21300000, guid: 8c889eebdea7e514b99d349204bb85de, type: 3}
+    video: {fileID: 0}
+    durationSeconds: 6
+    waitForInput: 1
+    caption: "It does not matter! The grounding is gone! When the core reaches saturation, the tectonic plates shatter\u2014and we all burn together!"
+    captionSpeaker: Grand Overseer
+  - image: {fileID: 21300000, guid: 8c889eebdea7e514b99d349204bb85de, type: 3}
+    video: {fileID: 0}
+    durationSeconds: 6
+    waitForInput: 1
+    caption: 'Your collapse is preventable. The central console holds an emergency stabilization shunt: a conscious analytical soul core can bridge the polarity circuit directly.'
+    captionSpeaker: Golem
+  - image: {fileID: 21300000, guid: 8c889eebdea7e514b99d349204bb85de, type: 3}
+    video: {fileID: 0}
+    durationSeconds: 6
+    waitForInput: 1
+    caption: You built your cult on the lie that humanity was weak, Overseer. Three thousand years ago, two humans gave everything to protect this earth. And we are still standing here.
+    captionSpeaker: Eliza
+  - image: {fileID: 21300000, guid: 8c889eebdea7e514b99d349204bb85de, type: 3}
+    video: {fileID: 0}
+    durationSeconds: 6
+    waitForInput: 1
+    caption: (Eliza kicks the Grand Overseer's ceremonial staff over the chasm brink as sirens shriek across the dais.)
+    captionSpeaker: 
+  - image: {fileID: 21300000, guid: 8c889eebdea7e514b99d349204bb85de, type: 3}
+    video: {fileID: 0}
+    durationSeconds: 1.8
+    waitForInput: 0
+    caption: '>> WARNING: PRIMARY GROUND SEVERED
+
+      >> POLARITY INVERSION AT 94%
+
+      >> MANUAL CORE BRIDGING REQUIRED WITHIN 15 SECONDS'
+    captionSpeaker: System
+  - image: {fileID: 21300000, guid: 8c889eebdea7e514b99d349204bb85de, type: 3}
+    video: {fileID: 0}
+    durationSeconds: 6
+    waitForInput: 1
+    caption: It requires a conscious mana core to absorb the polarity backlash and lock the seal permanently.
+    captionSpeaker: Golem
+  - image: {fileID: 21300000, guid: 8c889eebdea7e514b99d349204bb85de, type: 3}
+    video: {fileID: 0}
+    durationSeconds: 6
+    waitForInput: 1
+    caption: (Eyes wide with terror, seizing the Golem's arm) {PlayerName}, wait... If you absorb that charge, your chassis won't survive the feedback!
+    captionSpeaker: Eliza
+  - image: {fileID: 21300000, guid: 8c889eebdea7e514b99d349204bb85de, type: 3}
+    video: {fileID: 0}
+    durationSeconds: 6
+    waitForInput: 1
     caption: '>> FATAL CALIBRATION ERROR: INVERTED FLUX DETECTED
 
       >> CONTAINMENT FIELD: COLLAPSED

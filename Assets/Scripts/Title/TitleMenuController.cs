@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Morsoul.Core;
+using Morsoul.Cutscene;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -31,6 +32,10 @@ namespace Morsoul.Title
         public UguiButton settingsButton;
         public UguiButton quitButton;
         public bool saveExists;
+
+        [Header("Opening Cutscene")]
+        public CutscenePlayerController openingCutscenePlayer;
+        public CutsceneData openingCutscene;
 
         [Header("Selection Indicator (Legacy uGUI)")]
         public RectTransform selectionDiamond;
@@ -167,6 +172,7 @@ namespace Morsoul.Title
 
         void Update()
         {
+            if (_startingNewGameCutscene) return;
             var kb = Keyboard.current;
             if (kb == null) return;
 
@@ -191,7 +197,7 @@ namespace Morsoul.Title
                 if (_selectedMenuIndex >= 0 && _selectedMenuIndex < _menuEntries.Count)
                 {
                     var entry = _menuEntries[_selectedMenuIndex];
-                    if (entry.btn != null && entry.btn.enabledSelf)
+                    if (IsMenuEntrySelectable(entry))
                         entry.onActivate?.Invoke();
                 }
             }
@@ -232,6 +238,13 @@ namespace Morsoul.Title
             return false;
         }
 
+        static bool IsMenuEntrySelectable((VisualElement row, UitButton btn, Action onActivate) entry)
+        {
+            if (entry.row != null && entry.row.style.display == DisplayStyle.None)
+                return false;
+            return entry.btn != null && entry.btn.enabledSelf;
+        }
+
         void MoveKeyboardMenuSelection(int delta)
         {
             if (_menuEntries.Count == 0) return;
@@ -239,11 +252,10 @@ namespace Morsoul.Title
             for (int step = 0; step < _menuEntries.Count; step++)
             {
                 idx = (idx + delta + _menuEntries.Count) % _menuEntries.Count;
-                var btn = _menuEntries[idx].btn;
-                if (btn != null && btn.enabledSelf)
+                if (IsMenuEntrySelectable(_menuEntries[idx]))
                 {
                     SetActiveMenuIndex(idx);
-                    btn.Focus();
+                    _menuEntries[idx].btn.Focus();
                     return;
                 }
             }
@@ -367,14 +379,25 @@ namespace Morsoul.Title
                 continueButton.interactable = exists;
             if (loadGameButton != null)
                 loadGameButton.interactable = exists;
+            if (startGameButton != null)
+            {
+                startGameButton.interactable = exists;
+                startGameButton.gameObject.SetActive(exists);
+            }
+            if (_uitStartBtn != null)
+                _uitStartBtn.SetEnabled(exists);
+            if (_menuEntries.Count > 0 && _menuEntries[0].row != null)
+                _menuEntries[0].row.style.display = exists ? DisplayStyle.Flex : DisplayStyle.None;
             if (_uitLoadBtn != null)
                 _uitLoadBtn.SetEnabled(exists);
+            if (_menuEntries.Count > 0 && !IsMenuEntrySelectable(_menuEntries[_selectedMenuIndex]))
+                MoveKeyboardMenuSelection(1);
             RefreshSaveSlotCardPreview();
         }
 
         void RefreshSaveState()
         {
-            SetSaveExists(saveExists || SaveService.Persistent.HasSave);
+            SetSaveExists(SaveService.Persistent.HasSave);
         }
 
         void BindUguiButtons()
@@ -446,13 +469,12 @@ namespace Morsoul.Title
         {
             RefreshSaveState();
             if (saveExists) RequestContinue();
-            else RequestNewGame();
         }
 
         public void OnNewGameClicked()
         {
             RefreshSaveState();
-            if (_uitSaveModal != null || saveSlotModal != null)
+            if (saveExists && (_uitSaveModal != null || saveSlotModal != null))
                 OpenSaveSlotModal(isNewGame: true);
             else
                 RequestNewGame();
@@ -675,12 +697,90 @@ namespace Morsoul.Title
             }
         }
 
+        bool _startingNewGameCutscene;
+
         public void RequestNewGame()
         {
+            if (_startingNewGameCutscene) return;
             Debug.Log("TitleMenuController: New Game requested.", this);
+            var player = Application.isPlaying
+                ? (openingCutscenePlayer != null ? openingCutscenePlayer : FindAnyObjectByType<CutscenePlayerController>())
+                : null;
+            if (player != null)
+            {
+                _startingNewGameCutscene = true;
+                void OnDone()
+                {
+                    player.CutsceneEnded -= OnDone;
+                    _startingNewGameCutscene = false;
+                    NewGameRequested?.Invoke();
+                    if (CoreRuntime.Instance != null)
+                        CoreRuntime.Instance.Bus.Publish(new NewGameEvent());
+                }
+                player.CutsceneEnded += OnDone;
+                if (_uitRoot != null) _uitRoot.style.display = DisplayStyle.None;
+                player.Play(openingCutscene != null ? openingCutscene : BuildStandstillOpeningCutscene());
+                return;
+            }
             NewGameRequested?.Invoke();
             if (CoreRuntime.Instance != null)
                 CoreRuntime.Instance.Bus.Publish(new NewGameEvent());
+        }
+
+        static CutsceneData BuildStandstillOpeningCutscene()
+        {
+            var backdrop = Sprite.Create(Texture2D.blackTexture,
+                new Rect(0f, 0f, Texture2D.blackTexture.width, Texture2D.blackTexture.height),
+                new Vector2(0.5f, 0.5f));
+            backdrop.hideFlags = HideFlags.DontSave;
+
+            var data = ScriptableObject.CreateInstance<CutsceneData>();
+            data.hideFlags = HideFlags.DontSave;
+            data.id = "CS_Opening_Standstill";
+            data.skipToScene = false;
+            data.shots = new[]
+            {
+                new CutsceneShotData
+                {
+                    image = backdrop,
+                    waitForInput = true,
+                    captionSpeaker = "",
+                    caption = "In the lightless expanse of the Mana Abyss, a lone consciousness drifts across an endless sea of silence\u2014stripped of name, stripped of flesh, stripped of time."
+                },
+                new CutsceneShotData
+                {
+                    image = backdrop,
+                    waitForInput = true,
+                    captionSpeaker = "",
+                    caption = "From the dark, scattered incandescent fragments\u2014shards of instinct, logic, and an unyielding vow\u2014draw together around the drifting core."
+                },
+                new CutsceneShotData
+                {
+                    image = backdrop,
+                    waitForInput = true,
+                    captionSpeaker = "???",
+                    caption = "(A distant, unplaced warmth echoes through the void\u2014a phantom hand bracing against yours before the dark closes in.)"
+                },
+                new CutsceneShotData
+                {
+                    image = backdrop,
+                    waitForInput = true,
+                    captionSpeaker = "",
+                    caption = "Pulled by an unseen gravity, the converged soul plummets from the astral tide into cold, ancient stone."
+                },
+                new CutsceneShotData
+                {
+                    image = backdrop,
+                    waitForInput = true,
+                    captionSpeaker = "System",
+                    caption = ">> CORE RE-INITIALIZATION: OK.\n" +
+                              ">> PRIMARY DIRECTIVE: UNKNOWN.\n" +
+                              ">> WARNING: MEMORY SECTORS 01 THROUGH 99 CORRUPTED OR MISSING.\n" +
+                              ">> BIOLOGICAL SIGNATURE: NULL. CHASSIS INTEGRITY: 84%.\n" +
+                              ">> OPTICAL SENSORS: ONLINE."
+                }
+            };
+            return data;
         }
 
         public void RequestContinue()

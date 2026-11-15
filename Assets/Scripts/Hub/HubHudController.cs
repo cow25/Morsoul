@@ -105,17 +105,21 @@ namespace Morsoul.Hub
         {
             var session = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session : null;
             var sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-            int caseId = objectiveCaseId > 0 ? objectiveCaseId
-                : session != null ? session.CurrentCase : 0;
+            int caseId = session != null ? session.CurrentCase : objectiveCaseId;
 
-            string effectiveCaseText = caseText ?? "";
-            string effectiveObjective = objectiveText ?? "";
+            bool sceneMatchesSessionCase = session == null || objectiveCaseId <= 0 || objectiveCaseId == caseId;
+            string effectiveCaseText = sceneMatchesSessionCase ? (caseText ?? "") : "";
+            string effectiveObjective = sceneMatchesSessionCase ? (objectiveText ?? "") : "";
 
-            // A. Prologue progression
-            if (sceneName.Contains("Prologue"))
+            // A. Prologue progression (or dev-warped to a hub before Prologue finishes)
+            if (sceneName.Contains("Prologue") || (session != null && caseId == 0))
             {
                 effectiveCaseText = "Prologue";
-                if (session != null && (session.ElizaIntroSeen || session.HasFlag("Prologue_Completed")))
+                if (!sceneName.Contains("Prologue"))
+                {
+                    effectiveObjective = "Complete the prologue and follow Eliza toward Asterveil.";
+                }
+                else if (session != null && (session.ElizaIntroSeen || session.HasFlag("Prologue_Completed")))
                 {
                     effectiveObjective = "Follow Eliza Astra toward Asterveil Lower Market.";
                 }
@@ -124,37 +128,13 @@ namespace Morsoul.Hub
                     effectiveObjective = "Investigate the wilderness path toward the settlement.";
                 }
             }
-            // B. Guild Hall
-            else if (sceneName.Contains("Guild"))
+            // B. Guild Hall pre-Case-1 intro gating
+            else if (sceneName.Contains("Guild") && caseId <= 1 && (session == null || !GuildIntroRules.IsCaseOneActive(session)))
             {
-                if (session != null && GuildIntroRules.IsCaseOneActive(session))
-                {
-                    effectiveCaseText = !string.IsNullOrEmpty(caseText) ? caseText : "Case 1: The Poisoned Vault";
-                    bool unlocked = session.CanStartInterrogation(1);
-                    if (unlocked)
-                    {
-                        effectiveObjective = string.IsNullOrEmpty(postInvestigationObjective)
-                            ? DefaultPostInvestigationObjective
-                            : postInvestigationObjective;
-                    }
-                    else if (session.HasFlag(GuildIntroRules.WarrantFlag))
-                    {
-                        effectiveObjective = "Investigate the poisoned vault via the cellar grate.";
-                    }
-                    else
-                    {
-                        effectiveObjective = string.IsNullOrEmpty(objectiveText)
-                            ? "Interview Merchant Guildmaster Ovan for storage clearance."
-                            : objectiveText;
-                    }
-                }
-                else
-                {
-                    effectiveCaseText = "";
-                    effectiveObjective = (session != null && session.HasFlag(GuildIntroRules.IntroSeenFlag))
-                        ? "Speak with Guildmaster Ovan upstairs in the Guild hall."
-                        : "Follow Eliza to meet Guildmaster Ovan.";
-                }
+                effectiveCaseText = "";
+                effectiveObjective = (session != null && session.HasFlag(GuildIntroRules.IntroSeenFlag))
+                    ? "Speak with Guildmaster Ovan upstairs in the Guild hall."
+                    : "Follow Eliza to meet Guildmaster Ovan.";
             }
             // C. Case 1 or Lower Market / Guild exploration
             else if (caseId == 1 && session != null && (session.PrologueCompleted || sceneName.Contains("LowerMarket")))
@@ -176,42 +156,89 @@ namespace Morsoul.Hub
                 }
                 else
                 {
-                    effectiveCaseText = !string.IsNullOrEmpty(caseText) ? caseText : "Case 1: The Poisoned Vault";
-                    bool unlocked = session.CanStartInterrogation(caseId);
-                    if (unlocked)
-                    {
-                        effectiveObjective = string.IsNullOrEmpty(postInvestigationObjective)
-                            ? DefaultPostInvestigationObjective
-                            : postInvestigationObjective;
-                    }
-                    else if (session.HasFlag(GuildIntroRules.WarrantFlag))
-                    {
-                        effectiveObjective = "Investigate the poisoned vault via the cellar grate.";
-                    }
-                    else
-                    {
-                        effectiveObjective = string.IsNullOrEmpty(objectiveText)
-                            ? "Interview Merchant Guildmaster Ovan for storage clearance."
-                            : objectiveText;
-                    }
+                    effectiveCaseText = !string.IsNullOrEmpty(effectiveCaseText) ? effectiveCaseText : "Case 1: The Poisoned Vault";
+                    effectiveObjective = GetDynamicCaseObjective(session, caseId, effectiveObjective,
+                        sceneMatchesSessionCase ? postInvestigationObjective : null, sceneName);
                 }
             }
-            // C. Fallbacks for other cases, hubs, or standalone testing
+            // D. Dynamic goals for Cases 2-5, cross-hub visits, or standalone tests
             else
             {
-                bool unlocked = session != null && session.CanStartInterrogation(caseId);
-                effectiveObjective = unlocked
-                    ? (string.IsNullOrEmpty(postInvestigationObjective)
-                        ? DefaultPostInvestigationObjective : postInvestigationObjective)
-                    : (string.IsNullOrEmpty(objectiveText) ? GetCaseFallbackObjective(caseId) : objectiveText);
-
                 if (string.IsNullOrEmpty(effectiveCaseText) && caseId > 0)
-                {
                     effectiveCaseText = GetCaseFallbackTitle(caseId);
-                }
+                effectiveObjective = GetDynamicCaseObjective(session, caseId, effectiveObjective,
+                    sceneMatchesSessionCase ? postInvestigationObjective : null, sceneName);
             }
 
             ApplyObjective(effectiveCaseText, effectiveObjective);
+        }
+
+        static string GetDynamicCaseObjective(SessionState session, int caseId,
+            string baseObjective, string postObjective, string sceneName = "")
+        {
+            if (GuildIntroRules.IsBriefingPending(session, caseId))
+                return "Report to Guildmaster Ovan at the Investigator's Guild for your next assignment.";
+
+            if (session != null && session.HasFlag($"Guild.CheckBoard.{caseId}"))
+                return "Check the Quest Board downstairs in the Investigator's Guild for potential cases.";
+
+            if (session != null && session.HasFlag(ElizaCarrierGuideController.PendingFlag(caseId)))
+                return "Head out to Lower Market — Eliza will guide you to the Carrier.";
+
+            if (session != null && session.CanStartInterrogation(caseId))
+            {
+                if (!string.IsNullOrEmpty(postObjective)) return postObjective;
+                switch (caseId)
+                {
+                    case 1: return "The deduction is accepted - confront Master Alchemist Ignatius.";
+                    case 2: return sceneName.Contains("CathedralCourtyard")
+                        ? "The deduction is accepted - confront Accord inside the Cathedral."
+                        : "The deduction is accepted - confront Accord the Bell-Ringer.";
+                    case 3: return "The deduction is accepted - confront Vane the Veiled Circle Operative.";
+                    case 4: return "The deduction is accepted - confront Harlan, the Veiled Circle Infiltrator.";
+                    case 5: return "The deduction is accepted - confront the Sanctum Core.";
+                    default: return DefaultPostInvestigationObjective;
+                }
+            }
+
+            if (session != null)
+            {
+                switch (caseId)
+                {
+                    case 1:
+                        if (session.HasFlag(GuildIntroRules.WarrantFlag))
+                            return "Investigate the poisoned vault via the cellar grate.";
+                        break;
+                    case 2:
+                        if (session.HasFlag("C2_BelfryKeyGranted"))
+                            return "Investigate the Cathedral Belfry.";
+                        break;
+                    case 3:
+                        if (session.HasFlag("C3_PerimeterSealGranted"))
+                            return "Investigate Whisperwood Grove.";
+                        break;
+                    case 4:
+                        if (session.HasFlag("C4_OverrideClearance"))
+                            return "Investigate Iron Hollow Drift 09.";
+                        break;
+                }
+            }
+
+            if (!string.IsNullOrEmpty(baseObjective))
+                return baseObjective;
+
+            if (caseId >= 2 && caseId <= 4 && (sceneName.Contains("Guild") || sceneName.Contains("LowerMarket")))
+            {
+                return caseId switch
+                {
+                    2 => "Take the Carrier wagon in Lower Market to the Cathedral Courtyard.",
+                    3 => "Take the Carrier wagon in Lower Market to Whisperwood Grove.",
+                    4 => "Take the Carrier wagon in Lower Market to Iron Hollow.",
+                    _ => GetCaseFallbackObjective(caseId, sceneName)
+                };
+            }
+
+            return GetCaseFallbackObjective(caseId, sceneName);
         }
 
         static string GetCaseFallbackTitle(int caseId)
@@ -222,18 +249,22 @@ namespace Morsoul.Hub
                 case 2: return "Case 2: The Muted Belfry";
                 case 3: return "Case 3: The Dying Grove";
                 case 4: return "Case 4: The Shattered Seam";
+                case 5: return "Case 5: The Sanctum Core";
                 default: return "";
             }
         }
 
-        static string GetCaseFallbackObjective(int caseId)
+        static string GetCaseFallbackObjective(int caseId, string sceneName = "")
         {
             switch (caseId)
             {
                 case 1: return "Interview Merchant Guildmaster Ovan for storage clearance.";
-                case 2: return "Examine Mother Lyra and secure the Belfry Key.";
+                case 2: return sceneName.Contains("CathedralCourtyard")
+                    ? "Enter the Cathedral of Saint Althea."
+                    : "Examine Mother Lyra and secure the Belfry Key.";
                 case 3: return "Receive Kaelen's briefing and acquire the Elder Grove Perimeter Seal.";
                 case 4: return "Present Guild authority to Overseer Thrun and reach Drift 09.";
+                case 5: return "Speak with Guildmaster Ovan when you're ready to proceed to Case 5.";
                 default: return "Explore the area.";
             }
         }

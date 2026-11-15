@@ -37,16 +37,48 @@ namespace Morsoul.Hub
         public Vector3 officePlayer = new Vector3(-0.6f, 26.5f, 0f);
 
         Rigidbody2D _playerBody;
+        bool _introRunning;
+        bool _crystalRunning;
 
         void Start()
         {
-            var session = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session : null;
-            if (!GuildIntroRules.CanPlayGuildIntro(session)) return;
             if (context == null) context = FindAnyObjectByType<HubContext>();
             if (player == null) player = FindAnyObjectByType<HubPlayerController>();
             _playerBody = player != null ? player.GetComponent<Rigidbody2D>() : null;
-            if (player != null) player.enabled = false;
-            StartCoroutine(Run(session));
+
+            var session = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session : null;
+            if (GuildIntroRules.CanPlayGuildIntro(session))
+            {
+                _introRunning = true;
+                if (player != null) player.enabled = false;
+                StartCoroutine(Run(session));
+                return;
+            }
+
+            if (session != null && session.CurrentCase >= 2 &&
+                GuildIntroRules.IsBriefingPending(session, session.CurrentCase))
+            {
+                _introRunning = true;
+                if (player != null) player.enabled = false;
+                StartCoroutine(RunCaseDebrief(session, session.CurrentCase));
+            }
+        }
+
+        void Update()
+        {
+            if (_introRunning || _crystalRunning || player == null) return;
+            var session = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session : null;
+            if (session == null || !GuildIntroRules.IsCaseOneActive(session)) return;
+            if (session.HasFlag("Guild.CrystalReceived")) return;
+
+            // Trigger before descending from Ovan's 2F floor toward StairsDown (x=10.5, y=24.5).
+            Vector3 p = player.transform.position;
+            if (p.y > 18f && p.x >= 6.0f)
+            {
+                _crystalRunning = true;
+                player.enabled = false;
+                StartCoroutine(RunCrystalHandoff(session));
+            }
         }
 
         IEnumerator Run(SessionState session)
@@ -69,11 +101,17 @@ namespace Morsoul.Hub
             yield return playerFollow;
             yield return Play(receptionDialogue);
 
-            // Up the stairs to the Guildmaster's office.
-            var playerToStairs = StartCoroutine(MoveTo(
-                player != null ? player.transform : null, playerStairs, 2.8f));
-            yield return MoveTo(eliza, elizaStairs, 2.6f);
-            yield return playerToStairs;
+            // Up the stairs to the Guildmaster's office: align at the bottom entrance, then climb North up the carpet.
+            var playerFoot = StartCoroutine(MoveTo(
+                player != null ? player.transform : null, new Vector3(11.15f, 2.35f, 0f), 2.4f));
+            yield return MoveTo(eliza, new Vector3(11.85f, 2.45f, 0f), 2.2f);
+            yield return playerFoot;
+
+            var playerClimb = StartCoroutine(MoveTo(
+                player != null ? player.transform : null, new Vector3(11.15f, 5.05f, 0f), 1.0f));
+            yield return MoveTo(eliza, new Vector3(11.85f, 5.15f, 0f), 1.0f);
+            yield return playerClimb;
+
             yield return FadeTo(dialogue, 1f, 0.4f);
             Teleport(eliza, upstairsEliza);
             Teleport(player != null ? player.transform : null, upstairsPlayer);
@@ -88,7 +126,110 @@ namespace Morsoul.Hub
 
             session.SetFlag(GuildIntroRules.IntroSeenFlag);
             session.SetFlag(GuildIntroRules.IntroPendingFlag, false);
+            _introRunning = false;
             if (player != null) player.enabled = true;
+        }
+
+        IEnumerator RunCaseDebrief(SessionState session, int nextCaseId)
+        {
+            var dialogue = context != null ? context.dialogue : null;
+
+            yield return FadeTo(dialogue, 1f, 0f);
+            Teleport(player != null ? player.transform : null, officePlayer);
+            var cam = FindAnyObjectByType<CameraFollow2D>();
+            if (cam != null && player != null) cam.SnapToTarget(player.transform);
+            if (eliza != null)
+            {
+                eliza.position = officeEliza;
+                eliza.gameObject.SetActive(true);
+            }
+            yield return FadeTo(dialogue, 0f, 0.5f);
+
+            yield return Play(BuildCaseDebriefDialogue(nextCaseId));
+
+            session.SetFlag(GuildIntroRules.BriefingPendingFlag(nextCaseId), false);
+            if (nextCaseId < 5)
+                session.SetFlag($"Guild.CheckBoard.{nextCaseId}");
+            _introRunning = false;
+            if (player != null) player.enabled = true;
+        }
+
+        static DialogueData BuildCaseDebriefDialogue(int nextCaseId)
+        {
+            (string elizaReport, string ovanReply, string boardHint) = nextCaseId switch
+            {
+                2 => ("Guildmaster, Ignatius folded and the Lower Market vault is sealed. But his reagent came from an off-book broker nobody in the district can name.",
+                      "Clean work—though a phantom alchemical broker sets my teeth on edge. Our wardens will tear that paper trail apart.",
+                      "Meanwhile, keep an eye out on the Quest Board downstairs—the Cathedral of Saint Althea just flagged an urgent dispatch that fits your skills."),
+                3 => ("Ovan, Accord confessed. Mother Lyra's chalk slate links the Lower Market broker and Accord's blackmailers to one seal: the Veiled Circle.",
+                      "The Veiled Circle... I'd hoped that name stayed buried in ink. Good thing you cleared the Spirit-folk boy before the Templars hanged an innocent.",
+                      "Check the Quest Board downstairs—an emergency dispatch just arrived from the Whisperwood Rangers."),
+                4 => ("Vane is in Ranger custody, Guildmaster. He wasn't studying blight—he was pumping Elder sap out of Whisperwood straight down Iron Hollow cargo lines.",
+                      "So all three cases are arteries feeding one dark engine. You two are the only investigators seeing the whole pattern.",
+                      "Check the Quest Board downstairs—Overseer Thrun's Union sent a priority Drift 09 request from Iron Hollow."),
+                _ => ("Ovan, Harlan's sabotage is exposed and Chief Engineer Brokk is safe. Worse—Brokk saw the Grand Overseer descend straight into the Sanctum Core beneath Drift 09.",
+                      "Then every regional thread converges beneath Asterveil. With your new Aether Sight active, walk the earlier districts via the Carrier if you sense any hidden First-Age inscriptions left unread.",
+                      "Speak with me again whenever you're ready to proceed to Case 5 and have nothing else left to take care of.")
+            };
+
+            string closingLine = nextCaseId >= 5
+                ? "Let's wrap up anything we still need, or speak with Ovan again when we're ready for Case 5."
+                : "Let's check the Quest Board downstairs when you're ready.";
+
+            var data = ScriptableObject.CreateInstance<DialogueData>();
+            data.hideFlags = HideFlags.DontSave;
+            data.id = $"D_Guild_Debrief_C{nextCaseId}";
+            data.startNodeId = "n1";
+            data.nodes = new[]
+            {
+                new DialogueNodeData { id = "n1", speakerName = "Eliza", text = elizaReport, nextNodeId = "n2" },
+                new DialogueNodeData { id = "n2", speakerName = "Guildmaster Ovan", text = $"{ovanReply} {boardHint}", nextNodeId = "n3" },
+                new DialogueNodeData { id = "n3", speakerName = "Eliza", text = closingLine }
+            };
+            return data;
+        }
+
+        IEnumerator RunCrystalHandoff(SessionState session)
+        {
+            if (eliza != null && player != null)
+            {
+                if (eliza.position.y < 18f) eliza.position = officeEliza;
+                eliza.gameObject.SetActive(true);
+                Vector3 dest = player.transform.position + new Vector3(-1.3f, 0f, 0f);
+                yield return MoveTo(eliza, dest, 1.1f);
+            }
+
+            yield return Play(BuildCrystalDialogue());
+            session.SetFlag("Guild.CrystalReceived");
+            _crystalRunning = false;
+            if (player != null) player.enabled = true;
+        }
+
+        static DialogueData BuildCrystalDialogue()
+        {
+            var data = ScriptableObject.CreateInstance<DialogueData>();
+            data.hideFlags = HideFlags.DontSave;
+            data.id = "D_Guild_CrystalHandoff";
+            data.startNodeId = "n1";
+            data.nodes = new[]
+            {
+                new DialogueNodeData
+                {
+                    id = "n1",
+                    speakerName = "Eliza",
+                    text = "(Rushes up to you, holding out a glowing blue shard) " +
+                           "\"Wait—before you head downstairs! Take this Communicator Crystal. " +
+                           "If we get separated during an investigation, we can still reach each other from afar.\"",
+                    nextNodeId = "n2"
+                },
+                new DialogueNodeData
+                {
+                    id = "n2",
+                    speakerName = "Eliza",
+                    text = "\"Keep it safe. Now let's head down and get to work.\""
+                }
+            };
+            return data;
         }
 
         void Teleport(Transform target, Vector3 position)

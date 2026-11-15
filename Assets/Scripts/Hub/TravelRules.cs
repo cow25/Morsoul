@@ -45,7 +45,8 @@ namespace Morsoul.Hub
             IReadOnlyDictionary<int, string> labels,
             int currentCase,
             string currentScene,
-            System.Func<string, bool> canLoad)
+            System.Func<string, bool> canLoad,
+            System.Func<int, bool> isHubBriefed = null)
         {
             var result = new List<TravelDestination>();
             if (routes == null || hubCaseIds == null) return result;
@@ -54,6 +55,7 @@ namespace Morsoul.Hub
             {
                 int caseId = hubCaseIds[i];
                 if (!IsHubUnlocked(caseId, currentCase)) continue;
+                if (isHubBriefed != null && !isHubBriefed(caseId)) continue;
                 string key = RouteKeys.Hub(caseId);
                 string scene = routes.Resolve(key);
                 if (string.IsNullOrEmpty(scene) || scene == currentScene) continue;

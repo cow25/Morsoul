@@ -85,6 +85,8 @@ namespace Morsoul.Board
         public int LastCloseFrame { get; private set; } = -1;
         /// <summary>The headless session (null until SetCase builds one). Exposed for GameFlow/tests.</summary>
         public WeightedBoardSession Session => _session;
+        public string GetClueDisplayName(string id) =>
+            id != null && _clueNames.TryGetValue(id, out var name) ? name : id;
 
         void OnEnable()
         {
@@ -502,7 +504,26 @@ namespace Morsoul.Board
             _nodes.Clear();
             if (_session == null) return;
 
-            int i = 0;
+            // Build a shuffled pool of jittered grid slots for any unpositioned clues
+            // so cards start scattered and players organize them manually.
+            var unpositioned = new List<string>();
+            foreach (string id in _session.State.CollectedClueIds)
+                if (!_session.TryGetNodePosition(id, out _)) unpositioned.Add(id);
+
+            var slots = new List<Vector2>();
+            if (unpositioned.Count > 0)
+            {
+                int slotCount = Mathf.Max(9, unpositioned.Count);
+                for (int s = 0; s < slotCount; s++)
+                    slots.Add(new Vector2(18 + (s % 3) * 185, 20 + (s / 3) * 92));
+                for (int s = slots.Count - 1; s > 0; s--)
+                {
+                    int j = UnityEngine.Random.Range(0, s + 1);
+                    (slots[s], slots[j]) = (slots[j], slots[s]);
+                }
+            }
+
+            int slotIdx = 0;
             foreach (string clueId in _session.State.CollectedClueIds)
             {
                 var node = new VisualElement();
@@ -511,7 +532,7 @@ namespace Morsoul.Board
                 nameLabel.AddToClassList("wboard-node-name");
                 node.Add(nameLabel);
 
-                // Restore saved position or fall back to a grid layout.
+                // Restore saved position or assign a randomized, non-overlapping slot.
                 if (_session.TryGetNodePosition(clueId, out var pos))
                 {
                     node.style.left = pos.x;
@@ -519,10 +540,13 @@ namespace Morsoul.Board
                 }
                 else
                 {
-                    node.style.left = 18 + (i % 3) * 185;
-                    node.style.top = 20 + (i / 3) * 92;
+                    Vector2 baseSlot = slots[slotIdx++];
+                    float rx = Mathf.Max(8f, baseSlot.x + UnityEngine.Random.Range(-12f, 22f));
+                    float ry = Mathf.Max(8f, baseSlot.y + UnityEngine.Random.Range(-10f, 16f));
+                    node.style.left = rx;
+                    node.style.top = ry;
+                    _session.SetNodePosition(clueId, rx, ry);
                 }
-                i++;
 
                 var captured = clueId;
                 RegisterNodeInteractions(node, captured);

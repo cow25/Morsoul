@@ -12,6 +12,7 @@ namespace Morsoul.Tests
     public class InvestigationCompletionTests
     {
         readonly List<Object> _assets = new List<Object>();
+        GameObject _createdCore;
         CaseData _case;
         SessionState _session;
         FocusModel _focus;
@@ -57,6 +58,11 @@ namespace Morsoul.Tests
         [TearDown]
         public void TearDown()
         {
+            if (_createdCore != null)
+            {
+                Object.DestroyImmediate(_createdCore);
+                _createdCore = null;
+            }
             foreach (var asset in _assets) Object.DestroyImmediate(asset);
             _assets.Clear();
         }
@@ -280,6 +286,65 @@ namespace Morsoul.Tests
             Assert.AreEqual(InvestigationEntryKind.Blocked, catalog.Decide("unknown", true, true, out _));
             catalog.areas = new[] { catalog.areas[0], catalog.areas[0] };
             Assert.AreEqual(InvestigationEntryKind.Blocked, catalog.Decide("investigation.1", true, true, out _));
+        }
+
+        CoreRuntime EnsureIsolatedCore(int currentCase)
+        {
+            bool existed = CoreRuntime.Instance != null;
+            var core = CoreRuntime.Ensure();
+            if (!existed) _createdCore = core.gameObject;
+            core.Session.Reset();
+            core.Session.CurrentCase = currentCase;
+            core.Focus.Restore(FocusTuning.FocusMax, false);
+            return core;
+        }
+
+        [TestCase(0)]
+        [TestCase(1)]
+        [TestCase(2)]
+        [TestCase(3)]
+        [TestCase(4)]
+        [TestCase(5)]
+        public void ForceCompleteCase_CollectsCluesAndSolvesBoard_ForAuthoredCases(int caseId)
+        {
+            var core = EnsureIsolatedCore(caseId);
+            Assert.IsTrue(InvestigationCompletion.ForceCompleteCase(core, caseId));
+
+            var data = core.ResolveCase(caseId);
+            Assert.IsNotNull(data);
+            var board = core.Session.GetOrCreateBoardState(caseId);
+            Assert.IsTrue(board.BoardSolved);
+            Assert.AreEqual(data.evidenceGraph.completeConclusionId, board.SubmittedConclusionId);
+
+            if (data.preloadedClues != null)
+            {
+                foreach (var clue in data.preloadedClues)
+                    if (clue != null) Assert.IsTrue(core.Session.HasClue(clue.id), clue.id);
+            }
+            if (data.clues != null)
+            {
+                foreach (var clue in data.clues)
+                    if (clue != null && clue.type != ClueType.Latent && !clue.isBacktrackingOnly)
+                        Assert.IsTrue(core.Session.HasClue(clue.id), clue.id);
+            }
+        }
+
+        [TestCase(1)]
+        [TestCase(4)]
+        public void CompleteInterrogationAndTriggerCutscene_MarksCleanAndArmsPostCutscene(int caseId)
+        {
+            var core = EnsureIsolatedCore(caseId);
+            Assert.IsTrue(InvestigationCompletion.CompleteInterrogationAndTriggerCutscene(core, caseId));
+
+            Assert.IsTrue(core.Session.GetOrCreateBoardState(caseId).BoardSolved);
+            Assert.AreEqual(Grade.Clean, core.Session.Grades[caseId]);
+            Assert.AreEqual(0, core.Session.GetInterrogationStrikeCount(caseId));
+            Assert.IsTrue(core.Session.HasFlag(Morsoul.Hub.PostInterrogationCutsceneController.PendingFlag(caseId)));
+            if (caseId == 4)
+            {
+                Assert.IsTrue(core.Session.HasFlag("Case4_BrokkFreed"));
+                Assert.IsTrue(core.Session.HasClue("L4_04"));
+            }
         }
     }
 }

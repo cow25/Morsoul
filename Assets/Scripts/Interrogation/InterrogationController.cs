@@ -95,6 +95,7 @@ namespace Morsoul.Interrogation
         int _uiVersion;
 
         public bool IsOpen => _isOpen;
+        public InterrogationEngine Engine => _engine;
         /// <summary>Last frame the panel closed; lets callers suppress same-frame input leaks.</summary>
         public int LastEndFrame { get; private set; }
         /// <summary>Live engine state for snapshotting; safe defaults when idle.</summary>

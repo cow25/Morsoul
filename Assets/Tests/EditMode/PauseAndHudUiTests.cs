@@ -150,11 +150,12 @@ namespace Morsoul.Tests
                 ctrl.SetSaveExists(false);
                 Assert.IsFalse(ctrl.continueButton.interactable);
                 Assert.IsFalse(ctrl.loadGameButton.interactable);
-                Assert.IsTrue(ctrl.startGameButton.interactable);
+                Assert.IsFalse(ctrl.startGameButton.gameObject.activeSelf);
 
                 ctrl.SetSaveExists(true);
                 Assert.IsTrue(ctrl.continueButton.interactable);
                 Assert.IsTrue(ctrl.loadGameButton.interactable);
+                Assert.IsTrue(ctrl.startGameButton.gameObject.activeSelf);
             }
             finally
             {

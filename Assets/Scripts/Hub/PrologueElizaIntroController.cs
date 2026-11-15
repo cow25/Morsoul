@@ -318,6 +318,11 @@ namespace Morsoul.Hub
                 "I don't know why, but I had a strong urge to survey the ruins today...");
             yield return Line("Eliza", "Must be fate, meeting you here!");
             yield return Line("Eliza",
+                "Honestly, I kept having this strange dream about a sealed brass door beneath the roots... " +
+                "and when your core pulsed just now, my chest ached like I'd heard that rhythm before.");
+            yield return Line("Golem (thought)",
+                "[TELEMETRY: Unindexed harmonic resonance detected in subject's vocal cadence. Archiving anomaly.]");
+            yield return Line("Eliza",
                 "Come on, follow me back to the Guild. I have to report my findings.");
             yield return Line("Eliza",
                 "I'll answer your questions along the way. We've got time.");

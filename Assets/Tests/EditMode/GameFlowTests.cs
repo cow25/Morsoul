@@ -503,6 +503,27 @@ namespace Morsoul.Tests
             gsm.OnCaseCompleted(new Core.CaseCompletedEvent { CaseId = 1, Ending = 0 });
 
             Assert.AreEqual(2, core.Session.CurrentCase);
+            Assert.IsTrue(Hub.GuildIntroRules.IsBriefingPending(core.Session, 2));
+        }
+
+        [Test]
+        public void TravelRules_HidesNextHubUntilBriefed()
+        {
+            var routes = new Core.SceneRouteTable();
+            routes.Set("hub.1", "Hub_LowerMarket");
+            routes.Set("hub.2", "Hub_CathedralCourtyard");
+            var ids = new System.Collections.Generic.List<int> { 1, 2 };
+
+            var before = Hub.TravelRules.CollectDestinations(
+                routes, ids, null, currentCase: 2, currentScene: "Hub_LowerMarket",
+                canLoad: null, isHubBriefed: id => id != 2);
+            Assert.AreEqual(0, before.Count);
+
+            var after = Hub.TravelRules.CollectDestinations(
+                routes, ids, null, currentCase: 2, currentScene: "Hub_LowerMarket",
+                canLoad: null, isHubBriefed: id => true);
+            Assert.AreEqual(1, after.Count);
+            Assert.AreEqual("Hub_CathedralCourtyard", after[0].sceneName);
         }
 
         // --- Case 1 route/session integration -----------------------------------
@@ -1288,6 +1309,32 @@ namespace Morsoul.Tests
             Assert.IsNotNull(board.CanUse);
             Assert.IsTrue(board.CanUse());
             Assert.IsTrue(board.IsOpen);
+        }
+
+        [Test]
+        public void BuildEvidence_ExcludesCluesFromOtherCases()
+        {
+            var case2 = LoadCase(2);
+            var foreignClue = ScriptableObject.CreateInstance<ClueData>();
+            foreignClue.id = "C1_FOREIGN";
+            foreignClue.caseId = 1;
+
+            try
+            {
+                var journal = New<HubJournal>("HubJournal");
+                journal.Register(foreignClue);
+                journal.Register(case2.clues[0]);
+                _flow.hubJournal = journal;
+                _flow.BeginCase(case2);
+
+                var evidence = _flow.BuildEvidence();
+                CollectionAssert.Contains(evidence, case2.clues[0]);
+                CollectionAssert.DoesNotContain(evidence, foreignClue);
+            }
+            finally
+            {
+                Object.DestroyImmediate(foreignClue);
+            }
         }
     }
 }
