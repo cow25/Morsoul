@@ -1,3 +1,4 @@
+using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -99,19 +100,35 @@ public class ScanController : MonoBehaviour
         {
             ClueNode[] allClues = FindObjectsByType<ClueNode>(FindObjectsInactive.Exclude);
             Camera cam = Camera.main;
+            var session = Morsoul.Core.CoreRuntime.Instance?.Session;
+            bool hasAether = session != null && session.Tools.Contains(Morsoul.Data.Tool.AetherSight);
 
             foreach (ClueNode clue in allClues)
             {
+                bool needsAether = clue.requiredTool == ClueNode.Tool.AetherSight || clue.requiredTool == ClueNode.Tool.Both;
+                Transform outlineVisual = clue.transform.Find("OutlineVisual");
+
+                if (needsAether && !hasAether)
+                {
+                    if (clue.scanParticles != null && clue.scanParticles.isPlaying)
+                        clue.scanParticles.Stop();
+                    if (outlineVisual != null)
+                        outlineVisual.GetComponent<MeshRenderer>().enabled = false;
+                    continue;
+                }
+
                 Vector3 screenPoint = cam.WorldToViewportPoint(clue.transform.position);
                 bool isOnScreen = screenPoint.z > 0 && screenPoint.x > 0 && screenPoint.x < 1 && screenPoint.y > 0 && screenPoint.y < 1;
 
-                // Find the outline object we created
-                Transform outlineVisual = clue.transform.Find("OutlineVisual");
-
                 if (isOnScreen && clue.state != ClueNode.State.Collected)
                 {
-                    if (clue.state == ClueNode.State.Hidden)
-                        clue.state = ClueNode.State.Revealed;
+                    clue.MarkScanned();
+
+                    if (needsAether && clue.scanParticles != null)
+                    {
+                        var main = clue.scanParticles.main;
+                        main.startColor = new Color(1f, 0.85f, 0.15f, 1f);
+                    }
 
                     // Turn on particles
                     if (clue.scanParticles != null && !clue.scanParticles.isPlaying) 

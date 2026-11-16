@@ -10,12 +10,15 @@ public class InteractionProbe : MonoBehaviour
     [Tooltip("Drag your MainCamera here")]
     [SerializeField] private Camera playerCamera; 
 
+    private ScanController _scanController;
+
     private void Start()
     {
         if (playerCamera == null)
         {
             playerCamera = Camera.main;
         }
+        _scanController = FindAnyObjectByType<ScanController>();
     }
 
     private void Update()
@@ -39,29 +42,25 @@ public class InteractionProbe : MonoBehaviour
                 bool hasAether = session != null && session.Tools.Contains(Morsoul.Data.Tool.AetherSight);
                 if (needsAether && !hasAether)
                 {
-                    HUDManager.Instance.ShowInteractionPrompt("[Locked] Dormant Runic Inscription", "Requires Aether Sight (unlocked after Case 4) to decipher.");
+                    HUDManager.Instance?.HideInteractionPrompt();
                     return;
                 }
 
-                bool needsScan = clue.requiredTool == ClueNode.Tool.GolemEye && clue.state == ClueNode.State.Hidden;
-                if (needsScan)
+                if (_scanController == null) _scanController = FindAnyObjectByType<ScanController>();
+                bool isScanning = _scanController != null && _scanController.IsScanning;
+                if (!clue.IsScanned && !isScanning)
                 {
-                    HUDManager.Instance.ShowInteractionPrompt("[Hold Tab / L-Click] Scan with Golem Eye", "Unreadable modern script. Scan with Golem Eye [Tab] to decipher.");
-                    if (Mouse.current.leftButton.wasPressedThisFrame)
-                    {
-                        var scanner = FindAnyObjectByType<ScanController>();
-                        if (scanner != null) scanner.TriggerAccidentalScan(1.8f);
-                        clue.state = ClueNode.State.Revealed;
-                        InspectManager.Instance.OpenInspect(clue);
-                    }
+                    HUDManager.Instance?.HideInteractionPrompt();
+                    return;
                 }
-                else
+
+                if (!clue.IsScanned && isScanning)
+                    clue.MarkScanned();
+
+                HUDManager.Instance.ShowInteractionPrompt("[L-Click] Inspect Clue", clue.defaultDescription);
+                if (Mouse.current.leftButton.wasPressedThisFrame)
                 {
-                    HUDManager.Instance.ShowInteractionPrompt("[L-Click] Inspect Clue", clue.defaultDescription);
-                    if (Mouse.current.leftButton.wasPressedThisFrame)
-                    {
-                        InspectManager.Instance.OpenInspect(clue);
-                    }
+                    InspectManager.Instance.OpenInspect(clue);
                 }
             }
             else if (hit.collider.TryGetComponent(out DialogueTrigger dialogue))
