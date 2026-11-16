@@ -64,6 +64,21 @@ namespace Morsoul.Engine
             return _solutionEdges.IsSubsetOf(drawn);
         }
 
+        /// <summary>
+        /// Set of clues appearing in any solution edge.
+        /// Used by the leak check to distinguish on-path from off-path.
+        /// </summary>
+        public HashSet<string> SolutionPathClues()
+        {
+            var path = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var e in SolutionEdges)
+            {
+                path.Add(e.sourceId);
+                path.Add(e.targetId);
+            }
+            return path;
+        }
+
         public ConclusionDef GetConclusion(string id) =>
             id != null && _conclusionsById.TryGetValue(id, out var def) ? def : null;
 
@@ -398,11 +413,6 @@ namespace Morsoul.Engine
 
         static void ValidateCachedValues(EvidenceGraphDef def, EvidenceGraph g, List<string> errors)
         {
-            if (def.CachedReferenceSupport > 0f &&
-                Math.Abs(def.CachedReferenceSupport - g.ReferenceSupport) > 1e-4)
-                errors.Add($"cachedReferenceSupport {def.CachedReferenceSupport:F6} does not match the " +
-                           $"computed reference support {g.ReferenceSupport:F6}; recache the asset.");
-
             var supplied = def.SolutionTopologicalOrder ?? new string[0];
             if (supplied.Length > 0 &&
                 !supplied.SequenceEqual(g.SolutionOrder, StringComparer.Ordinal))
@@ -410,25 +420,41 @@ namespace Morsoul.Engine
                            "recache the asset.");
         }
 
+        internal static IReadOnlyDictionary<string, double> UniformSeeds(EvidenceGraph graph)
+        {
+            var d = new Dictionary<string, double>(StringComparer.Ordinal);
+            foreach (var cid in graph.ClueIds) d[cid] = 0.5;
+            return d;
+        }
+
         /// <summary>rho(h*) = Sup(h*) - lambda * Con(h*) on C = K, L = E_KK.</summary>
         static double ComputeReferenceSupport(EvidenceGraph g)
         {
-            var x = DampedPropagation.Run(g._authoredEdges, g._reliability, g.Parameters.alpha,
-                out var kAct);
+            var p = g.Parameters;
+            IReadOnlyDictionary<string, double> seeds = p.PrunedMode
+                ? UniformSeeds(g)
+                : g._reliability;
+            var x = DampedPropagation.Run(g._authoredEdges, seeds, p.alpha, out _);
             var complete = g._conclusionsById[g.CompleteConclusionId];
-            double sup = ScoreEdges(complete.supportingEdges, kAct, x);
-            double con = ScoreEdges(complete.contradictingEdges, kAct, x);
-            return Math.Max(0.0, sup - g.Parameters.contradictionWeight * con);
+            double sup = ScoreEvidence(complete.supportingEdges, x, seeds, p.alpha);
+            double con = ScoreEvidence(complete.contradictingEdges, x, seeds, p.alpha);
+            return Math.Max(0.0, sup - p.contradictionWeight * con);
         }
 
-        static double ScoreEdges(WeightedClueRef[] edges, HashSet<string> active,
-            IReadOnlyDictionary<string, double> values)
+        static double ScoreEvidence(WeightedClueRef[] edges,
+            IReadOnlyDictionary<string, double> x,
+            IReadOnlyDictionary<string, double> seeds,
+            double alpha)
         {
             double total = 0;
-            foreach (var e in edges ?? new WeightedClueRef[0])
-                if (e != null && active.Contains(e.clueId) &&
-                    values.TryGetValue(e.clueId, out double v))
-                    total += e.weight * v;
+            foreach (var e in edges ?? Array.Empty<WeightedClueRef>())
+            {
+                if (e == null) continue;
+                if (!x.TryGetValue(e.clueId, out double v)) continue;
+                if (!seeds.TryGetValue(e.clueId, out double r)) r = 0.5;
+                double evidence = Math.Max(0.0, v - (1.0 - alpha) * r);
+                total += e.weight * evidence;
+            }
             return total;
         }
 

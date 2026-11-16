@@ -40,10 +40,12 @@ namespace Morsoul.Engine
         public DeductionStatus Status;
         public string SelectedConclusionId;
         public ConclusionTier Verdict;                              // tier of the selected conclusion
+        public ConclusionTier ResolvedTier { get; set; }            // the engine's highest unlocked verdict
         public double SelectedSupport;                              // phi(h) in [0, 1]
         public SupportBand Band;
         public IReadOnlyDictionary<string, double> SupportByConclusion; // phi per hypothesis
         public IReadOnlyDictionary<string, double> PropagatedClueValues; // x over K_act
+        public IReadOnlyDictionary<string, double> SolutionPropagatedClueValues { get; set; } // solution-only propagation
         public int InventedLinkCount;                               // |L_spur|
         public IReadOnlyList<string> UncollectedClueIds;            // U \ C
         public IReadOnlyList<string> UnlinkedClueIds;               // C \ K_act
@@ -58,9 +60,11 @@ namespace Morsoul.Engine
         {
             Status = DeductionStatus.InvalidInput,
             Verdict = ConclusionTier.Wrong,
+            ResolvedTier = ConclusionTier.Wrong,
             Band = SupportBand.Cold,
             SupportByConclusion = new Dictionary<string, double>(),
             PropagatedClueValues = new Dictionary<string, double>(),
+            SolutionPropagatedClueValues = new Dictionary<string, double>(),
             UncollectedClueIds = new List<string>(0),
             UnlinkedClueIds = new List<string>(0),
             RuntimeMs = runtimeMs,

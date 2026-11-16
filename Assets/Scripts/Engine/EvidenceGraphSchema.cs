@@ -67,6 +67,7 @@ namespace Morsoul.Engine
     public enum ConclusionTier
     {
         Wrong = 0,
+        Incorrect = 0,
         Partial = 1,
         Complete = 2,
     }
@@ -78,6 +79,8 @@ namespace Morsoul.Engine
         public string id;
         public string text;
         public ConclusionTier tier;
+        /// <summary>Optional explicit target clue ID. If omitted, falls back to the first supporting edge's clue ID.</summary>
+        public string targetClueId;
         /// <summary>Optional authored board banner for a submitted conclusion.</summary>
         public string submissionFeedback;
         public WeightedClueRef[] supportingEdges = new WeightedClueRef[0];
@@ -94,6 +97,13 @@ namespace Morsoul.Engine
         public float lowThreshold;
         public float highThreshold = 1f;
 
+        // When true (default), every clue seed is pinned to 0.5, matching pruned SDP.
+        // Set false to use authored reliabilities.
+        public bool PrunedMode = true;
+
+        // Rival clue ID for the partial tier gate
+        public string RivalClueId;
+
         public SolverParameters Clone() => new SolverParameters
         {
             alpha = alpha,
@@ -101,6 +111,8 @@ namespace Morsoul.Engine
             inventedLinkPenalty = inventedLinkPenalty,
             lowThreshold = lowThreshold,
             highThreshold = highThreshold,
+            PrunedMode = PrunedMode,
+            RivalClueId = RivalClueId,
         };
     }
 
