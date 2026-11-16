@@ -85,11 +85,175 @@ namespace Morsoul.Editor
             BuildResearchFacilityProps(propsRoot);
             BuildOvergrowthAndVines(natureRoot);
             BuildSubterraneanSunlight(lightsRoot);
+            EnsureMissingClues(scene);
 
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene, ScenePath);
             if (openedHere) AssetDatabase.SaveAssets();
             Debug.Log("PrologueRuinsDressingBuilder: rebuilt gothic ruined research facility.");
+        }
+
+        [MenuItem("Morsoul/3D/Ensure Prologue Ruins Clues")]
+        public static void EnsureCluesMenu()
+        {
+            var scene = SceneManager.GetActiveScene();
+            bool openedHere = false;
+            if (!scene.IsValid() || scene.path != ScenePath)
+            {
+                scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+                openedHere = true;
+            }
+
+            int added = EnsureMissingClues(scene);
+            if (added > 0)
+            {
+                EditorSceneManager.MarkSceneDirty(scene);
+                EditorSceneManager.SaveScene(scene, ScenePath);
+                if (openedHere) AssetDatabase.SaveAssets();
+            }
+            Debug.Log($"PrologueRuinsDressingBuilder: ensured prologue clues ({added} added).");
+        }
+
+        static int EnsureMissingClues(Scene scene)
+        {
+            var existingNodes = new Dictionary<string, ClueNode>();
+            foreach (var rootGo in scene.GetRootGameObjects())
+                foreach (var node in rootGo.GetComponentsInChildren<ClueNode>(true))
+                    if (!string.IsNullOrEmpty(node.id)) existingNodes[node.id] = node;
+
+            int changed = 0;
+            if (!existingNodes.ContainsKey("C2_00"))
+            {
+                var go = CreateClueRoot(scene, "Clue_C2_OverloadedCapacitor", "C2_00",
+                    "Shattered glass vacuum tube surrounded by crystallized mana slag. Demonstrates that power to the primary hydraulic security blast door was severed during a forced emergency system overload.",
+                    new Vector3(-5.5f, FloorTopY + 0.18f, 17.4f), new Vector3(0.75f, 0.75f, 0.75f));
+
+                var crystal = Place(LoadDfk("Lightsources/dfk_crystal_01_blue.prefab"), "CapacitorCrystal", go.transform,
+                    go.transform.position, Vector3.zero, Vector3.one * 0.55f, stripLights: true);
+                if (crystal != null)
+                {
+                    foreach (var c in crystal.GetComponentsInChildren<Collider>(true))
+                        Object.DestroyImmediate(c);
+                }
+                else
+                {
+                    CreateCluePrimitive("CapacitorOrb", PrimitiveType.Sphere, go.transform, Vector3.zero, Vector3.zero,
+                        Vector3.one * 0.3f, new Color(0.25f, 0.8f, 0.95f));
+                }
+                CreateCluePrimitive("RelayBase", PrimitiveType.Cylinder, go.transform, new Vector3(0f, -0.12f, 0f), Vector3.zero,
+                    new Vector3(0.38f, 0.06f, 0.38f), new Color(0.22f, 0.24f, 0.27f));
+                changed++;
+            }
+            else if (UpgradeClueEmbers(existingNodes["C2_00"]))
+            {
+                changed++;
+            }
+
+            if (!existingNodes.ContainsKey("RH1_00"))
+            {
+                var go = CreateClueRoot(scene, "Clue_RH1_RustedPipe", "RH1_00",
+                    "A sheared section of cast-iron steam conduit. Heavily oxidized and structurally compromised; cannot be used as a lever to pry open the reinforced stone door.",
+                    new Vector3(5.2f, FloorTopY + 0.08f, 14.5f), new Vector3(0.8f, 0.5f, 0.8f));
+
+                CreateCluePrimitive("RustedPipeMesh", PrimitiveType.Cylinder, go.transform, Vector3.zero,
+                    new Vector3(82f, 35f, 15f), new Vector3(0.12f, 0.45f, 0.12f), new Color(0.36f, 0.22f, 0.15f));
+                changed++;
+            }
+            else if (UpgradeClueEmbers(existingNodes["RH1_00"]))
+            {
+                changed++;
+            }
+
+            return changed;
+        }
+
+        static bool UpgradeClueEmbers(ClueNode clue)
+        {
+            if (clue == null) return false;
+            var targetScale = new Vector3(0.01f, 0.2f, 0.01f);
+            if (clue.scanParticles != null && clue.scanParticles.gameObject.name == "Ground Embers")
+            {
+                if (clue.scanParticles.transform.localScale == targetScale)
+                    return false;
+                clue.scanParticles.transform.localScale = targetScale;
+                clue.scanParticles.transform.localPosition = Vector3.zero;
+                EditorUtility.SetDirty(clue.scanParticles.transform);
+                return true;
+            }
+
+            if (clue.scanParticles != null && clue.scanParticles.gameObject.name == "ScanParticles")
+                Object.DestroyImmediate(clue.scanParticles.gameObject);
+
+            AttachGroundEmbers(clue);
+            EditorUtility.SetDirty(clue);
+            return true;
+        }
+
+        static GameObject CreateClueRoot(Scene scene, string name, string clueId, string description, Vector3 pos, Vector3 colliderSize)
+        {
+            var go = new GameObject(name);
+            SceneManager.MoveGameObjectToScene(go, scene);
+            int interactLayer = LayerMask.NameToLayer("Interactable");
+            go.layer = interactLayer >= 0 ? interactLayer : 6;
+            go.transform.position = pos;
+
+            var bc = go.AddComponent<BoxCollider>();
+            bc.size = colliderSize;
+
+            var clue = go.AddComponent<ClueNode>();
+            clue.id = clueId;
+            clue.kind = ClueNode.Kind.Physical;
+            clue.requiredTool = ClueNode.Tool.None;
+            clue.state = ClueNode.State.Revealed;
+            clue.defaultDescription = description;
+
+            AttachGroundEmbers(clue);
+            return go;
+        }
+
+        static void AttachGroundEmbers(ClueNode clue)
+        {
+            var embersPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Ground Embers Variant.prefab");
+            ParticleSystem ps = null;
+            if (embersPrefab != null)
+            {
+                var inst = (GameObject)PrefabUtility.InstantiatePrefab(embersPrefab, clue.transform);
+                inst.name = "Ground Embers";
+                inst.transform.localPosition = Vector3.zero;
+                inst.transform.localRotation = Quaternion.identity;
+                inst.transform.localScale = new Vector3(0.01f, 0.2f, 0.01f);
+                ps = inst.GetComponent<ParticleSystem>();
+            }
+            if (ps == null)
+            {
+                var psGo = new GameObject("Ground Embers");
+                psGo.transform.SetParent(clue.transform, false);
+                ps = psGo.AddComponent<ParticleSystem>();
+            }
+            var main = ps.main;
+            main.playOnAwake = false;
+            main.startLifetime = 1f;
+            clue.scanParticles = ps;
+        }
+
+        static void CreateCluePrimitive(string name, PrimitiveType type, Transform parent, Vector3 localPos, Vector3 localEuler, Vector3 localScale, Color color)
+        {
+            var prim = GameObject.CreatePrimitive(type);
+            prim.name = name;
+            prim.transform.SetParent(parent, false);
+            prim.transform.localPosition = localPos;
+            prim.transform.localEulerAngles = localEuler;
+            prim.transform.localScale = localScale;
+            var col = prim.GetComponent<Collider>();
+            if (col != null) Object.DestroyImmediate(col);
+
+            var mr = prim.GetComponent<MeshRenderer>();
+            if (mr != null)
+            {
+                var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+                var mat = new Material(shader) { color = color };
+                mr.sharedMaterial = mat;
+            }
         }
 
         static void BuildFloors(Transform parent)
