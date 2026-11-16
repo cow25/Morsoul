@@ -440,35 +440,36 @@ namespace Morsoul.Editor
         {
             var scene = CreateBaseScene(
                 Case3ScenePath,
-                new Color(0.16f, 0.22f, 0.18f),
-                new Color(0.10f, 0.15f, 0.12f),
-                0.032f,
+                new Color(0.09f, 0.12f, 0.12f),
+                new Color(0.13f, 0.16f, 0.17f),
+                0.042f,
                 new Vector3(0f, 1.08f, -5.5f),
                 Vector3.zero);
+
+            RenderSettings.skybox = null;
+            foreach (var cam in Object.FindObjectsByType<Camera>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                cam.clearFlags = CameraClearFlags.SolidColor;
+                cam.backgroundColor = new Color(0.06f, 0.08f, 0.09f, 1f);
+            }
 
             var env = new GameObject("Environment").transform;
             SceneManager.MoveGameObjectToScene(env.gameObject, scene);
 
-            // Soft moonlight filtered through the forest canopy
+            // Dim, gloomy overcast moonlight filtering through dense canopy
             foreach (var l in Object.FindObjectsByType<Light>(FindObjectsInactive.Include, FindObjectsSortMode.None))
             {
                 if (l.type == LightType.Directional)
                 {
-                    l.color = new Color(0.70f, 0.84f, 0.76f);
-                    l.intensity = 0.95f;
+                    l.color = new Color(0.45f, 0.56f, 0.64f);
+                    l.intensity = 0.45f;
+                    l.transform.eulerAngles = new Vector3(48f, -30f, 0f);
                 }
             }
 
             // Custom sculpted Terrain (flat dirt ritual clearing + flat dirt exit trail + rolling forest hills)
             const string customDir = "Assets/Art/Environments/Custom/Whisperwood3D";
             if (!System.IO.Directory.Exists(customDir)) System.IO.Directory.CreateDirectory(customDir);
-
-            // Clean up previously generated procedural tree assets so the 3D dev can drop in their own models
-            foreach (var oldTree in new[] { customDir + "/TreePine.prefab", customDir + "/TreeBroadleaf.prefab", customDir + "/TreeBark.mat", customDir + "/PineLeaf.mat", customDir + "/OakLeaf.mat", customDir + "/ElderBark.mat", customDir + "/ElderCanopy.mat" })
-            {
-                if (AssetDatabase.LoadAssetAtPath<Object>(oldTree) != null)
-                    AssetDatabase.DeleteAsset(oldTree);
-            }
 
             var terrain = CreateWhisperwoodTerrain(customDir, env);
 
@@ -477,19 +478,85 @@ namespace Morsoul.Editor
 
             var ritualMat = EnsureRitualCircleMaterial(customDir);
 
-            // Vegetation & Flora (bushes, stumps, fallen logs) — no placeholder trees
+            // Forest & Vegetation using user-provided BrokenVector LowPolyTreePack trees
             var forest = new GameObject("ForestAndVegetation").transform;
             forest.SetParent(env, false);
             var rng = new System.Random(307);
 
-            // Interior bushes & undergrowth around clearing edge, trail borders, and hills
-            for (int i = 0; i < 65; i++)
+            const string TreePack = "Assets/BrokenVector/LowPolyTreePack/Prefabs/";
+            var urpLit = Shader.Find("Universal Render Pipeline/Lit");
+            if (urpLit != null)
             {
-                float x = Mathf.Lerp(-13.5f, 13.5f, (float)rng.NextDouble());
-                float z = Mathf.Lerp(-10.5f, 19.5f, (float)rng.NextDouble());
+                foreach (var matName in new[] { "Normal.mat", "Cold.mat", "Dry.mat", "Fall.mat" })
+                {
+                    var tMat = AssetDatabase.LoadAssetAtPath<Material>("Assets/BrokenVector/LowPolyTreePack/Materials/" + matName);
+                    if (tMat != null && tMat.shader != urpLit)
+                    {
+                        var tex = tMat.GetTexture("_MainTex");
+                        tMat.shader = urpLit;
+                        if (tex != null && tMat.HasProperty("_BaseMap")) tMat.SetTexture("_BaseMap", tex);
+                        if (tMat.HasProperty("_BaseColor")) tMat.SetColor("_BaseColor", Color.white);
+                        if (tMat.HasProperty("_Smoothness")) tMat.SetFloat("_Smoothness", 0.1f);
+                        EditorUtility.SetDirty(tMat);
+                    }
+                }
+            }
+            var treePrefabs = new[]
+            {
+                TreePack + "Tree Type0 01.prefab", TreePack + "Tree Type0 02.prefab", TreePack + "Tree Type0 03.prefab",
+                TreePack + "Tree Type1 01.prefab", TreePack + "Tree Type1 02.prefab", TreePack + "Tree Type2 01.prefab",
+                TreePack + "Tree Type3 01.prefab", TreePack + "Tree Type4 01.prefab", TreePack + "Tree Type5 01.prefab",
+                TreePack + "Tree Type6 01.prefab", TreePack + "Tree Type7 01.prefab"
+            };
+
+            // Natural tree clusters enclosing the clearing, trail, and surrounding hills (out to +/-26m)
+            Vector2[] clusterCenters =
+            {
+                new Vector2(-9.5f, -5.0f), new Vector2(9.5f, -4.5f),
+                new Vector2(-11.5f, 2.5f), new Vector2(11.5f, 2.0f),
+                new Vector2(-11.0f, 10.5f), new Vector2(11.0f, 10.0f),
+                new Vector2(-9.0f, 17.5f), new Vector2(9.0f, 17.5f),
+                new Vector2(-18.5f, -8.0f), new Vector2(18.5f, -7.5f),
+                new Vector2(-19.5f, 4.5f), new Vector2(19.5f, 5.0f),
+                new Vector2(-18.0f, 16.5f), new Vector2(18.0f, 16.5f),
+                new Vector2(-6.5f, 23.0f), new Vector2(6.5f, 23.0f),
+                new Vector2(0f, 25.0f), new Vector2(-14.5f, -15.5f), new Vector2(14.5f, -15.5f)
+            };
+
+            int treeIdx = 0;
+            foreach (var center in clusterCenters)
+            {
+                int count = 4 + rng.Next(3); // 4-6 trees per natural cluster
+                for (int k = 0; k < count; k++)
+                {
+                    float ang = (float)(rng.NextDouble() * Mathf.PI * 2.0);
+                    float rad = 1.2f + (float)rng.NextDouble() * 4.2f;
+                    float tx = center.x + Mathf.Cos(ang) * rad;
+                    float tz = center.y + Mathf.Sin(ang) * rad;
+
+                    bool insideClearing = Vector2.Distance(new Vector2(tx, tz), new Vector2(0f, 7.5f)) < 8.0f;
+                    bool onTrail = Mathf.Abs(tx) < 3.4f && tz >= -13.0f && tz <= 3.0f;
+                    bool nearElder = Vector2.Distance(new Vector2(tx, tz), new Vector2(0f, 17.2f)) < 4.0f;
+                    if (insideClearing || onTrail || nearElder) continue;
+
+                    float ty = terrain.SampleHeight(new Vector3(tx, 0f, tz));
+                    float sc = 0.85f + (float)rng.NextDouble() * 0.55f;
+                    PlaceProp(treePrefabs[treeIdx % treePrefabs.Length], forest,
+                        new Vector3(tx, ty - 0.15f, tz),
+                        new Vector3(0f, (float)rng.NextDouble() * 360f, 0f),
+                        Vector3.one * sc);
+                    treeIdx++;
+                }
+            }
+
+            // Interior bushes & undergrowth around clearing edge, trail borders, and tree bases
+            for (int i = 0; i < 85; i++)
+            {
+                float x = Mathf.Lerp(-16.5f, 16.5f, (float)rng.NextDouble());
+                float z = Mathf.Lerp(-13.5f, 22.0f, (float)rng.NextDouble());
                 bool insideRitualDirt = Vector2.Distance(new Vector2(x, z), new Vector2(0f, 7.5f)) < 5.6f;
-                bool onTrailCenter = Mathf.Abs(x) < 2.1f && z >= -11.5f && z <= 2.5f;
-                bool nearAltar = Vector2.Distance(new Vector2(x, z), new Vector2(-4.2f, 7.5f)) < 1.8f;
+                bool onTrailCenter = Mathf.Abs(x) < 2.2f && z >= -12.5f && z <= 2.5f;
+                bool nearAltar = Vector2.Distance(new Vector2(x, z), new Vector2(-4.2f, 7.5f)) < 2.0f;
                 if (insideRitualDirt || onTrailCenter || nearAltar) continue;
 
                 float y = terrain.SampleHeight(new Vector3(x, 0f, z));
@@ -498,12 +565,11 @@ namespace Morsoul.Editor
                 PlaceProp(bushPath, forest, new Vector3(x, y - 0.08f, z), new Vector3(0f, (float)rng.NextDouble() * 360f, 0f), Vector3.one * s);
             }
 
-            // Dense vegetation + fog barrier ringing the invisible boundary (leaving the South dirt path open)
+            // Dense vegetation + heavy white barrier fog ringing the invisible boundary (leaving South trail open)
             var barrierVisuals = new GameObject("BarrierFloraAndFog").transform;
             barrierVisuals.SetParent(env, false);
             for (int i = 0; i < 64; i++)
             {
-                float t = i / 64f;
                 float side = i % 4;
                 float bx, bz;
                 if (side == 0) { bx = -14.2f + (float)(rng.NextDouble() * 1.4 - 0.7); bz = Mathf.Lerp(-11.5f, 20.5f, (i / 4) / 16f); }
@@ -513,7 +579,7 @@ namespace Morsoul.Editor
                 {
                     bx = Mathf.Lerp(-14f, 14f, (i / 4) / 16f);
                     bz = -11.5f + (float)(rng.NextDouble() * 1.2 - 0.6);
-                    if (Mathf.Abs(bx) < 2.6f) continue; // Keep South entrance path open!
+                    if (Mathf.Abs(bx) < 2.6f) continue; // Keep South entrance path open
                 }
 
                 float by = terrain.SampleHeight(new Vector3(bx, 0f, bz));
@@ -522,26 +588,30 @@ namespace Morsoul.Editor
                 PlaceProp(bushPath, barrierVisuals, new Vector3(bx, by - 0.1f, bz), new Vector3(0f, (float)rng.NextDouble() * 360f, 0f), Vector3.one * bs);
             }
 
-            // Perimeter fog banks visually marking the impassable forest mist
+            // Two distinct white smoky fog systems: (A) Light ambient fog, (B) Heavy barrier fog
             var fogMat = EnsureFogParticleMaterial(customDir);
-            AddBoundaryFog(barrierVisuals, new Vector3(-14.5f, 1.4f, 4.5f), new Vector3(2f, 2f, 32f), fogMat);
-            AddBoundaryFog(barrierVisuals, new Vector3(14.5f, 1.4f, 4.5f), new Vector3(2f, 2f, 32f), fogMat);
-            AddBoundaryFog(barrierVisuals, new Vector3(0f, 1.4f, 20.8f), new Vector3(28f, 2f, 2f), fogMat);
-            AddBoundaryFog(barrierVisuals, new Vector3(-8.5f, 1.4f, -11.8f), new Vector3(11f, 2f, 2f), fogMat);
-            AddBoundaryFog(barrierVisuals, new Vector3(8.5f, 1.4f, -11.8f), new Vector3(11f, 2f, 2f), fogMat);
+            AddAmbientGroundFog(env, new Vector3(0f, 0.9f, 4.5f), new Vector3(26f, 1.6f, 30f), fogMat);
+            AddBoundaryFog(barrierVisuals, new Vector3(-14.2f, 1.5f, 4.5f), new Vector3(1.8f, 2.6f, 32f), fogMat);
+            AddBoundaryFog(barrierVisuals, new Vector3(14.2f, 1.5f, 4.5f), new Vector3(1.8f, 2.6f, 32f), fogMat);
+            AddBoundaryFog(barrierVisuals, new Vector3(0f, 1.5f, 20.6f), new Vector3(28f, 2.6f, 1.8f), fogMat);
+            AddBoundaryFog(barrierVisuals, new Vector3(-8.4f, 1.5f, -11.6f), new Vector3(11.2f, 2.6f, 1.8f), fogMat);
+            AddBoundaryFog(barrierVisuals, new Vector3(8.4f, 1.5f, -11.6f), new Vector3(11.2f, 2.6f, 1.8f), fogMat);
 
-            // A few appropriately-sized stumps & fallen logs grounded on the terrain
+            // Natural stone rubble outcrops, fallen logs & stumps
             PlaceProp(Mfp + "Miscellaneous/half_tree.prefab", forest, new Vector3(-6.8f, terrain.SampleHeight(new Vector3(-6.8f, 0f, 1.5f)) - 0.06f, 1.5f), new Vector3(0f, 35f, 0f), Vector3.one * 0.45f);
             PlaceProp(Mfp + "Miscellaneous/half_tree.001.prefab", forest, new Vector3(6.4f, terrain.SampleHeight(new Vector3(6.4f, 0f, 3.2f)) - 0.06f, 3.2f), new Vector3(0f, -60f, 0f), Vector3.one * 0.42f);
             PlaceProp(Mfp + "Miscellaneous/trunk.prefab", forest, new Vector3(7.4f, terrain.SampleHeight(new Vector3(7.4f, 0f, 10.8f)) - 0.06f, 10.8f), new Vector3(0f, -28f, 0f), Vector3.one * 0.48f);
+            PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_RubbleHeapMound_01.prefab", forest, new Vector3(-8.5f, terrain.SampleHeight(new Vector3(-8.5f, 0f, 13.5f)) - 0.1f, 13.5f), new Vector3(0f, 40f, 0f), Vector3.one * 0.9f);
+            PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_RubbleHeapMound_01.prefab", forest, new Vector3(8.2f, terrain.SampleHeight(new Vector3(8.2f, 0f, 14.0f)) - 0.1f, 14.0f), new Vector3(0f, -55f, 0f), Vector3.one * 0.85f);
 
-            // Elder Spirit Tree anchor at North edge of the clearing (0, 0, 16.2) for 3D dev's tree model
+            // Elder Spirit Tree at North edge of the clearing (0, 0, 17.5)
             var elderRoot = new GameObject("ElderSpiritTree_Anchor").transform;
             elderRoot.SetParent(env, false);
-            elderRoot.position = new Vector3(0f, 0f, 16.2f);
-            AddPointLight(env, new Vector3(0f, 3.8f, 14.5f), new Color(0.42f, 0.95f, 0.65f), 2.8f, 15f);
+            elderRoot.position = new Vector3(0f, 0f, 17.5f);
+            PlaceProp(TreePack + "Tree Type0 01.prefab", elderRoot, new Vector3(0f, -0.2f, 17.5f), new Vector3(0f, 15f, 0f), Vector3.one * 1.65f);
+            AddPointLight(env, new Vector3(0f, 3.6f, 14.2f), new Color(0.35f, 0.88f, 0.58f), 2.4f, 14f);
 
-            // Flat Ritual Clearing: Glowing Spell Circle + Stone Altar + Ritual Candles
+            // Flat Ritual Clearing: Glowing Spell Circle + Ceremonial Pillars + Stone Altar + Candle Clusters
             var ritual = new GameObject("RitualSite").transform;
             ritual.SetParent(env, false);
 
@@ -554,37 +624,54 @@ namespace Morsoul.Editor
             circleQuad.transform.localScale = new Vector3(7.2f, 7.2f, 1f);
             circleQuad.GetComponent<MeshRenderer>().sharedMaterial = ritualMat;
 
-            // Ring of ritual candles grounded around the spell circle
+            // Ring of ritual candle clusters & weathered stone pillars framing the circle
             for (int c = 0; c < 6; c++)
             {
                 float a = c * Mathf.PI * 2f / 6f;
-                Vector3 cPos = new Vector3(Mathf.Cos(a) * 3.55f, 0.0f, 7.5f + Mathf.Sin(a) * 3.55f);
+                Vector3 cPos = new Vector3(Mathf.Cos(a) * 3.65f, 0.0f, 7.5f + Mathf.Sin(a) * 3.65f);
                 PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_CandleTriple_01.prefab", ritual, cPos, Vector3.zero, Vector3.one * 1.15f);
+                if (c % 2 == 0)
+                {
+                    Vector3 pPos = new Vector3(Mathf.Cos(a + 0.35f) * 5.2f, -0.05f, 7.5f + Mathf.Sin(a + 0.35f) * 5.2f);
+                    PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_PillarBroken_01.prefab", ritual, pPos, new Vector3(0f, c * 60f, 0f), new Vector3(0.75f, 0.65f, 0.75f));
+                }
             }
-            AddPointLight(env, new Vector3(0f, 1.5f, 7.5f), new Color(0.78f, 0.25f, 0.95f), 2.4f, 11f);
+            AddPointLight(env, new Vector3(0f, 1.5f, 7.5f), new Color(0.75f, 0.24f, 0.92f), 2.2f, 11f);
 
-            // Stone Ritual Altar on the West edge of the circle (-4.2, 0, 7.5), top surface at y = 0.85
+            // Ceremonial Stone Altar on West edge of circle (-4.2, 0, 7.5) with candles, vessels & ritual materials
             EnsureSolidBox("RitualStoneAltar", new Vector3(-4.2f, 0.425f, 7.5f), new Vector3(1.1f, 0.85f, 1.8f), new Color(0.24f, 0.25f, 0.27f), ritual);
-            PlaceProp(Mfp + "Miscellaneous/cauldron.prefab", ritual, new Vector3(1.6f, 0f, 13.6f), Vector3.zero, Vector3.one * 0.9f);
             PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_CandleSingle_01.prefab", ritual, new Vector3(-4.45f, 0.85f, 8.15f), Vector3.zero, Vector3.one);
+            PlaceProp(Dfk + "Lightsources/dfk_candle_02.prefab", ritual, new Vector3(-4.45f, 0.85f, 6.85f), Vector3.zero, Vector3.one);
+            PlaceProp(Mfp + "Miscellaneous/On Table/bottle.002.prefab", ritual, new Vector3(-3.85f, 0.85f, 8.05f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_CressetLit_01.prefab", ritual, new Vector3(-4.8f, 0f, 6.1f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_CressetLit_01.prefab", ritual, new Vector3(-4.8f, 0f, 8.9f), Vector3.zero, Vector3.one);
 
-            // Identifiable Open South Trail Exit: two lanterns flanking the open dirt path (no blocking slab)
+            // East ritual preparation station (cauldron, ceremonial urns & mana canisters near siphon)
+            PlaceProp(Mfp + "Miscellaneous/cauldron.prefab", ritual, new Vector3(1.6f, 0f, 13.6f), Vector3.zero, Vector3.one * 0.9f);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_UrnUrn_01.prefab", ritual, new Vector3(2.8f, 0f, 13.2f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_PotClay_01.prefab", ritual, new Vector3(-1.5f, 0f, 13.8f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_BarrelUpright_01.prefab", ritual, new Vector3(2.2f, 0f, 14.5f), Vector3.zero, Vector3.one * 0.85f);
+            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_BrazierTripodLit_01.prefab", ritual, new Vector3(4.6f, 0f, 7.5f), Vector3.zero, Vector3.one);
+
+            // Identifiable Open South Trail Exit: two lanterns flanking the open dirt path
             var exitGroup = new GameObject("GroveExitTrailMarkers").transform;
             exitGroup.SetParent(env, false);
             PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_LanternFloor_01.prefab", exitGroup, new Vector3(-2.1f, 0f, -9.8f), Vector3.zero, Vector3.one);
             PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_LanternFloor_01.prefab", exitGroup, new Vector3(2.1f, 0f, -9.8f), Vector3.zero, Vector3.one);
-            AddPointLight(env, new Vector3(0f, 2.0f, -9.8f), new Color(1f, 0.78f, 0.45f), 2.6f, 10f);
+            AddPointLight(env, new Vector3(0f, 2.0f, -9.8f), new Color(1f, 0.78f, 0.45f), 2.2f, 9f);
 
             var clues = new GameObject("Clues").transform;
             SceneManager.MoveGameObjectToScene(clues.gameObject, scene);
 
-            // C1_03: Brass Extraction Siphon at Elder Tree roots (grounded at y = 0.58)
-            var siphon = CreatePrimitiveMarker("BrassExtractionSiphon", PrimitiveType.Cylinder, new Vector3(0f, 0.58f, 14.0f),
-                new Vector3(0.55f, 0.58f, 0.55f), new Color(0.75f, 0.55f, 0.2f), clues, false);
+            // C1_03: Brass Extraction Siphon at Elder Tree roots (grounded at y = 0, conduit plunging into root)
+            var siphonPrefab = EnsureBrassSiphonPrefab(customDir);
+            var siphon = (GameObject)PrefabUtility.InstantiatePrefab(siphonPrefab, clues);
+            siphon.name = "BrassExtractionSiphon";
+            siphon.transform.position = new Vector3(0f, 0f, 13.55f);
             AddAmbientMist(siphon.transform, new Color(0.25f, 0.85f, 0.55f, 0.45f));
             CreateClueNode("C1_ExtractionSiphon", "C1_03", ClueNode.Kind.Physical, ClueNode.Tool.None, ClueNode.State.Revealed,
                 "Industrial pneumatic tap driven deep into the Elder Spirit Tree's taproot, draining raw mana into pressurized canisters.",
-                new Vector3(0f, 0.8f, 14.0f), new Vector3(1.6f, 1.6f, 1.6f), clues, siphon);
+                new Vector3(0f, 0.6f, 13.55f), new Vector3(1.5f, 1.5f, 1.5f), clues, siphon, useGroundEmbers: true);
 
             // C2_03: Inscribed Silver Ritual Dagger resting flush on top of the Stone Altar (y = 0.87)
             var daggerRoot = new GameObject("SilverRitualDagger").transform;
@@ -598,20 +685,19 @@ namespace Morsoul.Editor
                 new Vector3(0.06f, 0.06f, 0.20f), new Color(0.28f, 0.16f, 0.18f), daggerRoot, false);
             CreateClueNode("C2_RitualDagger", "C2_03", ClueNode.Kind.Physical, ClueNode.Tool.None, ClueNode.State.Revealed,
                 "Ceremonial silver dagger bearing the Veiled Circle's eclipsed eye insignia, coated with Case 1's solvent stabilizer.",
-                new Vector3(-4.2f, 0.95f, 7.5f), new Vector3(1.4f, 1.1f, 1.4f), clues, daggerRoot.gameObject);
+                new Vector3(-4.2f, 0.95f, 7.5f), new Vector3(1.4f, 1.1f, 1.4f), clues, daggerRoot.gameObject, useGroundEmbers: true);
 
-            // C3_03: Vane's Discarded Ritual Cloak (grounded beside the altar, without off-center chimney hood)
+            // C3_03: Vane's Discarded Ritual Cloak (grounded beside the altar)
             var cloak = PlaceProp(Dfk + "Decoration/Textiles/dfk_carpet_black_small.prefab", clues, new Vector3(-5.5f, 0.02f, 9.6f), new Vector3(0f, 35f, 0f), new Vector3(0.85f, 0.85f, 0.85f));
             AddAmbientMist(cloak.transform, new Color(0.65f, 0.28f, 0.95f, 0.35f));
             CreateClueNode("C3_VaneCloak", "C3_03", ClueNode.Kind.Physical, ClueNode.Tool.None, ClueNode.State.Revealed,
                 "Vane's discarded ritual cloak. Lingers with fanatical zeal and deceit tying him to the Sanctum Core ritual.",
-                new Vector3(-5.5f, 0.45f, 9.6f), new Vector3(1.6f, 1.0f, 1.6f), clues, cloak);
+                new Vector3(-5.5f, 0.45f, 9.6f), new Vector3(1.6f, 1.0f, 1.6f), clues, cloak, useGroundEmbers: true);
 
-            // L3_03: Central Altar Ground (center of spell circle) — requires AetherSight
-            AddPointLight(env, new Vector3(0f, 0.8f, 7.5f), new Color(0.25f, 0.85f, 0.95f), 1.4f, 5.0f);
+            // L3_03: Central Altar Ground (center of spell circle) — concealed until AetherSight is unlocked (yellow embers)
             CreateClueNode("L3_RunicLog3_AltarGround", "L3_03", ClueNode.Kind.Physical, ClueNode.Tool.AetherSight, ClueNode.State.Hidden,
                 "Buried pre-cataclysm telemetry beneath the altar: Displacement Device Telemetry (Runic Log #3).",
-                new Vector3(0f, 0.45f, 7.5f), new Vector3(1.8f, 1.2f, 1.8f), clues);
+                new Vector3(0f, 0.45f, 7.5f), new Vector3(1.8f, 1.2f, 1.8f), clues, visualChild: clues.gameObject, useGroundEmbers: true, isRunic: true);
 
             // Open Trail Exit back to Whisperwood Trail
             CreateExitPortal("Exit_WhisperwoodTrail", 3, "Hub_Wilderness",
@@ -637,114 +723,138 @@ namespace Morsoul.Editor
         {
             var scene = CreateBaseScene(
                 Case4ScenePath,
-                new Color(0.18f, 0.14f, 0.12f),
-                new Color(0.09f, 0.07f, 0.06f),
-                0.022f,
+                new Color(0.14f, 0.12f, 0.11f),
+                new Color(0.08f, 0.07f, 0.07f),
+                0.025f,
                 new Vector3(0f, 1.0f, 0.5f),
                 Vector3.zero);
+
+            // Underground sub-facility: disable outdoor Directional Light so no sky sunlight leaks through
+            foreach (var l in Object.FindObjectsByType<Light>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (l.type == LightType.Directional) l.gameObject.SetActive(false);
+            }
+            RenderSettings.skybox = null;
+
+            const string customDir = "Assets/Art/Environments/Custom/IronHollow3D";
+            if (!System.IO.Directory.Exists(customDir)) System.IO.Directory.CreateDirectory(customDir);
+            var ih = EnsureIronHollowAssets(customDir);
 
             var env = new GameObject("Environment").transform;
             SceneManager.MoveGameObjectToScene(env.gameObject, scene);
 
-            // Invisible perimeter colliders (x in [-10, 10], z in [-2, 22]) backed by real 3D rock/rubble walls
+            // Invisible perimeter colliders (x in [-10, 10], z in [-2, 22])
             BuildPerimeterColliders(env, new Vector3(0f, 0f, 10f), new Vector3(20f, 4.5f, 24f));
 
-            // 4m x 4m stone floor tiles (-8..8 in X, 0..20 in Z)
+            // 4m x 4m stone & industrial floor tiles (-8..8 in X, 0..20 in Z)
             for (int gx = -8; gx <= 8; gx += 4)
             for (int gz = 0; gz <= 20; gz += 4)
             {
-                string tile = gz >= 12
-                    ? "02_Floors/SM_LPD_Floor_PavingFlagstone_01.prefab"
-                    : ((gx + gz) % 8 == 0 ? "02_Floors/SM_LPD_Floor_PavingFlagstoneWorn_01.prefab" : "02_Floors/SM_LPD_Floor_PavingFlagstone_01.prefab");
+                string tile = "02_Floors/SM_LPD_Floor_PavingFlagstone_01.prefab";
+                if (gz < 12 && gx == 0 && (gz == 4 || gz == 8))
+                    tile = "02_Floors/SM_LPD_Floor_PavingChannelStraight_01.prefab";
+                else if (gz < 12 && (gx + gz) % 8 == 0)
+                    tile = "02_Floors/SM_LPD_Floor_PavingFlagstoneWorn_01.prefab";
                 PlaceProp(Lpd + tile, env, new Vector3(gx, 0f, gz), Vector3.zero, Vector3.one);
             }
 
-            // Mine timber-braced ceiling in outer mining bay (z=0..8) & stone ceiling in sub-lab (z=12..20)
+            // Sealed stone & iron-beamed ceiling at Y = 4.0 (no wooden ceiling gaps)
             for (int gx = -8; gx <= 8; gx += 4)
             for (int gz = 0; gz <= 20; gz += 4)
             {
-                string ceil = gz < 12 ? "01_Structure/SM_LPD_Struct_CeilTimberBraced_01.prefab" : "01_Structure/SM_LPD_Struct_CeilFlat_01.prefab";
+                string ceil = (gz < 12 && Mathf.Abs(gx) == 4)
+                    ? "01_Structure/SM_LPD_Struct_CeilBeams_01.prefab"
+                    : "01_Structure/SM_LPD_Struct_CeilFlat_01.prefab";
                 PlaceProp(Lpd + ceil, env, new Vector3(gx, 4.0f, gz), Vector3.zero, Vector3.one);
             }
 
-            // Rough stone/rubble perimeter walls (x = +/-10, z = -2 / +22)
+            // Stone perimeter walls (x = +/-10, z = -2 / +22)
             for (int gx = -8; gx <= 8; gx += 4)
             {
                 string northWall = gx == 0 ? "01_Structure/SM_LPD_Struct_WallNiche_01.prefab" : "01_Structure/SM_LPD_Struct_WallCracked_01.prefab";
                 PlaceProp(Lpd + northWall, env, new Vector3(gx, 0f, 22f), new Vector3(0f, 180f, 0f), Vector3.one);
-                string southWall = gx == 0 ? "01_Structure/SM_LPD_Struct_WallDoorway_01.prefab" : "01_Structure/SM_LPD_Struct_WallRubble_01.prefab";
+                string southWall = gx == 0 ? "01_Structure/SM_LPD_Struct_WallDoorway_01.prefab" : "01_Structure/SM_LPD_Struct_WallAshlar_01.prefab";
                 PlaceProp(Lpd + southWall, env, new Vector3(gx, 0f, -2f), Vector3.zero, Vector3.one);
             }
             for (int gz = 0; gz <= 20; gz += 4)
             {
-                string wallType = gz < 12 ? "01_Structure/SM_LPD_Struct_WallRubble_01.prefab" : "01_Structure/SM_LPD_Struct_WallCracked_01.prefab";
+                string wallType = gz < 12 ? "01_Structure/SM_LPD_Struct_WallAshlar_01.prefab" : "01_Structure/SM_LPD_Struct_WallCracked_01.prefab";
                 PlaceProp(Lpd + wallType, env, new Vector3(-10f, 0f, gz), new Vector3(0f, 90f, 0f), Vector3.one);
                 PlaceProp(Lpd + wallType, env, new Vector3(10f, 0f, gz), new Vector3(0f, -90f, 0f), Vector3.one);
             }
 
-            // Rubble heaps & mine timber shoring props along the rough mine walls
-            PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_RubbleHeapAgainst_01.prefab", env, new Vector3(-9.2f, 0f, 2f), new Vector3(0f, 90f, 0f), Vector3.one);
-            PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_RubbleHeapAgainst_01.prefab", env, new Vector3(9.2f, 0f, 7f), new Vector3(0f, -90f, 0f), Vector3.one);
-            PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_RubbleHeapMound_01.prefab", env, new Vector3(-6.5f, 0f, 9.5f), Vector3.zero, Vector3.one);
-            PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_DebrisScatter_01.prefab", env, new Vector3(3.5f, 0.02f, 3.5f), Vector3.zero, Vector3.one);
-            PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_ShoringProps_01.prefab", env, new Vector3(-6f, 0f, 4f), Vector3.zero, Vector3.one);
-            PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_ShoringProps_01.prefab", env, new Vector3(6f, 0f, 4f), new Vector3(0f, 180f, 0f), Vector3.one);
-            PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_PillarBroken_01.prefab", env, new Vector3(-4f, 0f, 16f), Vector3.zero, Vector3.one);
-            PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_PillarSquare_01.prefab", env, new Vector3(4f, 0f, 16f), Vector3.zero, Vector3.one);
+            // Structural stone pillars (replacing excessive wooden shoring)
+            foreach (var p in new[] { new Vector3(-4f, 0f, 3.5f), new Vector3(4f, 0f, 3.5f), new Vector3(-4f, 0f, 16f), new Vector3(4f, 0f, 16f) })
+                PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_PillarSquare_01.prefab", env, p, Vector3.zero, Vector3.one);
 
-            // Outer mining bay decor (furnace, anvil, mine cart, workbench, dunnage, crates, barrels, torches)
-            PlaceProp(Mfp + "Miscellaneous/furnace.prefab", env, new Vector3(-8.2f, 0f, 5.5f), new Vector3(0f, 90f, 0f), Vector3.one * 1.1f);
-            PlaceProp(Mfp + "Miscellaneous/anvil.prefab", env, new Vector3(7.5f, 0f, 4.5f), new Vector3(0f, -35f, 0f), Vector3.one);
-            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_HandcartLoaded_01.prefab", env, new Vector3(6.8f, 0f, 1.5f), new Vector3(0f, -35f, 0f), Vector3.one);
-            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_HandcartEmpty_01.prefab", env, new Vector3(-4.2f, 0f, 1.2f), new Vector3(0f, 40f, 0f), Vector3.one);
-            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_ChestFlat_01.prefab", env, new Vector3(8.2f, 0f, 7.5f), new Vector3(0f, -90f, 0f), Vector3.one);
-            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_BarrelUpright_01.prefab", env, new Vector3(8.6f, 0f, 9.0f), Vector3.zero, Vector3.one);
-            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_BarrelUpright_01.prefab", env, new Vector3(-8.6f, 0f, 9.2f), Vector3.zero, Vector3.one);
-            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_BarrelRackSingle_01.prefab", env, new Vector3(-8.4f, 0f, 7.6f), new Vector3(0f, 90f, 0f), Vector3.one);
-            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_FirewoodStack_01.prefab", env, new Vector3(-7.6f, 0f, 1.5f), new Vector3(0f, 25f, 0f), Vector3.one);
-            PlaceProp(Lpd + "06_Furniture/SM_LPD_Furn_DunnagePallet_01.prefab", env, new Vector3(5.2f, 0f, 9.5f), Vector3.zero, Vector3.one);
-            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_CrateLarge_01.prefab", env, new Vector3(5.0f, 0.16f, 9.3f), new Vector3(0f, 12f, 0f), Vector3.one);
-            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_CrateBanded_01.prefab", env, new Vector3(5.8f, 0.16f, 9.8f), new Vector3(0f, -20f, 0f), Vector3.one);
-            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_SackUpright_01.prefab", env, new Vector3(4.3f, 0f, 9.9f), Vector3.zero, Vector3.one);
-            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_SackSlumped_01.prefab", env, new Vector3(-4.0f, 0f, 10.2f), new Vector3(0f, 25f, 0f), Vector3.one);
-            PlaceProp(Lpd + "06_Furniture/SM_LPD_Furn_TableTrestle_01.prefab", env, new Vector3(7.4f, 0f, 6.2f), new Vector3(0f, 90f, 0f), Vector3.one);
-            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_OilLampBrass_01.prefab", env, new Vector3(7.4f, 0.8f, 6.4f), Vector3.zero, Vector3.one);
-            PlaceProp(Lpd + "06_Furniture/SM_LPD_Furn_StoolRound_01.prefab", env, new Vector3(6.4f, 0f, 6.2f), Vector3.zero, Vector3.one);
-            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_BucketIron_01.prefab", env, new Vector3(-6.8f, 0f, 5.2f), Vector3.zero, Vector3.one);
-            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_BrazierTripodLit_01.prefab", env, new Vector3(-2.6f, 0f, 2.2f), Vector3.zero, Vector3.one);
-            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_BrazierTripodLit_01.prefab", env, new Vector3(2.6f, 0f, 2.2f), Vector3.zero, Vector3.one);
-            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_TorchWallLit_01.prefab", env, new Vector3(-9.7f, 2.2f, 4.0f), new Vector3(0f, 90f, 0f), Vector3.one);
-            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_TorchWallLit_01.prefab", env, new Vector3(9.7f, 2.2f, 4.0f), new Vector3(0f, -90f, 0f), Vector3.one);
-            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_TorchWallLit_01.prefab", env, new Vector3(-9.7f, 2.2f, 10.0f), new Vector3(0f, 90f, 0f), Vector3.one);
-            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_TorchWallLit_01.prefab", env, new Vector3(9.7f, 2.2f, 10.0f), new Vector3(0f, -90f, 0f), Vector3.one);
-            PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_ShoringProps_01.prefab", env, new Vector3(-6f, 0f, 8.5f), Vector3.zero, Vector3.one);
-            PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_ShoringProps_01.prefab", env, new Vector3(6f, 0f, 8.5f), new Vector3(0f, 180f, 0f), Vector3.one);
+            // --- PRODUCTION WORKFLOW IN PROCESSING BAY (z = 0..12) ---
+            var facility = new GameObject("IndustrialFacility").transform;
+            facility.SetParent(env, false);
 
-            // Pre-Cataclysm Sub-Lab decor (z = 12..22): archive shelves, research table, chairs, crystals, chandelier
-            PlaceProp(Dfk + "Furnitures/dfk_shelf_01.prefab", env, new Vector3(-9.0f, 0f, 14.5f), new Vector3(0f, 90f, 0f), Vector3.one);
-            PlaceProp(Dfk + "Furnitures/dfk_shelf_01.prefab", env, new Vector3(-9.0f, 0f, 18.5f), new Vector3(0f, 90f, 0f), Vector3.one);
-            PlaceProp(Dfk + "Furnitures/dfk_shelf_01.prefab", env, new Vector3(9.0f, 0f, 14.5f), new Vector3(0f, -90f, 0f), Vector3.one);
-            PlaceProp(Lpd + "06_Furniture/SM_LPD_Furn_CupboardOpen_01.prefab", env, new Vector3(8.8f, 0f, 18.5f), new Vector3(0f, -90f, 0f), Vector3.one);
-            PlaceProp(Lpd + "06_Furniture/SM_LPD_Furn_TableLong_01.prefab", env, new Vector3(5.8f, 0f, 16.5f), new Vector3(0f, 90f, 0f), Vector3.one);
-            PlaceProp(Dfk + "Furnitures/dfk_chair_01.prefab", env, new Vector3(4.6f, 0f, 16.5f), new Vector3(0f, 90f, 0f), Vector3.one);
-            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_CandleTriple_01.prefab", env, new Vector3(5.8f, 0.8f, 16.2f), Vector3.zero, Vector3.one);
+            // 1. Raw Material Receiving & Coal/Ore Storage (SE: x = 4.5..9.0, z = 0.5..4.0)
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_HandcartLoaded_01.prefab", facility, new Vector3(6.6f, 0f, 1.2f), new Vector3(0f, -35f, 0f), Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_BucketIron_01.prefab", facility, new Vector3(5.2f, 0f, 1.4f), Vector3.zero, Vector3.one);
+            CreateCoalOrOrePile("CoalStoragePile", new Vector3(8.2f, 0f, 2.2f), ih.coalMat, facility);
+            CreateCoalOrOrePile("RawIronOrePile", new Vector3(8.2f, 0f, 4.2f), ih.ironWeatheredMat, facility);
+
+            // 2. Ore Crushing & Sorting Station (East: x = 7.4, z = 6.8)
+            var crusher = (GameObject)PrefabUtility.InstantiatePrefab(ih.oreCrusherPrefab, facility);
+            crusher.transform.position = new Vector3(7.4f, 0f, 6.8f);
+            crusher.transform.eulerAngles = new Vector3(0f, -90f, 0f);
+
+            // 3. Smelting & Refinement (West: Blast Furnace at (-8.0, 0, 5.5) + Refining Vat at (-5.2, 0, 9.2))
+            var furnace = (GameObject)PrefabUtility.InstantiatePrefab(ih.blastFurnacePrefab, facility);
+            furnace.transform.position = new Vector3(-8.0f, 0f, 5.5f);
+            furnace.transform.eulerAngles = new Vector3(0f, 90f, 0f);
+            AddPointLight(env, new Vector3(-6.8f, 1.1f, 5.5f), new Color(1f, 0.45f, 0.14f), 2.8f, 9f);
+
+            var vat = (GameObject)PrefabUtility.InstantiatePrefab(ih.refiningVatPrefab, facility);
+            vat.transform.position = new Vector3(-5.2f, 0f, 9.2f);
+
+            // 4. Connected Metal Pipelines (Blast Furnace -> C1 Valve Manifold -> C2 Conduit Junction -> Refining Vat & Sub-Lab)
+            BuildPipeRun(facility, "Pipe_FurnaceToValve", new Vector3(-7.0f, 1.2f, 5.8f), new Vector3(-4.5f, 1.2f, 6.0f), 0.11f, ih.ironDarkMat, ih.copperMat);
+            BuildPipeRun(facility, "Pipe_ValveToVat", new Vector3(-4.5f, 1.2f, 6.0f), new Vector3(-5.2f, 1.2f, 8.5f), 0.10f, ih.ironDarkMat, ih.copperMat);
+            BuildPipeRun(facility, "Pipe_ValveToJunction", new Vector3(-4.5f, 0.45f, 6.0f), new Vector3(-0.7f, 0.45f, 8.0f), 0.09f, ih.copperMat, ih.ironDarkMat);
+            BuildPipeRun(facility, "Pipe_JunctionToSubLab", new Vector3(0.0f, 0.45f, 8.0f), new Vector3(0.0f, 0.45f, 11.8f), 0.09f, ih.copperMat, ih.ironDarkMat);
+            BuildPipeRun(facility, "Pipe_OverheadMain", new Vector3(-8.0f, 3.3f, 5.5f), new Vector3(7.4f, 3.3f, 6.8f), 0.12f, ih.ironDarkMat, ih.ironWeatheredMat);
+            BuildPipeRun(facility, "Pipe_OverheadDropToCrusher", new Vector3(7.4f, 3.3f, 6.8f), new Vector3(7.4f, 1.95f, 6.8f), 0.11f, ih.ironDarkMat, ih.copperMat);
+            BuildPipeRun(facility, "Pipe_OverheadSupportL", new Vector3(-3.0f, 4.0f, 5.9f), new Vector3(-3.0f, 3.3f, 5.9f), 0.06f, ih.ironWeatheredMat, ih.ironDarkMat);
+            BuildPipeRun(facility, "Pipe_OverheadSupportR", new Vector3(3.0f, 4.0f, 6.43f), new Vector3(3.0f, 3.3f, 6.43f), 0.06f, ih.ironWeatheredMat, ih.ironDarkMat);
+
+            // 5. Cooling, Anvil & Refined Iron Ingot Storage (NE: x = 4.5..8.5, z = 9.2..11.0)
+            PlaceProp(Mfp + "Miscellaneous/anvil.prefab", facility, new Vector3(5.2f, 0f, 9.6f), new Vector3(0f, -35f, 0f), Vector3.one);
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_BucketIron_01.prefab", facility, new Vector3(4.3f, 0f, 10.2f), Vector3.zero, Vector3.one);
+            CreateIngotStack("RefinedIngotPallet", new Vector3(7.5f, 0f, 10.2f), ih.ingotMat, ih.ironDarkMat, facility);
+
+            // Soot & rubble accents + wall sconces (iron industrial lighting, minimal wood)
+            PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_RubbleHeapAgainst_01.prefab", env, new Vector3(-9.2f, 0f, 1.8f), new Vector3(0f, 90f, 0f), Vector3.one);
+            PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_RubbleHeapAgainst_01.prefab", env, new Vector3(9.2f, 0f, 9.2f), new Vector3(0f, -90f, 0f), Vector3.one);
+            PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_DebrisScatter_01.prefab", env, new Vector3(-3.2f, 0.02f, 2.5f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_BrazierTripodLit_01.prefab", env, new Vector3(-2.6f, 0f, 1.8f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_BrazierTripodLit_01.prefab", env, new Vector3(2.6f, 0f, 1.8f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_SconceIronLit_01.prefab", env, new Vector3(-9.7f, 2.3f, 3.5f), new Vector3(0f, 90f, 0f), Vector3.one);
+            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_SconceIronLit_01.prefab", env, new Vector3(9.7f, 2.3f, 3.5f), new Vector3(0f, -90f, 0f), Vector3.one);
+            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_SconceIronLit_01.prefab", env, new Vector3(-9.7f, 2.3f, 9.5f), new Vector3(0f, 90f, 0f), Vector3.one);
+            PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_SconceIronLit_01.prefab", env, new Vector3(9.7f, 2.3f, 9.5f), new Vector3(0f, -90f, 0f), Vector3.one);
+
+            // Pre-Cataclysm Sub-Lab decor (z = 12..22): stone/iron lab feel
             PlaceProp(Dfk + "Lightsources/dfk_crystal_01_blue.prefab", env, new Vector3(-2.6f, 0f, 20.5f), Vector3.zero, new Vector3(1.1f, 1.4f, 1.1f));
             PlaceProp(Dfk + "Lightsources/dfk_crystal_01_blue.prefab", env, new Vector3(2.6f, 0f, 20.5f), Vector3.zero, new Vector3(1.1f, 1.4f, 1.1f));
             PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_UrnUrn_01.prefab", env, new Vector3(-7.5f, 0f, 20.5f), Vector3.zero, Vector3.one);
             PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_UrnUrn_01.prefab", env, new Vector3(7.5f, 0f, 20.5f), Vector3.zero, Vector3.one);
             PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_ChandelierRing_01.prefab", env, new Vector3(0f, 3.8f, 16.5f), Vector3.zero, Vector3.one);
 
-            // Steam vents along outer mining bay edges (clear center walkway)
+            // Steam vents along outer processing bay edges
             var steamL = new GameObject("SteamVent_Left");
             steamL.transform.SetParent(env, false);
-            steamL.transform.position = new Vector3(-5.8f, 0.2f, 3.8f);
+            steamL.transform.position = new Vector3(-6.2f, 0.2f, 3.8f);
             AddAmbientMist(steamL.transform, new Color(0.85f, 0.88f, 0.92f, 0.35f));
             var steamR = new GameObject("SteamVent_Right");
             steamR.transform.SetParent(env, false);
-            steamR.transform.position = new Vector3(5.8f, 0.2f, 3.8f);
+            steamR.transform.position = new Vector3(6.2f, 0.2f, 3.8f);
             AddAmbientMist(steamR.transform, new Color(0.85f, 0.88f, 0.92f, 0.35f));
 
-            // Midway stone partition wall at z=12 separating mining bay from Pre-Cataclysm Sub-Lab (open doorway at x=0)
+            // Midway stone partition wall at z=12 separating processing bay from Pre-Cataclysm Sub-Lab
             for (int gx = -8; gx <= 8; gx += 4)
             {
                 string partWall = gx == 0 ? "01_Structure/SM_LPD_Struct_WallDoorway_01.prefab" : "01_Structure/SM_LPD_Struct_WallAshlar_01.prefab";
@@ -753,56 +863,61 @@ namespace Morsoul.Editor
             CreateWall("SubLabCollider_West", new Vector3(-5.75f, 2.25f, 12f), new Vector3(8.5f, 4.5f, 0.6f), null, env);
             CreateWall("SubLabCollider_East", new Vector3(5.75f, 2.25f, 12f), new Vector3(8.5f, 4.5f, 0.6f), null, env);
 
-            // Deep-shaft elevator entrance/exit on South wall (z = -2.0)
+            // Deep-shaft elevator entrance/exit on South wall (z = -2.0) — backed by solid black shaft wall
+            EnsureSolidBox("ElevatorShaftBlackWall", new Vector3(0f, 1.6f, -2.25f), new Vector3(3.0f, 3.4f, 0.25f), new Color(0.02f, 0.02f, 0.025f), env);
             var elevator = new GameObject("DeepShaftElevator").transform;
             elevator.SetParent(env, false);
-            PlaceProp(Lpd + "03_Doors/SM_LPD_Door_DoorFrameTimber_01.prefab", elevator, new Vector3(0f, 0f, -1.95f), Vector3.zero, Vector3.one);
+            PlaceProp(Lpd + "03_Doors/SM_LPD_Door_DoorFrameStone_01.prefab", elevator, new Vector3(0f, 0f, -1.95f), Vector3.zero, Vector3.one);
             PlaceProp(Lpd + "03_Doors/SM_LPD_Door_FloorGrate_01.prefab", elevator, new Vector3(0f, 0.03f, -1.2f), Vector3.zero, new Vector3(1.2f, 1f, 1.2f));
             PlaceProp(Lpd + "01_Structure/SM_LPD_Struct_RopeDescentHanging_01.prefab", elevator, new Vector3(-0.7f, 0f, -1.6f), Vector3.zero, Vector3.one);
             PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_LanternFloor_01.prefab", elevator, new Vector3(-1.6f, 0f, -1.3f), Vector3.zero, Vector3.one);
             PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_LanternFloor_01.prefab", elevator, new Vector3(1.6f, 0f, -1.3f), Vector3.zero, Vector3.one);
 
-            // Stasis Chamber anchor inside Pre-Cataclysm Sub-Lab (z = 15.5)
+            // Stasis Chamber anchor inside Pre-Cataclysm Sub-Lab (z = 16.5)
             EnsureSolidBox("StasisChamberDais", new Vector3(-4.2f, 0.2f, 16.5f), new Vector3(3.2f, 0.4f, 3.2f), new Color(0.18f, 0.22f, 0.26f), env);
             PlaceProp(Dfk + "Lightsources/dfk_crystal_01_blue.prefab", env, new Vector3(-4.2f, 0.45f, 16.5f), Vector3.zero, new Vector3(1.8f, 2.2f, 1.8f));
 
-            // Warm forge lighting in mining bay + cool cyan pre-cataclysm lighting in sub-lab
-            AddPointLight(env, new Vector3(0f, 4.8f, 5f), new Color(1f, 0.68f, 0.42f), 3.0f, 18f);
+            // Warm forge lighting in processing bay + cool cyan pre-cataclysm lighting in sub-lab
+            AddPointLight(env, new Vector3(0f, 3.5f, 5f), new Color(1f, 0.65f, 0.38f), 2.8f, 18f);
             AddPointLight(env, new Vector3(0f, 2.8f, -1.2f), new Color(1f, 0.78f, 0.48f), 2.2f, 10f);
-            AddPointLight(env, new Vector3(0f, 4.8f, 17f), new Color(0.45f, 0.85f, 1f), 2.8f, 16f);
-            AddPointLight(env, new Vector3(-4.2f, 2.5f, 16.5f), new Color(0.35f, 0.92f, 1f), 2.2f, 9f);
+            AddPointLight(env, new Vector3(0f, 3.5f, 17f), new Color(0.45f, 0.85f, 1f), 2.6f, 16f);
+            AddPointLight(env, new Vector3(-4.2f, 2.5f, 16.5f), new Color(0.35f, 0.92f, 1f), 2.0f, 9f);
 
             var clues = new GameObject("Clues").transform;
             SceneManager.MoveGameObjectToScene(clues.gameObject, scene);
 
-            // C1_04: Tampered Pneumatic Valves (left steam line)
-            var valve = CreatePrimitiveMarker("PneumaticValves", PrimitiveType.Cylinder, new Vector3(-4.5f, 1.1f, 6f),
-                new Vector3(0.8f, 0.8f, 0.8f), new Color(0.58f, 0.36f, 0.22f), clues, false);
+            // C1_04: Tampered Pneumatic Valve Manifold (connected to Furnace & Vat pipelines)
+            var valve = (GameObject)PrefabUtility.InstantiatePrefab(ih.valveManifoldPrefab, clues);
+            valve.name = "PneumaticValves";
+            valve.transform.position = new Vector3(-4.5f, 0f, 6.0f);
             CreateClueNode("C1_PneumaticValves", "C1_04", ClueNode.Kind.Physical, ClueNode.Tool.None, ClueNode.State.Revealed,
                 "High-pressure pneumatic release valves jammed with iron wedge pins to force catastrophic backflow.",
-                new Vector3(-4.5f, 1.1f, 6f), new Vector3(1.5f, 1.5f, 1.5f), clues, valve);
+                new Vector3(-4.5f, 1.0f, 6.0f), new Vector3(1.5f, 1.6f, 1.5f), clues, valve, useGroundEmbers: true);
 
             // C2_04: Chemically Dissolved Bypass Conduits (center junction) — requires GolemEye
-            var conduit = CreatePrimitiveMarker("DissolvedConduits", PrimitiveType.Cube, new Vector3(0f, 0.5f, 8f),
-                new Vector3(1.6f, 0.5f, 0.8f), new Color(0.45f, 0.25f, 0.65f), clues, false);
+            var conduit = (GameObject)PrefabUtility.InstantiatePrefab(ih.conduitJunctionPrefab, clues);
+            conduit.name = "DissolvedConduits";
+            conduit.transform.position = new Vector3(0f, 0f, 8.0f);
             AddAmbientMist(conduit.transform, new Color(0.65f, 0.35f, 0.95f, 0.4f));
             CreateClueNode("C2_DissolvedConduits", "C2_04", ClueNode.Kind.Physical, ClueNode.Tool.GolemEye, ClueNode.State.Hidden,
                 "Copper control wiring corroded into slag. Golem Eye confirms the same synthetic mana solvent from Case 1 and Case 3.",
-                new Vector3(0f, 0.7f, 8f), new Vector3(1.8f, 1.2f, 1.4f), clues, conduit);
+                new Vector3(0f, 0.55f, 8.0f), new Vector3(1.8f, 1.2f, 1.4f), clues, conduit, useGroundEmbers: true);
 
-            // C3_04: Pre-Cataclysm Sub-Lab Blast Door (stone frame + broken/breached door swung aside at z=12)
+            // C3_04: Pre-Cataclysm Sub-Lab Blast Door (reinforced titanium-alloy door swung aside at z=12)
             PlaceProp(Lpd + "03_Doors/SM_LPD_Door_DoorFrameStone_01.prefab", env, new Vector3(0f, 0f, 12f), Vector3.zero, Vector3.one);
-            var blastDoor = PlaceProp(Lpd + "03_Doors/SM_LPD_Door_DoorBroken_01.prefab", clues, new Vector3(-0.75f, 0f, 12.1f), new Vector3(0f, -75f, 0f), Vector3.one);
+            var blastDoor = (GameObject)PrefabUtility.InstantiatePrefab(ih.blastDoorPrefab, clues);
+            blastDoor.name = "SubLabBlastDoorMesh";
+            blastDoor.transform.position = new Vector3(-0.75f, 0f, 12.1f);
+            blastDoor.transform.eulerAngles = new Vector3(0f, -75f, 0f);
             CreateClueNode("C3_SubLabBlastDoor", "C3_04", ClueNode.Kind.Physical, ClueNode.Tool.None, ClueNode.State.Revealed,
                 "Massive pre-cataclysm blast door forced open from outside to breach the engineering bay.",
-                new Vector3(-0.75f, 1.2f, 12.1f), new Vector3(1.8f, 2.4f, 1.4f), clues, blastDoor);
+                new Vector3(-0.75f, 1.2f, 12.1f), new Vector3(1.8f, 2.4f, 1.4f), clues, blastDoor, useGroundEmbers: true);
 
-            // L4_04: Ancient Primary Terminal inside sub-lab (z=18) — requires Both (AetherSight + GolemEye)
+            // L4_04: Ancient Primary Terminal inside sub-lab (z=18.5) — concealed until AetherSight+GolemEye (yellow embers)
             var terminal = PlaceProp(Dfk + "Furnitures/dfk_desk_02.prefab", clues, new Vector3(0f, 0f, 18.5f), Vector3.zero, Vector3.one);
-            AddAmbientMist(terminal.transform, new Color(0.35f, 0.85f, 1f, 0.4f));
             CreateClueNode("L4_RunicLog4_Terminal", "L4_04", ClueNode.Kind.Physical, ClueNode.Tool.Both, ClueNode.State.Hidden,
                 "Decrypted pre-cataclysm primary terminal: Planetary Stabilizer Console Blueprints (Runic Log #4).",
-                new Vector3(0f, 1.1f, 18.5f), new Vector3(1.8f, 1.6f, 1.4f), clues, terminal);
+                new Vector3(0f, 1.1f, 18.5f), new Vector3(1.8f, 1.6f, 1.4f), clues, terminal, useGroundEmbers: true, isRunic: true);
 
             // Exit Shaft Elevator back to Iron Hollow surface
             CreateExitPortal("Exit_ShaftElevator", 4, "Hub_IronHollow",
@@ -1309,6 +1424,28 @@ namespace Morsoul.Editor
             return mat;
         }
 
+        static void AddAmbientGroundFog(Transform parent, Vector3 pos, Vector3 boxSize, Material fogMat)
+        {
+            var go = new GameObject("AmbientGroundFog");
+            go.transform.SetParent(parent, false);
+            go.transform.position = pos;
+            var ps = go.AddComponent<ParticleSystem>();
+            var psr = go.GetComponent<ParticleSystemRenderer>();
+            if (psr != null && fogMat != null) psr.sharedMaterial = fogMat;
+            var main = ps.main;
+            main.startLifetime = 7.0f;
+            main.startSpeed = 0.14f;
+            main.startSize = new ParticleSystem.MinMaxCurve(3.6f, 5.4f);
+            main.startColor = new Color(0.92f, 0.95f, 0.98f, 0.11f);
+            main.maxParticles = 90;
+            main.prewarm = true;
+            var emission = ps.emission;
+            emission.rateOverTime = 14f;
+            var shape = ps.shape;
+            shape.shapeType = ParticleSystemShapeType.Box;
+            shape.scale = boxSize;
+        }
+
         static void AddBoundaryFog(Transform parent, Vector3 pos, Vector3 boxSize, Material fogMat)
         {
             var go = new GameObject("BoundaryFogBank");
@@ -1318,17 +1455,88 @@ namespace Morsoul.Editor
             var psr = go.GetComponent<ParticleSystemRenderer>();
             if (psr != null && fogMat != null) psr.sharedMaterial = fogMat;
             var main = ps.main;
-            main.startLifetime = 5.0f;
-            main.startSpeed = 0.12f;
-            main.startSize = new ParticleSystem.MinMaxCurve(2.6f, 4.2f);
-            main.startColor = new Color(0.58f, 0.72f, 0.65f, 0.20f);
-            main.maxParticles = 45;
+            main.startLifetime = 4.5f;
+            main.startSpeed = 0.10f;
+            main.startSize = new ParticleSystem.MinMaxCurve(2.8f, 4.4f);
+            main.startColor = new Color(0.94f, 0.96f, 0.99f, 0.48f);
+            main.maxParticles = 110;
             main.prewarm = true;
             var emission = ps.emission;
-            emission.rateOverTime = 8f;
+            emission.rateOverTime = 24f;
             var shape = ps.shape;
             shape.shapeType = ParticleSystemShapeType.Box;
             shape.scale = boxSize;
+        }
+
+        static GameObject EnsureBrassSiphonPrefab(string customDir)
+        {
+            string prefabPath = customDir + "/BrassExtractionSiphon.prefab";
+            var urpLit = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+
+            Material MakeMat(string fileName, Color col, float metallic, float smoothness, Color? emission = null)
+            {
+                string matPath = customDir + "/" + fileName;
+                if (AssetDatabase.LoadAssetAtPath<Material>(matPath) != null)
+                    AssetDatabase.DeleteAsset(matPath);
+                var m = new Material(urpLit) { color = col };
+                if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", col);
+                if (m.HasProperty("_Metallic")) m.SetFloat("_Metallic", metallic);
+                if (m.HasProperty("_Smoothness")) m.SetFloat("_Smoothness", smoothness);
+                if (emission.HasValue && m.HasProperty("_EmissionColor"))
+                {
+                    m.EnableKeyword("_EMISSION");
+                    m.SetColor("_EmissionColor", emission.Value);
+                }
+                AssetDatabase.CreateAsset(m, matPath);
+                return m;
+            }
+
+            var brassMat = MakeMat("SiphonBrass.mat", new Color(0.74f, 0.53f, 0.21f), 0.78f, 0.42f);
+            var ironMat = MakeMat("SiphonDarkIron.mat", new Color(0.20f, 0.21f, 0.24f), 0.72f, 0.28f);
+            var manaMat = MakeMat("SiphonManaGlow.mat", new Color(0.22f, 0.88f, 0.58f), 0.1f, 0.75f, new Color(0.18f, 0.78f, 0.48f) * 1.4f);
+
+            var root = new GameObject("BrassExtractionSiphon");
+            void AddPart(string partName, PrimitiveType type, Vector3 localPos, Vector3 localEuler, Vector3 localScale, Material mat)
+            {
+                var p = GameObject.CreatePrimitive(type);
+                p.name = partName;
+                Object.DestroyImmediate(p.GetComponent<Collider>());
+                p.transform.SetParent(root.transform, false);
+                p.transform.localPosition = localPos;
+                p.transform.localEulerAngles = localEuler;
+                p.transform.localScale = localScale;
+                p.GetComponent<MeshRenderer>().sharedMaterial = mat;
+            }
+
+            // Grounded base flange & tap spike
+            AddPart("BaseFlange", PrimitiveType.Cylinder, new Vector3(0f, 0.05f, 0f), Vector3.zero, new Vector3(0.62f, 0.05f, 0.62f), ironMat);
+            AddPart("TapCollar", PrimitiveType.Cylinder, new Vector3(0f, 0.17f, 0f), Vector3.zero, new Vector3(0.36f, 0.10f, 0.36f), ironMat);
+
+            // Pressurized brass canister + iron bands + glowing mana sight-glass
+            AddPart("MainCanister", PrimitiveType.Cylinder, new Vector3(0f, 0.55f, 0f), Vector3.zero, new Vector3(0.44f, 0.29f, 0.44f), brassMat);
+            AddPart("LowerBand", PrimitiveType.Cylinder, new Vector3(0f, 0.36f, 0f), Vector3.zero, new Vector3(0.48f, 0.035f, 0.48f), ironMat);
+            AddPart("UpperBand", PrimitiveType.Cylinder, new Vector3(0f, 0.74f, 0f), Vector3.zero, new Vector3(0.48f, 0.035f, 0.48f), ironMat);
+            AddPart("ManaSightGlass", PrimitiveType.Cylinder, new Vector3(0f, 0.55f, 0f), Vector3.zero, new Vector3(0.455f, 0.10f, 0.455f), manaMat);
+
+            // Top dome & pressure valve wheel
+            AddPart("TopDome", PrimitiveType.Sphere, new Vector3(0f, 0.84f, 0f), Vector3.zero, new Vector3(0.42f, 0.22f, 0.42f), brassMat);
+            AddPart("ValveStem", PrimitiveType.Cylinder, new Vector3(0f, 0.98f, 0f), Vector3.zero, new Vector3(0.08f, 0.08f, 0.08f), ironMat);
+            AddPart("ValveWheel", PrimitiveType.Cylinder, new Vector3(0f, 1.07f, 0f), Vector3.zero, new Vector3(0.24f, 0.025f, 0.24f), ironMat);
+
+            // Front pressure gauge
+            AddPart("GaugeNeck", PrimitiveType.Cylinder, new Vector3(0f, 0.74f, -0.24f), new Vector3(90f, 0f, 0f), new Vector3(0.07f, 0.06f, 0.07f), brassMat);
+            AddPart("GaugeDial", PrimitiveType.Cylinder, new Vector3(0f, 0.74f, -0.30f), new Vector3(90f, 0f, 0f), new Vector3(0.16f, 0.025f, 0.16f), ironMat);
+
+            // Root intake conduit extending horizontally from tank and plunging straight into the Elder Tree root (+Z)
+            AddPart("ConduitUpper", PrimitiveType.Cylinder, new Vector3(0f, 0.68f, 0.36f), new Vector3(90f, 0f, 0f), new Vector3(0.11f, 0.16f, 0.11f), brassMat);
+            AddPart("ConduitElbow", PrimitiveType.Sphere, new Vector3(0f, 0.68f, 0.52f), Vector3.zero, new Vector3(0.15f, 0.15f, 0.15f), ironMat);
+            AddPart("ConduitRootPipe", PrimitiveType.Cylinder, new Vector3(0f, 0.38f, 0.52f), Vector3.zero, new Vector3(0.11f, 0.30f, 0.11f), brassMat);
+
+            if (AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath) != null)
+                AssetDatabase.DeleteAsset(prefabPath);
+            var prefab = PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
+            Object.DestroyImmediate(root);
+            return prefab;
         }
 
         static Material EnsureRitualCircleMaterial(string customDir)
@@ -1411,6 +1619,216 @@ namespace Morsoul.Editor
             mat.renderQueue = 2450;
             AssetDatabase.CreateAsset(mat, matPath);
             return mat;
+        }
+
+        // --- Iron Hollow Industrial Facility Helpers -------------------------
+
+        struct IronHollowAssetSet
+        {
+            public Material ironDarkMat, ironWeatheredMat, copperMat, emberMat, coalMat, ingotMat, slagMat;
+            public GameObject blastFurnacePrefab, oreCrusherPrefab, refiningVatPrefab, valveManifoldPrefab, conduitJunctionPrefab, blastDoorPrefab;
+        }
+
+        static IronHollowAssetSet EnsureIronHollowAssets(string customDir)
+        {
+            var urpLit = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+            Material MakeMat(string fileName, Color col, float metallic, float smoothness, Color? emission = null)
+            {
+                string matPath = customDir + "/" + fileName;
+                if (AssetDatabase.LoadAssetAtPath<Material>(matPath) != null)
+                    AssetDatabase.DeleteAsset(matPath);
+                var m = new Material(urpLit) { color = col };
+                if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", col);
+                if (m.HasProperty("_Metallic")) m.SetFloat("_Metallic", metallic);
+                if (m.HasProperty("_Smoothness")) m.SetFloat("_Smoothness", smoothness);
+                if (emission.HasValue && m.HasProperty("_EmissionColor"))
+                {
+                    m.EnableKeyword("_EMISSION");
+                    m.SetColor("_EmissionColor", emission.Value);
+                }
+                AssetDatabase.CreateAsset(m, matPath);
+                return m;
+            }
+
+            var s = new IronHollowAssetSet
+            {
+                ironDarkMat = MakeMat("IH_IronDark.mat", new Color(0.18f, 0.19f, 0.22f), 0.76f, 0.28f),
+                ironWeatheredMat = MakeMat("IH_IronWeathered.mat", new Color(0.30f, 0.27f, 0.25f), 0.65f, 0.22f),
+                copperMat = MakeMat("IH_CopperPipe.mat", new Color(0.62f, 0.37f, 0.20f), 0.78f, 0.38f),
+                emberMat = MakeMat("IH_FurnaceEmber.mat", new Color(1.0f, 0.38f, 0.08f), 0.05f, 0.2f, new Color(1.0f, 0.32f, 0.04f) * 1.6f),
+                coalMat = MakeMat("IH_Coal.mat", new Color(0.10f, 0.10f, 0.12f), 0.15f, 0.18f),
+                ingotMat = MakeMat("IH_IngotSteel.mat", new Color(0.55f, 0.58f, 0.62f), 0.85f, 0.52f),
+                slagMat = MakeMat("IH_SolventSlag.mat", new Color(0.45f, 0.20f, 0.62f), 0.2f, 0.65f, new Color(0.35f, 0.12f, 0.52f) * 0.8f)
+            };
+
+            GameObject SavePrefab(string name, System.Action<GameObject> buildParts)
+            {
+                string pPath = customDir + "/" + name + ".prefab";
+                if (AssetDatabase.LoadAssetAtPath<GameObject>(pPath) != null)
+                    AssetDatabase.DeleteAsset(pPath);
+                var root = new GameObject(name);
+                buildParts(root);
+                var pf = PrefabUtility.SaveAsPrefabAsset(root, pPath);
+                Object.DestroyImmediate(root);
+                return pf;
+            }
+
+            void Part(GameObject parent, string n, PrimitiveType t, Vector3 lp, Vector3 le, Vector3 ls, Material m)
+            {
+                var p = GameObject.CreatePrimitive(t);
+                p.name = n;
+                Object.DestroyImmediate(p.GetComponent<Collider>());
+                p.transform.SetParent(parent.transform, false);
+                p.transform.localPosition = lp;
+                p.transform.localEulerAngles = le;
+                p.transform.localScale = ls;
+                p.GetComponent<MeshRenderer>().sharedMaterial = m;
+            }
+
+            // 1. Industrial Blast Furnace (stone/iron hearth, glowing firebox, heavy exhaust stack to ceiling)
+            s.blastFurnacePrefab = SavePrefab("IH_BlastFurnace", r =>
+            {
+                Part(r, "HearthBase", PrimitiveType.Cube, new Vector3(0f, 0.55f, 0f), Vector3.zero, new Vector3(2.2f, 1.1f, 2.0f), s.ironWeatheredMat);
+                Part(r, "FireboxEmbers", PrimitiveType.Cube, new Vector3(0f, 0.45f, 0.88f), Vector3.zero, new Vector3(1.1f, 0.55f, 0.3f), s.emberMat);
+                Part(r, "FireboxFrame", PrimitiveType.Cube, new Vector3(0f, 0.85f, 0.96f), Vector3.zero, new Vector3(1.3f, 0.18f, 0.2f), s.ironDarkMat);
+                Part(r, "SmelterDrum", PrimitiveType.Cylinder, new Vector3(0f, 1.65f, -0.1f), Vector3.zero, new Vector3(1.6f, 0.65f, 1.6f), s.ironDarkMat);
+                Part(r, "ExhaustStack", PrimitiveType.Cylinder, new Vector3(0f, 3.05f, -0.25f), Vector3.zero, new Vector3(0.75f, 1.0f, 0.75f), s.ironDarkMat);
+                Part(r, "LoadingHopper", PrimitiveType.Cube, new Vector3(0f, 1.45f, 0.85f), new Vector3(25f, 0f, 0f), new Vector3(0.95f, 0.45f, 0.65f), s.ironWeatheredMat);
+            });
+
+            // 2. Mechanical Ore Crusher (iron frame, top hopper, crushing block, side flywheel)
+            s.oreCrusherPrefab = SavePrefab("IH_OreCrusher", r =>
+            {
+                Part(r, "BasePlate", PrimitiveType.Cube, new Vector3(0f, 0.1f, 0f), Vector3.zero, new Vector3(2.2f, 0.2f, 1.8f), s.ironDarkMat);
+                Part(r, "FrameL", PrimitiveType.Cube, new Vector3(-0.85f, 1.05f, 0f), Vector3.zero, new Vector3(0.25f, 1.8f, 1.5f), s.ironDarkMat);
+                Part(r, "FrameR", PrimitiveType.Cube, new Vector3(0.85f, 1.05f, 0f), Vector3.zero, new Vector3(0.25f, 1.8f, 1.5f), s.ironDarkMat);
+                Part(r, "CrusherHead", PrimitiveType.Cube, new Vector3(0f, 0.85f, 0f), Vector3.zero, new Vector3(1.35f, 0.65f, 1.15f), s.ironWeatheredMat);
+                Part(r, "TopHopper", PrimitiveType.Cube, new Vector3(0f, 1.75f, 0f), Vector3.zero, new Vector3(1.55f, 0.55f, 1.35f), s.copperMat);
+                Part(r, "Flywheel", PrimitiveType.Cylinder, new Vector3(1.1f, 1.05f, 0f), new Vector3(0f, 0f, 90f), new Vector3(1.25f, 0.12f, 1.25f), s.ironWeatheredMat);
+                Part(r, "DriveAxle", PrimitiveType.Cylinder, new Vector3(0f, 1.05f, 0f), new Vector3(0f, 0f, 90f), new Vector3(0.22f, 1.25f, 0.22f), s.ironDarkMat);
+            });
+
+            // 3. Refining Vat (riveted iron vat with copper rim & top condenser)
+            s.refiningVatPrefab = SavePrefab("IH_RefiningVat", r =>
+            {
+                Part(r, "VatStand", PrimitiveType.Cylinder, new Vector3(0f, 0.15f, 0f), Vector3.zero, new Vector3(1.7f, 0.15f, 1.7f), s.ironWeatheredMat);
+                Part(r, "VatBody", PrimitiveType.Cylinder, new Vector3(0f, 0.85f, 0f), Vector3.zero, new Vector3(1.45f, 0.65f, 1.45f), s.ironDarkMat);
+                Part(r, "VatBand", PrimitiveType.Cylinder, new Vector3(0f, 1.2f, 0f), Vector3.zero, new Vector3(1.54f, 0.08f, 1.54f), s.copperMat);
+                Part(r, "CondenserDome", PrimitiveType.Sphere, new Vector3(0f, 1.5f, 0f), Vector3.zero, new Vector3(1.1f, 0.45f, 1.1f), s.copperMat);
+            });
+
+            // 4. Tampered Pneumatic Valve Manifold (C1_04)
+            s.valveManifoldPrefab = SavePrefab("IH_ValveManifold", r =>
+            {
+                Part(r, "Pedestal", PrimitiveType.Cube, new Vector3(0f, 0.4f, 0f), Vector3.zero, new Vector3(0.75f, 0.8f, 0.55f), s.ironDarkMat);
+                Part(r, "ManifoldHeader", PrimitiveType.Cylinder, new Vector3(0f, 1.05f, 0f), new Vector3(0f, 0f, 90f), new Vector3(0.24f, 0.55f, 0.24f), s.copperMat);
+                Part(r, "ValveStemL", PrimitiveType.Cylinder, new Vector3(-0.32f, 1.28f, 0f), Vector3.zero, new Vector3(0.08f, 0.18f, 0.08f), s.ironDarkMat);
+                Part(r, "ValveWheelL", PrimitiveType.Cylinder, new Vector3(-0.32f, 1.44f, 0f), Vector3.zero, new Vector3(0.32f, 0.04f, 0.32f), s.copperMat);
+                Part(r, "ValveStemR", PrimitiveType.Cylinder, new Vector3(0.32f, 1.28f, 0f), Vector3.zero, new Vector3(0.08f, 0.18f, 0.08f), s.ironDarkMat);
+                Part(r, "ValveWheelR", PrimitiveType.Cylinder, new Vector3(0.32f, 1.44f, 0f), Vector3.zero, new Vector3(0.32f, 0.04f, 0.32f), s.copperMat);
+                Part(r, "WedgePin", PrimitiveType.Cube, new Vector3(0.32f, 1.32f, 0.12f), new Vector3(25f, 0f, 35f), new Vector3(0.06f, 0.22f, 0.06f), s.ingotMat);
+                Part(r, "PressureGauge", PrimitiveType.Cylinder, new Vector3(0f, 1.32f, -0.14f), new Vector3(90f, 0f, 0f), new Vector3(0.20f, 0.04f, 0.20f), s.ironWeatheredMat);
+            });
+
+            // 5. Dissolved Bypass Conduit Junction (C2_04)
+            s.conduitJunctionPrefab = SavePrefab("IH_ConduitJunction", r =>
+            {
+                Part(r, "JunctionHousing", PrimitiveType.Cube, new Vector3(0f, 0.25f, 0f), Vector3.zero, new Vector3(1.35f, 0.45f, 0.85f), s.ironDarkMat);
+                Part(r, "CorrodedPipeA", PrimitiveType.Cylinder, new Vector3(-0.35f, 0.50f, 0f), new Vector3(0f, 0f, 90f), new Vector3(0.14f, 0.35f, 0.14f), s.copperMat);
+                Part(r, "CorrodedPipeB", PrimitiveType.Cylinder, new Vector3(0.35f, 0.50f, 0f), new Vector3(0f, 0f, 90f), new Vector3(0.14f, 0.35f, 0.14f), s.copperMat);
+                Part(r, "SolventSlagPool", PrimitiveType.Cylinder, new Vector3(0f, 0.04f, 0f), Vector3.zero, new Vector3(1.65f, 0.03f, 1.15f), s.slagMat);
+            });
+
+            // 6. Reinforced Titanium-Alloy Sub-Lab Blast Door (C3_04)
+            s.blastDoorPrefab = SavePrefab("IH_BlastDoor", r =>
+            {
+                Part(r, "DoorSlab", PrimitiveType.Cube, new Vector3(0.75f, 1.15f, 0f), Vector3.zero, new Vector3(1.5f, 2.3f, 0.18f), s.ironDarkMat);
+                Part(r, "RibTop", PrimitiveType.Cube, new Vector3(0.75f, 1.95f, 0f), Vector3.zero, new Vector3(1.54f, 0.16f, 0.24f), s.ingotMat);
+                Part(r, "RibMid", PrimitiveType.Cube, new Vector3(0.75f, 1.15f, 0f), Vector3.zero, new Vector3(1.54f, 0.18f, 0.24f), s.ingotMat);
+                Part(r, "RibBot", PrimitiveType.Cube, new Vector3(0.75f, 0.35f, 0f), Vector3.zero, new Vector3(1.54f, 0.16f, 0.24f), s.ingotMat);
+                Part(r, "LockHousing", PrimitiveType.Cube, new Vector3(1.25f, 1.15f, 0f), Vector3.zero, new Vector3(0.32f, 0.42f, 0.28f), s.ironWeatheredMat);
+            });
+
+            return s;
+        }
+
+        static void BuildPipeRun(Transform parent, string name, Vector3 a, Vector3 b, float radius, Material pipeMat, Material flangeMat)
+        {
+            var root = new GameObject(name).transform;
+            root.SetParent(parent, false);
+            Vector3 diff = b - a;
+            float len = diff.magnitude;
+            if (len < 0.05f) return;
+
+            var seg = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            seg.name = "Segment";
+            Object.DestroyImmediate(seg.GetComponent<Collider>());
+            seg.transform.SetParent(root, false);
+            seg.transform.position = (a + b) * 0.5f;
+            seg.transform.up = diff.normalized;
+            seg.transform.localScale = new Vector3(radius * 2f, len * 0.5f, radius * 2f);
+            seg.GetComponent<MeshRenderer>().sharedMaterial = pipeMat;
+
+            foreach (var endPos in new[] { a, b })
+            {
+                var flange = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                flange.name = "Flange";
+                Object.DestroyImmediate(flange.GetComponent<Collider>());
+                flange.transform.SetParent(root, false);
+                flange.transform.position = endPos;
+                flange.transform.up = diff.normalized;
+                flange.transform.localScale = new Vector3(radius * 3.0f, 0.06f, radius * 3.0f);
+                flange.GetComponent<MeshRenderer>().sharedMaterial = flangeMat;
+            }
+        }
+
+        static void CreateCoalOrOrePile(string name, Vector3 pos, Material mat, Transform parent)
+        {
+            var root = new GameObject(name).transform;
+            root.SetParent(parent, false);
+            root.position = pos;
+            var rng = new System.Random(name.GetHashCode());
+            for (int i = 0; i < 9; i++)
+            {
+                var chunk = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                chunk.name = "Chunk_" + i;
+                Object.DestroyImmediate(chunk.GetComponent<Collider>());
+                chunk.transform.SetParent(root, false);
+                float a = i * 0.7f;
+                float r = (i == 0) ? 0f : 0.35f + (float)rng.NextDouble() * 0.45f;
+                float h = (i < 3) ? 0.35f : 0.18f;
+                chunk.transform.localPosition = new Vector3(Mathf.Cos(a) * r, h, Mathf.Sin(a) * r);
+                chunk.transform.localEulerAngles = new Vector3(rng.Next(45), rng.Next(360), rng.Next(45));
+                float sc = 0.38f + (float)rng.NextDouble() * 0.28f;
+                chunk.transform.localScale = new Vector3(sc * 1.2f, sc * 0.8f, sc);
+                chunk.GetComponent<MeshRenderer>().sharedMaterial = mat;
+            }
+        }
+
+        static void CreateIngotStack(string name, Vector3 pos, Material ingotMat, Material palletMat, Transform parent)
+        {
+            var root = new GameObject(name).transform;
+            root.SetParent(parent, false);
+            root.position = pos;
+            var basePlate = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            basePlate.name = "IronPallet";
+            Object.DestroyImmediate(basePlate.GetComponent<Collider>());
+            basePlate.transform.SetParent(root, false);
+            basePlate.transform.localPosition = new Vector3(0f, 0.06f, 0f);
+            basePlate.transform.localScale = new Vector3(1.5f, 0.12f, 1.1f);
+            basePlate.GetComponent<MeshRenderer>().sharedMaterial = palletMat;
+
+            for (int row = 0; row < 2; row++)
+            for (int i = 0; i < 4; i++)
+            {
+                var bar = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                bar.name = $"Ingot_{row}_{i}";
+                Object.DestroyImmediate(bar.GetComponent<Collider>());
+                bar.transform.SetParent(root, false);
+                bar.transform.localPosition = new Vector3(-0.42f + i * 0.28f, 0.19f + row * 0.14f, 0f);
+                bar.transform.localScale = new Vector3(0.22f, 0.12f, 0.65f);
+                bar.GetComponent<MeshRenderer>().sharedMaterial = ingotMat;
+            }
         }
     }
 }
