@@ -101,7 +101,8 @@ namespace Morsoul.Engine
 
                 foreach (var c in graph.Conclusions)
                     if (DeductionEngine.IsConclusionUnlocked(graph, c,
-                            cert.SupportByConclusion[c.id], links))
+                            cert.SupportByConclusion[c.id], links,
+                            cert.PropagatedClueValues, cert.SolutionPropagatedClueValues, cert.InventedLinkCount))
                         unlockingMasks[c.id].Add(mask);
             }
 

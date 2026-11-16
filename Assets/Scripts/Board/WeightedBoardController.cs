@@ -190,8 +190,9 @@ namespace Morsoul.Board
             {
                 _session = null;
                 _graph = null;
+                var errors = data.evidenceGraph.Validate();
                 Debug.LogError($"WeightedBoardController: evidence graph for '{data.title}' " +
-                               "failed validation — check the asset's errors.", this);
+                               $"failed validation — {(errors != null ? string.Join(" | ", errors) : "unknown error")}", this);
                 return false;
             }
 

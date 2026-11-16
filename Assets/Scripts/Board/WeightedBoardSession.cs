@@ -148,7 +148,8 @@ namespace Morsoul.Board
                          cert.SupportByConclusion.TryGetValue(conclusionId, out double v)
                 ? v
                 : 0.0;
-            return DeductionEngine.IsConclusionUnlocked(Graph, conclusion, phi, State.Links);
+            return DeductionEngine.IsConclusionUnlocked(Graph, conclusion, phi, State.Links,
+                cert.PropagatedClueValues, cert.SolutionPropagatedClueValues, cert.InventedLinkCount);
         }
 
         /// <summary>All currently selectable conclusions (locked ones hidden).</summary>
