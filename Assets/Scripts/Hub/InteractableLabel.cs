@@ -22,9 +22,13 @@ namespace Morsoul.Hub
         {
             if (string.IsNullOrEmpty(text)) return;
             if (PauseMenuController.AnyModalOrPauseOpen) return;
-            if (_context == null) _context = FindAnyObjectByType<HubContext>();
-            if (_context != null && _context.UiBlocked) return;
-            if (gameObject.name == "NameLabel" && !IsSignificantOwner()) return;
+            bool isEmote = gameObject.name.IndexOf("Emote", StringComparison.OrdinalIgnoreCase) >= 0;
+            if (!isEmote)
+            {
+                if (_context == null) _context = FindAnyObjectByType<HubContext>();
+                if (_context != null && _context.UiBlocked) return;
+                if (gameObject.name == "NameLabel" && !IsSignificantOwner()) return;
+            }
             var cam = Camera.main;
             if (cam == null) return;
             var screen = cam.WorldToScreenPoint(transform.position);

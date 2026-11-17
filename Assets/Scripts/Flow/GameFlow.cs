@@ -283,6 +283,15 @@ namespace Morsoul.Flow
                 else Debug.LogWarning("GameFlow: this 2D encounter requires an accepted investigation.", this);
                 return;
             }
+            if (Application.isPlaying && caseData.caseId == 5 && weightedBoard != null)
+            {
+                board?.Close();
+                if (board != null) board.handleBoardHotkey = false;
+                var report = gameObject.GetComponent<Case5ReportController>()
+                             ?? gameObject.AddComponent<Case5ReportController>();
+                report.Begin(this, weightedBoard, dialogue);
+                return;
+            }
             bool weighted = weightedBoard != null && caseData.evidenceGraph != null
                             && weightedBoard.SetCase(caseData,
                                 core != null
@@ -954,7 +963,7 @@ namespace Morsoul.Flow
             return evidence;
         }
 
-        void RequestEnding(int ending)
+        internal void RequestEnding(int ending)
         {
             _endingRequested = true;
             _lastEnding = ending;
