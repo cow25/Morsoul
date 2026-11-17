@@ -84,10 +84,33 @@ public class InspectManager : MonoBehaviour
 
     public void OpenInspect(ClueNode clue)
     {
-        if (_isInspecting) return;
+        if (clue == null || _isInspecting) return;
+
+        if (Morsoul.Core.CoreRuntime.Instance is { } core && core.Session != null && !string.IsNullOrEmpty(clue.id))
+        {
+            var clueData = core.ResolveClue(clue.id);
+            if (clueData != null)
+            {
+                var log = clueData.type == Morsoul.Data.ClueType.Latent
+                    ? core.ResolveCase(clueData.caseId)?.latentLog
+                    : null;
+                if (!Morsoul.Core.ClueAcquisition.CanAcquire(clueData, core.Session, log, out _))
+                {
+                    return;
+                }
+            }
+        }
+
         _isInspecting = true;
 
-        _inspectDescription.text = $"{clue.defaultDescription}\n\n[Drag] Rotate   |   [Scroll] Zoom   |   [ESC] Close";
+        bool newlyRegistered = !DiaryManager.Instance.HasClue(clue.id);
+        if (newlyRegistered)
+        {
+            DiaryManager.Instance.AddClue(clue);
+            clue.Collect();
+        }
+        string toast = newlyRegistered ? "Registered to Journal\n\n" : string.Empty;
+        _inspectDescription.text = $"{toast}{clue.defaultDescription}\n\n[Drag] Rotate   |   [Scroll] Zoom   |   [ESC] Close";
         _inspectRoot.style.display = DisplayStyle.Flex;
 
         Time.timeScale = 0f; 
@@ -118,12 +141,6 @@ public class InspectManager : MonoBehaviour
         if (_inspectLight != null) _inspectLight.enabled = true;
 
         inspectCamera.transform.position = inspectOrigin.position + new Vector3(0, 0, _currentZoom);
-
-        if (!DiaryManager.Instance.HasClue(clue.id))
-        {
-            DiaryManager.Instance.AddClue(clue);
-            clue.Collect();
-        }
     }
 
     public void CloseInspect()

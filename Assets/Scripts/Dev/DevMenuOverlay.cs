@@ -491,6 +491,7 @@ namespace Morsoul.Dev
             if (GUILayout.Button("Mark closed now", GUILayout.Width(140)))
                 f.MarkClosed(System.DateTime.UtcNow);
             GUILayout.EndHorizontal();
+            core.ZeroScanFocusCost = GUILayout.Toggle(core.ZeroScanFocusCost, "Zero Scan Energy Cost (Dev)", GUILayout.Width(220));
         }
 
         // --- Hub ----------------------------------------------------------------

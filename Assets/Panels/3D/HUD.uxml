@@ -51,17 +51,7 @@
                 </ui:VisualElement>
                 <ui:VisualElement style="flex-direction: column;" picking-mode="Ignore">
                     <ui:Label text="Aether Sight" class="hud-text-large" picking-mode="Ignore"/>
-                    <ui:Label name="AetherFocusCostText" text="Focus Energy Cost: 30" class="hud-text-small" picking-mode="Ignore"/>
-                </ui:VisualElement>
-            </ui:VisualElement>
-            <ui:VisualElement name="EmotionEchoRow" class="hud-ability-row" style="display: none;" picking-mode="Ignore">
-                <ui:Label text="2" class="keycap hud-ability-key" picking-mode="Ignore"/>
-                <ui:VisualElement class="hud-ability-frame" picking-mode="Ignore">
-                    <ui:VisualElement name="EmotionEchoIcon" class="icon-box icon-emotion-echo" picking-mode="Ignore"/>
-                </ui:VisualElement>
-                <ui:VisualElement style="flex-direction: column;" picking-mode="Ignore">
-                    <ui:Label text="Emotion Echo" class="hud-text-large" picking-mode="Ignore"/>
-                    <ui:Label name="EmotionFocusCostText" text="Focus Energy Cost: 0" class="hud-text-small" picking-mode="Ignore"/>
+                    <ui:Label name="AetherFocusCostText" text="OFF — Press [1]" class="hud-text-small" picking-mode="Ignore"/>
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>

@@ -48,7 +48,7 @@ MonoBehaviour:
       responseDialogue: I was busy oiling the rope pulleys! A cunning sorcerer could whisper upward through the floor flues without making a sound!
       emotionAura: 0
     - verb: 2
-      evidence: {fileID: 11400000, guid: c5d2410d6e80a1f48ab03dbdab423988, type: 2}
+      evidence: {fileID: 11400000, guid: 017b3743fbb65574c980ad380c2c8601, type: 2}
       breaksComposureSegment: 1
       strikeCost: 0
       isCoreContradiction: 0

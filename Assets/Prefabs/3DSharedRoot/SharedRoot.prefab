@@ -868,7 +868,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: '::'
   maxFocus: 100
   currentFocus: 100
-  focusDrainPerSecond: 0
+  focusDrainPerSecond: 10
   scanTransitionSpeed: 4
 --- !u!114 &8090697344354145123
 MonoBehaviour:

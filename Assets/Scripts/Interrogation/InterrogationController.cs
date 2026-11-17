@@ -45,6 +45,9 @@ namespace Morsoul.Interrogation
         /// </summary>
         public event Action StateChanged;
 
+        /// <summary>Optional external gate checked in Update (e.g. while Journal is open over Interrogation).</summary>
+        public Func<bool> InputBlocked;
+
         const string BannerErrorClass = "banner--error";
         const string BannerInfoClass = "banner--info";
         const string SegmentBrokenClass = "segment--broken";
@@ -128,6 +131,7 @@ namespace Morsoul.Interrogation
         {
             var keyboard = Keyboard.current;
             if (keyboard == null || !_isOpen) return;
+            if (InputBlocked != null && InputBlocked()) return;
 
             if (keyboard.escapeKey.wasPressedThisFrame)
             {

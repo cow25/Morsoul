@@ -37,16 +37,37 @@ public class InteractionProbe : MonoBehaviour
         {
             if (hit.collider.TryGetComponent(out ClueNode clue))
             {
+                _scanController ??= FindAnyObjectByType<ScanController>();
+                var core = Morsoul.Core.CoreRuntime.Instance;
+                var session = core?.Session;
+
                 bool needsAether = clue.requiredTool == ClueNode.Tool.AetherSight || clue.requiredTool == ClueNode.Tool.Both;
-                var session = Morsoul.Core.CoreRuntime.Instance?.Session;
                 bool hasAether = session != null && session.Tools.Contains(Morsoul.Data.Tool.AetherSight);
-                if (needsAether && !hasAether)
+                bool aetherActive = hasAether && _scanController != null && _scanController.IsAetherSightActive;
+                bool needsGolemEye = clue.requiredTool == ClueNode.Tool.GolemEye || clue.requiredTool == ClueNode.Tool.Both;
+                bool hasGolemEye = session != null && session.Tools.Contains(Morsoul.Data.Tool.GolemEye);
+                if ((needsAether && !aetherActive) || (needsGolemEye && !hasGolemEye))
                 {
                     HUDManager.Instance?.HideInteractionPrompt();
                     return;
                 }
 
-                if (_scanController == null) _scanController = FindAnyObjectByType<ScanController>();
+                if (core != null && session != null && !string.IsNullOrEmpty(clue.id))
+                {
+                    var clueData = core.ResolveClue(clue.id);
+                    if (clueData != null)
+                    {
+                        var log = clueData.type == Morsoul.Data.ClueType.Latent
+                            ? core.ResolveCase(clueData.caseId)?.latentLog
+                            : null;
+                        if (!Morsoul.Core.ClueAcquisition.CanAcquire(clueData, session, log, out _))
+                        {
+                            HUDManager.Instance?.HideInteractionPrompt();
+                            return;
+                        }
+                    }
+                }
+
                 bool isScanning = _scanController != null && _scanController.IsScanning;
                 if (!clue.IsScanned && !isScanning)
                 {
@@ -74,6 +95,12 @@ public class InteractionProbe : MonoBehaviour
                 {
                     interactable.Interact();
                 }
+            }
+            else if (hit.collider.TryGetComponent(out RestSpot3D restSpot))
+            {
+                if (Keyboard.current != null && Keyboard.current.eKey.isPressed)
+                    restSpot.TickRest(Time.deltaTime);
+                HUDManager.Instance.ShowInteractionPrompt(restSpot.GetPromptAction(), restSpot.GetPromptDescription());
             }
         }
         else if (HUDManager.Instance != null)

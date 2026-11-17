@@ -92,7 +92,7 @@ namespace Morsoul.Tests
             AssertUxmlElements("Assets/Panels/3D/HUD.uxml",
                 "HUD-Root", "UserNameLabel", "EscKeyButton", "FocusValueLabel", "FocusBarFill",
                 "ObjectivePanel", "ActiveGoalTitle", "ObjectiveLabel", "CaseLabel",
-                "GolemEyeRow", "AetherSightRow", "EmotionEchoRow", "DeskKeyButton", "BoardKeyButton",
+                "GolemEyeRow", "AetherSightRow", "DeskKeyButton", "BoardKeyButton",
                 "InteractionContainer", "InteractionText", "ItemDescriptionText");
 
             AssertUxmlElements("Assets/HubHud.uxml",

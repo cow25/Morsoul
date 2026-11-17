@@ -903,15 +903,36 @@ namespace Morsoul.Editor
                 "Copper control wiring corroded into slag. Golem Eye confirms the same synthetic mana solvent from Case 1 and Case 3.",
                 new Vector3(0f, 0.55f, 8.0f), new Vector3(1.8f, 1.2f, 1.4f), clues, conduit, useGroundEmbers: true);
 
-            // C3_04: Pre-Cataclysm Sub-Lab Blast Door (reinforced titanium-alloy door swung aside at z=12)
+            // C3_04: Pre-Cataclysm Sub-Lab Blast Door (closed across z=12 doorway, bound by runic seal)
             PlaceProp(Lpd + "03_Doors/SM_LPD_Door_DoorFrameStone_01.prefab", env, new Vector3(0f, 0f, 12f), Vector3.zero, Vector3.one);
             var blastDoor = (GameObject)PrefabUtility.InstantiatePrefab(ih.blastDoorPrefab, clues);
             blastDoor.name = "SubLabBlastDoorMesh";
-            blastDoor.transform.position = new Vector3(-0.75f, 0f, 12.1f);
-            blastDoor.transform.eulerAngles = new Vector3(0f, -75f, 0f);
+            blastDoor.transform.position = new Vector3(-0.75f, 0f, 12f);
+            blastDoor.transform.eulerAngles = Vector3.zero;
             CreateClueNode("C3_SubLabBlastDoor", "C3_04", ClueNode.Kind.Physical, ClueNode.Tool.None, ClueNode.State.Revealed,
-                "Massive pre-cataclysm blast door forced open from outside to breach the engineering bay.",
-                new Vector3(-0.75f, 1.2f, 12.1f), new Vector3(1.8f, 2.4f, 1.4f), clues, blastDoor, useGroundEmbers: true);
+                "Massive pre-cataclysm blast door sealed shut across the sub-lab threshold.",
+                new Vector3(-0.75f, 1.2f, 11.65f), new Vector3(1.2f, 2.2f, 0.25f), clues, blastDoor, useGroundEmbers: true);
+
+            // Runic seal blocking the z=12 doorway until revealed with [1] Aether Sight
+            var sealGo = new GameObject("SubLabBlastDoorSeal");
+            sealGo.layer = InteractableLayer;
+            sealGo.transform.SetParent(clues, false);
+            sealGo.transform.position = new Vector3(0f, 1.5f, 12f);
+            var sealCol = sealGo.AddComponent<BoxCollider>();
+            sealCol.size = new Vector3(3.0f, 3.0f, 0.4f);
+            sealCol.isTrigger = false;
+            var sealLock = sealGo.AddComponent<LockableInteractable>();
+            sealLock.requiredItemId = "";
+            sealLock.requireBoardSolved = false;
+            sealLock.requireAetherSight = true;
+            sealLock.boardCaseId = 4;
+            sealLock.lockedPromptAction = "[Locked] Runic Blast Door Seal";
+            sealLock.unlockedPromptAction = "[L-Click] Dispel Runic Seal & Open Door";
+            sealLock.lockedDescription = "An ancient runic seal binds the blast door. Activate [1] Aether Sight to reveal and dispel it.";
+            sealLock.unlockedDescription = "Runic seal revealed by Aether Sight. Dispel the barrier to enter the Pre-Cataclysm Sub-Lab.";
+            sealLock.onInteractSuccess ??= new UnityEngine.Events.UnityEvent();
+            UnityEventTools.AddBoolPersistentListener(sealLock.onInteractSuccess, sealGo.SetActive, false);
+            UnityEventTools.AddBoolPersistentListener(sealLock.onInteractSuccess, blastDoor.SetActive, false);
 
             // L4_04: Ancient Primary Terminal inside sub-lab (z=18.5) — concealed until AetherSight+GolemEye (yellow embers)
             var terminal = PlaceProp(Dfk + "Furnitures/dfk_desk_02.prefab", clues, new Vector3(0f, 0f, 18.5f), Vector3.zero, Vector3.one);

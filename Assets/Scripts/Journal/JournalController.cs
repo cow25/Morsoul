@@ -80,17 +80,22 @@ namespace Morsoul.Journal
         Label _detailType;
         Label _detailDesc;
         readonly Button[] _tabButtons = new Button[4];
+        readonly List<(Button card, Action activate)> _cards = new List<(Button, Action)>();
 
         // Interaction state.
         bool _isOpen;
         JournalTab _activeTab = JournalTab.Physical;
         ClueData _detailClue;
+        int _selectedIndex = -1;
         float _previousTimeScale = 1f;
+        CursorLockMode _previousCursorLockState = CursorLockMode.Locked;
+        bool _previousCursorVisible;
         int _uiVersion;
         Func<bool> _openBlocker;
         Func<bool> _pauseBlocker;
 
         public bool IsOpen => _isOpen;
+        public int LastClosedFrame { get; private set; } = -1;
         public JournalTab ActiveTab => _activeTab;
 
         void OnEnable()
@@ -98,7 +103,7 @@ namespace Morsoul.Journal
             _panelRenderer = GetComponent<PanelRenderer>();
             if (_panelRenderer != null)
             {
-                _panelRenderer.sortingOrder = 40;
+                _panelRenderer.sortingOrder = 75;
                 _panelRenderer.RegisterUIReloadCallback(OnUIReload);
             }
             if (journal != null) journal.ClueRegistered += OnClueRegistered;
@@ -163,6 +168,11 @@ namespace Morsoul.Journal
             else if (keyboard.digit2Key.wasPressedThisFrame) SelectTab(JournalTab.Testimony);
             else if (keyboard.digit3Key.wasPressedThisFrame) SelectTab(JournalTab.Logs);
             else if (keyboard.digit4Key.wasPressedThisFrame) SelectTab(JournalTab.Dossier);
+            else if (keyboard.qKey.wasPressedThisFrame) CycleTab(-1);
+            else if (keyboard.eKey.wasPressedThisFrame) CycleTab(1);
+            else if (keyboard.wKey.wasPressedThisFrame || keyboard.upArrowKey.wasPressedThisFrame) MoveSelection(-1);
+            else if (keyboard.sKey.wasPressedThisFrame || keyboard.downArrowKey.wasPressedThisFrame) MoveSelection(1);
+            else if (keyboard.enterKey.wasPressedThisFrame || keyboard.numpadEnterKey.wasPressedThisFrame) ActivateSelected();
         }
 
         /// <summary>Swaps the clue store (e.g. when entering a new hub scene).</summary>
@@ -222,6 +232,8 @@ namespace Morsoul.Journal
             if (_root != null) _root.style.display = DisplayStyle.Flex;
             if (manageCursor)
             {
+                _previousCursorLockState = UnityEngine.Cursor.lockState;
+                _previousCursorVisible = UnityEngine.Cursor.visible;
                 UnityEngine.Cursor.lockState = CursorLockMode.None;
                 UnityEngine.Cursor.visible = true;
             }
@@ -231,17 +243,18 @@ namespace Morsoul.Journal
         {
             if (!_isOpen) return;
             _isOpen = false;
+            LastClosedFrame = Time.frameCount;
             PauseMenuController.NotifyExternalModalClosed();
             Time.timeScale = _previousTimeScale;
             if (_root != null) _root.style.display = DisplayStyle.None;
             if (manageCursor)
             {
-                UnityEngine.Cursor.lockState = CursorLockMode.Locked;
-                UnityEngine.Cursor.visible = false;
+                UnityEngine.Cursor.lockState = _previousCursorLockState;
+                UnityEngine.Cursor.visible = _previousCursorVisible;
             }
         }
 
-        /// <summary>Switches the active tab (also bound to keys 1-4 and the header buttons).</summary>
+        /// <summary>Switches the active tab (also bound to keys 1-4, Q/E, and the header buttons).</summary>
         public void SelectTab(JournalTab tab)
         {
             if (_activeTab == tab) return;
@@ -249,6 +262,48 @@ namespace Morsoul.Journal
             RefreshTabButtons();
             RebuildBody();
             ClearDetail();
+        }
+
+        void CycleTab(int delta)
+        {
+            int count = 4;
+            int next = ((int)_activeTab + delta + count) % count;
+            SelectTab((JournalTab)next);
+        }
+
+        void MoveSelection(int delta)
+        {
+            if (_cards.Count == 0) return;
+            int next = _selectedIndex < 0
+                ? (delta >= 0 ? 0 : _cards.Count - 1)
+                : (_selectedIndex + delta + _cards.Count) % _cards.Count;
+            SelectCard(next);
+        }
+
+        void ActivateSelected()
+        {
+            if (_cards.Count == 0) return;
+            if (_selectedIndex < 0) SelectCard(0);
+            else _cards[_selectedIndex].activate?.Invoke();
+        }
+
+        void RegisterCard(Button card, Action activate)
+        {
+            int idx = _cards.Count;
+            _cards.Add((card, activate));
+            card.RegisterCallback<ClickEvent>(_ => SelectCard(idx));
+        }
+
+        void SelectCard(int idx)
+        {
+            if (idx < 0 || idx >= _cards.Count) return;
+            if (_selectedIndex >= 0 && _selectedIndex < _cards.Count)
+                _cards[_selectedIndex].card.RemoveFromClassList("journal-card--selected");
+            _selectedIndex = idx;
+            var (card, activate) = _cards[_selectedIndex];
+            card.AddToClassList("journal-card--selected");
+            card.Focus();
+            activate?.Invoke();
         }
 
         void OnClueRegistered(ClueData clue)
@@ -264,6 +319,8 @@ namespace Morsoul.Journal
         {
             if (_tabBody == null) return;
             _tabBody.Clear();
+            _cards.Clear();
+            _selectedIndex = -1;
             switch (_activeTab)
             {
                 case JournalTab.Physical:
@@ -307,7 +364,7 @@ namespace Morsoul.Journal
                 card.Add(preview);
 
                 var captured = clue;
-                card.RegisterCallback<ClickEvent>(_ => ShowClueDetail(captured));
+                RegisterCard(card, () => ShowClueDetail(captured));
                 _tabBody.Add(card);
             }
         }
@@ -369,8 +426,7 @@ namespace Morsoul.Journal
                 var capturedTitle = title;
                 var capturedLocation = location;
                 var capturedBody = body;
-                card.RegisterCallback<ClickEvent>(_ =>
-                    ShowTextDetail(capturedTitle, capturedLocation, capturedBody));
+                RegisterCard(card, () => ShowTextDetail(capturedTitle, capturedLocation, capturedBody));
                 _tabBody.Add(card);
             }
         }
@@ -409,8 +465,7 @@ namespace Morsoul.Journal
                 card.Add(notes);
 
                 var captured = entry;
-                card.RegisterCallback<ClickEvent>(_ =>
-                    ShowTextDetail(captured.suspectName, captured.role, captured.notes));
+                RegisterCard(card, () => ShowTextDetail(captured.suspectName, captured.role, captured.notes));
                 _tabBody.Add(card);
             }
             if (shown == 0) AddEmptyLabel("No suspects on record.");

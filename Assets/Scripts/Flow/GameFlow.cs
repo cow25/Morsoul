@@ -262,12 +262,15 @@ namespace Morsoul.Flow
             if (journalPanel != null)
                 journalPanel.CanOpen = () =>
                     !_endingRequested &&
-                    !(interrogation != null && interrogation.IsOpen) &&
                     !(weightedBoard != null && weightedBoard.IsOpen) &&
                     !(board != null && board.IsOpen) &&
                     !(resolution != null && resolution.IsVisible) &&
                     !(cutscenePlayer != null && cutscenePlayer.IsPlaying) &&
                     !(dialogue != null && dialogue.IsPlaying);
+            if (interrogation != null)
+                interrogation.InputBlocked = () =>
+                    (journalPanel != null && (journalPanel.IsOpen || journalPanel.LastClosedFrame == Time.frameCount)) ||
+                    Core.PauseMenuController.AnyModalOrPauseOpen;
             if (encounter)
             {
                 weightedBoard?.Close();

@@ -71,6 +71,9 @@ namespace Morsoul.Board
 
         bool _isOpen;
         string _pendingSource;
+        string _dragLinkSource;
+        Vector2 _dragLinkPointer;
+        VisualElement _linkLayer;
         string _hintTargetClue;
         string _bannerText;
         string _bannerHint;
@@ -502,6 +505,14 @@ namespace Morsoul.Board
             if (_canvas == null) return;
             _canvas.Clear();
             _nodes.Clear();
+            _linkLayer = new VisualElement { pickingMode = PickingMode.Ignore };
+            _linkLayer.style.position = Position.Absolute;
+            _linkLayer.style.left = 0;
+            _linkLayer.style.top = 0;
+            _linkLayer.style.right = 0;
+            _linkLayer.style.bottom = 0;
+            _linkLayer.generateVisualContent += OnGenerateLinkVisuals;
+            _canvas.Add(_linkLayer);
             if (_session == null) return;
 
             // Build a shuffled pool of jittered grid slots for any unpositioned clues
@@ -561,18 +572,36 @@ namespace Morsoul.Board
             Vector2 dragStart = default;
             Vector2 nodeStart = default;
             bool dragging = false;
+            bool linking = false;
 
             node.RegisterCallback<PointerDownEvent>(evt =>
             {
+                if (evt.button == 1 || (evt.button == 0 && evt.shiftKey))
+                {
+                    linking = true;
+                    _dragLinkSource = clueId;
+                    _dragLinkPointer = _canvas != null ? _canvas.WorldToLocal(evt.position) : (Vector2)evt.position;
+                    node.CapturePointer(evt.pointerId);
+                    _linkLayer?.MarkDirtyRepaint();
+                    evt.StopPropagation();
+                    return;
+                }
                 if (evt.button != 0) return;
                 dragStart = evt.position;
                 nodeStart = new Vector2(node.resolvedStyle.left, node.resolvedStyle.top);
                 dragging = false;
+                linking = false;
                 node.CapturePointer(evt.pointerId);
             });
             node.RegisterCallback<PointerMoveEvent>(evt =>
             {
                 if (!node.HasPointerCapture(evt.pointerId)) return;
+                if (linking)
+                {
+                    _dragLinkPointer = _canvas != null ? _canvas.WorldToLocal(evt.position) : (Vector2)evt.position;
+                    _linkLayer?.MarkDirtyRepaint();
+                    return;
+                }
                 var delta = (Vector2)evt.position - dragStart;
                 if (!dragging && delta.magnitude > 4f) dragging = true;
                 if (dragging)
@@ -580,15 +609,29 @@ namespace Morsoul.Board
                     var p = nodeStart + delta;
                     node.style.left = Mathf.Max(0, p.x);
                     node.style.top = Mathf.Max(0, p.y);
+                    _linkLayer?.MarkDirtyRepaint();
                 }
             });
             node.RegisterCallback<PointerUpEvent>(evt =>
             {
-                if (evt.button != 0 || !node.HasPointerCapture(evt.pointerId)) return;
+                if (!node.HasPointerCapture(evt.pointerId)) return;
+                if (linking)
+                {
+                    node.ReleasePointer(evt.pointerId);
+                    linking = false;
+                    _dragLinkSource = null;
+                    string targetId = FindNodeAt(evt.position);
+                    if (targetId != null && targetId != clueId)
+                        DrawLink(clueId, targetId);
+                    _linkLayer?.MarkDirtyRepaint();
+                    return;
+                }
+                if (evt.button != 0) return;
                 node.ReleasePointer(evt.pointerId);
                 if (dragging)
                 {
                     _session.SetNodePosition(clueId, node.resolvedStyle.left, node.resolvedStyle.top);
+                    _linkLayer?.MarkDirtyRepaint();
                     StateChanged?.Invoke();
                 }
                 else
@@ -657,6 +700,87 @@ namespace Morsoul.Board
                 });
                 _linkList.Add(row);
             }
+            _linkLayer?.MarkDirtyRepaint();
+        }
+
+        string FindNodeAt(Vector2 worldPos)
+        {
+            foreach (var pair in _nodes)
+                if (pair.Value.worldBound.Contains(worldPos))
+                    return pair.Key;
+            return null;
+        }
+
+        static Vector2 NodeCenter(VisualElement node)
+        {
+            float w = node.resolvedStyle.width > 0 ? node.resolvedStyle.width : 150f;
+            float h = node.resolvedStyle.height > 0 ? node.resolvedStyle.height : 56f;
+            return new Vector2(node.resolvedStyle.left + w * 0.5f, node.resolvedStyle.top + h * 0.5f);
+        }
+
+        void OnGenerateLinkVisuals(MeshGenerationContext ctx)
+        {
+            if (_session == null) return;
+            var painter = ctx.painter2D;
+            painter.lineWidth = 2.5f;
+            painter.lineCap = LineCap.Round;
+            foreach (var link in _session.State.Links)
+            {
+                if (!_nodes.TryGetValue(link.sourceId, out var srcNode) ||
+                    !_nodes.TryGetValue(link.targetId, out var dstNode)) continue;
+                Color col = (_graph != null && _graph.IsSolutionLink(link))
+                    ? new Color(0.18f, 0.55f, 0.28f, 0.9f)
+                    : ((_graph != null && !_graph.IsAuthoredLink(link))
+                        ? new Color(0.75f, 0.25f, 0.2f, 0.85f)
+                        : new Color(0.28f, 0.2f, 0.14f, 0.85f));
+                DrawArrow(painter, NodeCenter(srcNode), NodeCenter(dstNode), col, true);
+            }
+            if (_dragLinkSource != null && _nodes.TryGetValue(_dragLinkSource, out var dragSrc))
+                DrawArrow(painter, NodeCenter(dragSrc), _dragLinkPointer, new Color(0.2f, 0.55f, 0.75f, 0.9f), false);
+        }
+
+        static void DrawArrow(Painter2D painter, Vector2 from, Vector2 to, Color color, bool trimEnd)
+        {
+            Vector2 dir = to - from;
+            float len = dir.magnitude;
+            if (len < 6f) return;
+            dir /= len;
+            Vector2 end = trimEnd ? to - dir * Mathf.Min(36f, len * 0.3f) : to;
+
+            painter.strokeColor = color;
+            painter.BeginPath();
+            painter.MoveTo(from);
+            painter.LineTo(end);
+            painter.Stroke();
+
+            Vector2 perp = new Vector2(-dir.y, dir.x);
+            const float headLen = 11f;
+            const float headHalf = 5.5f;
+            painter.fillColor = color;
+            painter.BeginPath();
+            painter.MoveTo(end);
+            painter.LineTo(end - dir * headLen + perp * headHalf);
+            painter.LineTo(end - dir * headLen - perp * headHalf);
+            painter.ClosePath();
+            painter.Fill();
+        }
+
+        /// <summary>Arranges all board nodes into a clean grid and updates link arrows.</summary>
+        public void AutoAlignNodes()
+        {
+            if (_session == null) return;
+            int idx = 0;
+            foreach (var pair in _nodes)
+            {
+                float x = 24f + (idx % 3) * 200f;
+                float y = 24f + (idx / 3) * 116f;
+                pair.Value.style.left = x;
+                pair.Value.style.top = y;
+                _session.SetNodePosition(pair.Key, x, y);
+                idx++;
+            }
+            _linkLayer?.MarkDirtyRepaint();
+            StateChanged?.Invoke();
         }
 
         void RefreshConclusions()
@@ -776,6 +900,8 @@ namespace Morsoul.Board
 
             _root = root.Q<VisualElement>("WeightedBoard-Root");
             _canvas = root.Q<VisualElement>("NodeCanvas");
+            if (_canvas != null)
+                _canvas.RegisterCallback<GeometryChangedEvent>(_ => _linkLayer?.MarkDirtyRepaint());
             _linkList = root.Q<VisualElement>("LinkList");
             _conclusionList = root.Q<VisualElement>("ConclusionList");
             _feedbackBanner = root.Q<VisualElement>("FeedbackBanner");
@@ -800,6 +926,9 @@ namespace Morsoul.Board
             var closeBoardButton = root.Q<Button>("CloseBoardButton");
             if (closeBoardButton != null)
                 closeBoardButton.RegisterCallback<ClickEvent>(_ => Close());
+            var autoAlignButton = root.Q<Button>("AutoAlignButton");
+            if (autoAlignButton != null)
+                autoAlignButton.RegisterCallback<ClickEvent>(_ => AutoAlignNodes());
 
             if (_root != null)
                 _root.style.display = _isOpen ? DisplayStyle.Flex : DisplayStyle.None;

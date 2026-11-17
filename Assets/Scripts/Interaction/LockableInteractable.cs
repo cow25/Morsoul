@@ -1,3 +1,4 @@
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -12,6 +13,9 @@ public class LockableInteractable : MonoBehaviour
     public string unlockedPromptAction = "[L-Click] Unlock & Exit Ruins";
     public bool requireBoardSolved = false;
     public int boardCaseId = 0;
+    public bool requireAetherSight = false;
+
+    private ScanController _scanController;
 
     [Header("Events")]
     [Tooltip("What happens when the player interacts successfully?")]
@@ -34,9 +38,17 @@ public class LockableInteractable : MonoBehaviour
         return board != null && board.BoardSolved;
     }
 
+    public bool IsAetherSealRevealed()
+    {
+        if (!requireAetherSight) return true;
+        if (Morsoul.Core.CoreRuntime.Instance?.Session?.Tools.Contains(Morsoul.Data.Tool.AetherSight) != true)
+            return false;
+        return (_scanController ??= FindAnyObjectByType<ScanController>())?.IsAetherSightActive == true;
+    }
+
     public bool IsLocked()
     {
-        return !HasRequiredItem() || !IsBoardReady();
+        return !HasRequiredItem() || !IsBoardReady() || !IsAetherSealRevealed();
     }
 
     public string GetPromptAction()
@@ -71,7 +83,8 @@ public class LockableInteractable : MonoBehaviour
             }
             Debug.Log("Door Unlocked! Triggering event...");
             onInteractSuccess?.Invoke();
-            requiredItemId = ""; 
+            requiredItemId = "";
+            requireAetherSight = false;
         }
         else
         {

@@ -34,7 +34,7 @@
                 <ui:VisualElement name="EvidenceGrid" style="flex-direction: row; flex-wrap: wrap;"/>
             </ui:ScrollView>
             <ui:Label name="Banner" text="" class="banner" style="display: none; flex-shrink: 0; white-space: normal; margin-top: 10px;"/>
-            <ui:Label name="FooterLabel" text="[1/2/3] Stance | [E] advance | [ESC] forfeit" class="hud-text-small" style="margin-top: auto; flex-shrink: 0;"/>
+            <ui:Label name="FooterLabel" text="[1/2/3] Stance | [E] advance | [G] Journal | [ESC] forfeit" class="hud-text-small" style="margin-top: auto; flex-shrink: 0;"/>
         </ui:VisualElement>
         <ui:VisualElement name="EndOverlay" class="end-overlay" style="display: none;">
             <ui:Label name="EndLabel" text="" class="end-label"/>
