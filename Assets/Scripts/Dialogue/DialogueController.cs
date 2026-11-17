@@ -55,7 +55,6 @@ namespace Morsoul.Dialogue
         bool _isPlaying;
         int _uiVersion;
         float _fadeOpacity;
-        bool _suppressPortrait;
         readonly List<string> _pages = new List<string>();
         int _pageIndex;
         DialogueNodeData _renderedNode;
@@ -163,7 +162,6 @@ namespace Morsoul.Dialogue
             _runner.DialogueEnded += OnRunnerEnded;
 
             _isPlaying = true;
-            _suppressPortrait = false;
             if (_root != null) _root.style.display = DisplayStyle.Flex;
             if (manageCursor)
             {
@@ -207,7 +205,6 @@ namespace Morsoul.Dialogue
         {
             StopRunner();
             _isPlaying = true;
-            _suppressPortrait = true;
             if (_root != null) _root.style.display = DisplayStyle.Flex;
             if (manageCursor)
             {
@@ -246,7 +243,6 @@ namespace Morsoul.Dialogue
             if (_nameInputContainer == null || _nameInputField == null) return false;
             NamePromptActive = true;
             _isPlaying = true;
-            _suppressPortrait = true;
             if (_root != null) _root.style.display = DisplayStyle.Flex;
             if (manageCursor)
             {
@@ -427,41 +423,11 @@ namespace Morsoul.Dialogue
         void RenderPortrait(DialogueNodeData node)
         {
             if (_portrait == null) return;
-            bool isThought = !string.IsNullOrEmpty(node.speakerName) &&
-                             node.speakerName.IndexOf("(thought)", StringComparison.OrdinalIgnoreCase) >= 0;
-            if (_suppressPortrait || isThought)
-            {
-                _portrait.style.display = DisplayStyle.None;
-                _portrait.style.backgroundImage = default;
-                return;
-            }
             var sprite = node.speakerPortrait != null
                 ? node.speakerPortrait
                 : FindSpeakerPortrait(node.speakerName);
-            if (sprite != null)
-            {
-                _portrait.style.display = DisplayStyle.Flex;
-                _portrait.style.backgroundImage = new StyleBackground(sprite);
-                return;
-            }
-            var tex = LoadConceptPortrait(node.speakerName);
-            _portrait.style.display = tex != null ? DisplayStyle.Flex : DisplayStyle.None;
-            _portrait.style.backgroundImage = tex != null ? new StyleBackground(tex) : default;
-        }
-
-        static Texture2D LoadConceptPortrait(string speakerName)
-        {
-            if (string.IsNullOrEmpty(speakerName)) return null;
-            string key = null;
-            if (speakerName.IndexOf("Eliza", StringComparison.OrdinalIgnoreCase) >= 0) key = "HalfEliza";
-            else if (speakerName.IndexOf("Golem", StringComparison.OrdinalIgnoreCase) >= 0) key = "HalfGolem";
-            else if (speakerName.IndexOf("Ovan", StringComparison.OrdinalIgnoreCase) >= 0) key = "HalfOvan";
-            else if (speakerName.IndexOf("Ignatius", StringComparison.OrdinalIgnoreCase) >= 0) key = "HalfIgnatius";
-            else if (speakerName.IndexOf("Accord", StringComparison.OrdinalIgnoreCase) >= 0) key = "HalfAccord";
-            else if (speakerName.IndexOf("Vane", StringComparison.OrdinalIgnoreCase) >= 0) key = "HalfVane";
-            else if (speakerName.IndexOf("Harlan", StringComparison.OrdinalIgnoreCase) >= 0) key = "HalfHarlan";
-            else if (speakerName.IndexOf("Overseer", StringComparison.OrdinalIgnoreCase) >= 0) key = "HalfGrandOverseer";
-            return key != null ? Resources.Load<Texture2D>($"Portraits/{key}") : null;
+            _portrait.style.display = sprite != null ? DisplayStyle.Flex : DisplayStyle.None;
+            _portrait.style.backgroundImage = sprite != null ? new StyleBackground(sprite) : default;
         }
 
         Sprite FindSpeakerPortrait(string speakerName)

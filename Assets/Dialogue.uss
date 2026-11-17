@@ -15,14 +15,9 @@
 .dialogue-portrait {
     width: 240px;
     height: 240px;
-    margin-bottom: -14px;
+    margin-bottom: -6px;
     -unity-background-scale-mode: scale-to-fit;
     background-color: transparent;
-    border-width: 0;
-}
-
-.dialogue-portrait--crystal {
-    -unity-background-image-tint-color: rgb(185, 245, 255);
 }
 
 .dialogue-box-wrapper {
