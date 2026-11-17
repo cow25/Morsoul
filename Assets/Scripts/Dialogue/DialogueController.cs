@@ -54,6 +54,9 @@ namespace Morsoul.Dialogue
         bool _isPlaying;
         int _uiVersion;
         float _fadeOpacity;
+        readonly List<string> _pages = new List<string>();
+        int _pageIndex;
+        DialogueNodeData _renderedNode;
 
         public bool IsPlaying => _isPlaying;
         /// <summary>True while the name-entry prompt is visible.</summary>
@@ -101,7 +104,15 @@ namespace Morsoul.Dialogue
             }
             if (!_isPlaying || _runner == null) return;
 
-            if (_runner.HasOptions)
+            if (_pageIndex < _pages.Count - 1)
+            {
+                if (keyboard.eKey.wasPressedThisFrame)
+                {
+                    _pageIndex++;
+                    ApplyCurrentPage();
+                }
+            }
+            else if (_runner.HasOptions)
             {
                 if (keyboard.digit1Key.wasPressedThisFrame) TryChoose(0);
                 else if (keyboard.digit2Key.wasPressedThisFrame) TryChoose(1);
@@ -327,17 +338,25 @@ namespace Morsoul.Dialogue
         void RenderNode(DialogueNodeData node)
         {
             if (node == null) return;
+            _renderedNode = node;
             if (_speakerLabel != null) _speakerLabel.text = node.speakerName ?? "";
-            if (_dialogueText != null)
-            {
-                _dialogueText.text = _runner != null
-                    ? _runner.SubstituteName(node.text)
-                    : (node.text ?? "").Replace(DialogueRunner.PlayerNameToken, playerName ?? "");
-            }
+            string fullText = _runner != null
+                ? _runner.SubstituteName(node.text)
+                : (node.text ?? "").Replace(DialogueRunner.PlayerNameToken, playerName ?? "");
+            PaginateText(fullText, _pages, 115);
+            _pageIndex = 0;
             RenderPortrait(node);
+            ApplyCurrentPage();
+        }
 
+        void ApplyCurrentPage()
+        {
+            if (_dialogueText != null)
+                _dialogueText.text = _pageIndex < _pages.Count ? _pages[_pageIndex] : "";
+
+            bool isLastPage = _pageIndex >= _pages.Count - 1;
             var options = _runner != null ? _runner.CurrentOptions : null;
-            int count = options != null ? options.Count : 0;
+            int count = isLastPage && options != null ? options.Count : 0;
             for (int i = 0; i < _optionButtons.Length; i++)
             {
                 var button = _optionButtons[i];
@@ -349,9 +368,49 @@ namespace Morsoul.Dialogue
             if (_optionsContainer != null)
                 _optionsContainer.style.display = count > 0 ? DisplayStyle.Flex : DisplayStyle.None;
             if (_continueHint != null)
-                _continueHint.style.display = _runner != null && count == 0 && !NamePromptActive
+                _continueHint.style.display = _runner != null && !NamePromptActive && (!isLastPage || count == 0)
                     ? DisplayStyle.Flex
                     : DisplayStyle.None;
+        }
+
+        static void PaginateText(string text, List<string> pages, int maxChars)
+        {
+            pages.Clear();
+            string remaining = (text ?? "").Trim();
+            if (remaining.Length == 0)
+            {
+                pages.Add("");
+                return;
+            }
+            while (remaining.Length > maxChars)
+            {
+                int split = FindSplitIndex(remaining, maxChars);
+                pages.Add(remaining.Substring(0, split).TrimEnd());
+                remaining = remaining.Substring(split).TrimStart();
+            }
+            if (remaining.Length > 0) pages.Add(remaining);
+        }
+
+        static int FindSplitIndex(string s, int maxChars)
+        {
+            int limit = Mathf.Min(s.Length, maxChars);
+            int newline = s.LastIndexOf('\n', limit - 1);
+            if (newline > 20) return newline + 1;
+
+            int bestSentence = -1;
+            for (int i = limit - 1; i >= 24; i--)
+            {
+                char c = s[i];
+                if ((c == '.' || c == '!' || c == '?') && (i + 1 >= s.Length || char.IsWhiteSpace(s[i + 1])))
+                {
+                    bestSentence = i + 1;
+                    break;
+                }
+            }
+            if (bestSentence > 0) return bestSentence;
+
+            int space = s.LastIndexOf(' ', limit - 1);
+            return space > 20 ? space + 1 : limit;
         }
 
         void RenderPortrait(DialogueNodeData node)

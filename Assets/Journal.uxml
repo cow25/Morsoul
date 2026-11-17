@@ -11,7 +11,7 @@
             <ui:VisualElement name="JournalPanel" class="journal-panel">
                 <ui:VisualElement name="BookPagesRow" class="journal-pages-row">
                     <ui:VisualElement name="LeftPage" class="journal-page journal-page-left">
-                        <ui:ScrollView name="TabBody" class="journal-tab-body"/>
+                        <ui:VisualElement name="TabBody" class="journal-tab-body"/>
                     </ui:VisualElement>
                     <ui:VisualElement name="RightPage" class="journal-page journal-page-right">
                         <ui:VisualElement name="HeaderRow" class="journal-header-row">
@@ -19,7 +19,7 @@
                             <ui:Label name="JournalType" text="Case Record" class="journal-type"/>
                         </ui:VisualElement>
                         <ui:Label name="JournalDesc" text="Inspect collected physical evidence, witness testimonies, decoded runic logs, and NPC dossiers." class="journal-desc" style="white-space: normal;"/>
-                        <ui:Label name="JournalFooterHint" text="[1-4] Switch Tabs   |   [G] or [ESC] Close Diary" class="journal-footer-hint"/>
+                        <ui:Label name="JournalFooterHint" text="[1-4] or [Q/E] Tabs  |  [W/S] Select  |  [G] or [ESC] Close" class="journal-footer-hint" style="white-space: normal;"/>
                     </ui:VisualElement>
                 </ui:VisualElement>
             </ui:VisualElement>

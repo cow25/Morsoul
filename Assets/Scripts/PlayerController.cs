@@ -33,6 +33,17 @@ public class PlayerController : MonoBehaviour
         Cursor.visible = false;
 
         currentMoveSpeed = WalkSpeed;
+
+        var session = Morsoul.Core.CoreRuntime.Instance?.Session;
+        string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+        if (session != null && session.HasPlayerPosition &&
+            session.CurrentSceneMode == Morsoul.Core.SceneMode.Mode3D &&
+            session.CurrentSceneId == sceneName)
+        {
+            characterController.enabled = false;
+            transform.position = session.PlayerPosition;
+            characterController.enabled = true;
+        }
     }
 
     // Update is called once per frame
@@ -88,6 +99,11 @@ public class PlayerController : MonoBehaviour
         moveDirection.z = horizontalMovement.z;
 
         characterController.Move(moveDirection * Time.deltaTime);
+        Morsoul.Core.CoreRuntime.Instance?.Session?.SetPlayerContext(
+            Morsoul.Core.SceneMode.Mode3D,
+            UnityEngine.SceneManagement.SceneManager.GetActiveScene().name,
+            transform.position,
+            Morsoul.Core.PlayerFacing2D.Down);
     }
 
     private void HandleLooking(Vector2 mouseDelta)

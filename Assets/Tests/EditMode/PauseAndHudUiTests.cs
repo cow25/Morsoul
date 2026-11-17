@@ -102,9 +102,9 @@ namespace Morsoul.Tests
                 "FooterLabel");
 
             AssertUxmlElements("Assets/PauseMenu.uxml",
-                "PauseMenu-Root", "DossierSurname", "DossierName", "DossierDob", "DossierCasesSolved",
-                "DossierSex", "DossierSpecies", "ReputationLevelLabel", "ReputationBarFill", "ReputationPointsLabel",
-                "DossierDateIssued", "DossierTitle", "PauseStatusBanner",
+                "PauseMenu-Root", "DossierName", "DossierSpecies", "DossierActiveCase", "DossierCasesSolved",
+                "FocusLevelLabel", "FocusBarFill", "FocusPointsLabel",
+                "DossierCluesLogged", "DossierRunicLogs", "DossierTitle", "PauseStatusBanner",
                 "ActionsPage", "SaveStateButton", "SettingsButton", "QuitGameButton", "ResumeButton",
                 "QuitConfirmRow", "ReturnTitleButton", "ExitAppButton", "QuitCancelButton",
                 "SettingsPage", "MasterFill", "MusicFill", "SfxFill",

@@ -43,7 +43,9 @@ namespace Morsoul.Hub
             // stamps Mode3D and the deduction board's CanUse gate reads it.
             // Stamping Mode2D unconditionally here would close the board in
             // investigation stand-ins (e.g. the vault placeholder).
-            SceneMode mode = session != null ? session.CurrentSceneMode : SceneMode.Mode2D;
+            SceneMode mode = (sceneName.StartsWith("Hub_") || sceneName.StartsWith("Prologue_"))
+                ? SceneMode.Mode2D
+                : (session != null ? session.CurrentSceneMode : SceneMode.Mode2D);
 
             // A gate that named a destination spawn (entryId) wins over both
             // resume and default spawn — doors deposit you at their doorway.

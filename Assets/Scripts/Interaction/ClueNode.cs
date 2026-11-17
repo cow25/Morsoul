@@ -20,6 +20,19 @@ public class ClueNode : MonoBehaviour
 
     public bool IsScanned { get; private set; }
 
+    private void Start()
+    {
+        if (string.IsNullOrEmpty(id)) return;
+        bool alreadyCollected =
+            (DiaryManager.Instance != null && DiaryManager.Instance.HasClue(id)) ||
+            Morsoul.Core.CoreRuntime.Instance?.Session?.HasClue(id) == true;
+        if (!alreadyCollected) return;
+
+        IsScanned = true;
+        state = State.Collected;
+        if (kind == Kind.Item) gameObject.SetActive(false);
+    }
+
     public void MarkScanned()
     {
         IsScanned = true;

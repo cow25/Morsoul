@@ -6,5 +6,5 @@
     top: 0;
     right: 0;
     bottom: 0;
-    -unity-font-definition: url("project://database/Assets/Fonts/Middleearth.ttf");
+    -unity-font-definition: url("project://database/Assets/Fonts/EBGaramond.ttf");
 }

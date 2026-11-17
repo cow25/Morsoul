@@ -83,6 +83,22 @@ namespace Morsoul.Interrogation
             return FirstPressMove(phase)?.emotionAura ?? Aura.None;
         }
 
+        /// <summary>
+        /// Returns the authored Emotion Echo aura for the current phase when unlocked,
+        /// or infers Amber (contradictable lie) / Violet (concealed motive) from valid moves.
+        /// </summary>
+        public Aura InferEffectiveAura()
+        {
+            var phase = CurrentPhase;
+            if (!EmotionEchoUnlocked || phase == null) return Aura.None;
+            var explicitAura = FirstPressMove(phase)?.emotionAura ?? Aura.None;
+            if (explicitAura != Aura.None) return explicitAura;
+            var moves = phase.validMoves ?? Array.Empty<MoveData>();
+            if (moves.Any(m => m != null && m.verb == Verb.Contradict)) return Aura.Amber;
+            if (moves.Any(m => m != null && m.verb == Verb.PresentEvidence)) return Aura.Violet;
+            return Aura.None;
+        }
+
         public MoveResult Press(string keyword)
         {
             EnsureInProgress();

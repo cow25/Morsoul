@@ -116,7 +116,6 @@ public class HUDManager : MonoBehaviour
         _focusValueLabel = root.Q<Label>("FocusValueLabel");
         _focusBarFill = root.Q<VisualElement>("FocusBarFill");
         _focusCostText = root.Q<Label>("FocusCostText");
-        if (_focusCostText != null) _focusCostText.text = $"Focus Energy Cost: {_cachedFocusCost}";
 
         _objectivePanel = root.Q<VisualElement>("ObjectivePanel");
         _activeGoalTitle = root.Q<Label>("ActiveGoalTitle");
@@ -247,8 +246,6 @@ public class HUDManager : MonoBehaviour
     public void UpdateFocusCost(float cost)
     {
         _cachedFocusCost = cost;
-        if (_focusCostText != null)
-            _focusCostText.text = $"Focus Energy Cost: {cost}";
     }
 
     public void ShowInteractionPrompt(string actionText, string description)

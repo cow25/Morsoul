@@ -39,9 +39,8 @@
                 <ui:VisualElement class="hud-ability-frame" picking-mode="Ignore">
                     <ui:VisualElement name="GolemEyeIcon" class="icon-box icon-golem-eye" picking-mode="Ignore"/>
                 </ui:VisualElement>
-                <ui:VisualElement style="flex-direction: column;" picking-mode="Ignore">
+                <ui:VisualElement style="flex-direction: column; justify-content: center;" picking-mode="Ignore">
                     <ui:Label text="Golem Eye" class="hud-text-large" picking-mode="Ignore"/>
-                    <ui:Label name="FocusCostText" text="Focus Energy Cost: 15" class="hud-text-small" picking-mode="Ignore"/>
                 </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement name="AetherSightRow" class="hud-ability-row" style="display: none;" picking-mode="Ignore">

@@ -1,5 +1,5 @@
 .interrogation-root {
-    -unity-font-definition: url("project://database/Assets/Fonts/Middleearth.ttf");
+    -unity-font-definition: url("project://database/Assets/Fonts/EBGaramond.ttf");
 }
 
 .hud-text-large {
@@ -206,16 +206,18 @@
 }
 
 .evidence-card {
-    width: 170px;
-    height: 96px;
+    width: 192px;
+    min-height: 108px;
+    height: auto;
     flex-shrink: 0;
     flex-direction: column;
     background-image: url("project://database/Assets/Art/UI/Flat/UI_Flat_Frame01a.png");
     -unity-background-image-tint-color: rgb(242, 230, 204);
     background-color: transparent;
     border-width: 0;
-    padding: 10px;
-    margin: 4px;
+    padding: 10px 12px;
+    margin: 5px;
+    overflow: hidden;
 }
 
 .evidence-card:hover {
@@ -226,12 +228,13 @@
 }
 
 .evidence-card-name {
-    font-size: 13px;
+    font-size: 12px;
     color: rgb(28, 20, 14);
     text-shadow: 0 0 0 transparent;
     -unity-font-style: bold;
     white-space: normal;
     flex-grow: 1;
+    margin-bottom: 6px;
 }
 
 .evidence-card-type {
@@ -239,6 +242,7 @@
     color: rgb(116, 76, 30);
     -unity-text-align: middle-right;
     flex-shrink: 0;
+    margin-top: auto;
 }
 
 /* --- Banner / hints ------------------------------------------------------- */

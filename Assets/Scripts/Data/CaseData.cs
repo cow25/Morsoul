@@ -211,8 +211,8 @@ namespace Morsoul.Data
                         }
                         if (move.emotionAura == Aura.Crimson)
                             errors.Add($"Phase {i} move uses Aura.Crimson, which is cinematic-only.");
-                        if (caseId < 3 && move.emotionAura != Aura.None)
-                            errors.Add($"Phase {i} move uses aura {move.emotionAura}; Emotion Echo auras are not available before caseId 3.");
+                        if (caseId < 2 && move.emotionAura != Aura.None)
+                            errors.Add($"Phase {i} move uses aura {move.emotionAura}; Emotion Echo auras are not available before caseId 2.");
                         if (move.evidence != null && !allowedEvidence.Contains(move.evidence)
                             && !(evidenceGraph != null && move.evidence is PremiseData))
                             errors.Add($"Phase {i} move evidence '{move.evidence.id}' is not a clue of this case or a premise it produces.");

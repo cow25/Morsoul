@@ -1,5 +1,5 @@
 .resolution-root {
-    -unity-font-definition: url("project://database/Assets/Fonts/Middleearth.ttf");
+    -unity-font-definition: url("project://database/Assets/Fonts/EBGaramond.ttf");
 }
 
 .resolution-backdrop {
@@ -25,11 +25,14 @@
 }
 
 .resolution-header {
+    -unity-font-definition: url("project://database/Assets/Fonts/Middleearth.ttf");
     font-size: 26px;
     -unity-font-style: bold;
     color: white;
     text-shadow: 1px 1px 3px black;
     -unity-text-align: middle-center;
+    white-space: normal;
+    max-width: 100%;
 }
 
 .resolution-grade {
