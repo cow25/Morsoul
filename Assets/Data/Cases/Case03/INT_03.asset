@@ -72,7 +72,7 @@ MonoBehaviour:
       strikeCost: 0
       isCoreContradiction: 0
       responseDialogue: Nature dies to make way for the strong! This woodland decay is localized, irrelevant, and forgotten by tomorrow's sunrise!
-      emotionAura: 1
+      emotionAura: 2
     - verb: 1
       evidence: {fileID: 11400000, guid: 8fe96e21dca72614abfb619ab90c3d83, type: 2}
       breaksComposureSegment: 1

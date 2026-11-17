@@ -120,16 +120,14 @@ namespace Morsoul.Core
         VisualElement _quitConfirmRow;
 
         // Dossier labels
-        Label _surnameLabel;
         Label _nameLabel;
-        Label _dobLabel;
-        Label _casesSolvedLabel;
-        Label _sexLabel;
         Label _speciesLabel;
-        Label _repLevelLabel;
-        Label _repPointsLabel;
-        VisualElement _repBarFill;
-        Label _dateIssuedLabel;
+        Label _activeCaseLabel;
+        Label _casesSolvedLabel;
+        Label _focusPointsLabel;
+        VisualElement _focusBarFill;
+        Label _cluesLoggedLabel;
+        Label _runicLogsLabel;
         Label _titleLabel;
         Label _statusBanner;
 
@@ -322,54 +320,51 @@ namespace Morsoul.Core
 
         public void RefreshDossier()
         {
-            var session = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session : null;
-            string rawName = session != null ? (session.PlayerName ?? "").Trim() : "";
+            var core = CoreRuntime.Instance;
+            var session = core != null ? core.Session : null;
+            var focus = core != null ? core.Focus : null;
 
-            string firstName = "John";
-            string surname = "Doe";
-            if (!string.IsNullOrEmpty(rawName))
-            {
-                int sp = rawName.IndexOf(' ');
-                if (sp > 0)
-                {
-                    firstName = rawName.Substring(0, sp);
-                    surname = rawName.Substring(sp + 1).Trim();
-                }
-                else
-                {
-                    firstName = rawName;
-                    surname = "Construct";
-                }
-            }
+            string playerName = session != null && !string.IsNullOrWhiteSpace(session.PlayerName)
+                ? session.PlayerName.Trim()
+                : "Golem";
 
             int solved = 0;
             if (session != null)
             {
-                solved = Math.Max(session.Grades.Count, Math.Max(0, session.CurrentCase - 1));
-                if (session.PrologueCompleted && solved == 0 && session.CurrentCase >= 1)
-                    solved = 1;
+                foreach (var kv in session.Grades)
+                {
+                    if (kv.Value != Morsoul.Data.Grade.Ungraded) solved++;
+                }
             }
 
-            int repLevel = 10 + solved * 5;
-            int repPoints = 120 + solved * 65;
-            int repMax = 400;
-            if (repPoints > repMax) repPoints = repMax;
+            string activeCase = "Prologue";
+            if (session != null && session.CurrentCase >= 1)
+            {
+                var caseData = core.ResolveCase(session.CurrentCase);
+                activeCase = caseData != null && !string.IsNullOrEmpty(caseData.title)
+                    ? $"Case {session.CurrentCase}"
+                    : $"Case {session.CurrentCase}";
+            }
+
+            float focusPct = focus != null ? focus.Percent : FocusTuning.FocusMax;
+            float focusMax = focus != null ? focus.Maximum : FocusTuning.FocusMax;
+            float focusRatio = focusMax > 0f ? Mathf.Clamp01(focusPct / focusMax) : 1f;
+            int cluesCount = session != null ? session.ClueIds.Count : 0;
+            int logsCount = session != null ? session.RunicLogCount : 0;
 
             string rankTitle = solved >= 3 ? "Master Detective"
                 : solved >= 2 ? "Senior Investigator"
                 : solved >= 1 ? "Case Investigator"
                 : "Initiated Construct";
 
-            if (_surnameLabel != null) _surnameLabel.text = surname;
-            if (_nameLabel != null) _nameLabel.text = firstName;
-            if (_dobLabel != null) _dobLabel.text = "09-09-2009";
-            if (_casesSolvedLabel != null) _casesSolvedLabel.text = solved.ToString();
-            if (_sexLabel != null) _sexLabel.text = "N/A";
+            if (_nameLabel != null) _nameLabel.text = playerName;
             if (_speciesLabel != null) _speciesLabel.text = "Golem";
-            if (_repLevelLabel != null) _repLevelLabel.text = $"Reputation Level : {repLevel}";
-            if (_repPointsLabel != null) _repPointsLabel.text = $"{repPoints}/{repMax}";
-            if (_repBarFill != null) _repBarFill.style.width = Length.Percent((float)repPoints / repMax * 100f);
-            if (_dateIssuedLabel != null) _dateIssuedLabel.text = "27-10-2026";
+            if (_activeCaseLabel != null) _activeCaseLabel.text = activeCase;
+            if (_casesSolvedLabel != null) _casesSolvedLabel.text = solved.ToString();
+            if (_focusPointsLabel != null) _focusPointsLabel.text = $"{Mathf.RoundToInt(focusPct)}/{Mathf.RoundToInt(focusMax)}";
+            if (_focusBarFill != null) _focusBarFill.style.width = Length.Percent(focusRatio * 100f);
+            if (_cluesLoggedLabel != null) _cluesLoggedLabel.text = cluesCount.ToString();
+            if (_runicLogsLabel != null) _runicLogsLabel.text = $"{logsCount}/4";
             if (_titleLabel != null) _titleLabel.text = rankTitle;
         }
 
@@ -433,16 +428,14 @@ namespace Morsoul.Core
             _settingsPage = root.Q<VisualElement>("SettingsPage");
             _quitConfirmRow = root.Q<VisualElement>("QuitConfirmRow");
 
-            _surnameLabel = root.Q<Label>("DossierSurname");
             _nameLabel = root.Q<Label>("DossierName");
-            _dobLabel = root.Q<Label>("DossierDob");
-            _casesSolvedLabel = root.Q<Label>("DossierCasesSolved");
-            _sexLabel = root.Q<Label>("DossierSex");
             _speciesLabel = root.Q<Label>("DossierSpecies");
-            _repLevelLabel = root.Q<Label>("ReputationLevelLabel");
-            _repPointsLabel = root.Q<Label>("ReputationPointsLabel");
-            _repBarFill = root.Q<VisualElement>("ReputationBarFill");
-            _dateIssuedLabel = root.Q<Label>("DossierDateIssued");
+            _activeCaseLabel = root.Q<Label>("DossierActiveCase");
+            _casesSolvedLabel = root.Q<Label>("DossierCasesSolved");
+            _focusPointsLabel = root.Q<Label>("FocusPointsLabel");
+            _focusBarFill = root.Q<VisualElement>("FocusBarFill");
+            _cluesLoggedLabel = root.Q<Label>("DossierCluesLogged");
+            _runicLogsLabel = root.Q<Label>("DossierRunicLogs");
             _titleLabel = root.Q<Label>("DossierTitle");
             _statusBanner = root.Q<Label>("PauseStatusBanner");
 

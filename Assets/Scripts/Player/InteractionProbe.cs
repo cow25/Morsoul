@@ -10,12 +10,15 @@ public class InteractionProbe : MonoBehaviour
     [Tooltip("Drag your MainCamera here")]
     [SerializeField] private Camera playerCamera; 
 
+    private ScanController _scanController;
+
     private void Start()
     {
         if (playerCamera == null)
         {
             playerCamera = Camera.main;
         }
+        _scanController = FindAnyObjectByType<ScanController>();
     }
 
     private void Update()
@@ -34,34 +37,51 @@ public class InteractionProbe : MonoBehaviour
         {
             if (hit.collider.TryGetComponent(out ClueNode clue))
             {
+                _scanController ??= FindAnyObjectByType<ScanController>();
+                var core = Morsoul.Core.CoreRuntime.Instance;
+                var session = core?.Session;
+
                 bool needsAether = clue.requiredTool == ClueNode.Tool.AetherSight || clue.requiredTool == ClueNode.Tool.Both;
-                var session = Morsoul.Core.CoreRuntime.Instance?.Session;
                 bool hasAether = session != null && session.Tools.Contains(Morsoul.Data.Tool.AetherSight);
-                if (needsAether && !hasAether)
+                bool aetherActive = hasAether && _scanController != null && _scanController.IsAetherSightActive;
+                bool needsGolemEye = clue.requiredTool == ClueNode.Tool.GolemEye || clue.requiredTool == ClueNode.Tool.Both;
+                bool hasGolemEye = session != null && session.Tools.Contains(Morsoul.Data.Tool.GolemEye);
+                if ((needsAether && !aetherActive) || (needsGolemEye && !hasGolemEye))
                 {
-                    HUDManager.Instance.ShowInteractionPrompt("[Locked] Dormant Runic Inscription", "Requires Aether Sight (unlocked after Case 4) to decipher.");
+                    HUDManager.Instance?.HideInteractionPrompt();
                     return;
                 }
 
-                bool needsScan = clue.requiredTool == ClueNode.Tool.GolemEye && clue.state == ClueNode.State.Hidden;
-                if (needsScan)
+                if (core != null && session != null && !string.IsNullOrEmpty(clue.id))
                 {
-                    HUDManager.Instance.ShowInteractionPrompt("[Hold Tab / L-Click] Scan with Golem Eye", "Unreadable modern script. Scan with Golem Eye [Tab] to decipher.");
-                    if (Mouse.current.leftButton.wasPressedThisFrame)
+                    var clueData = core.ResolveClue(clue.id);
+                    if (clueData != null)
                     {
-                        var scanner = FindAnyObjectByType<ScanController>();
-                        if (scanner != null) scanner.TriggerAccidentalScan(1.8f);
-                        clue.state = ClueNode.State.Revealed;
-                        InspectManager.Instance.OpenInspect(clue);
+                        var log = clueData.type == Morsoul.Data.ClueType.Latent
+                            ? core.ResolveCase(clueData.caseId)?.latentLog
+                            : null;
+                        if (!Morsoul.Core.ClueAcquisition.CanAcquire(clueData, session, log, out _))
+                        {
+                            HUDManager.Instance?.HideInteractionPrompt();
+                            return;
+                        }
                     }
                 }
-                else
+
+                bool isScanning = _scanController != null && _scanController.IsScanning;
+                if (!clue.IsScanned && !isScanning)
                 {
-                    HUDManager.Instance.ShowInteractionPrompt("[L-Click] Inspect Clue", clue.defaultDescription);
-                    if (Mouse.current.leftButton.wasPressedThisFrame)
-                    {
-                        InspectManager.Instance.OpenInspect(clue);
-                    }
+                    HUDManager.Instance?.HideInteractionPrompt();
+                    return;
+                }
+
+                if (!clue.IsScanned && isScanning)
+                    clue.MarkScanned();
+
+                HUDManager.Instance.ShowInteractionPrompt("[L-Click] Inspect Clue", clue.defaultDescription);
+                if (Mouse.current.leftButton.wasPressedThisFrame)
+                {
+                    InspectManager.Instance.OpenInspect(clue);
                 }
             }
             else if (hit.collider.TryGetComponent(out DialogueTrigger dialogue))
@@ -75,6 +95,12 @@ public class InteractionProbe : MonoBehaviour
                 {
                     interactable.Interact();
                 }
+            }
+            else if (hit.collider.TryGetComponent(out RestSpot3D restSpot))
+            {
+                if (Keyboard.current != null && Keyboard.current.eKey.isPressed)
+                    restSpot.TickRest(Time.deltaTime);
+                HUDManager.Instance.ShowInteractionPrompt(restSpot.GetPromptAction(), restSpot.GetPromptDescription());
             }
         }
         else if (HUDManager.Instance != null)

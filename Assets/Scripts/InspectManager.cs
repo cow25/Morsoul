@@ -30,10 +30,13 @@ public class InspectManager : MonoBehaviour
     private MonoBehaviour _playerController; 
     private ScanController _scanController;
     private Light _inspectLight; // NEW: Store the light reference
+    private System.Func<bool> _modalBlocker;
 
     private void Awake() 
     {
         Instance = this;
+        _modalBlocker = () => _isInspecting;
+        Morsoul.Core.PauseMenuController.RegisterExternalModal(_modalBlocker);
         
         // Create the light once and attach it to the Inspect Camera
         GameObject lightObj = new GameObject("InspectLight");
@@ -54,6 +57,21 @@ public class InspectManager : MonoBehaviour
         if (panelRenderer != null) panelRenderer.RegisterUIReloadCallback(OnUIReload);
     }
 
+    private void OnDisable()
+    {
+        if (panelRenderer != null) panelRenderer.UnregisterUIReloadCallback(OnUIReload);
+    }
+
+    private void OnDestroy()
+    {
+        if (_modalBlocker != null)
+        {
+            Morsoul.Core.PauseMenuController.UnregisterExternalModal(_modalBlocker);
+            _modalBlocker = null;
+        }
+        if (Instance == this) Instance = null;
+    }
+
     private void OnUIReload(PanelRenderer renderer, VisualElement root, int version)
     {
         _inspectRoot = root.Q<VisualElement>("InspectRoot");
@@ -66,10 +84,33 @@ public class InspectManager : MonoBehaviour
 
     public void OpenInspect(ClueNode clue)
     {
-        if (_isInspecting) return;
+        if (clue == null || _isInspecting) return;
+
+        if (Morsoul.Core.CoreRuntime.Instance is { } core && core.Session != null && !string.IsNullOrEmpty(clue.id))
+        {
+            var clueData = core.ResolveClue(clue.id);
+            if (clueData != null)
+            {
+                var log = clueData.type == Morsoul.Data.ClueType.Latent
+                    ? core.ResolveCase(clueData.caseId)?.latentLog
+                    : null;
+                if (!Morsoul.Core.ClueAcquisition.CanAcquire(clueData, core.Session, log, out _))
+                {
+                    return;
+                }
+            }
+        }
+
         _isInspecting = true;
 
-        _inspectDescription.text = $"{clue.defaultDescription}\n\n[Drag] Rotate   |   [Scroll] Zoom   |   [ESC] Close";
+        bool newlyRegistered = !DiaryManager.Instance.HasClue(clue.id);
+        if (newlyRegistered)
+        {
+            DiaryManager.Instance.AddClue(clue);
+            clue.Collect();
+        }
+        string toast = newlyRegistered ? "Registered to Journal\n\n" : string.Empty;
+        _inspectDescription.text = $"{toast}{clue.defaultDescription}\n\n[Drag] Rotate   |   [Scroll] Zoom   |   [ESC] Close";
         _inspectRoot.style.display = DisplayStyle.Flex;
 
         Time.timeScale = 0f; 
@@ -85,9 +126,12 @@ public class InspectManager : MonoBehaviour
         Cursor.visible = true;
 
         if (_currentClone != null) Destroy(_currentClone);
-        _currentClone = Instantiate(clue.gameObject, inspectOrigin.position, Quaternion.identity);
+        GameObject source = clue.GetComponentInChildren<MeshRenderer>() != null
+            ? clue.gameObject
+            : (clue.inspectVisual != null ? clue.inspectVisual : FindNearestSiblingVisual(clue));
+        _currentClone = Instantiate(source != null ? source : clue.gameObject, inspectOrigin.position, Quaternion.identity);
         
-        if (_currentClone.TryGetComponent(out Collider col)) Destroy(col);
+        foreach (var col in _currentClone.GetComponentsInChildren<Collider>(true)) Destroy(col);
         if (_currentClone.TryGetComponent(out ClueNode cn)) Destroy(cn);
         if (_currentClone.TryGetComponent(out Rigidbody rb)) Destroy(rb);
 
@@ -97,12 +141,6 @@ public class InspectManager : MonoBehaviour
         if (_inspectLight != null) _inspectLight.enabled = true;
 
         inspectCamera.transform.position = inspectOrigin.position + new Vector3(0, 0, _currentZoom);
-
-        if (!DiaryManager.Instance.HasClue(clue.id))
-        {
-            DiaryManager.Instance.AddClue(clue);
-            clue.Collect();
-        }
     }
 
     public void CloseInspect()
@@ -124,6 +162,7 @@ public class InspectManager : MonoBehaviour
         Cursor.visible = false;
 
         if (_currentClone != null) Destroy(_currentClone);
+        Morsoul.Core.PauseMenuController.NotifyExternalModalClosed();
     }
 
     private void Update()
@@ -152,6 +191,25 @@ public class InspectManager : MonoBehaviour
             _currentZoom = Mathf.Clamp(_currentZoom, maxZoom, minZoom);
             inspectCamera.transform.position = inspectOrigin.position + new Vector3(0, 0, _currentZoom);
         }
+    }
+
+    private static GameObject FindNearestSiblingVisual(ClueNode clue)
+    {
+        if (clue.transform.parent == null) return null;
+        GameObject best = null;
+        float bestDist = 3.0f;
+        foreach (Transform sibling in clue.transform.parent)
+        {
+            if (sibling == clue.transform || sibling.GetComponent<ClueNode>() != null) continue;
+            if (sibling.GetComponentInChildren<MeshRenderer>() == null) continue;
+            float d = Vector3.Distance(sibling.position, clue.transform.position);
+            if (d < bestDist)
+            {
+                bestDist = d;
+                best = sibling.gameObject;
+            }
+        }
+        return best;
     }
 
     private void SetLayerRecursively(GameObject obj, int newLayer)

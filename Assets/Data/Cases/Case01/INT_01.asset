@@ -48,7 +48,7 @@ MonoBehaviour:
       responseDialogue: I lock up strictly at the eighth bell! Any thief with a standard pick-set could slip past the sleepy market watch and force the cylinder!
       emotionAura: 0
     - verb: 2
-      evidence: {fileID: 11400000, guid: d106003ae83c269438ccf6dffda8b50d, type: 2}
+      evidence: {fileID: 11400000, guid: 0066f2bffa0259746805d3019de693ea, type: 2}
       breaksComposureSegment: 1
       strikeCost: 0
       isCoreContradiction: 0

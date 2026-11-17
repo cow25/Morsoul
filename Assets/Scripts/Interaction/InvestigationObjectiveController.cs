@@ -20,6 +20,8 @@ namespace Morsoul.Interaction
         void Awake()
         {
             var core = CoreRuntime.Ensure();
+            if (core.ResolveCase(caseId) is { } caseData && caseData.toolUnlocked != Morsoul.Data.Tool.None)
+                core.Session.UnlockTool(caseData.toolUnlocked);
             if (core.Session.InvestigationCaseId < 0)
                 core.Session.InvestigationCaseId = caseId;
             if (core.Session.CurrentCase < caseId)

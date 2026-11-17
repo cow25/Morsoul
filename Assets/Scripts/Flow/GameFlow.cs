@@ -262,12 +262,15 @@ namespace Morsoul.Flow
             if (journalPanel != null)
                 journalPanel.CanOpen = () =>
                     !_endingRequested &&
-                    !(interrogation != null && interrogation.IsOpen) &&
                     !(weightedBoard != null && weightedBoard.IsOpen) &&
                     !(board != null && board.IsOpen) &&
                     !(resolution != null && resolution.IsVisible) &&
                     !(cutscenePlayer != null && cutscenePlayer.IsPlaying) &&
                     !(dialogue != null && dialogue.IsPlaying);
+            if (interrogation != null)
+                interrogation.InputBlocked = () =>
+                    (journalPanel != null && (journalPanel.IsOpen || journalPanel.LastClosedFrame == Time.frameCount)) ||
+                    Core.PauseMenuController.AnyModalOrPauseOpen;
             if (encounter)
             {
                 weightedBoard?.Close();
@@ -462,10 +465,11 @@ namespace Morsoul.Flow
                 : activeCase != null ? activeCase.caseId : 0;
             // Guided first phase for the tutorial case; Emotion Echo auras
             // follow the actual unlocked tool, not the case index alone.
-            var sessionTools = Core.CoreRuntime.Instance != null
-                ? Core.CoreRuntime.Instance.Session.Tools : null;
-            bool echo = sessionTools != null
-                ? sessionTools.Contains(Tool.EmotionEcho) : caseId >= 3;
+            var coreSession = Core.CoreRuntime.Instance != null
+                ? Core.CoreRuntime.Instance.Session : null;
+            if (caseId >= 2 && coreSession != null && !coreSession.Tools.Contains(Tool.EmotionEcho))
+                coreSession.UnlockTool(Tool.EmotionEcho);
+            bool echo = (coreSession != null && coreSession.Tools.Contains(Tool.EmotionEcho)) || caseId >= 2;
             interrogation.SetInterrogation(data, BuildEvidence(data),
                 guided: caseId == 1, echo: echo);
             _mistrialHandled = false;

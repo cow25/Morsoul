@@ -75,22 +75,31 @@ namespace Morsoul.Journal
 
         // Cached elements (re-queried on every UI reload).
         VisualElement _root;
-        ScrollView _tabBody;
+        VisualElement _tabBody;
         Label _detailTitle;
         Label _detailType;
         Label _detailDesc;
         readonly Button[] _tabButtons = new Button[4];
+        readonly List<(Button card, Action activate)> _cards = new List<(Button, Action)>();
+
+        const int EntriesPerPage = 8;
 
         // Interaction state.
         bool _isOpen;
         JournalTab _activeTab = JournalTab.Physical;
         ClueData _detailClue;
+        int _selectedIndex = -1;
+        int _tocPage = 0;
+        int _tocPageCount = 1;
         float _previousTimeScale = 1f;
+        CursorLockMode _previousCursorLockState = CursorLockMode.Locked;
+        bool _previousCursorVisible;
         int _uiVersion;
         Func<bool> _openBlocker;
         Func<bool> _pauseBlocker;
 
         public bool IsOpen => _isOpen;
+        public int LastClosedFrame { get; private set; } = -1;
         public JournalTab ActiveTab => _activeTab;
 
         void OnEnable()
@@ -98,7 +107,7 @@ namespace Morsoul.Journal
             _panelRenderer = GetComponent<PanelRenderer>();
             if (_panelRenderer != null)
             {
-                _panelRenderer.sortingOrder = 40;
+                _panelRenderer.sortingOrder = 75;
                 _panelRenderer.RegisterUIReloadCallback(OnUIReload);
             }
             if (journal != null) journal.ClueRegistered += OnClueRegistered;
@@ -163,6 +172,13 @@ namespace Morsoul.Journal
             else if (keyboard.digit2Key.wasPressedThisFrame) SelectTab(JournalTab.Testimony);
             else if (keyboard.digit3Key.wasPressedThisFrame) SelectTab(JournalTab.Logs);
             else if (keyboard.digit4Key.wasPressedThisFrame) SelectTab(JournalTab.Dossier);
+            else if (keyboard.qKey.wasPressedThisFrame) CycleTab(-1);
+            else if (keyboard.eKey.wasPressedThisFrame) CycleTab(1);
+            else if (keyboard.wKey.wasPressedThisFrame || keyboard.upArrowKey.wasPressedThisFrame) MoveSelection(-1);
+            else if (keyboard.sKey.wasPressedThisFrame || keyboard.downArrowKey.wasPressedThisFrame) MoveSelection(1);
+            else if (keyboard.aKey.wasPressedThisFrame || keyboard.leftArrowKey.wasPressedThisFrame) ChangeTocPage(-1);
+            else if (keyboard.dKey.wasPressedThisFrame || keyboard.rightArrowKey.wasPressedThisFrame) ChangeTocPage(1);
+            else if (keyboard.enterKey.wasPressedThisFrame || keyboard.numpadEnterKey.wasPressedThisFrame) ActivateSelected();
         }
 
         /// <summary>Swaps the clue store (e.g. when entering a new hub scene).</summary>
@@ -222,6 +238,8 @@ namespace Morsoul.Journal
             if (_root != null) _root.style.display = DisplayStyle.Flex;
             if (manageCursor)
             {
+                _previousCursorLockState = UnityEngine.Cursor.lockState;
+                _previousCursorVisible = UnityEngine.Cursor.visible;
                 UnityEngine.Cursor.lockState = CursorLockMode.None;
                 UnityEngine.Cursor.visible = true;
             }
@@ -231,24 +249,94 @@ namespace Morsoul.Journal
         {
             if (!_isOpen) return;
             _isOpen = false;
+            LastClosedFrame = Time.frameCount;
             PauseMenuController.NotifyExternalModalClosed();
             Time.timeScale = _previousTimeScale;
             if (_root != null) _root.style.display = DisplayStyle.None;
             if (manageCursor)
             {
-                UnityEngine.Cursor.lockState = CursorLockMode.Locked;
-                UnityEngine.Cursor.visible = false;
+                UnityEngine.Cursor.lockState = _previousCursorLockState;
+                UnityEngine.Cursor.visible = _previousCursorVisible;
             }
         }
 
-        /// <summary>Switches the active tab (also bound to keys 1-4 and the header buttons).</summary>
+        /// <summary>Switches the active tab (also bound to keys 1-4, Q/E, and the header buttons).</summary>
         public void SelectTab(JournalTab tab)
         {
             if (_activeTab == tab) return;
             _activeTab = tab;
+            _tocPage = 0;
             RefreshTabButtons();
             RebuildBody();
             ClearDetail();
+        }
+
+        void ChangeTocPage(int delta)
+        {
+            if (_tocPageCount <= 1) return;
+            int next = (_tocPage + delta + _tocPageCount) % _tocPageCount;
+            if (next == _tocPage) return;
+            _tocPage = next;
+            RebuildBody();
+        }
+
+        void CycleTab(int delta)
+        {
+            int count = 4;
+            int next = ((int)_activeTab + delta + count) % count;
+            SelectTab((JournalTab)next);
+        }
+
+        void MoveSelection(int delta)
+        {
+            if (_cards.Count == 0) return;
+            if (_tocPageCount > 1 && _selectedIndex >= 0)
+            {
+                if (delta > 0 && _selectedIndex == _cards.Count - 1)
+                {
+                    _tocPage = (_tocPage + 1) % _tocPageCount;
+                    RebuildBody();
+                    if (_cards.Count > 0) SelectCard(0);
+                    return;
+                }
+                if (delta < 0 && _selectedIndex == 0)
+                {
+                    _tocPage = (_tocPage - 1 + _tocPageCount) % _tocPageCount;
+                    RebuildBody();
+                    if (_cards.Count > 0) SelectCard(_cards.Count - 1);
+                    return;
+                }
+            }
+            int next = _selectedIndex < 0
+                ? (delta >= 0 ? 0 : _cards.Count - 1)
+                : (_selectedIndex + delta + _cards.Count) % _cards.Count;
+            SelectCard(next);
+        }
+
+        void ActivateSelected()
+        {
+            if (_cards.Count == 0) return;
+            if (_selectedIndex < 0) SelectCard(0);
+            else _cards[_selectedIndex].activate?.Invoke();
+        }
+
+        void RegisterCard(Button card, Action activate)
+        {
+            int idx = _cards.Count;
+            _cards.Add((card, activate));
+            card.RegisterCallback<ClickEvent>(_ => SelectCard(idx));
+        }
+
+        void SelectCard(int idx)
+        {
+            if (idx < 0 || idx >= _cards.Count) return;
+            if (_selectedIndex >= 0 && _selectedIndex < _cards.Count)
+                _cards[_selectedIndex].card.RemoveFromClassList("journal-card--selected");
+            _selectedIndex = idx;
+            var (card, activate) = _cards[_selectedIndex];
+            card.AddToClassList("journal-card--selected");
+            card.Focus();
+            activate?.Invoke();
         }
 
         void OnClueRegistered(ClueData clue)
@@ -264,6 +352,11 @@ namespace Morsoul.Journal
         {
             if (_tabBody == null) return;
             _tabBody.Clear();
+            _cards.Clear();
+            _selectedIndex = -1;
+            var tocHeader = new Label("Table of Contents");
+            tocHeader.AddToClassList("journal-toc-header");
+            _tabBody.Add(tocHeader);
             switch (_activeTab)
             {
                 case JournalTab.Physical:
@@ -288,28 +381,13 @@ namespace Morsoul.Journal
             }
 
             var clues = JournalFilter.CluesForTab(journal != null ? journal.Collected : null, _activeTab);
-            if (clues.Count == 0)
-            {
-                AddEmptyLabel("No entries yet.");
-                return;
-            }
+            var entries = new List<(string title, Action activate, bool locked)>(clues.Count);
             foreach (var clue in clues)
             {
-                var card = new Button();
-                card.AddToClassList("journal-card");
-
-                var name = new Label(clue.displayName);
-                name.AddToClassList("journal-card-name");
-                card.Add(name);
-
-                var preview = new Label(JournalFilter.Preview(clue.description));
-                preview.AddToClassList("journal-card-preview");
-                card.Add(preview);
-
                 var captured = clue;
-                card.RegisterCallback<ClickEvent>(_ => ShowClueDetail(captured));
-                _tabBody.Add(card);
+                entries.Add((clue.displayName, () => ShowClueDetail(captured), false));
             }
+            RenderTocEntries(entries, "No entries yet.");
         }
 
         VisualElement BuildDissonanceBanner()
@@ -336,84 +414,85 @@ namespace Morsoul.Journal
 
         void BuildLogList()
         {
-            if (allLogs == null || allLogs.Length == 0)
+            var entries = new List<(string title, Action activate, bool locked)>();
+            if (allLogs != null)
             {
-                AddEmptyLabel("No runic logs recorded.");
-                return;
+                foreach (var log in allLogs)
+                {
+                    if (log == null) continue;
+                    bool collected = JournalFilter.IsLogCollected(log, collectedLogs);
+                    string title = JournalFilter.LogTitle(log);
+                    string location = string.IsNullOrEmpty(log.location) ? "Unknown site" : log.location;
+                    string body = collected ? log.contents : JournalFilter.Mask(log.contents);
+                    var capturedTitle = title;
+                    var capturedLocation = location;
+                    var capturedBody = body;
+                    entries.Add((title, () => ShowTextDetail(capturedTitle, capturedLocation, capturedBody), !collected));
+                }
             }
-            foreach (var log in allLogs)
-            {
-                if (log == null) continue;
-                bool collected = JournalFilter.IsLogCollected(log, collectedLogs);
-                string title = JournalFilter.LogTitle(log);
-                string location = string.IsNullOrEmpty(log.location) ? "Unknown site" : log.location;
-                string body = collected ? log.contents : JournalFilter.Mask(log.contents);
-
-                var card = new Button();
-                card.AddToClassList("journal-card");
-                card.AddToClassList("log-card");
-                if (!collected) card.AddToClassList(LogLockedClass);
-
-                var name = new Label(title);
-                name.AddToClassList("journal-card-name");
-                card.Add(name);
-
-                var meta = new Label(location);
-                meta.AddToClassList("journal-card-meta");
-                card.Add(meta);
-
-                var preview = new Label(collected ? JournalFilter.Preview(body, 140) : body);
-                preview.AddToClassList("journal-card-preview");
-                card.Add(preview);
-
-                var capturedTitle = title;
-                var capturedLocation = location;
-                var capturedBody = body;
-                card.RegisterCallback<ClickEvent>(_ =>
-                    ShowTextDetail(capturedTitle, capturedLocation, capturedBody));
-                _tabBody.Add(card);
-            }
+            RenderTocEntries(entries, "No runic logs recorded.");
         }
 
         void BuildDossierList()
         {
-            if (dossiers == null || dossiers.Length == 0)
+            var entries = new List<(string title, Action activate, bool locked)>();
+            if (dossiers != null)
             {
-                AddEmptyLabel("No suspects on record.");
+                foreach (var entry in dossiers)
+                {
+                    if (entry == null) continue;
+                    if (!JournalFilter.IsDossierVisible(entry.requiresFlag, _flags)) continue;
+                    var captured = entry;
+                    entries.Add((entry.suspectName, () => ShowTextDetail(captured.suspectName, captured.role, captured.notes), false));
+                }
+            }
+            RenderTocEntries(entries, "No suspects on record.");
+        }
+
+        void RenderTocEntries(List<(string title, Action activate, bool locked)> entries, string emptyText)
+        {
+            if (entries.Count == 0)
+            {
+                _tocPage = 0;
+                _tocPageCount = 1;
+                AddEmptyLabel(emptyText);
                 return;
             }
-            int shown = 0;
-            foreach (var entry in dossiers)
+
+            _tocPageCount = Mathf.Max(1, Mathf.CeilToInt(entries.Count / (float)EntriesPerPage));
+            _tocPage = Mathf.Clamp(_tocPage, 0, _tocPageCount - 1);
+
+            int start = _tocPage * EntriesPerPage;
+            int end = Mathf.Min(entries.Count, start + EntriesPerPage);
+            for (int i = start; i < end; i++)
             {
-                if (entry == null) continue;
-                if (!JournalFilter.IsDossierVisible(entry.requiresFlag, _flags)) continue;
-                shown++;
-
-                var card = new Button();
+                var item = entries[i];
+                var card = new Button { text = $"{i + 1}.  {item.title}" };
                 card.AddToClassList("journal-card");
-                card.AddToClassList("dossier-card");
-
-                var name = new Label(entry.suspectName);
-                name.AddToClassList("journal-card-name");
-                card.Add(name);
-
-                if (!string.IsNullOrEmpty(entry.role))
-                {
-                    var role = new Label(entry.role);
-                    role.AddToClassList("journal-card-meta");
-                    card.Add(role);
-                }
-
-                var notes = new Label(JournalFilter.Preview(entry.notes));
-                notes.AddToClassList("journal-card-preview");
-                card.Add(notes);
-
-                var captured = entry;
-                card.RegisterCallback<ClickEvent>(_ =>
-                    ShowTextDetail(captured.suspectName, captured.role, captured.notes));
+                if (item.locked) card.AddToClassList(LogLockedClass);
+                RegisterCard(card, item.activate);
                 _tabBody.Add(card);
             }
-            if (shown == 0) AddEmptyLabel("No suspects on record.");
+
+            if (_tocPageCount > 1)
+            {
+                var pager = new VisualElement();
+                pager.AddToClassList("journal-pager");
+
+                var prevBtn = new Button(() => ChangeTocPage(-1)) { text = "< Prev [A]" };
+                prevBtn.AddToClassList("journal-pager-btn");
+                pager.Add(prevBtn);
+
+                var pageLbl = new Label($"Page {_tocPage + 1} / {_tocPageCount}");
+                pageLbl.AddToClassList("journal-pager-label");
+                pager.Add(pageLbl);
+
+                var nextBtn = new Button(() => ChangeTocPage(1)) { text = "[D] Next >" };
+                nextBtn.AddToClassList("journal-pager-btn");
+                pager.Add(nextBtn);
+
+                _tabBody.Add(pager);
+            }
         }
 
         void AddEmptyLabel(string text)
@@ -469,7 +548,7 @@ namespace Morsoul.Journal
             _uiVersion = version;
 
             _root = root.Q<VisualElement>("Journal-Root");
-            _tabBody = root.Q<ScrollView>("TabBody");
+            _tabBody = root.Q<VisualElement>("TabBody");
             _detailTitle = root.Q<Label>("JournalTitle");
             _detailType = root.Q<Label>("JournalType");
             _detailDesc = root.Q<Label>("JournalDesc");

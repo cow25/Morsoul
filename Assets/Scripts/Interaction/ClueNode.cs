@@ -15,9 +15,35 @@ public class ClueNode : MonoBehaviour
     [Tooltip("Assign a particle system to play when scanned")]
     public ParticleSystem scanParticles;
 
+    [Tooltip("Optional visual object to display in the Inspect UI if this GameObject has no MeshRenderer")]
+    public GameObject inspectVisual;
+
+    public bool IsScanned { get; private set; }
+
+    private void Start()
+    {
+        if (string.IsNullOrEmpty(id)) return;
+        bool alreadyCollected =
+            (DiaryManager.Instance != null && DiaryManager.Instance.HasClue(id)) ||
+            Morsoul.Core.CoreRuntime.Instance?.Session?.HasClue(id) == true;
+        if (!alreadyCollected) return;
+
+        IsScanned = true;
+        state = State.Collected;
+        if (kind == Kind.Item) gameObject.SetActive(false);
+    }
+
+    public void MarkScanned()
+    {
+        IsScanned = true;
+        if (state == State.Hidden)
+            state = State.Revealed;
+    }
+
     public void Collect()
     {
         if (state == State.Collected) return;
+        IsScanned = true;
         state = State.Collected;
         Debug.Log($"Collected Clue: {id}");
 

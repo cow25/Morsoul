@@ -1,5 +1,5 @@
 .dialogue-root {
-    -unity-font-definition: url("project://database/Assets/Fonts/Middleearth.ttf");
+    -unity-font-definition: url("project://database/Assets/Fonts/EBGaramond.ttf");
 }
 
 .dialogue-stage {

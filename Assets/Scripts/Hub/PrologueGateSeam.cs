@@ -114,6 +114,7 @@ namespace Morsoul.Hub
             var core = CoreRuntime.Instance;
             if (core != null)
             {
+                core.Session.PrologueExitLoaded = true;
                 core.Session.SetSceneContext(SceneMode.Mode2D, scene);
                 core.Bus.Publish(new CheckpointRequestedEvent
                 {

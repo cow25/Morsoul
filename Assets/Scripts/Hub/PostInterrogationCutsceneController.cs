@@ -155,6 +155,21 @@ namespace Morsoul.Hub
 
             yield return Play(BuildElizaDebriefDialogue(caseId));
 
+            if (caseId == 1)
+            {
+                core.Session.UnlockTool(Morsoul.Data.Tool.EmotionEcho);
+                core.Session.SetFlag("Crystal.C3.Echo");
+                yield return Play(BuildEmotionEchoAwakeningDialogue());
+                yield return SkillUnlockModal.Show(Morsoul.Data.Tool.EmotionEcho, context);
+            }
+            else if (caseId == 3)
+            {
+                core.Session.UnlockTool(Morsoul.Data.Tool.AetherSight);
+                core.Session.SetFlag("Crystal.C4.AetherSight");
+                yield return Play(BuildAetherSightAwakeningDialogue());
+                yield return SkillUnlockModal.Show(Morsoul.Data.Tool.AetherSight, context);
+            }
+
             yield return FadeTo(dialogue, 1f, 0.5f);
             core.Session.SetFlag(PendingFlag(caseId), false);
             core.Bus.Publish(new CaseCompletedEvent { CaseId = caseId, Ending = 0 });
@@ -437,6 +452,25 @@ namespace Morsoul.Hub
                     ("Golem", "[AETHER SIGHT STATUS]: Dormant First-Age inscriptions across Asterveil are now legible. Recommend reporting to Ovan and reviewing earlier scenes before final descent."),
                     ("Eliza", "And your new eyes might catch what we walked straight past in the Lower Market, the Cathedral, and Whisperwood. Let's check in with the Guild first—then end this."))
             };
+        }
+
+        static DialogueData BuildEmotionEchoAwakeningDialogue()
+        {
+            return MakeChain("D_PostInterrogation_C1_EmotionEcho",
+                ("Golem", "[CHASSIS ALERT]: Dormant subroutine awakening. Observing human distress and sustained proximity to Eliza Astra has unlocked a locked module."),
+                ("Eliza", "Wait—your chest core just pulsed violet! Are you alright, {PlayerName}?"),
+                ("Golem", "[EMOTION ECHO ONLINE]: Scanning nearest baseline (Eliza Astra)... Anomaly. Beneath her focus lies a centuries-old protective resonance toward this unit."),
+                ("Eliza", "(Blinks, resting a hand over her heart) Centuries-old? Why does it feel like I've guarded your back a hundred times before?"),
+                ("Golem", "Resonance archived. I can now read the emotional tremors behind spoken lies during interrogations."));
+        }
+
+        static DialogueData BuildAetherSightAwakeningDialogue()
+        {
+            return MakeChain("D_PostInterrogation_C3_AetherSight",
+                ("Golem", "[CORE SATURATION]: Residual mana absorbed at the Whisperwood ritual site has reached optical threshold."),
+                ("Eliza", "Wait—your lens just flared cyan! Did that Elder-root siphon leave something inside your core?"),
+                ("Golem", "[AETHER SIGHT ONLINE]: The ritual energy recharged a dormant First-Age prism. Concealed mana conduits and ancient runes are now visible."),
+                ("Eliza", "So the very magic the Veiled Circle tried to siphon just gave us eyes to see everything they buried—even in our earlier cases."));
         }
 
         static DialogueData MakeChain(string id, params (string speaker, string text)[] lines)

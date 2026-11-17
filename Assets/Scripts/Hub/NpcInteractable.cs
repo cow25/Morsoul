@@ -39,6 +39,9 @@ namespace Morsoul.Hub
             var core = Morsoul.Core.CoreRuntime.Instance;
             if (core != null && core.Session.CanStartInterrogation(interrogationCaseId))
             {
+                if (core.Session.CurrentSceneMode != SceneMode.Mode2D)
+                    core.Session.SetSceneContext(SceneMode.Mode2D,
+                        UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
                 if (!core.EnterInterrogation(interrogationCaseId))
                     Debug.LogWarning("NpcInteractable: the unlocked 2D interrogation could not be entered.", this);
                 return;

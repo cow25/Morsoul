@@ -12,16 +12,16 @@
                     <ui:VisualElement class="dossier-fields">
                         <ui:VisualElement class="dossier-col">
                             <ui:VisualElement class="dossier-field">
-                                <ui:Label text="Surname" class="dossier-label"/>
-                                <ui:Label name="DossierSurname" text="Doe" class="dossier-value"/>
+                                <ui:Label text="Investigator" class="dossier-label"/>
+                                <ui:Label name="DossierName" text="Golem" class="dossier-value"/>
                             </ui:VisualElement>
                             <ui:VisualElement class="dossier-field">
-                                <ui:Label text="Name" class="dossier-label"/>
-                                <ui:Label name="DossierName" text="John" class="dossier-value"/>
+                                <ui:Label text="Species" class="dossier-label"/>
+                                <ui:Label name="DossierSpecies" text="Golem" class="dossier-value"/>
                             </ui:VisualElement>
                             <ui:VisualElement class="dossier-field">
-                                <ui:Label text="Date Birth" class="dossier-label"/>
-                                <ui:Label name="DossierDob" text="09-09-2009" class="dossier-value"/>
+                                <ui:Label text="Active Case" class="dossier-label"/>
+                                <ui:Label name="DossierActiveCase" text="Prologue" class="dossier-value"/>
                             </ui:VisualElement>
                             <ui:VisualElement class="dossier-field">
                                 <ui:Label text="Cases Solved" class="dossier-label"/>
@@ -30,29 +30,23 @@
                         </ui:VisualElement>
                         <ui:VisualElement class="dossier-col" style="margin-right: 0; flex-grow: 1;">
                             <ui:VisualElement class="dossier-field">
-                                <ui:Label name="ReputationLevelLabel" text="Reputation Level : 10" class="dossier-label"/>
+                                <ui:Label name="FocusLevelLabel" text="Focus Energy" class="dossier-label"/>
                                 <ui:VisualElement class="rep-track">
-                                    <ui:VisualElement name="ReputationBarFill" class="rep-fill"/>
+                                    <ui:VisualElement name="FocusBarFill" class="rep-fill"/>
                                 </ui:VisualElement>
-                                <ui:Label name="ReputationPointsLabel" text="120/400" class="rep-points"/>
+                                <ui:Label name="FocusPointsLabel" text="100/100" class="rep-points"/>
                             </ui:VisualElement>
                             <ui:VisualElement class="dossier-field">
-                                <ui:Label text="Date Issued" class="dossier-label"/>
-                                <ui:Label name="DossierDateIssued" text="27-10-2026" class="dossier-value"/>
+                                <ui:Label text="Clues Logged" class="dossier-label"/>
+                                <ui:Label name="DossierCluesLogged" text="0" class="dossier-value"/>
                             </ui:VisualElement>
                             <ui:VisualElement class="dossier-field">
-                                <ui:Label text="Title" class="dossier-label"/>
+                                <ui:Label text="Runic Logs" class="dossier-label"/>
+                                <ui:Label name="DossierRunicLogs" text="0/4" class="dossier-value"/>
+                            </ui:VisualElement>
+                            <ui:VisualElement class="dossier-field">
+                                <ui:Label text="Rank" class="dossier-label"/>
                                 <ui:Label name="DossierTitle" text="Initiated Construct" class="dossier-value"/>
-                            </ui:VisualElement>
-                            <ui:VisualElement class="dossier-row-inline">
-                                <ui:VisualElement class="dossier-field">
-                                    <ui:Label text="Sex" class="dossier-label"/>
-                                    <ui:Label name="DossierSex" text="N/A" class="dossier-value"/>
-                                </ui:VisualElement>
-                                <ui:VisualElement class="dossier-field" style="margin-left: 16px;">
-                                    <ui:Label text="Species" class="dossier-label"/>
-                                    <ui:Label name="DossierSpecies" text="Golem" class="dossier-value"/>
-                                </ui:VisualElement>
                             </ui:VisualElement>
                         </ui:VisualElement>
                     </ui:VisualElement>

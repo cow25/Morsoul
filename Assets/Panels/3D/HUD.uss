@@ -4,7 +4,7 @@
     top: 0;
     right: 0;
     bottom: 0;
-    -unity-font-definition: url("project://database/Assets/Fonts/Middleearth.ttf");
+    -unity-font-definition: url("project://database/Assets/Fonts/EBGaramond.ttf");
 }
 
 .hud-panel {
@@ -13,36 +13,33 @@
 
 .hud-text {
     font-size: 16px;
-    color: rgb(246, 242, 232);
-    -unity-text-outline-width: 1px;
-    -unity-text-outline-color: rgba(12, 10, 14, 0.9);
-    text-shadow: 1px 2px 3px rgba(0, 0, 0, 0.92);
+    color: rgb(248, 244, 234);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.95);
 }
 
 .hud-text-large {
     font-size: 17px;
-    color: rgb(248, 244, 234);
-    -unity-text-outline-width: 1px;
-    -unity-text-outline-color: rgba(12, 10, 14, 0.9);
-    text-shadow: 1px 2px 3px rgba(0, 0, 0, 0.95);
+    color: rgb(250, 246, 236);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.95);
     -unity-font-style: bold;
 }
 
 .hud-text-small {
-    font-size: 12px;
-    color: rgb(216, 210, 198);
-    -unity-text-outline-width: 1px;
-    -unity-text-outline-color: rgba(10, 8, 12, 0.85);
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.9);
+    font-size: 13px;
+    color: rgb(224, 218, 206);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.95);
 }
 
 /* Top-Left Portrait + Focus */
 .hud-top-left {
     position: absolute;
-    top: 16px;
-    left: 18px;
+    top: 14px;
+    left: 16px;
     flex-direction: row;
     align-items: flex-start;
+    background-color: rgba(12, 10, 14, 0.68);
+    border-radius: 6px;
+    padding: 8px 12px;
 }
 
 .hud-user-col {
@@ -70,10 +67,8 @@
 
 .hud-user-name {
     font-size: 13px;
-    color: rgb(246, 242, 232);
-    -unity-text-outline-width: 1px;
-    -unity-text-outline-color: rgba(10, 8, 12, 0.9);
-    text-shadow: 1px 2px 2px rgba(0, 0, 0, 0.95);
+    color: rgb(248, 244, 234);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.95);
     -unity-text-align: middle-center;
     margin-bottom: 3px;
 }
@@ -153,27 +148,26 @@
 .hud-top-center {
     position: absolute;
     top: 12px;
-    left: 24%;
-    right: 24%;
+    left: 28%;
+    right: 28%;
     align-items: center;
+    background-color: rgba(12, 10, 14, 0.68);
+    border-radius: 6px;
+    padding: 6px 14px;
 }
 
 .hud-goal-title {
     font-size: 18px;
     color: rgb(248, 244, 232);
-    -unity-text-outline-width: 1px;
-    -unity-text-outline-color: rgba(12, 10, 14, 0.92);
-    text-shadow: 1px 2px 3px rgba(0, 0, 0, 0.95);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.95);
     -unity-font-style: bold;
     -unity-text-align: middle-center;
 }
 
 .hud-goal-desc {
     font-size: 14px;
-    color: rgb(236, 232, 222);
-    -unity-text-outline-width: 1px;
-    -unity-text-outline-color: rgba(12, 10, 14, 0.9);
-    text-shadow: 1px 2px 3px rgba(0, 0, 0, 0.95);
+    color: rgb(240, 236, 226);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.95);
     -unity-text-align: middle-center;
     white-space: normal;
     margin-top: 2px;
@@ -181,26 +175,30 @@
 
 .hud-top-right {
     position: absolute;
-    top: 16px;
-    right: 22px;
+    top: 14px;
+    right: 18px;
     align-items: flex-end;
+    background-color: rgba(12, 10, 14, 0.68);
+    border-radius: 6px;
+    padding: 6px 12px;
 }
 
 .hud-case-label {
     font-size: 16px;
     color: rgb(248, 242, 226);
-    -unity-text-outline-width: 1px;
-    -unity-text-outline-color: rgba(12, 10, 14, 0.9);
-    text-shadow: 1px 2px 3px rgba(0, 0, 0, 0.95);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.95);
     -unity-text-align: middle-right;
 }
 
 /* Bottom-Left Abilities */
 .hud-bottom-left {
     position: absolute;
-    bottom: 18px;
-    left: 20px;
+    bottom: 16px;
+    left: 16px;
     flex-direction: column;
+    background-color: rgba(12, 10, 14, 0.68);
+    border-radius: 6px;
+    padding: 6px 12px 8px 12px;
 }
 
 .hud-ability-row {
@@ -245,9 +243,12 @@
 /* Bottom-Right Controls */
 .hud-bottom-right {
     position: absolute;
-    bottom: 18px;
-    right: 22px;
+    bottom: 16px;
+    right: 18px;
     align-items: flex-end;
+    background-color: rgba(12, 10, 14, 0.68);
+    border-radius: 6px;
+    padding: 6px 12px 8px 12px;
 }
 
 .hud-shortcut-row {
@@ -258,9 +259,7 @@
 
 .hud-shortcut-label {
     font-size: 15px;
-    color: rgb(246, 242, 232);
-    -unity-text-outline-width: 1px;
-    -unity-text-outline-color: rgba(12, 10, 14, 0.9);
-    text-shadow: 1px 2px 2px rgba(0, 0, 0, 0.95);
+    color: rgb(248, 244, 234);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.95);
     margin-right: 10px;
 }

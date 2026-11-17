@@ -1,7 +1,9 @@
 using Morsoul.Board;
 using Morsoul.Core;
 using Morsoul.Data;
+using Morsoul.Hub;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
 using Cursor = UnityEngine.Cursor;
@@ -24,7 +26,8 @@ public class PrologueTutorialController : MonoBehaviour
     }
 
     public float scanTriggerExploreDelay = 3.5f;
-    public float accidentalScanRadius = 4.0f;
+    public float accidentalScanRadius = 4.5f;
+    public float awakeningCameraOffsetY = -0.65f;
 
     private static readonly string[] AwakeningLines =
     {
@@ -45,6 +48,12 @@ public class PrologueTutorialController : MonoBehaviour
     private CharacterController _characterController;
     private WeightedBoardController _boardController;
     private Transform _playerTransform;
+    private Transform _cradleTransform;
+    private Transform _cameraTransform;
+    private float _cameraBaseLocalY;
+    private float _currentCameraOffsetY;
+    private bool _cameraOffsetInitialized;
+    private bool _awakeningOffsetActive;
     private ClueNode _deskLogsNode;
 
     private Phase _phase = Phase.AwakeningDialogue;
@@ -100,6 +109,10 @@ public class PrologueTutorialController : MonoBehaviour
             _checkpointRot = _playerTransform.rotation;
         }
 
+        EnsureCradleAnchor();
+        EnsureTravelerRobeProp();
+        EnsureExitGateSeam();
+
         foreach (var node in FindObjectsByType<ClueNode>(FindObjectsInactive.Include, FindObjectsSortMode.None))
         {
             if (node != null && node.id == DeskLogsClueId)
@@ -121,6 +134,7 @@ public class PrologueTutorialController : MonoBehaviour
 
     private void OnDestroy()
     {
+        ResetAwakeningCameraOffset();
         if (HUDManager.Instance != null)
             HUDManager.Instance.HudLoaded -= OnHudLoaded;
         if (_boardController != null)
@@ -276,6 +290,7 @@ public class PrologueTutorialController : MonoBehaviour
     {
         EnsureBoardGuardrails();
         UpdateCheckpointOnClueGain();
+        UpdateAwakeningCameraOffset();
 
         switch (_phase)
         {
@@ -306,6 +321,8 @@ public class PrologueTutorialController : MonoBehaviour
     {
         _phase = Phase.AwakeningDialogue;
         _dialogueIndex = 0;
+        _awakeningOffsetActive = true;
+        _currentCameraOffsetY = awakeningCameraOffsetY;
         SetGameplayControl(false, unlockCursor: true);
         SetObjective("Look around the ruins and examine your surroundings.");
         RefreshOverlays();
@@ -332,6 +349,7 @@ public class PrologueTutorialController : MonoBehaviour
             {
                 Morsoul.Flow.InvestigationCompletion.ForceCompleteCase(CoreRuntime.Instance, 0);
                 _phase = Phase.Investigation;
+                ResetAwakeningCameraOffset();
                 SetGameplayControl(true, unlockCursor: false);
                 RefreshOverlays();
                 return;
@@ -350,6 +368,7 @@ public class PrologueTutorialController : MonoBehaviour
         {
             Morsoul.Flow.InvestigationCompletion.ForceCompleteCase(CoreRuntime.Instance, 0);
             _phase = Phase.Investigation;
+            ResetAwakeningCameraOffset();
             SetGameplayControl(true, unlockCursor: false);
             RefreshOverlays();
             return;
@@ -358,9 +377,10 @@ public class PrologueTutorialController : MonoBehaviour
         _exploreTimer += Time.deltaTime;
         bool nearDesk = _deskLogsNode != null && _playerTransform != null &&
                         Vector3.Distance(_playerTransform.position, _deskLogsNode.transform.position) <= accidentalScanRadius;
+        bool timerFallback = _deskLogsNode == null && _exploreTimer >= scanTriggerExploreDelay;
         bool pressedTab = Keyboard.current != null && Keyboard.current.tabKey.wasPressedThisFrame;
 
-        if (_exploreTimer >= scanTriggerExploreDelay || nearDesk || pressedTab)
+        if (nearDesk || timerFallback || pressedTab)
         {
             _phase = Phase.ScanWindup;
             _windupTimer = 0f;
@@ -586,6 +606,115 @@ public class PrologueTutorialController : MonoBehaviour
         if (text == _lastObjective || HUDManager.Instance == null) return;
         _lastObjective = text;
         HUDManager.Instance.SetObjective(text, "Prologue");
+    }
+
+    private void EnsureCradleAnchor()
+    {
+        var existing = GameObject.Find("case00_cradle");
+        if (existing != null)
+        {
+            _cradleTransform = existing.transform;
+            return;
+        }
+
+        var cradle = new GameObject("case00_cradle");
+        if (_playerTransform != null)
+            cradle.transform.SetPositionAndRotation(_playerTransform.position, _playerTransform.rotation);
+        _cradleTransform = cradle.transform;
+    }
+
+    private void UpdateAwakeningCameraOffset()
+    {
+        if (!_awakeningOffsetActive) return;
+
+        if (!_cameraOffsetInitialized)
+        {
+            var cam = _playerController != null
+                ? _playerController.GetComponentInChildren<Camera>()
+                : Camera.main;
+            if (cam == null) return;
+            _cameraTransform = cam.transform;
+            _cameraBaseLocalY = _cameraTransform.localPosition.y;
+            _cameraOffsetInitialized = true;
+        }
+
+        if (_cameraTransform == null) return;
+
+        float targetOffset = _phase == Phase.AwakeningDialogue
+            ? Mathf.Lerp(awakeningCameraOffsetY, 0f, (float)_dialogueIndex / Mathf.Max(1, AwakeningLines.Length))
+            : 0f;
+
+        float speed = _phase == Phase.AwakeningDialogue ? 1.8f : 2.5f;
+        _currentCameraOffsetY = Mathf.MoveTowards(_currentCameraOffsetY, targetOffset, Time.unscaledDeltaTime * speed);
+
+        var pos = _cameraTransform.localPosition;
+        pos.y = _cameraBaseLocalY + _currentCameraOffsetY;
+        _cameraTransform.localPosition = pos;
+
+        if (_phase != Phase.AwakeningDialogue && Mathf.Approximately(_currentCameraOffsetY, 0f))
+            ResetAwakeningCameraOffset();
+    }
+
+    private void ResetAwakeningCameraOffset()
+    {
+        _awakeningOffsetActive = false;
+        _currentCameraOffsetY = 0f;
+        if (_cameraOffsetInitialized && _cameraTransform != null)
+        {
+            var pos = _cameraTransform.localPosition;
+            pos.y = _cameraBaseLocalY;
+            _cameraTransform.localPosition = pos;
+        }
+    }
+
+    private static void EnsureTravelerRobeProp()
+    {
+        if (GameObject.Find("TravelerRobeProp") != null) return;
+
+        var robe = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        robe.name = "TravelerRobeProp";
+        robe.transform.position = new Vector3(-1f, 0.05f, 9f);
+        robe.transform.rotation = Quaternion.Euler(0f, 22f, 0f);
+        robe.transform.localScale = new Vector3(0.75f, 0.12f, 0.55f);
+
+        var col = robe.GetComponent<Collider>();
+        if (col != null) Destroy(col);
+
+        var renderer = robe.GetComponent<Renderer>();
+        if (renderer != null)
+        {
+            var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+            if (shader != null)
+            {
+                var mat = new Material(shader);
+                mat.color = new Color(0.22f, 0.18f, 0.16f, 1f);
+                renderer.sharedMaterial = mat;
+            }
+        }
+    }
+
+    private static void EnsureExitGateSeam()
+    {
+        var lockables = FindObjectsByType<LockableInteractable>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        foreach (var lockable in lockables)
+        {
+            if (lockable == null) continue;
+            bool isPrologueExit = lockable.name == "PrologueExitPortal" ||
+                                  (lockable.boardCaseId == 0 && lockable.requireBoardSolved);
+            if (!isPrologueExit) continue;
+
+            var seam = lockable.GetComponent<PrologueGateSeam>() ?? lockable.gameObject.AddComponent<PrologueGateSeam>();
+            seam.boardCaseId = lockable.boardCaseId;
+            seam.triggerOnPlayerEnter = false;
+
+            // Replace persistent SceneLoader listeners so exit always routes through PrologueGateSeam.
+            lockable.onInteractSuccess = new UnityEvent();
+            lockable.onInteractSuccess.AddListener(() =>
+            {
+                seam.MarkGateUnlocked();
+                seam.TryCrossGate();
+            });
+        }
     }
 
     private static void SetBorder(VisualElement el, float width, Color color, float radius)

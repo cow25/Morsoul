@@ -45,6 +45,9 @@ namespace Morsoul.Interrogation
         /// </summary>
         public event Action StateChanged;
 
+        /// <summary>Optional external gate checked in Update (e.g. while Journal is open over Interrogation).</summary>
+        public Func<bool> InputBlocked;
+
         const string BannerErrorClass = "banner--error";
         const string BannerInfoClass = "banner--info";
         const string SegmentBrokenClass = "segment--broken";
@@ -128,6 +131,7 @@ namespace Morsoul.Interrogation
         {
             var keyboard = Keyboard.current;
             if (keyboard == null || !_isOpen) return;
+            if (InputBlocked != null && InputBlocked()) return;
 
             if (keyboard.escapeKey.wasPressedThisFrame)
             {
@@ -303,6 +307,31 @@ namespace Morsoul.Interrogation
             _trayOpen = stance != Stance.Press;
             ApplyStanceClasses();
             ApplyTrayState();
+            if (stance == Stance.Press)
+                PressNextKeyword();
+        }
+
+        void PressNextKeyword()
+        {
+            if (_engine == null || !_isOpen) return;
+            var keywords = _engine.CurrentPhase?.keywords;
+            if (keywords == null || keywords.Length == 0)
+            {
+                ShowBanner(BannerInfoClass, "No highlighted claim to press in this phase.");
+                return;
+            }
+            string target = null;
+            foreach (var kw in keywords)
+            {
+                if (!string.IsNullOrEmpty(kw) && !_engine.IsKeywordPressed(kw))
+                {
+                    target = kw;
+                    break;
+                }
+            }
+            target ??= keywords.FirstOrDefault(k => !string.IsNullOrEmpty(k));
+            if (!string.IsNullOrEmpty(target))
+                OnKeywordClicked(target);
         }
 
         void Advance()
@@ -331,6 +360,14 @@ namespace Morsoul.Interrogation
             RefreshKeywordStates();
             ApplyPortrait();
             ApplyGuidedHint();
+            if (_engine.EmotionEchoUnlocked)
+            {
+                var aura = _engine.InferEffectiveAura();
+                if (aura == Aura.Amber)
+                    ShowBanner(BannerInfoClass, "Emotion Echo [AMBER]: Mana tremors betray a lie — use [2] CONTRADICT.");
+                else if (aura == Aura.Violet)
+                    ShowBanner(BannerInfoClass, "Emotion Echo [VIOLET]: Guarded distress — probe with [3] PRESENT EVIDENCE.");
+            }
             ResolveStatus(result.Status);
             StateChanged?.Invoke();
         }
@@ -452,9 +489,10 @@ namespace Morsoul.Interrogation
 
         void ApplyKeywordState(Button button, string keyword)
         {
-            button.EnableInClassList(KeywordPressedClass,
-                _engine != null && _engine.IsKeywordPressed(keyword));
-            var aura = _engine != null ? _engine.GetKeywordAura(keyword) : Aura.None;
+            bool pressed = _engine != null && _engine.IsKeywordPressed(keyword);
+            button.EnableInClassList(KeywordPressedClass, pressed);
+            var aura = _engine == null ? Aura.None
+                : (pressed ? _engine.InferEffectiveAura() : _engine.GetKeywordAura(keyword));
             button.EnableInClassList("keyword--amber", aura == Aura.Amber);
             button.EnableInClassList("keyword--violet", aura == Aura.Violet);
         }

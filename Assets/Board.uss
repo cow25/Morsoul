@@ -1,5 +1,5 @@
 .board-root {
-    -unity-font-definition: url("project://database/Assets/Fonts/Middleearth.ttf");
+    -unity-font-definition: url("project://database/Assets/Fonts/EBGaramond.ttf");
     background-color: rgba(10, 9, 8, 0.72);
     align-items: center;
     justify-content: center;

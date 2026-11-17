@@ -1,3 +1,4 @@
+using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -12,8 +13,13 @@ public class ScanController : MonoBehaviour
     private float _currentScanProgress = 0f;
     private bool _isScanning = false;
     private float _forcedScanTimer = 0f;
+    private bool _lastZeroCost = false;
+
+    private static float FocusDrainRate =>
+        Morsoul.Core.FocusTuning.FocusDrainPerTick / Morsoul.Core.FocusTuning.FocusTickSeconds;
 
     public bool IsScanning => _isScanning;
+    public bool IsAetherSightActive { get; private set; }
 
     public void TriggerAccidentalScan(float duration = 1.6f)
     {
@@ -25,9 +31,9 @@ public class ScanController : MonoBehaviour
         var core = Morsoul.Core.CoreRuntime.Instance;
         if (core != null)
         {
+            core.Focus.Refill();
             maxFocus = core.Focus.Maximum;
-            currentFocus = maxFocus;
-            core.Focus.Sync(currentFocus, maxFocus);
+            currentFocus = core.Focus.Percent;
         }
         else
         {
@@ -39,17 +45,26 @@ public class ScanController : MonoBehaviour
 
     private void Start()
     {
-        var core = Morsoul.Core.CoreRuntime.Instance;
-        if (core != null)
-        {
-            maxFocus = core.Focus.Maximum;
-            currentFocus = core.Focus.Percent;
-        }
+        var core = Morsoul.Core.CoreRuntime.Ensure();
+        maxFocus = core.Focus.Maximum;
+        currentFocus = core.Focus.Percent;
+        _lastZeroCost = core.ZeroScanFocusCost;
         if (HUDManager.Instance != null)
         {
             HUDManager.Instance.UpdateFocus(Mathf.RoundToInt(currentFocus), Mathf.RoundToInt(maxFocus));
-            HUDManager.Instance.UpdateFocusCost(focusDrainPerSecond); 
+            HUDManager.Instance.UpdateFocusCost(_lastZeroCost ? 0f : FocusDrainRate);
         }
+    }
+
+    private void OnDisable() => SetAetherSight(false);
+    private void OnDestroy() => SetAetherSight(false);
+
+    private void SetAetherSight(bool active)
+    {
+        if (IsAetherSightActive == active) return;
+        IsAetherSightActive = active;
+        if (active) Shader.EnableKeyword("_AETHER_SIGHT_ACTIVE");
+        else Shader.DisableKeyword("_AETHER_SIGHT_ACTIVE");
     }
 
     private void Update()
@@ -58,6 +73,13 @@ public class ScanController : MonoBehaviour
             Morsoul.Dev.DevMenuOverlay.IsOpen)
             return;
 
+        var session = Morsoul.Core.CoreRuntime.Instance?.Session;
+        bool hasAether = session != null && session.Tools.Contains(Morsoul.Data.Tool.AetherSight);
+        if (!hasAether && IsAetherSightActive)
+            SetAetherSight(false);
+        else if (hasAether && Keyboard.current != null && Keyboard.current.digit1Key.wasPressedThisFrame)
+            SetAetherSight(!IsAetherSightActive);
+
         if (_forcedScanTimer > 0f)
             _forcedScanTimer = Mathf.Max(0f, _forcedScanTimer - Time.deltaTime);
 
@@ -65,14 +87,25 @@ public class ScanController : MonoBehaviour
         bool manualScan = Keyboard.current != null && Keyboard.current.tabKey.isPressed;
         bool forcedScan = _forcedScanTimer > 0f;
 
-        // 2. Check for Focus
-        if ((manualScan && currentFocus > 0f) || forcedScan)
+        var core = Morsoul.Core.CoreRuntime.Ensure();
+        bool zeroCost = core.ZeroScanFocusCost;
+        if (zeroCost != _lastZeroCost)
+        {
+            _lastZeroCost = zeroCost;
+            HUDManager.Instance?.UpdateFocusCost(zeroCost ? 0f : FocusDrainRate);
+        }
+
+        // 2. Check for Focus (no strained scanning when Focus is depleted unless zero-cost)
+        bool canManualScan = manualScan && (zeroCost || !core.Focus.IsDepleted);
+        if (canManualScan || forcedScan)
         {
             _isScanning = true;
-            if (manualScan && !forcedScan)
+            if (canManualScan && !forcedScan)
             {
-                currentFocus = Mathf.Max(0f, currentFocus - focusDrainPerSecond * Time.deltaTime);
-                Morsoul.Core.CoreRuntime.Instance?.Focus.Sync(currentFocus, maxFocus);
+                if (!zeroCost)
+                    core.Focus.TickScan(Time.deltaTime);
+                currentFocus = core.Focus.Percent;
+                maxFocus = core.Focus.Maximum;
                 HUDManager.Instance?.UpdateFocus(Mathf.RoundToInt(currentFocus), Mathf.RoundToInt(maxFocus));
             }
         }
@@ -92,6 +125,14 @@ public class ScanController : MonoBehaviour
         UpdateClueParticles();
     }
 
+    private static void HideClueVisuals(ClueNode clue, Transform outlineVisual)
+    {
+        if (clue.scanParticles != null && clue.scanParticles.isPlaying)
+            clue.scanParticles.Stop();
+        if (outlineVisual != null && outlineVisual.TryGetComponent<MeshRenderer>(out var mr))
+            mr.enabled = false;
+    }
+
     private void UpdateClueParticles()
     {
         // If we are actively scanning, check what is on screen
@@ -99,19 +140,49 @@ public class ScanController : MonoBehaviour
         {
             ClueNode[] allClues = FindObjectsByType<ClueNode>(FindObjectsInactive.Exclude);
             Camera cam = Camera.main;
+            var core = Morsoul.Core.CoreRuntime.Instance;
+            var session = core?.Session;
+            bool hasAether = session != null && session.Tools.Contains(Morsoul.Data.Tool.AetherSight);
+            bool hasGolemEye = session != null && session.Tools.Contains(Morsoul.Data.Tool.GolemEye);
 
             foreach (ClueNode clue in allClues)
             {
+                bool needsAether = clue.requiredTool == ClueNode.Tool.AetherSight || clue.requiredTool == ClueNode.Tool.Both;
+                bool needsGolemEye = clue.requiredTool == ClueNode.Tool.GolemEye || clue.requiredTool == ClueNode.Tool.Both;
+                Transform outlineVisual = clue.transform.Find("OutlineVisual");
+
+                bool blocked = (needsAether && !(hasAether && IsAetherSightActive)) || (needsGolemEye && !hasGolemEye);
+                if (!blocked && core != null && session != null && !string.IsNullOrEmpty(clue.id))
+                {
+                    var clueData = core.ResolveClue(clue.id);
+                    if (clueData != null)
+                    {
+                        Morsoul.Data.RunicLogData log = clueData.type == Morsoul.Data.ClueType.Latent
+                            ? core.ResolveCase(clueData.caseId)?.latentLog
+                            : null;
+                        if (!Morsoul.Core.ClueAcquisition.CanAcquire(clueData, session, log, out _))
+                            blocked = true;
+                    }
+                }
+
+                if (blocked)
+                {
+                    HideClueVisuals(clue, outlineVisual);
+                    continue;
+                }
+
                 Vector3 screenPoint = cam.WorldToViewportPoint(clue.transform.position);
                 bool isOnScreen = screenPoint.z > 0 && screenPoint.x > 0 && screenPoint.x < 1 && screenPoint.y > 0 && screenPoint.y < 1;
 
-                // Find the outline object we created
-                Transform outlineVisual = clue.transform.Find("OutlineVisual");
-
                 if (isOnScreen && clue.state != ClueNode.State.Collected)
                 {
-                    if (clue.state == ClueNode.State.Hidden)
-                        clue.state = ClueNode.State.Revealed;
+                    clue.MarkScanned();
+
+                    if (needsAether && clue.scanParticles != null)
+                    {
+                        var main = clue.scanParticles.main;
+                        main.startColor = new Color(1f, 0.85f, 0.15f, 1f);
+                    }
 
                     // Turn on particles
                     if (clue.scanParticles != null && !clue.scanParticles.isPlaying) 
@@ -123,13 +194,7 @@ public class ScanController : MonoBehaviour
                 }
                 else
                 {
-                    // Turn off particles
-                    if (clue.scanParticles != null && clue.scanParticles.isPlaying) 
-                        clue.scanParticles.Stop();
-                    
-                    // Turn off thick outline
-                    if (outlineVisual != null) 
-                        outlineVisual.GetComponent<MeshRenderer>().enabled = false;
+                    HideClueVisuals(clue, outlineVisual);
                 }
             }
         }
@@ -139,12 +204,7 @@ public class ScanController : MonoBehaviour
             ClueNode[] allClues = FindObjectsByType<ClueNode>(FindObjectsInactive.Exclude);
             foreach (ClueNode clue in allClues)
             {
-                if (clue.scanParticles != null && clue.scanParticles.isPlaying) 
-                    clue.scanParticles.Stop();
-                
-                Transform outlineVisual = clue.transform.Find("OutlineVisual");
-                if (outlineVisual != null) 
-                    outlineVisual.GetComponent<MeshRenderer>().enabled = false;
+                HideClueVisuals(clue, clue.transform.Find("OutlineVisual"));
             }
         }
     }

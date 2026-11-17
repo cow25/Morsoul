@@ -168,10 +168,6 @@ namespace Morsoul.Data.Editor
                 "Pre-cataclysm formula on synthetic mana solvent flash points and sublimation rates. Required for Ending 3.",
                 isBacktrackingOnly: true, hasWorldPosition: true, worldPosition: new Vector2(0, 8));
 
-            // INT_01 phase 2 presents this premise as evidence; keep the asset.
-            var p1 = Premise(folder, "P1_01", "Absence of Forced Entry",
-                "The vault was accessed without picking or damage, requiring one of only two registered keys.");
-
             var interrogation = LoadOrCreate<InterrogationData>($"{folder}/INT_01.asset");
             interrogation.id = "INT_01";
             interrogation.suspectName = "Master Alchemist Ignatius";
@@ -200,7 +196,7 @@ namespace Morsoul.Data.Editor
                     {
                         Move(Verb.Press, null, false, 0, false,
                             "I lock up strictly at the eighth bell! Any thief with a standard pick-set could slip past the sleepy market watch and force the cylinder!"),
-                        Move(Verb.PresentEvidence, p1, true, 0, false,
+                        Move(Verb.PresentEvidence, c1, true, 0, false,
                             "The cylinder pins bear no scratches, and the Guild holds the only duplicate. That substantiates a single conclusion \u2014 the door was opened with a registered key, and only yours and the Guildmaster's exist. So whose key turned it?"),
                     },
                     invalidMoves = new[]
@@ -283,10 +279,6 @@ namespace Morsoul.Data.Editor
                 "Pre-cataclysm architectural rune etched into the tower's rear load-bearing masonry beam. Documents harmonic acoustic dissipation used to stabilize runaway mana resonance. Required for Ending 3; unobtainable on initial run.",
                 isBacktrackingOnly: true, hasWorldPosition: true, worldPosition: new Vector2(0, 8));
 
-            // INT_02 phase 2 presents this premise as evidence; keep the asset.
-            var p1 = Premise(folder, "P1_02", "Acoustic Resonance Sabotage",
-                "The silence hex was an acoustic trap delivered through the Great Bell's vibration, not an external spell cast from the ground.");
-
             var interrogation = LoadOrCreate<InterrogationData>($"{folder}/INT_02.asset");
             interrogation.id = "INT_02";
             interrogation.suspectName = "Accord the Bell-Ringer";
@@ -315,7 +307,7 @@ namespace Morsoul.Data.Editor
                     {
                         Move(Verb.Press, null, false, 0, false,
                             "I was busy oiling the rope pulleys! A cunning sorcerer could whisper upward through the floor flues without making a sound!"),
-                        Move(Verb.PresentEvidence, p1, true, 0, false,
+                        Move(Verb.PresentEvidence, c1, true, 0, false,
                             "The acoustics substantiate a redirect: a spell from the base cannot coat a clapper suspended eighty feet in the rafters. The damping agent was applied manually by whoever climbed the belfry before vespers."),
                     },
                     invalidMoves = new[]
@@ -406,7 +398,7 @@ namespace Morsoul.Data.Editor
             press2Move.emotionAura = Aura.Amber;
             var press3Move = Move(Verb.Press, null, false, 0, false,
                 "Nature dies to make way for the strong! This woodland decay is localized, irrelevant, and forgotten by tomorrow's sunrise!");
-            press3Move.emotionAura = Aura.Amber;
+            press3Move.emotionAura = Aura.Violet;
 
             var interrogation = LoadOrCreate<InterrogationData>($"{folder}/INT_03.asset");
             interrogation.id = "INT_03";

@@ -44,6 +44,19 @@ namespace Morsoul.Hub
             promptText = "[E] Travel";
         }
 
+        void Start()
+        {
+            if (!offerTravelMenu) return;
+            var sr = GetComponent<SpriteRenderer>();
+            if (sr != null && sr.sprite != null &&
+                sr.sprite.name.IndexOf("Wagon", StringComparison.OrdinalIgnoreCase) >= 0 &&
+                GetComponent<CarriageVisualRig>() == null)
+            {
+                var rig = gameObject.AddComponent<CarriageVisualRig>();
+                rig.Initialize(moving: false, order: sr.sortingOrder);
+            }
+        }
+
         public override void Interact(HubContext ctx)
         {
             base.Interact(ctx);
@@ -76,9 +89,9 @@ namespace Morsoul.Hub
                     {
                         menu.DestinationSelected -= OnSelected;
                         menu.Cancelled -= OnCancelled;
-                        if (ElizaHubPresenceController.TryCatchUpBeforeTravel(ctx, () => TravelTo(d.sceneName)))
+                        if (ElizaHubPresenceController.TryCatchUpBeforeTravel(ctx, () => TravelTo(d.sceneName, ctx)))
                             return;
-                        TravelTo(d.sceneName);
+                        TravelTo(d.sceneName, ctx);
                     }
                     void OnCancelled()
                     {
@@ -106,7 +119,7 @@ namespace Morsoul.Hub
                     GameStateManager.Ensure().ReturnFromInvestigation(caseId))
                     return;
             }
-            TravelTo(ResolveTargetScene());
+            TravelTo(ResolveTargetScene(), ctx);
         }
 
         /// <summary>Route-table lookup first, serialized targetScene as fallback.</summary>
@@ -120,8 +133,8 @@ namespace Morsoul.Hub
             return targetScene;
         }
 
-        /// <summary>Checkpoints and loads <paramref name="scene"/> through the GSM.</summary>
-        protected void TravelTo(string scene)
+        /// <summary>Checkpoints and loads <paramref name="scene"/> through the GSM (playing any pending carriage cutscene first).</summary>
+        protected void TravelTo(string scene, HubContext ctx = null)
         {
             if (string.IsNullOrEmpty(scene))
             {
@@ -129,6 +142,13 @@ namespace Morsoul.Hub
                                  $"(routeKey '{routeKey}' unresolved, targetScene empty).", this);
                 return;
             }
+            if (offerTravelMenu && CarriageRideCutscene.TryPlayBeforeTravel(ctx, scene, () => ExecuteTravel(scene)))
+                return;
+            ExecuteTravel(scene);
+        }
+
+        void ExecuteTravel(string scene)
+        {
             CheckpointRequested?.Invoke(checkpointReason);
             CoreRuntime.Instance?.Session.SetFlag(ElizaHubPresenceController.RaceToCarrierFlag, false);
             // Single load authority: the GSM guards missing scenes and stamps

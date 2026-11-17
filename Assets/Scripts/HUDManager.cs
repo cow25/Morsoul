@@ -20,7 +20,7 @@ public class HUDManager : MonoBehaviour
 
     private VisualElement _golemEyeRow;
     private VisualElement _aetherSightRow;
-    private VisualElement _emotionEchoRow;
+    private Label _aetherFocusCostText;
     private VisualElement _interactionContainer;
     private VisualElement _hudRoot;
     private VisualElement _objectivePanel;
@@ -42,14 +42,15 @@ public class HUDManager : MonoBehaviour
     private WeightedBoardController _weightedBoard;
     private BoardController _legacyBoard;
     private DiaryManager _diaryManager;
+    private ScanController _scanController;
     private Func<bool> _modalBlocker;
     private int _syncedDiaryCount = -1;
     private int _syncedSessionClueCount = -1;
     private readonly List<ClueData> _runtimeClues = new List<ClueData>();
 
-    private int _cachedCurrentFocus = 120;
-    private int _cachedMaxFocus = 120;
-    private float _cachedFocusCost = 30f;
+    private int _cachedCurrentFocus = 100;
+    private int _cachedMaxFocus = 100;
+    private float _cachedFocusCost = FocusTuning.FocusDrainPerTick / FocusTuning.FocusTickSeconds;
     private string _cachedObjective = "Examine the ancient ruins and locate clues.";
     private string _cachedCaseTitle = "Prologue";
     private int _uiVersion = 0;
@@ -110,12 +111,11 @@ public class HUDManager : MonoBehaviour
 
         _golemEyeRow = root.Q<VisualElement>("GolemEyeRow");
         _aetherSightRow = root.Q<VisualElement>("AetherSightRow");
-        _emotionEchoRow = root.Q<VisualElement>("EmotionEchoRow");
+        _aetherFocusCostText = root.Q<Label>("AetherFocusCostText");
         _userNameLabel = root.Q<Label>("UserNameLabel");
         _focusValueLabel = root.Q<Label>("FocusValueLabel");
         _focusBarFill = root.Q<VisualElement>("FocusBarFill");
         _focusCostText = root.Q<Label>("FocusCostText");
-        if (_focusCostText != null) _focusCostText.text = $"Focus Energy Cost: {_cachedFocusCost}";
 
         _objectivePanel = root.Q<VisualElement>("ObjectivePanel");
         _activeGoalTitle = root.Q<Label>("ActiveGoalTitle");
@@ -133,7 +133,6 @@ public class HUDManager : MonoBehaviour
         _itemDescriptionText = root.Q<Label>("ItemDescriptionText");
 
         if (_aetherSightRow != null) _aetherSightRow.style.display = DisplayStyle.None;
-        if (_emotionEchoRow != null) _emotionEchoRow.style.display = DisplayStyle.None;
         if (_interactionContainer != null) _interactionContainer.style.display = DisplayStyle.None;
         
         ApplyFocusToUI();
@@ -154,7 +153,6 @@ public class HUDManager : MonoBehaviour
         if (session != null)
         {
             if (session.Tools.Contains(Tool.AetherSight)) UnlockAetherHUD();
-            if (session.Tools.Contains(Tool.EmotionEcho)) UnlockEmotionEchoHUD();
             int caseNum = session.InvestigationCaseId >= 0 ? session.InvestigationCaseId : session.CurrentCase;
             string expectedCase = caseNum <= 0 ? "Prologue" : $"Case {caseNum}";
             if (_caseLabel != null && _caseLabel.text != expectedCase)
@@ -163,10 +161,25 @@ public class HUDManager : MonoBehaviour
                 _caseLabel.text = expectedCase;
             }
         }
+        var focus = CoreRuntime.Instance?.Focus;
+        if (focus != null)
+        {
+            int cur = Mathf.RoundToInt(focus.Percent);
+            int max = Mathf.RoundToInt(focus.Maximum);
+            if (cur != _cachedCurrentFocus || max != _cachedMaxFocus)
+                UpdateFocus(cur, max);
+        }
     }
 
     private void UpdateKeyHighlights()
     {
+        _scanController ??= FindAnyObjectByType<ScanController>();
+        bool aetherActive = _scanController != null && _scanController.IsAetherSightActive;
+        if (_aetherSightRow != null)
+            _aetherSightRow.style.opacity = aetherActive ? 1f : 0.2f;
+        if (_aetherFocusCostText != null)
+            _aetherFocusCostText.text = aetherActive ? "ON — Press [1]" : "OFF — Press [1]";
+
         var keyboard = UnityEngine.InputSystem.Keyboard.current;
         if (keyboard == null) return;
 
@@ -230,17 +243,9 @@ public class HUDManager : MonoBehaviour
             _aetherSightRow.style.display = DisplayStyle.Flex;
     }
 
-    public void UnlockEmotionEchoHUD()
-    {
-        if (_emotionEchoRow != null)
-            _emotionEchoRow.style.display = DisplayStyle.Flex;
-    }
-
     public void UpdateFocusCost(float cost)
     {
         _cachedFocusCost = cost;
-        if (_focusCostText != null)
-            _focusCostText.text = $"Focus Energy Cost: {cost}";
     }
 
     public void ShowInteractionPrompt(string actionText, string description)
@@ -289,6 +294,7 @@ public class HUDManager : MonoBehaviour
             var jc = journalGo.AddComponent<JournalController>();
             jc.journal = hubJournal;
             jc.manageCursor = true;
+            jc.allLogs = BuildRunicLogs(core);
             journalGo.SetActive(true);
             _journalController = jc;
             _hubJournal = hubJournal;
@@ -299,6 +305,8 @@ public class HUDManager : MonoBehaviour
                 ?? FindAnyObjectByType<HubJournal>(FindObjectsInactive.Include);
             if (_hubJournal != null && _journalController.journal == null)
                 _journalController.SetJournal(_hubJournal);
+            if (_journalController.allLogs == null || _journalController.allLogs.Length == 0)
+                _journalController.allLogs = BuildRunicLogs(core);
         }
 
         if (_journalController != null)
@@ -310,6 +318,8 @@ public class HUDManager : MonoBehaviour
                 !(_weightedBoard != null && _weightedBoard.IsOpen) &&
                 !(_legacyBoard != null && _legacyBoard.IsOpen);
             SyncSessionCluesToHubJournal();
+            SyncJournalContext(core, _journalController);
+            _journalController.SyncLogsFromSession();
         }
 
         _weightedBoard = FindAnyObjectByType<WeightedBoardController>(FindObjectsInactive.Include);
@@ -418,8 +428,70 @@ public class HUDManager : MonoBehaviour
                 _runtimeClues.Add(resolved);
             }
             core?.Session.RegisterClue(resolved);
+            if (core != null && resolved.type == ClueType.Latent)
+            {
+                core.Session.RegisterLatentClue(resolved);
+                var owner = core.ResolveCase(resolved.caseId);
+                if (owner != null && !string.IsNullOrEmpty(owner.uneaseFlagKey))
+                    core.Session.SetFlag(owner.uneaseFlagKey, false);
+                _journalController?.SyncLogsFromSession();
+            }
             _hubJournal.Register(resolved);
         }
+    }
+
+    private static void SyncJournalContext(CoreRuntime core, JournalController jc)
+    {
+        if (core == null || jc == null) return;
+        if (jc.dossiers == null || jc.dossiers.Length == 0)
+            jc.dossiers = BuildDossiers(core);
+        var currentCase = core.Session.CurrentCase >= 1 && core.Session.CurrentCase <= 4
+            ? core.ResolveCase(core.Session.CurrentCase)
+            : null;
+        if (currentCase != null)
+        {
+            if (string.IsNullOrEmpty(jc.dissonanceFlag))
+                jc.dissonanceFlag = currentCase.uneaseFlagKey;
+            if (string.IsNullOrEmpty(jc.dissonanceLocationText) && currentCase.latentLog != null)
+                jc.dissonanceLocationText = currentCase.latentLog.location;
+        }
+        var activeFlags = new HashSet<string>();
+        foreach (var kv in core.Session.Flags)
+        {
+            if (kv.Value) activeFlags.Add(kv.Key);
+        }
+        jc.SetFlags(activeFlags);
+    }
+
+    private static JournalController.DossierEntry[] BuildDossiers(CoreRuntime core)
+    {
+        var list = new List<JournalController.DossierEntry>();
+        if (core == null) return list.ToArray();
+        for (int i = 1; i <= 4; i++)
+        {
+            var c = core.ResolveCase(i);
+            if (c == null || c.interrogation == null || string.IsNullOrEmpty(c.interrogation.suspectName)) continue;
+            list.Add(new JournalController.DossierEntry
+            {
+                suspectName = c.interrogation.suspectName,
+                role = $"Case {c.caseId} — {c.title}",
+                notes = string.IsNullOrEmpty(c.region) ? c.title : $"Region: {c.region}",
+                requiresFlag = i <= core.Session.CurrentCase ? null : $"Case{i}_Accepted",
+            });
+        }
+        return list.ToArray();
+    }
+
+    private static RunicLogData[] BuildRunicLogs(CoreRuntime core)
+    {
+        var logs = new List<RunicLogData>();
+        if (core == null) return logs.ToArray();
+        for (int i = 1; i <= 4; i++)
+        {
+            var log = core.ResolveCase(i)?.latentLog;
+            if (log != null) logs.Add(log);
+        }
+        return logs.ToArray();
     }
 
     public void ToggleJournal()
@@ -437,7 +509,10 @@ public class HUDManager : MonoBehaviour
         if (_legacyBoard != null && _legacyBoard.IsOpen)
             _legacyBoard.Close();
         if (_journalController.OpenAllowed())
+        {
+            SyncJournalContext(CoreRuntime.Instance, _journalController);
             _journalController.Open();
+        }
     }
 
     public void ToggleBoard()
