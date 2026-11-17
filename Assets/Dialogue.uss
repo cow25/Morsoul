@@ -13,19 +13,16 @@
 }
 
 .dialogue-portrait {
-    width: 196px;
-    height: 196px;
-    margin-bottom: -8px;
-    -unity-background-scale-mode: scale-and-crop;
-    background-color: rgba(18, 14, 12, 0.85);
-    border-color: rgba(206, 168, 108, 0.75);
-    border-width: 2px;
-    border-radius: 8px;
+    width: 240px;
+    height: 240px;
+    margin-bottom: -14px;
+    -unity-background-scale-mode: scale-to-fit;
+    background-color: transparent;
+    border-width: 0;
 }
 
 .dialogue-portrait--crystal {
-    border-color: rgba(80, 224, 248, 0.95);
-    background-color: rgba(10, 28, 40, 0.92);
+    -unity-background-image-tint-color: rgb(185, 245, 255);
 }
 
 .dialogue-box-wrapper {
