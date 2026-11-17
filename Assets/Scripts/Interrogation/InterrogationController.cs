@@ -529,13 +529,35 @@ namespace Morsoul.Interrogation
         void ApplyPortrait()
         {
             if (_portrait == null) return;
-            _portrait.style.backgroundImage = suspectPortrait != null
-                ? new StyleBackground(suspectPortrait)
-                : new StyleBackground(StyleKeyword.Null);
+            if (suspectPortrait != null)
+            {
+                _portrait.style.backgroundImage = new StyleBackground(suspectPortrait);
+            }
+            else
+            {
+                var tex = LoadSuspectPortrait(_engine?.Data?.suspectName);
+                _portrait.style.backgroundImage = tex != null
+                    ? new StyleBackground(tex)
+                    : new StyleBackground(StyleKeyword.Null);
+            }
             var aura = _engine != null ? _engine.PortraitAura : Aura.None;
             _portrait.EnableInClassList("portrait--amber", aura == Aura.Amber);
             _portrait.EnableInClassList("portrait--violet", aura == Aura.Violet);
             _portrait.EnableInClassList("portrait--crimson", aura == Aura.Crimson);
+        }
+
+        static Texture2D LoadSuspectPortrait(string suspectName)
+        {
+            if (string.IsNullOrEmpty(suspectName)) return null;
+            string key = null;
+            if (suspectName.IndexOf("Ignatius", StringComparison.OrdinalIgnoreCase) >= 0) key = "ArtIgnatius";
+            else if (suspectName.IndexOf("Accord", StringComparison.OrdinalIgnoreCase) >= 0) key = "ArtAccord";
+            else if (suspectName.IndexOf("Vane", StringComparison.OrdinalIgnoreCase) >= 0) key = "ArtVane";
+            else if (suspectName.IndexOf("Harlan", StringComparison.OrdinalIgnoreCase) >= 0) key = "ArtHarlan";
+            else if (suspectName.IndexOf("Overseer", StringComparison.OrdinalIgnoreCase) >= 0) key = "ArtGrandOverseer";
+            else if (suspectName.IndexOf("Eliza", StringComparison.OrdinalIgnoreCase) >= 0) key = "ArtEliza";
+            else if (suspectName.IndexOf("Ovan", StringComparison.OrdinalIgnoreCase) >= 0) key = "ArtOvan";
+            return key != null ? Resources.Load<Texture2D>($"Portraits/{key}") : null;
         }
 
         void ApplyStanceClasses()

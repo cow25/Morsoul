@@ -4,8 +4,8 @@
 
 .dialogue-stage {
     position: absolute;
-    left: 21%;
-    right: 12%;
+    left: 15%;
+    right: 15%;
     bottom: 4%;
     flex-direction: column;
     align-items: center;
@@ -13,11 +13,19 @@
 }
 
 .dialogue-portrait {
-    width: 240px;
-    height: 240px;
-    margin-bottom: -6px;
-    -unity-background-scale-mode: scale-to-fit;
-    background-color: transparent;
+    width: 196px;
+    height: 196px;
+    margin-bottom: -8px;
+    -unity-background-scale-mode: scale-and-crop;
+    background-color: rgba(18, 14, 12, 0.85);
+    border-color: rgba(206, 168, 108, 0.75);
+    border-width: 2px;
+    border-radius: 8px;
+}
+
+.dialogue-portrait--crystal {
+    border-color: rgba(80, 224, 248, 0.95);
+    background-color: rgba(10, 28, 40, 0.92);
 }
 
 .dialogue-box-wrapper {
@@ -27,22 +35,33 @@
 }
 
 .dialogue-speaker {
-    font-size: 24px;
-    color: rgb(252, 248, 240);
+    font-size: 22px;
+    color: rgb(252, 246, 234);
+    -unity-font-style: bold;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.95);
     margin-left: 14px;
     margin-bottom: 4px;
     flex-shrink: 0;
 }
 
+.dialogue-speaker--crystal {
+    color: rgb(118, 238, 255);
+}
+
 .dialogue-box {
     width: 100%;
     min-height: 150px;
-    background-color: rgba(232, 228, 222, 0.90);
-    border-color: rgba(255, 250, 242, 0.65);
+    background-color: rgba(26, 20, 16, 0.90);
+    border-color: rgba(206, 168, 108, 0.65);
     border-width: 1.5px;
     border-radius: 10px;
     padding: 18px 24px 14px 24px;
+}
+
+.dialogue-box--crystal {
+    background-color: rgba(10, 22, 34, 0.92);
+    border-color: rgba(80, 224, 248, 0.88);
+    border-width: 2px;
 }
 
 .dialogue-content {
@@ -51,9 +70,9 @@
 }
 
 .dialogue-text {
-    font-size: 19px;
-    color: rgb(26, 23, 20);
-    text-shadow: 0 0 0 rgba(0, 0, 0, 0);
+    font-size: 18px;
+    color: rgb(246, 240, 228);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.85);
     margin-bottom: 6px;
 }
 

@@ -39,6 +39,7 @@ namespace Morsoul.Dialogue
         // Cached elements (re-queried on every UI reload).
         VisualElement _root;
         VisualElement _portrait;
+        VisualElement _dialogueBox;
         VisualElement _optionsContainer;
         Label _speakerLabel;
         Label _dialogueText;
@@ -339,6 +340,12 @@ namespace Morsoul.Dialogue
         {
             if (node == null) return;
             _renderedNode = node;
+            bool isCrystal = !string.IsNullOrEmpty(node.speakerName) &&
+                             node.speakerName.IndexOf("CRYSTAL", StringComparison.OrdinalIgnoreCase) >= 0;
+            _dialogueBox?.EnableInClassList("dialogue-box--crystal", isCrystal);
+            _speakerLabel?.EnableInClassList("dialogue-speaker--crystal", isCrystal);
+            _portrait?.EnableInClassList("dialogue-portrait--crystal", isCrystal);
+
             if (_speakerLabel != null) _speakerLabel.text = node.speakerName ?? "";
             string fullText = _runner != null
                 ? _runner.SubstituteName(node.text)
@@ -419,8 +426,30 @@ namespace Morsoul.Dialogue
             var sprite = node.speakerPortrait != null
                 ? node.speakerPortrait
                 : FindSpeakerPortrait(node.speakerName);
-            _portrait.style.display = sprite != null ? DisplayStyle.Flex : DisplayStyle.None;
-            _portrait.style.backgroundImage = sprite != null ? new StyleBackground(sprite) : default;
+            if (sprite != null)
+            {
+                _portrait.style.display = DisplayStyle.Flex;
+                _portrait.style.backgroundImage = new StyleBackground(sprite);
+                return;
+            }
+            var tex = LoadConceptPortrait(node.speakerName);
+            _portrait.style.display = tex != null ? DisplayStyle.Flex : DisplayStyle.None;
+            _portrait.style.backgroundImage = tex != null ? new StyleBackground(tex) : default;
+        }
+
+        static Texture2D LoadConceptPortrait(string speakerName)
+        {
+            if (string.IsNullOrEmpty(speakerName)) return null;
+            string key = null;
+            if (speakerName.IndexOf("Eliza", StringComparison.OrdinalIgnoreCase) >= 0) key = "ArtEliza";
+            else if (speakerName.IndexOf("Golem", StringComparison.OrdinalIgnoreCase) >= 0) key = "ArtGolem";
+            else if (speakerName.IndexOf("Ovan", StringComparison.OrdinalIgnoreCase) >= 0) key = "ArtOvan";
+            else if (speakerName.IndexOf("Ignatius", StringComparison.OrdinalIgnoreCase) >= 0) key = "ArtIgnatius";
+            else if (speakerName.IndexOf("Accord", StringComparison.OrdinalIgnoreCase) >= 0) key = "ArtAccord";
+            else if (speakerName.IndexOf("Vane", StringComparison.OrdinalIgnoreCase) >= 0) key = "ArtVane";
+            else if (speakerName.IndexOf("Harlan", StringComparison.OrdinalIgnoreCase) >= 0) key = "ArtHarlan";
+            else if (speakerName.IndexOf("Overseer", StringComparison.OrdinalIgnoreCase) >= 0) key = "ArtGrandOverseer";
+            return key != null ? Resources.Load<Texture2D>($"Portraits/{key}") : null;
         }
 
         Sprite FindSpeakerPortrait(string speakerName)
@@ -444,6 +473,7 @@ namespace Morsoul.Dialogue
 
             _root = root.Q<VisualElement>("Dialogue-Root");
             _portrait = root.Q<VisualElement>("SpeakerPortrait");
+            _dialogueBox = root.Q<VisualElement>("DialogueBox");
             _optionsContainer = root.Q<VisualElement>("OptionsContainer");
             _speakerLabel = root.Q<Label>("SpeakerLabel");
             _dialogueText = root.Q<Label>("DialogueText");
