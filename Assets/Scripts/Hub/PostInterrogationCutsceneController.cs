@@ -331,6 +331,8 @@ namespace Morsoul.Hub
         VisualProfile ResolveElizaProfile()
         {
             if (context != null && context.elizaProfile != null) return context.elizaProfile;
+            var cfgProfile = Resources.Load<Morsoul.Core.PauseMenuAssets>("PauseMenuConfig")?.elizaProfile as VisualProfile;
+            if (cfgProfile != null) return cfgProfile;
 #if UNITY_EDITOR
             return UnityEditor.AssetDatabase.LoadAssetAtPath<VisualProfile>("Assets/Art/Profiles/Eliza.asset");
 #else

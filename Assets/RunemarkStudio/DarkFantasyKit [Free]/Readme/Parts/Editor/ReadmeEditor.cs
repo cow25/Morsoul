@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
@@ -52,9 +52,12 @@ namespace Runemark.DarkFantasyKit
             {
                 var readmeObject = AssetDatabase.LoadMainAssetAtPath(AssetDatabase.GUIDToAssetPath(ids[0]));
 
+                var readme = readmeObject as Readme;
+                if (readme == null) return null;
+
                 Selection.objects = new UnityEngine.Object[] { readmeObject };
 
-                return (Readme)readmeObject;
+                return readme;
             }
             else
             {

@@ -69,6 +69,11 @@ public class DiaryManager : MonoBehaviour
     {
         if (string.IsNullOrEmpty(clueId)) return false;
         if (Morsoul.Core.CoreRuntime.Instance?.Session?.HasClue(clueId) == true) return true;
-        return collectedClues.Exists(c => c != null && c.id == clueId);
+        for (int i = 0; i < collectedClues.Count; i++)
+        {
+            var c = collectedClues[i];
+            if (c != null && c.id == clueId) return true;
+        }
+        return false;
     }
 }

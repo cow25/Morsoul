@@ -19,6 +19,16 @@ namespace Morsoul.Core
         public VisualTreeAsset boardUxml;
         public VisualTreeAsset interrogationUxml;
         public VisualTreeAsset resolutionUxml;
+
+        [Header("Runtime Fallback Assets (Standalone Builds)")]
+        public ScriptableObject elizaProfile;
+        public Texture2D carrierWagonTexture;
+        public Texture2D horseTrotSheetTexture;
+        public Texture2D carrierIdleSheetTexture;
+        public Font bodyFont;
+        public Font titleFont;
+        public Texture2D abilityAetherSightIcon;
+        public Texture2D abilityEmotionEchoIcon;
     }
 }
 

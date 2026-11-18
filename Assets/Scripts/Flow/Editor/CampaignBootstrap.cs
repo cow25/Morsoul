@@ -17,7 +17,6 @@ namespace Morsoul.Flow.Editor
             Morsoul.Dialogue.Editor.DialogueContentGenerator.Generate();
             Morsoul.Dialogue.Editor.HubDialogueContentGenerator.Generate();
             Morsoul.Cutscene.Editor.CutsceneContentGenerator.GenerateFinaleCutscenes();
-            Morsoul.Hub.Editor.HubContentSetup.Install();
             Morsoul.Hub.Editor.HubCaseLoopSetup.Install();
         }
 

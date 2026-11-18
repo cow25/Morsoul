@@ -114,7 +114,7 @@ namespace Morsoul.Tests
         {
             var f = TestCases.Build(1, true);
             f.interrogation.phases[1].validMoves[0].emotionAura = Aura.Amber;
-            AssertInvalid(f.caseData.Validate(), "caseId 3");
+            AssertInvalid(f.caseData.Validate(), "caseId 2");
         }
 
         [Test]

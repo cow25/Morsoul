@@ -17,21 +17,33 @@ namespace Morsoul.Hub
 
         static GUIStyle _style;
         HubContext _context;
+        Camera _cam;
+        bool _isEmote;
+        bool _isNameLabel;
+        bool _significantOwner;
+        GUIContent _cachedContent;
+        string _cachedText;
+
+        void Awake()
+        {
+            _isEmote = gameObject.name.IndexOf("Emote", StringComparison.OrdinalIgnoreCase) >= 0;
+            _isNameLabel = gameObject.name == "NameLabel";
+            _significantOwner = !_isNameLabel || IsSignificantOwner();
+        }
 
         void OnGUI()
         {
             if (string.IsNullOrEmpty(text)) return;
             if (PauseMenuController.AnyModalOrPauseOpen) return;
-            bool isEmote = gameObject.name.IndexOf("Emote", StringComparison.OrdinalIgnoreCase) >= 0;
-            if (!isEmote)
+            if (!_isEmote)
             {
                 if (_context == null) _context = FindAnyObjectByType<HubContext>();
                 if (_context != null && _context.UiBlocked) return;
-                if (gameObject.name == "NameLabel" && !IsSignificantOwner()) return;
+                if (_isNameLabel && !_significantOwner) return;
             }
-            var cam = Camera.main;
-            if (cam == null) return;
-            var screen = cam.WorldToScreenPoint(transform.position);
+            if (_cam == null) _cam = Camera.main;
+            if (_cam == null) return;
+            var screen = _cam.WorldToScreenPoint(transform.position);
             if (screen.z <= 0f) return;
 
             _style ??= new GUIStyle
@@ -42,12 +54,17 @@ namespace Morsoul.Hub
             _style.fontSize = fontSize;
             _style.normal.textColor = color;
 
-            var size = _style.CalcSize(new GUIContent(text));
+            if (_cachedContent == null || _cachedText != text)
+            {
+                _cachedText = text;
+                _cachedContent = new GUIContent(text);
+            }
+            var size = _style.CalcSize(_cachedContent);
             var rect = new Rect(
                 screen.x - size.x * 0.5f,
                 Screen.height - screen.y - size.y * 0.5f,
                 size.x, size.y);
-            GUI.Label(rect, text, _style);
+            GUI.Label(rect, _cachedContent, _style);
         }
 
         bool IsSignificantOwner()

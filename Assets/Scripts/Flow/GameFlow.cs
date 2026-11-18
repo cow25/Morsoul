@@ -758,7 +758,15 @@ namespace Morsoul.Flow
                 {
                     _punishmentPlayed = true;
                     _punishmentPending = true;
-                    cutscenePlayer.Play(BuildPunishmentCutscene(caseId));
+                    var tempData = BuildPunishmentCutscene(caseId, out var tempBackdrop);
+                    void CleanupPunishment()
+                    {
+                        if (cutscenePlayer != null) cutscenePlayer.CutsceneEnded -= CleanupPunishment;
+                        if (tempData != null) Destroy(tempData);
+                        if (tempBackdrop != null) Destroy(tempBackdrop);
+                    }
+                    cutscenePlayer.CutsceneEnded += CleanupPunishment;
+                    cutscenePlayer.Play(tempData);
                     return;
                 }
             }
@@ -995,9 +1003,9 @@ namespace Morsoul.Flow
             });
         }
 
-        static CutsceneData BuildPunishmentCutscene(int caseId)
+        static CutsceneData BuildPunishmentCutscene(int caseId, out Sprite backdrop)
         {
-            var backdrop = Sprite.Create(Texture2D.blackTexture,
+            backdrop = Sprite.Create(Texture2D.blackTexture,
                 new Rect(0f, 0f, Texture2D.blackTexture.width, Texture2D.blackTexture.height),
                 new Vector2(0.5f, 0.5f));
             backdrop.hideFlags = HideFlags.DontSave;

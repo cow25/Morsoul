@@ -709,9 +709,13 @@ namespace Morsoul.Title
             if (player != null)
             {
                 _startingNewGameCutscene = true;
+                CutsceneData tempData = null;
+                Sprite tempBackdrop = null;
                 void OnDone()
                 {
                     player.CutsceneEnded -= OnDone;
+                    if (tempData != null) Destroy(tempData);
+                    if (tempBackdrop != null) Destroy(tempBackdrop);
                     _startingNewGameCutscene = false;
                     NewGameRequested?.Invoke();
                     if (CoreRuntime.Instance != null)
@@ -719,7 +723,13 @@ namespace Morsoul.Title
                 }
                 player.CutsceneEnded += OnDone;
                 if (_uitRoot != null) _uitRoot.style.display = DisplayStyle.None;
-                player.Play(openingCutscene != null ? openingCutscene : BuildStandstillOpeningCutscene());
+                CutsceneData toPlay = openingCutscene;
+                if (toPlay == null)
+                {
+                    tempData = BuildStandstillOpeningCutscene(out tempBackdrop);
+                    toPlay = tempData;
+                }
+                player.Play(toPlay);
                 return;
             }
             NewGameRequested?.Invoke();
@@ -727,9 +737,9 @@ namespace Morsoul.Title
                 CoreRuntime.Instance.Bus.Publish(new NewGameEvent());
         }
 
-        static CutsceneData BuildStandstillOpeningCutscene()
+        static CutsceneData BuildStandstillOpeningCutscene(out Sprite backdrop)
         {
-            var backdrop = Sprite.Create(Texture2D.blackTexture,
+            backdrop = Sprite.Create(Texture2D.blackTexture,
                 new Rect(0f, 0f, Texture2D.blackTexture.width, Texture2D.blackTexture.height),
                 new Vector2(0.5f, 0.5f));
             backdrop.hideFlags = HideFlags.DontSave;

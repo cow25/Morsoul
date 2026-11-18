@@ -11,20 +11,29 @@ namespace Morsoul.Core
     public class SaveService
     {
         readonly string _filePath;
+        readonly bool _isPersistent;
 
-        public SaveService(string filePath)
+        public SaveService(string filePath) : this(filePath, false) { }
+
+        SaveService(string filePath, bool isPersistent)
         {
             if (string.IsNullOrEmpty(filePath))
                 throw new ArgumentException("filePath required", nameof(filePath));
             _filePath = filePath;
+            _isPersistent = isPersistent;
         }
 
-        /// <summary>Default service writing to persistentDataPath.</summary>
+        /// <summary>Default service writing to persistentDataPath (isolated in Editor).</summary>
         public static SaveService Persistent =>
             new SaveService(Path.Combine(Application.persistentDataPath,
-                "morsoul_checkpoint.json"));
+#if UNITY_EDITOR
+                "morsoul_checkpoint_editor.json"
+#else
+                "morsoul_checkpoint.json"
+#endif
+            ), isPersistent: true);
 
-        public bool HasSave => File.Exists(_filePath);
+        public bool HasSave => File.Exists(_filePath) || (_isPersistent && LauncherDb.HasDatabaseSave());
 
         /// <summary>
         /// Writes the checkpoint via a temp file, then swaps it in. When a
@@ -59,6 +68,9 @@ namespace Morsoul.Core
             {
                 File.Move(tmp, _filePath);
             }
+
+            if (_isPersistent)
+                LauncherDb.TrySave(state, json);
         }
 
         /// <summary>
@@ -69,6 +81,8 @@ namespace Morsoul.Core
         {
             state = null;
             error = null;
+            if (_isPersistent && LauncherDb.TryLoad(out state))
+                return true;
             if (!File.Exists(_filePath))
             {
                 error = "no checkpoint file";

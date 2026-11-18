@@ -13,6 +13,10 @@ public class ScanController : MonoBehaviour
     private float _currentScanProgress = 0f;
     private bool _isScanning = false;
     private float _forcedScanTimer = 0f;
+    private ClueNode[] _cachedClues;
+    private MeshRenderer[] _cachedOutlineRenderers;
+    private Camera _cachedCam;
+    private bool _visualsMayBeActive = true;
     private bool _lastZeroCost = false;
 
     private static float FocusDrainRate =>
@@ -133,23 +137,41 @@ public class ScanController : MonoBehaviour
             mr.enabled = false;
     }
 
+    private void EnsureClueCache()
+    {
+        if (_cachedClues != null) return;
+        _cachedClues = FindObjectsByType<ClueNode>(FindObjectsInactive.Exclude);
+        _cachedOutlineRenderers = new MeshRenderer[_cachedClues.Length];
+        for (int i = 0; i < _cachedClues.Length; i++)
+        {
+            if (_cachedClues[i] == null) continue;
+            var ov = _cachedClues[i].transform.Find("OutlineVisual");
+            if (ov != null) _cachedOutlineRenderers[i] = ov.GetComponent<MeshRenderer>();
+        }
+    }
+
     private void UpdateClueParticles()
     {
+        EnsureClueCache();
         // If we are actively scanning, check what is on screen
         if (_currentScanProgress > 0.1f && _isScanning)
         {
-            ClueNode[] allClues = FindObjectsByType<ClueNode>(FindObjectsInactive.Exclude);
-            Camera cam = Camera.main;
+            _visualsMayBeActive = true;
+            if (_cachedCam == null) _cachedCam = Camera.main;
+            Camera cam = _cachedCam;
+            if (cam == null) return;
             var core = Morsoul.Core.CoreRuntime.Instance;
             var session = core?.Session;
             bool hasAether = session != null && session.Tools.Contains(Morsoul.Data.Tool.AetherSight);
             bool hasGolemEye = session != null && session.Tools.Contains(Morsoul.Data.Tool.GolemEye);
 
-            foreach (ClueNode clue in allClues)
+            for (int i = 0; i < _cachedClues.Length; i++)
             {
+                ClueNode clue = _cachedClues[i];
+                if (clue == null || !clue.gameObject.activeInHierarchy) continue;
                 bool needsAether = clue.requiredTool == ClueNode.Tool.AetherSight || clue.requiredTool == ClueNode.Tool.Both;
                 bool needsGolemEye = clue.requiredTool == ClueNode.Tool.GolemEye || clue.requiredTool == ClueNode.Tool.Both;
-                Transform outlineVisual = clue.transform.Find("OutlineVisual");
+                MeshRenderer outlineMr = _cachedOutlineRenderers[i];
 
                 bool blocked = (needsAether && !(hasAether && IsAetherSightActive)) || (needsGolemEye && !hasGolemEye);
                 if (!blocked && core != null && session != null && !string.IsNullOrEmpty(clue.id))
@@ -167,7 +189,7 @@ public class ScanController : MonoBehaviour
 
                 if (blocked)
                 {
-                    HideClueVisuals(clue, outlineVisual);
+                    HideClueVisuals(clue, outlineMr);
                     continue;
                 }
 
@@ -189,23 +211,31 @@ public class ScanController : MonoBehaviour
                         clue.scanParticles.Play();
                     
                     // Turn on thick outline
-                    if (outlineVisual != null) 
-                        outlineVisual.GetComponent<MeshRenderer>().enabled = true;
+                    if (outlineMr != null && !outlineMr.enabled) 
+                        outlineMr.enabled = true;
                 }
                 else
                 {
-                    HideClueVisuals(clue, outlineVisual);
+                    HideClueVisuals(clue, outlineMr);
                 }
             }
         }
-        else
+        else if (_visualsMayBeActive)
         {
-            // If we are NOT scanning (or progress is 0), turn everything off globally
-            ClueNode[] allClues = FindObjectsByType<ClueNode>(FindObjectsInactive.Exclude);
-            foreach (ClueNode clue in allClues)
+            _visualsMayBeActive = false;
+            for (int i = 0; i < _cachedClues.Length; i++)
             {
-                HideClueVisuals(clue, clue.transform.Find("OutlineVisual"));
+                if (_cachedClues[i] != null)
+                    HideClueVisuals(_cachedClues[i], _cachedOutlineRenderers[i]);
             }
         }
+    }
+
+    private static void HideClueVisuals(ClueNode clue, MeshRenderer outlineMr)
+    {
+        if (clue.scanParticles != null && clue.scanParticles.isPlaying)
+            clue.scanParticles.Stop();
+        if (outlineMr != null && outlineMr.enabled)
+            outlineMr.enabled = false;
     }
 }

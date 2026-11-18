@@ -64,6 +64,12 @@ public class InspectManager : MonoBehaviour
 
     private void OnDestroy()
     {
+        if (_currentClone != null)
+        {
+            Destroy(_currentClone);
+            _currentClone = null;
+            Time.timeScale = 1f;
+        }
         if (_modalBlocker != null)
         {
             Morsoul.Core.PauseMenuController.UnregisterExternalModal(_modalBlocker);

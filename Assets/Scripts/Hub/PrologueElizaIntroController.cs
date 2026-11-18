@@ -90,6 +90,8 @@ namespace Morsoul.Hub
                 {
                     var visual = eliza.gameObject.AddComponent<EntityVisual>();
                     visual.profile = elizaProfile;
+                    if (visual.profile == null)
+                        visual.profile = Resources.Load<Morsoul.Core.PauseMenuAssets>("PauseMenuConfig")?.elizaProfile as VisualProfile;
 #if UNITY_EDITOR
                     if (visual.profile == null)
                         visual.profile = UnityEditor.AssetDatabase.LoadAssetAtPath<VisualProfile>("Assets/Art/Profiles/Eliza.asset");

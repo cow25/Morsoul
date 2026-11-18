@@ -73,6 +73,8 @@ namespace Morsoul.Flow
         bool _active;
         bool _waitingDialogue;
         int _uiVersion = -1;
+        Action _activeDialogueOnEnd;
+        DialogueData _activeDialogueData;
 
         public void Begin(GameFlow flow, WeightedBoardController board, DialogueController dialogue)
         {
@@ -112,6 +114,12 @@ namespace Morsoul.Flow
         {
             if (_panelRenderer != null)
                 _panelRenderer.UnregisterUIReloadCallback(OnUIReload);
+            if (_dialogue != null && _activeDialogueOnEnd != null)
+                _dialogue.DialogueEnded -= _activeDialogueOnEnd;
+            if (_activeDialogueData != null)
+                Destroy(_activeDialogueData);
+            _activeDialogueOnEnd = null;
+            _activeDialogueData = null;
         }
 
         void OnUIReload(PanelRenderer renderer, VisualElement root, int version)
@@ -611,10 +619,15 @@ namespace Morsoul.Flow
             }
             void OnEnd()
             {
-                _dialogue.DialogueEnded -= OnEnd;
+                if (_dialogue != null) _dialogue.DialogueEnded -= OnEnd;
+                _activeDialogueOnEnd = null;
+                if (_activeDialogueData != null) Destroy(_activeDialogueData);
+                _activeDialogueData = null;
                 _waitingDialogue = false;
                 onDone?.Invoke();
             }
+            _activeDialogueOnEnd = OnEnd;
+            _activeDialogueData = data;
             _dialogue.DialogueEnded += OnEnd;
             _dialogue.SetDialogue(data);
             _dialogue.Play();

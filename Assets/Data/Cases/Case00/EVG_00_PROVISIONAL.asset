@@ -70,6 +70,7 @@ MonoBehaviour:
   - id: CASE0_FORCE_BREACH
     text: Force the door open with the pipe.
     tier: 0
+    targetClueId: 
     submissionFeedback: The pipe is a lever, not a bypass. It cannot power or turn this lock.
     supportingEdges:
     - clueId: RH1_00
@@ -82,6 +83,7 @@ MonoBehaviour:
   - id: CASE0_UNPOWERED_LOCKDOWN
     text: The door is unpowered, but nothing here opens it.
     tier: 1
+    targetClueId: 
     submissionFeedback: The lock is unpowered, but that does not yet explain how the key releases it.
     supportingEdges:
     - clueId: C1_00
@@ -94,7 +96,8 @@ MonoBehaviour:
   - id: CASE0_MANUAL_OVERRIDE
     text: The ancient key can power the manual override.
     tier: 2
-    submissionFeedback: ''
+    targetClueId: 
+    submissionFeedback: 
     supportingEdges:
     - clueId: T1_00
       weight: 0.8
@@ -111,7 +114,9 @@ MonoBehaviour:
     inventedLinkPenalty: 0.1
     lowThreshold: 0.35
     highThreshold: 0.93
-  cachedReferenceSupport: 0.454547
+    PrunedMode: 1
+    RivalClueId: 
+  cachedReferenceSupport: 0.12851888
   solutionTopologicalOrder:
   - T1_00
   - C1_00

@@ -24,6 +24,9 @@ namespace Morsoul.Hub
         public bool insetByView = true;
 
         Vector2 _velocity;
+        Camera _cam;
+
+        void Awake() => _cam = GetComponent<Camera>();
 
         public void SnapToTarget(Transform newTarget)
         {
@@ -65,10 +68,10 @@ namespace Morsoul.Hub
 
         Vector2 ViewHalfExtents()
         {
-            var cam = GetComponent<Camera>();
-            if (cam == null || !cam.orthographic) return Vector2.zero;
-            float halfH = cam.orthographicSize;
-            return new Vector2(halfH * cam.aspect, halfH);
+            if (_cam == null) _cam = GetComponent<Camera>();
+            if (_cam == null || !_cam.orthographic) return Vector2.zero;
+            float halfH = _cam.orthographicSize;
+            return new Vector2(halfH * _cam.aspect, halfH);
         }
     }
 }

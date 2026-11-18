@@ -125,6 +125,11 @@ namespace Morsoul.Hub
                 sr.sortingOrder = visualProfile.sortingOrder + att.sortingOrderOffset;
                 Vector2 s = att.localScale == Vector2.zero ? Vector2.one : att.localScale;
                 go.transform.localScale = new Vector3(s.x, s.y, 1f);
+                if (i < _cachedAttachTransforms.Length)
+                {
+                    _cachedAttachTransforms[i] = go.transform;
+                    _cachedAttachRenderers[i] = sr;
+                }
             }
 
             // Disable any leftover Attach_* children from an earlier profile with more slots.
@@ -137,6 +142,9 @@ namespace Morsoul.Hub
             }
         }
 
+        Transform[] _cachedAttachTransforms;
+        SpriteRenderer[] _cachedAttachRenderers;
+
         public void SyncFlip(bool facingLeft)
         {
             AnimateAttachments(facingLeft, 0f, 0f);
@@ -145,15 +153,26 @@ namespace Morsoul.Hub
         public void AnimateAttachments(bool facingLeft, float stridePhase, float moveWeight)
         {
             if (profile == null || profile.attachments == null) return;
-            var visualRoot = transform.Find(VisualChildName);
-            if (visualRoot == null) return;
+            if (_cachedAttachTransforms == null || _cachedAttachTransforms.Length != profile.attachments.Length)
+            {
+                var visualRoot = transform.Find(VisualChildName);
+                if (visualRoot == null) return;
+                _cachedAttachTransforms = new Transform[profile.attachments.Length];
+                _cachedAttachRenderers = new SpriteRenderer[profile.attachments.Length];
+                for (int i = 0; i < profile.attachments.Length; i++)
+                {
+                    var c = visualRoot.Find($"{AttachmentPrefix}{i}");
+                    _cachedAttachTransforms[i] = c;
+                    if (c != null) _cachedAttachRenderers[i] = c.GetComponent<SpriteRenderer>();
+                }
+            }
 
             float swingSin = moveWeight > 0.01f ? Mathf.Sin(stridePhase) * moveWeight : 0f;
             float bobCos = moveWeight > 0.01f ? Mathf.Abs(Mathf.Cos(stridePhase)) * 0.03f * moveWeight : 0f;
 
             for (int i = 0; i < profile.attachments.Length; i++)
             {
-                var child = visualRoot.Find($"{AttachmentPrefix}{i}");
+                var child = _cachedAttachTransforms[i];
                 if (child == null || !child.gameObject.activeSelf) continue;
 
                 var att = profile.attachments[i];
@@ -164,7 +183,8 @@ namespace Morsoul.Hub
                 child.localPosition = new Vector3(x, y, att.localZ);
                 float rot = (facingLeft ? -att.rotationZ : att.rotationZ) - dirSign * swingSin * 12f * flipSign;
                 child.localRotation = Quaternion.Euler(0f, 0f, rot);
-                if (child.TryGetComponent<SpriteRenderer>(out var sr))
+                var sr = _cachedAttachRenderers[i];
+                if (sr != null)
                     sr.flipX = att.flipX ^ facingLeft;
             }
         }

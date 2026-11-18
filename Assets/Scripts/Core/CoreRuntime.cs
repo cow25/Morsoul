@@ -133,6 +133,16 @@ namespace Morsoul.Core
                 gameObject.AddComponent<GameStateManager>();
             if (GetComponent<AudioCoordinator>() == null)
                 gameObject.AddComponent<AudioCoordinator>();
+#if !UNITY_EDITOR
+            GameLock.Acquire();
+#endif
+        }
+
+        void OnApplicationQuit()
+        {
+#if !UNITY_EDITOR
+            GameLock.Release();
+#endif
         }
 
         void OnDestroy()

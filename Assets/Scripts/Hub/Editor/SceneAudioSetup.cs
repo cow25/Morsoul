@@ -26,17 +26,10 @@ namespace Morsoul.Hub.Editor
             "Assets/Scenes/Hub_IronHollow.unity",
         };
 
-        public static void CreateCathedralArt() => HubArtSceneFactory.CreateArtScene("Hub_CathedralNave_Art");
-
-        public static void CreateIronHollowArt() => HubArtSceneFactory.CreateArtScene("Hub_IronHollow_Art");
-
-        /// <summary>Creates both missing art overlays and installs all audio loops.</summary>
+        /// <summary>Installs all audio loops.</summary>
         public static void InstallAll()
         {
             ParkOnSavedScene();
-            CreateCathedralArt();
-            CreateIronHollowArt();
-            RegisterArtOverlays();
             InstallAudioLoops();
         }
 

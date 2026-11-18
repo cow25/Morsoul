@@ -141,24 +141,38 @@ public class HUDManager : MonoBehaviour
         HudLoaded?.Invoke(_hudRoot);
     }
 
+    private string _lastRawUserName;
+    private string _lastDisplayUserName = "User";
+    private int _lastCaseNum = int.MinValue;
+    private bool? _lastAetherActive;
+    private bool _scanLookedUp;
+
     private void SyncSessionState()
     {
         var session = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session : null;
         if (_userNameLabel != null)
         {
-            string displayName = session != null && !string.IsNullOrWhiteSpace(session.PlayerName)
-                ? session.PlayerName.Trim() : "User";
-            if (_userNameLabel.text != displayName) _userNameLabel.text = displayName;
+            string raw = session != null ? session.PlayerName : null;
+            if (!string.Equals(raw, _lastRawUserName, System.StringComparison.Ordinal))
+            {
+                _lastRawUserName = raw;
+                _lastDisplayUserName = !string.IsNullOrWhiteSpace(raw) ? raw.Trim() : "User";
+            }
+            if (_userNameLabel.text != _lastDisplayUserName) _userNameLabel.text = _lastDisplayUserName;
         }
         if (session != null)
         {
             if (session.Tools.Contains(Tool.AetherSight)) UnlockAetherHUD();
             int caseNum = session.InvestigationCaseId >= 0 ? session.InvestigationCaseId : session.CurrentCase;
-            string expectedCase = caseNum <= 0 ? "Prologue" : $"Case {caseNum}";
-            if (_caseLabel != null && _caseLabel.text != expectedCase)
+            if (caseNum != _lastCaseNum)
             {
-                _cachedCaseTitle = expectedCase;
-                _caseLabel.text = expectedCase;
+                _lastCaseNum = caseNum;
+                string expectedCase = caseNum <= 0 ? "Prologue" : $"Case {caseNum}";
+                if (_caseLabel != null && _caseLabel.text != expectedCase)
+                {
+                    _cachedCaseTitle = expectedCase;
+                    _caseLabel.text = expectedCase;
+                }
             }
         }
         var focus = CoreRuntime.Instance?.Focus;
@@ -173,12 +187,20 @@ public class HUDManager : MonoBehaviour
 
     private void UpdateKeyHighlights()
     {
-        _scanController ??= FindAnyObjectByType<ScanController>();
+        if (!_scanLookedUp && _scanController == null)
+        {
+            _scanController = FindAnyObjectByType<ScanController>();
+            _scanLookedUp = true;
+        }
         bool aetherActive = _scanController != null && _scanController.IsAetherSightActive;
-        if (_aetherSightRow != null)
-            _aetherSightRow.style.opacity = aetherActive ? 1f : 0.2f;
-        if (_aetherFocusCostText != null)
-            _aetherFocusCostText.text = aetherActive ? "ON — Press [1]" : "OFF — Press [1]";
+        if (_lastAetherActive != aetherActive)
+        {
+            _lastAetherActive = aetherActive;
+            if (_aetherSightRow != null)
+                _aetherSightRow.style.opacity = aetherActive ? 1f : 0.2f;
+            if (_aetherFocusCostText != null)
+                _aetherFocusCostText.text = aetherActive ? "ON — Press [1]" : "OFF — Press [1]";
+        }
 
         var keyboard = UnityEngine.InputSystem.Keyboard.current;
         if (keyboard == null) return;
