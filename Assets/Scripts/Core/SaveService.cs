@@ -11,20 +11,45 @@ namespace Morsoul.Core
     public class SaveService
     {
         readonly string _filePath;
+        readonly bool _isPersistent;
 
-        public SaveService(string filePath)
+        public SaveService(string filePath) : this(filePath, false) { }
+
+        SaveService(string filePath, bool isPersistent)
         {
             if (string.IsNullOrEmpty(filePath))
                 throw new ArgumentException("filePath required", nameof(filePath));
             _filePath = filePath;
+            _isPersistent = isPersistent;
         }
 
-        /// <summary>Default service writing to persistentDataPath.</summary>
-        public static SaveService Persistent =>
-            new SaveService(Path.Combine(Application.persistentDataPath,
-                "morsoul_checkpoint.json"));
+        static int _activeSlot = 1;
 
-        public bool HasSave => File.Exists(_filePath);
+        /// <summary>Active save slot (1..3). Defaults to 1.</summary>
+        public static int ActiveSlot
+        {
+            get => _activeSlot;
+            set => _activeSlot = Mathf.Clamp(value, 1, 3);
+        }
+
+        /// <summary>Service for a specific save slot (1..3). Slot 1 includes LauncherDb.</summary>
+        public static SaveService ForSlot(int slot)
+        {
+            int clamped = Mathf.Clamp(slot, 1, 3);
+            string suffix = clamped == 1 ? "" : $"_slot{clamped}";
+            return new SaveService(Path.Combine(Application.persistentDataPath,
+#if UNITY_EDITOR
+                $"morsoul_checkpoint{suffix}_editor.json"
+#else
+                $"morsoul_checkpoint{suffix}.json"
+#endif
+            ), isPersistent: clamped == 1);
+        }
+
+        /// <summary>Default service writing to persistentDataPath (isolated in Editor).</summary>
+        public static SaveService Persistent => ForSlot(_activeSlot);
+
+        public bool HasSave => File.Exists(_filePath) || (_isPersistent && LauncherDb.HasDatabaseSave());
 
         /// <summary>
         /// Writes the checkpoint via a temp file, then swaps it in. When a
@@ -59,6 +84,9 @@ namespace Morsoul.Core
             {
                 File.Move(tmp, _filePath);
             }
+
+            if (_isPersistent)
+                LauncherDb.TrySave(state, json);
         }
 
         /// <summary>
@@ -69,6 +97,8 @@ namespace Morsoul.Core
         {
             state = null;
             error = null;
+            if (_isPersistent && LauncherDb.TryLoad(out state))
+                return true;
             if (!File.Exists(_filePath))
             {
                 error = "no checkpoint file";

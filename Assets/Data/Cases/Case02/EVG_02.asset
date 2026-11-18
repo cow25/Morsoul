@@ -16,10 +16,10 @@ MonoBehaviour:
   provisional: 1
   designNote: Provisionally approved Case 2 weighted board. Complete scapegoating requires both acoustic sabotage and coerced scapegoat branches.
   tutorialRedHerringClueIds: []
-  tutorialRedHerringFeedback: ''
-  tutorialReversedLinkFeedback: ''
-  tutorialGenericLinkFeedback: ''
-  tutorialLockedConclusionFeedback: ''
+  tutorialRedHerringFeedback: 
+  tutorialReversedLinkFeedback: 
+  tutorialGenericLinkFeedback: 
+  tutorialLockedConclusionFeedback: 
   clueIds:
   - C1_02
   - C2_02
@@ -67,6 +67,7 @@ MonoBehaviour:
   - id: CASE2_SYLVAN_SPIRIT_CURSE
     text: Sylvan's wild spirit magic cursed Lyra from the tower base.
     tier: 0
+    targetClueId: 
     submissionFeedback: The accusation repeats institutional prejudice, not the acoustic evidence.
     supportingEdges:
     - clueId: T2_02
@@ -85,6 +86,7 @@ MonoBehaviour:
   - id: CASE2_ACOUSTIC_SABOTAGE
     text: The Great Bell was prepared to emit a muting shockwave.
     tier: 1
+    targetClueId: 
     submissionFeedback: The delivery mechanism is proven, but the operator and motive remain unresolved.
     supportingEdges:
     - clueId: C1_02
@@ -97,6 +99,7 @@ MonoBehaviour:
   - id: CASE2_COERCED_SCAPEGOAT
     text: Accord was coerced, and Sylvan's alibi clears the accused acolyte.
     tier: 1
+    targetClueId: 
     submissionFeedback: The coercion and scapegoating are established, but the physical delivery method is still missing.
     supportingEdges:
     - clueId: C3_02
@@ -109,7 +112,8 @@ MonoBehaviour:
   - id: CASE2_COERCED_INSTITUTIONAL_SCAPEGOATING
     text: Accord applied dark resonance dust to the clapper under Veiled Circle blackmail and framed Sylvan to protect Marian.
     tier: 2
-    submissionFeedback: ''
+    targetClueId: 
+    submissionFeedback: 
     supportingEdges:
     - clueId: C2_02
       weight: 0.9
@@ -128,7 +132,9 @@ MonoBehaviour:
     inventedLinkPenalty: 0.1
     lowThreshold: 0.35
     highThreshold: 0.75
-  cachedReferenceSupport: 0.318438
+    PrunedMode: 1
+    RivalClueId: 
+  cachedReferenceSupport: 0.06724325
   solutionTopologicalOrder:
   - C1_02
   - C2_02

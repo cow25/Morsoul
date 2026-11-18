@@ -10652,7 +10652,7 @@ MonoBehaviour:
   blocksMovement: 0
   blockSize: {x: 0.55, y: 0.5}
   restingIndicator: {fileID: 0}
-  restCue: {fileID: 0}
+  restCue: {fileID: 8300000, guid: adcac75087a17704ca6c0c3b15bc3aa5, type: 3}
 --- !u!114 &79820986
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -76495,6 +76495,7 @@ GameObject:
   - component: {fileID: 999389234}
   - component: {fileID: 999389233}
   - component: {fileID: 999389232}
+  - component: {fileID: 999389235}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -76586,6 +76587,14 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!81 &999389235
+AudioListener:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 999389231}
+  m_Enabled: 1
 --- !u!1 &1008410551
 GameObject:
   m_ObjectHideFlags: 0
@@ -82189,7 +82198,9 @@ MonoBehaviour:
   interactLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  footstepClips: []
+  footstepClips:
+  - {fileID: 8300000, guid: a0010a1a0c474473b81729eb770c485f, type: 3}
+  - {fileID: 8300000, guid: 7478151cf36724a7dada558f746c3633, type: 3}
   stepIntervalSeconds: 0.42
 --- !u!114 &1278914298
 MonoBehaviour:
@@ -93614,8 +93625,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fc065444264e1434389ac6324fed4cf8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Morsoul.Core::Morsoul.Core.SceneAudioLoop
-  music: {fileID: 0}
-  ambience: {fileID: 0}
+  music: {fileID: 8300000, guid: efc44feb252279c46a9be06260e99a89, type: 3}
+  ambience: {fileID: 8300000, guid: c53d52b6903e77342963b7b627f126fb, type: 3}
 --- !u!4 &1910466060
 Transform:
   m_ObjectHideFlags: 0

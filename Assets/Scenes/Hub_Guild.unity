@@ -1137,6 +1137,7 @@ GameObject:
   - component: {fileID: 54196006}
   - component: {fileID: 54196005}
   - component: {fileID: 54196004}
+  - component: {fileID: 54196007}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -1228,6 +1229,14 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!81 &54196007
+AudioListener:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 54196003}
+  m_Enabled: 1
 --- !u!1 &54358322
 GameObject:
   m_ObjectHideFlags: 0
@@ -4335,7 +4344,9 @@ MonoBehaviour:
   interactLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  footstepClips: []
+  footstepClips:
+  - {fileID: 8300000, guid: a0010a1a0c474473b81729eb770c485f, type: 3}
+  - {fileID: 8300000, guid: 7478151cf36724a7dada558f746c3633, type: 3}
   stepIntervalSeconds: 0.42
 --- !u!4 &206976677
 Transform:
@@ -10471,6 +10482,7 @@ MonoBehaviour:
   hud: {fileID: 326028499}
   travelMenu: {fileID: 0}
   boardPanel: {fileID: 0}
+  elizaProfile: {fileID: 0}
 --- !u!114 &705571988
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10507,8 +10519,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fc065444264e1434389ac6324fed4cf8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Morsoul.Core::Morsoul.Core.SceneAudioLoop
-  music: {fileID: 0}
-  ambience: {fileID: 0}
+  music: {fileID: 8300000, guid: 473b0ec330757c34ca6c77c578140a5b, type: 3}
+  ambience: {fileID: 8300000, guid: cdfab68e200464842847522ffb19ae13, type: 3}
 --- !u!4 &705571991
 Transform:
   m_ObjectHideFlags: 0

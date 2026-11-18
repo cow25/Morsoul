@@ -16,10 +16,10 @@ MonoBehaviour:
   provisional: 1
   designNote: Provisionally approved Case 5 weighted board. Complete extremism requires both forced cataclysmic overload and calculated ideological purge branches.
   tutorialRedHerringClueIds: []
-  tutorialRedHerringFeedback: ''
-  tutorialReversedLinkFeedback: ''
-  tutorialGenericLinkFeedback: ''
-  tutorialLockedConclusionFeedback: ''
+  tutorialRedHerringFeedback: 
+  tutorialReversedLinkFeedback: 
+  tutorialGenericLinkFeedback: 
+  tutorialLockedConclusionFeedback: 
   clueIds:
   - C1_05
   - C2_05
@@ -57,6 +57,7 @@ MonoBehaviour:
   - id: CASE5_PASSIVE_RITUAL_DIVERGENCE
     text: A passive grounding rod can safely divert the ritual discharge.
     tier: 0
+    targetClueId: 
     submissionFeedback: The rod addresses surface arcing, not a pressurized planetary siphon breach.
     supportingEdges:
     - clueId: RH1_05
@@ -71,6 +72,7 @@ MonoBehaviour:
   - id: CASE5_FORCED_CATACLYSMIC_OVERLOAD
     text: The pylons are forcing a containment overload at the central fissure.
     tier: 1
+    targetClueId: 
     submissionFeedback: The overload mechanism is proven, but the ideological responsibility remains unresolved.
     supportingEdges:
     - clueId: C1_05
@@ -83,6 +85,7 @@ MonoBehaviour:
   - id: CASE5_IDEOLOGICAL_PURGE
     text: The Overseer intentionally distorted ancient science to justify mass eradication.
     tier: 1
+    targetClueId: 
     submissionFeedback: The motive is established, but the physical overload path still needs proof.
     supportingEdges:
     - clueId: T1_05
@@ -95,7 +98,8 @@ MonoBehaviour:
   - id: CASE5_HYPOCRITICAL_IDEOLOGICAL_EXTREMISM
     text: The Grand Overseer is using forbidden extraction to force an extinction-level purge while rewriting the cause of the first catastrophe.
     tier: 2
-    submissionFeedback: ''
+    targetClueId: 
+    submissionFeedback: 
     supportingEdges:
     - clueId: C2_05
       weight: 0.9
@@ -112,7 +116,9 @@ MonoBehaviour:
     inventedLinkPenalty: 0.1
     lowThreshold: 0.35
     highThreshold: 0.75
-  cachedReferenceSupport: 0.400542
+    PrunedMode: 1
+    RivalClueId: 
+  cachedReferenceSupport: 0.091404736
   solutionTopologicalOrder:
   - C1_05
   - C2_05

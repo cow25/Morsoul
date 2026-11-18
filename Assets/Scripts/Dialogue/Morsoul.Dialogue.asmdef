@@ -2,6 +2,7 @@
     "name": "Morsoul.Dialogue",
     "rootNamespace": "Morsoul.Dialogue",
     "references": [
+        "Morsoul.Core",
         "Morsoul.Data",
         "Unity.InputSystem"
     ],

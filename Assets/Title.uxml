@@ -64,14 +64,14 @@
                         <ui:Label name="Slot1Subtitle" text="" class="tarot-subtitle" picking-mode="Ignore"/>
                     </ui:Button>
                     <ui:Button name="Slot2Card" class="tarot-card">
-                        <ui:Label text="Empty Slot" class="tarot-title" picking-mode="Ignore"/>
-                        <ui:VisualElement class="tarot-portrait" style="opacity: 0;" picking-mode="Ignore"/>
-                        <ui:Label text="Slot 2" class="tarot-subtitle" style="opacity: 0.45;" picking-mode="Ignore"/>
+                        <ui:Label name="Slot2Title" text="Empty Slot" class="tarot-title" picking-mode="Ignore"/>
+                        <ui:VisualElement name="Slot2Portrait" class="tarot-portrait" style="display: none;" picking-mode="Ignore"/>
+                        <ui:Label name="Slot2Subtitle" text="Slot 2" class="tarot-subtitle" style="opacity: 0.45;" picking-mode="Ignore"/>
                     </ui:Button>
                     <ui:Button name="Slot3Card" class="tarot-card">
-                        <ui:Label text="Empty Slot" class="tarot-title" picking-mode="Ignore"/>
-                        <ui:VisualElement class="tarot-portrait" style="opacity: 0;" picking-mode="Ignore"/>
-                        <ui:Label text="Slot 3" class="tarot-subtitle" style="opacity: 0.45;" picking-mode="Ignore"/>
+                        <ui:Label name="Slot3Title" text="Empty Slot" class="tarot-title" picking-mode="Ignore"/>
+                        <ui:VisualElement name="Slot3Portrait" class="tarot-portrait" style="display: none;" picking-mode="Ignore"/>
+                        <ui:Label name="Slot3Subtitle" text="Slot 3" class="tarot-subtitle" style="opacity: 0.45;" picking-mode="Ignore"/>
                     </ui:Button>
                 </ui:VisualElement>
 

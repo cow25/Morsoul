@@ -66,7 +66,7 @@ MonoBehaviour:
     speakerPortrait: {fileID: 0}
     text: '"Your permit doesn''t supersede a Class-A Guild Warrant. Step aside, ''Scholar.'' {PlayerName}, scan the gate."'
     registersClue: {fileID: 0}
-    setsFlag: C3_PerimeterSealGranted
+    setsFlag: 
     requiresFlag: 
     options: []
     nextNodeId: 

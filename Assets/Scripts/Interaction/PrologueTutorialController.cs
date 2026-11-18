@@ -132,6 +132,8 @@ public class PrologueTutorialController : MonoBehaviour
         EnterAwakeningDialogue();
     }
 
+    private static Material _robeMaterial;
+
     private void OnDestroy()
     {
         ResetAwakeningCameraOffset();
@@ -139,6 +141,11 @@ public class PrologueTutorialController : MonoBehaviour
             HUDManager.Instance.HudLoaded -= OnHudLoaded;
         if (_boardController != null)
             _boardController.BoardLoaded -= OnBoardLoaded;
+        if (_robeMaterial != null)
+        {
+            Destroy(_robeMaterial);
+            _robeMaterial = null;
+        }
     }
 
     private void OnHudLoaded(VisualElement hudRoot)
@@ -689,6 +696,7 @@ public class PrologueTutorialController : MonoBehaviour
                 var mat = new Material(shader);
                 mat.color = new Color(0.22f, 0.18f, 0.16f, 1f);
                 renderer.sharedMaterial = mat;
+                _robeMaterial = mat;
             }
         }
     }

@@ -58,6 +58,7 @@ namespace Morsoul.Hub
             if (clue == null || _collected.Contains(clue)) return false;
             _collected.Add(clue);
             CoreRuntime.Instance?.Session.RegisterClue(clue);
+            AudioCoordinator.PlayBankSfx(b => b.sfxClueCollected, 0.3f);
             ClueRegistered?.Invoke(clue);
             return true;
         }

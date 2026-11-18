@@ -86,7 +86,6 @@ namespace Morsoul.Hub
             SyncPlayerContext();
 
             UpdatePromptTarget();
-            TickFootsteps(keyboard);
 
             if (!dialoguePlaying && !cutsceneActive && keyboard.eKey.wasPressedThisFrame &&
                 CurrentTarget != null)
@@ -130,13 +129,16 @@ namespace Morsoul.Hub
                 : (input.y > 0f ? PlayerFacing2D.Up : PlayerFacing2D.Down);
         }
 
+        string _cachedSceneName;
+        readonly Collider2D[] _hitBuffer = new Collider2D[16];
+
         void SyncPlayerContext()
         {
             var session = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session : null;
             // Keep the mode the entry mechanism stamped — investigation
             // stand-ins run as Mode3D and the board's CanUse gate reads it.
             session?.SetPlayerContext(session.CurrentSceneMode,
-                SceneManager.GetActiveScene().name, transform.position, _facing);
+                _cachedSceneName ??= SceneManager.GetActiveScene().name, transform.position, _facing);
         }
 
         void UpdatePromptTarget()
@@ -156,9 +158,11 @@ namespace Morsoul.Hub
                 return;
             }
 
-            var hits = Physics2D.OverlapCircleAll(transform.position, interactRadius, interactLayers);
-            foreach (var hit in hits)
+            var filter = new ContactFilter2D { useLayerMask = true, layerMask = interactLayers, useTriggers = true };
+            int count = Physics2D.OverlapCircle((Vector2)transform.position, interactRadius, filter, _hitBuffer);
+            for (int i = 0; i < count; i++)
             {
+                var hit = _hitBuffer[i];
                 if (hit == null) continue;
                 var interactable = hit.GetComponentInParent<Interactable2D>();
                 if (interactable == null || _candidates.Contains(interactable)) continue;
@@ -191,7 +195,7 @@ namespace Morsoul.Hub
             bool sprint = keyboard.leftShiftKey.isPressed;
             _stepTimer = stepIntervalSeconds / (sprint ? sprintMultiplier : 1f);
             var clip = footstepClips[Random.Range(0, footstepClips.Length)];
-            if (clip != null) CoreRuntime.Instance?.Audio?.PlaySfx(clip, 0.8f);
+            if (clip != null) CoreRuntime.Instance?.Audio?.PlaySfx(clip, 0.3f);
         }
 
         void OnDisable()

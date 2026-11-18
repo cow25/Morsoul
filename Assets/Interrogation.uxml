@@ -16,7 +16,7 @@
                     <ui:VisualElement name="Seal2" class="strike-seal"/>
                 </ui:VisualElement>
             </ui:VisualElement>
-            <ui:Label name="GuidedHint" text="Eliza: press the underlined keyword first." class="guided-hint" style="display: none; flex-shrink: 0; white-space: normal; margin-bottom: 8px;"/>
+            <ui:Label name="GuidedHint" text="TUTORIAL (1/2): Click an underlined keyword (or press [1] PRESS) to probe the suspect's claim for weak spots." class="guided-hint" style="display: none; flex-shrink: 0; white-space: normal; margin-bottom: 8px;"/>
             <ui:VisualElement name="ClaimArea" class="claim-area" style="flex-direction: row; margin-bottom: 12px; flex-shrink: 1; min-height: 0;">
                 <ui:VisualElement name="PortraitImage" class="portrait"/>
                 <ui:VisualElement name="ClaimColumn" style="flex-grow: 1; flex-shrink: 1; min-width: 0; flex-direction: column; margin-left: 14px;">

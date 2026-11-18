@@ -159,6 +159,20 @@ namespace Morsoul.Hub
                 dialogue.playerName = session.PlayerName;
             dialogue.SetDialogue(data);
             dialogue.Play();
+            if ((data.hideFlags & HideFlags.DontSave) != 0)
+            {
+                if (!dialogue.IsPlaying)
+                {
+                    Destroy(data);
+                    return false;
+                }
+                void CleanupTransient()
+                {
+                    if (dialogue != null) dialogue.DialogueEnded -= CleanupTransient;
+                    if (data != null) Destroy(data);
+                }
+                dialogue.DialogueEnded += CleanupTransient;
+            }
             return dialogue.IsPlaying;
         }
 

@@ -33,9 +33,15 @@ public class PlayerController : MonoBehaviour
         Cursor.visible = false;
 
         currentMoveSpeed = WalkSpeed;
+    }
+
+    void Awake()
+    {
+        characterController = GetComponent<CharacterController>();
+        _cachedSceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
 
         var session = Morsoul.Core.CoreRuntime.Instance?.Session;
-        string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+        string sceneName = _cachedSceneName;
         if (session != null && session.HasPlayerPosition &&
             session.CurrentSceneMode == Morsoul.Core.SceneMode.Mode3D &&
             session.CurrentSceneId == sceneName)
@@ -43,6 +49,17 @@ public class PlayerController : MonoBehaviour
             characterController.enabled = false;
             transform.position = session.PlayerPosition;
             characterController.enabled = true;
+        }
+        else
+        {
+            var spawn = GameObject.Find("PlayerSpawn");
+            if (spawn != null)
+            {
+                characterController.enabled = false;
+                transform.position = spawn.transform.position;
+                transform.rotation = spawn.transform.rotation;
+                characterController.enabled = true;
+            }
         }
     }
 
@@ -99,12 +116,20 @@ public class PlayerController : MonoBehaviour
         moveDirection.z = horizontalMovement.z;
 
         characterController.Move(moveDirection * Time.deltaTime);
-        Morsoul.Core.CoreRuntime.Instance?.Session?.SetPlayerContext(
-            Morsoul.Core.SceneMode.Mode3D,
-            UnityEngine.SceneManagement.SceneManager.GetActiveScene().name,
-            transform.position,
-            Morsoul.Core.PlayerFacing2D.Down);
+        var session = Morsoul.Core.CoreRuntime.Instance?.Session;
+        if (session != null &&
+            session.CurrentSceneMode == Morsoul.Core.SceneMode.Mode3D &&
+            session.CurrentSceneId == _cachedSceneName)
+        {
+            session.SetPlayerContext(
+                Morsoul.Core.SceneMode.Mode3D,
+                _cachedSceneName,
+                transform.position,
+                Morsoul.Core.PlayerFacing2D.Down);
+        }
     }
+
+    private string _cachedSceneName;
 
     private void HandleLooking(Vector2 mouseDelta)
     {

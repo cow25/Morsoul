@@ -19,6 +19,7 @@ namespace Morsoul.Hub
         SpriteRenderer _horseSr;
         LineRenderer _reins;
         Sprite[] _horseFrames;
+        readonly System.Collections.Generic.List<Object> _runtimeAssets = new System.Collections.Generic.List<Object>();
         float _animTime;
         Vector3 _wagonBaseLocal;
         Vector3 _carrierBaseLocal;
@@ -64,6 +65,7 @@ namespace Morsoul.Hub
                 _wagonSr.sprite = Sprite.Create(wagonTex,
                     new Rect(0, 0, wagonTex.width, wagonTex.height),
                     new Vector2(0.5f, 0.25f), 24f);
+                _runtimeAssets.Add(_wagonSr.sprite);
             }
             _wagonSr.sortingOrder = sortingOrder;
             _wagonBaseLocal = _wagonSr.transform.localPosition;
@@ -83,6 +85,7 @@ namespace Morsoul.Hub
                 _carrierSr.sprite = Sprite.Create(carrierTex,
                     new Rect(0, 0, frameW, carrierTex.height),
                     new Vector2(0.5f, 0.2f), 32f);
+                _runtimeAssets.Add(_carrierSr.sprite);
             }
             _carrierBaseLocal = new Vector3(1.15f, 0.45f, 0f);
             _carrierSr.transform.localPosition = _carrierBaseLocal;
@@ -105,6 +108,7 @@ namespace Morsoul.Hub
                     _horseFrames[i] = Sprite.Create(horseTex,
                         new Rect(i * fw, 0, fw, horseTex.height),
                         new Vector2(0.5f, 0.15f), 16f);
+                    _runtimeAssets.Add(_horseFrames[i]);
                 }
                 _horseSr.sprite = _horseFrames[0];
             }
@@ -126,6 +130,7 @@ namespace Morsoul.Hub
                 var mat = new Material(Shader.Find("Sprites/Default"));
                 mat.color = new Color(0.24f, 0.14f, 0.08f, 1f);
                 _reins.material = mat;
+                _runtimeAssets.Add(mat);
                 _reins.startColor = new Color(0.24f, 0.14f, 0.08f, 1f);
                 _reins.endColor = new Color(0.24f, 0.14f, 0.08f, 1f);
             }
@@ -171,8 +176,27 @@ namespace Morsoul.Hub
             _reins.SetPosition(1, bridlePos);
         }
 
+        void OnDestroy()
+        {
+            for (int i = 0; i < _runtimeAssets.Count; i++)
+            {
+                if (_runtimeAssets[i] != null) Destroy(_runtimeAssets[i]);
+            }
+            _runtimeAssets.Clear();
+        }
+
         static Texture2D LoadTex(string assetPath)
         {
+            var cfg = Resources.Load<Morsoul.Core.PauseMenuAssets>("PauseMenuConfig");
+            if (cfg != null)
+            {
+                if (assetPath.EndsWith("Carrier_Wagon.png") && cfg.carrierWagonTexture != null)
+                    return cfg.carrierWagonTexture;
+                if (assetPath.EndsWith("Horse_Trot_Sheet.png") && cfg.horseTrotSheetTexture != null)
+                    return cfg.horseTrotSheetTexture;
+                if (assetPath.EndsWith("Idle_Side-Sheet.png") && cfg.carrierIdleSheetTexture != null)
+                    return cfg.carrierIdleSheetTexture;
+            }
 #if UNITY_EDITOR
             return UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>(assetPath);
 #else

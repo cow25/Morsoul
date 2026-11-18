@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Morsoul.Core;
 using Morsoul.Data;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -39,6 +40,7 @@ namespace Morsoul.Dialogue
         // Cached elements (re-queried on every UI reload).
         VisualElement _root;
         VisualElement _portrait;
+        VisualElement _dialogueBox;
         VisualElement _optionsContainer;
         Label _speakerLabel;
         Label _dialogueText;
@@ -110,6 +112,7 @@ namespace Morsoul.Dialogue
                 {
                     _pageIndex++;
                     ApplyCurrentPage();
+                    AudioCoordinator.PlayBankSfx(b => b.sfxDialogueBlip, 0.35f);
                 }
             }
             else if (_runner.HasOptions)
@@ -339,6 +342,12 @@ namespace Morsoul.Dialogue
         {
             if (node == null) return;
             _renderedNode = node;
+            bool isCrystal = !string.IsNullOrEmpty(node.speakerName) &&
+                             node.speakerName.IndexOf("CRYSTAL", StringComparison.OrdinalIgnoreCase) >= 0;
+            _dialogueBox?.EnableInClassList("dialogue-box--crystal", isCrystal);
+            _speakerLabel?.EnableInClassList("dialogue-speaker--crystal", isCrystal);
+            _portrait?.EnableInClassList("dialogue-portrait--crystal", isCrystal);
+
             if (_speakerLabel != null) _speakerLabel.text = node.speakerName ?? "";
             string fullText = _runner != null
                 ? _runner.SubstituteName(node.text)
@@ -347,6 +356,8 @@ namespace Morsoul.Dialogue
             _pageIndex = 0;
             RenderPortrait(node);
             ApplyCurrentPage();
+            if (!string.IsNullOrEmpty(node.text))
+                AudioCoordinator.PlayBankSfx(b => b.sfxDialogueBlip, 0.35f);
         }
 
         void ApplyCurrentPage()
@@ -384,6 +395,8 @@ namespace Morsoul.Dialogue
             }
             while (remaining.Length > maxChars)
             {
+                if (remaining.Length <= maxChars + 38)
+                    break;
                 int split = FindSplitIndex(remaining, maxChars);
                 pages.Add(remaining.Substring(0, split).TrimEnd());
                 remaining = remaining.Substring(split).TrimStart();
@@ -444,6 +457,7 @@ namespace Morsoul.Dialogue
 
             _root = root.Q<VisualElement>("Dialogue-Root");
             _portrait = root.Q<VisualElement>("SpeakerPortrait");
+            _dialogueBox = root.Q<VisualElement>("DialogueBox");
             _optionsContainer = root.Q<VisualElement>("OptionsContainer");
             _speakerLabel = root.Q<Label>("SpeakerLabel");
             _dialogueText = root.Q<Label>("DialogueText");

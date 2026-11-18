@@ -36,6 +36,16 @@ public class LoadingManager : MonoBehaviour
         if (panelRenderer != null) panelRenderer.RegisterUIReloadCallback(OnUIReload);
     }
 
+    private void OnDisable()
+    {
+        if (panelRenderer != null) panelRenderer.UnregisterUIReloadCallback(OnUIReload);
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this) Instance = null;
+    }
+
     private void OnUIReload(PanelRenderer renderer, VisualElement root, int version)
     {
         _loadingRoot = root.Q<VisualElement>("LoadingRoot");

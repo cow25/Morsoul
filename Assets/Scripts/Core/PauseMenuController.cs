@@ -192,10 +192,18 @@ namespace Morsoul.Core
             if (_isOpen) Close();
         }
 
+        string _cachedSceneName;
+        bool _isTitleScene;
+
         void LateUpdate()
         {
-            var sceneName = SceneManager.GetActiveScene().name;
-            if (string.Equals(sceneName, TitleSceneName, StringComparison.OrdinalIgnoreCase))
+            var activeName = SceneManager.GetActiveScene().name;
+            if (_cachedSceneName != activeName)
+            {
+                _cachedSceneName = activeName;
+                _isTitleScene = string.Equals(activeName, TitleSceneName, StringComparison.OrdinalIgnoreCase);
+            }
+            if (_isTitleScene)
             {
                 if (_isOpen) Close();
                 _wasExternalModalOpenPrevFrame = false;

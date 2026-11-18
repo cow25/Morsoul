@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Morsoul.Core;
 using Morsoul.Data;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -193,11 +194,15 @@ namespace Morsoul.Interrogation
             _isOpen = true;
             _endShown = _engine.Status != InterrogationStatus.InProgress;
             if (_engine.Status == InterrogationStatus.InProgress) _endText = null;
-            SelectStance(Stance.Press);
+            _stance = Stance.Press;
+            _trayOpen = false;
             HideBanner();
             _responseText = null;
             ApplyResponse();
             RefreshAll();
+            ApplyGuidedHint();
+            if (_engine.EmotionEchoUnlocked)
+                ShowBanner(BannerInfoClass, "Emotion Echo Active — Press [1] on a keyword to read their emotional aura.");
             if (_root != null) _root.style.display = DisplayStyle.Flex;
             if (manageCursor)
             {
@@ -356,10 +361,13 @@ namespace Morsoul.Interrogation
                 return;
             }
 
-            SetResponse(result.Response);
+            SetResponse(!string.IsNullOrEmpty(result.Response)
+                ? result.Response
+                : "The suspect refuses to elaborate further.");
             RefreshKeywordStates();
             ApplyPortrait();
             ApplyGuidedHint();
+            AudioCoordinator.PlayBankSfx(b => b.sfxDialogueBlip, 0.35f);
             if (_engine.EmotionEchoUnlocked)
             {
                 var aura = _engine.InferEffectiveAura();
@@ -367,6 +375,12 @@ namespace Morsoul.Interrogation
                     ShowBanner(BannerInfoClass, "Emotion Echo [AMBER]: Mana tremors betray a lie — use [2] CONTRADICT.");
                 else if (aura == Aura.Violet)
                     ShowBanner(BannerInfoClass, "Emotion Echo [VIOLET]: Guarded distress — probe with [3] PRESENT EVIDENCE.");
+                else
+                    ShowBanner(BannerInfoClass, $"Pressed \"{keyword}\" — read their response above.");
+            }
+            else
+            {
+                ShowBanner(BannerInfoClass, $"Pressed \"{keyword}\" — read their response above.");
             }
             ResolveStatus(result.Status);
             StateChanged?.Invoke();
@@ -529,13 +543,35 @@ namespace Morsoul.Interrogation
         void ApplyPortrait()
         {
             if (_portrait == null) return;
-            _portrait.style.backgroundImage = suspectPortrait != null
-                ? new StyleBackground(suspectPortrait)
-                : new StyleBackground(StyleKeyword.Null);
+            if (suspectPortrait != null)
+            {
+                _portrait.style.backgroundImage = new StyleBackground(suspectPortrait);
+            }
+            else
+            {
+                var tex = LoadSuspectPortrait(_engine?.Data?.suspectName);
+                _portrait.style.backgroundImage = tex != null
+                    ? new StyleBackground(tex)
+                    : new StyleBackground(StyleKeyword.Null);
+            }
             var aura = _engine != null ? _engine.PortraitAura : Aura.None;
             _portrait.EnableInClassList("portrait--amber", aura == Aura.Amber);
             _portrait.EnableInClassList("portrait--violet", aura == Aura.Violet);
             _portrait.EnableInClassList("portrait--crimson", aura == Aura.Crimson);
+        }
+
+        static Texture2D LoadSuspectPortrait(string suspectName)
+        {
+            if (string.IsNullOrEmpty(suspectName)) return null;
+            string key = null;
+            if (suspectName.IndexOf("Ignatius", StringComparison.OrdinalIgnoreCase) >= 0) key = "ArtIgnatius";
+            else if (suspectName.IndexOf("Accord", StringComparison.OrdinalIgnoreCase) >= 0) key = "ArtAccord";
+            else if (suspectName.IndexOf("Vane", StringComparison.OrdinalIgnoreCase) >= 0) key = "ArtVane";
+            else if (suspectName.IndexOf("Harlan", StringComparison.OrdinalIgnoreCase) >= 0) key = "ArtHarlan";
+            else if (suspectName.IndexOf("Overseer", StringComparison.OrdinalIgnoreCase) >= 0) key = "ArtGrandOverseer";
+            else if (suspectName.IndexOf("Eliza", StringComparison.OrdinalIgnoreCase) >= 0) key = "ArtEliza";
+            else if (suspectName.IndexOf("Ovan", StringComparison.OrdinalIgnoreCase) >= 0) key = "ArtOvan";
+            return key != null ? Resources.Load<Texture2D>($"Portraits/{key}") : null;
         }
 
         void ApplyStanceClasses()
@@ -652,9 +688,21 @@ namespace Morsoul.Interrogation
             if (_guidedHint == null) return;
             bool show = _engine != null
                         && _engine.GuidedFirstPhase
-                        && _engine.Status == InterrogationStatus.InProgress
-                        && _engine.PhaseIndex == 0;
+                        && _engine.Status == InterrogationStatus.InProgress;
             _guidedHint.style.display = show ? DisplayStyle.Flex : DisplayStyle.None;
+            if (!show) return;
+
+            if (_engine.PhaseIndex == 0)
+            {
+                bool anyPressed = _engine.CurrentPhase?.keywords?.Any(k => _engine.IsKeywordPressed(k)) == true;
+                _guidedHint.text = anyPressed
+                    ? "TUTORIAL (2/2): Select [2] CONTRADICT or [3] PRESENT EVIDENCE, then pick matching evidence below. (Wrong picks cost a Seal.)"
+                    : "TUTORIAL (1/2): Click an underlined keyword (or press [1] PRESS) to probe the suspect's claim for weak spots.";
+            }
+            else
+            {
+                _guidedHint.text = "TUTORIAL: Probe keywords with [1] PRESS, then break claims with [2] CONTRADICT or [3] PRESENT EVIDENCE. [E] clears response, [G] opens Journal.";
+            }
         }
 
         void SetEndOverlay(string text)

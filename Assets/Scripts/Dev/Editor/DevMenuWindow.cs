@@ -21,14 +21,11 @@ namespace Morsoul.Dev.Editor
         {
             ("Title", "Assets/Scenes/Title.unity"),
             ("CaseLoop", "Assets/Scenes/CaseLoop.unity"),
-            ("Prologue_2D", "Assets/Scenes/Prologue_2D.unity"),
             ("Hub 1: Lower Market", "Assets/Scenes/Hub_LowerMarket.unity"),
             ("Hub 2: Cathedral Nave", "Assets/Scenes/Hub_CathedralNave.unity"),
             ("Hub 3: Whisperwood", "Assets/Scenes/Hub_Wilderness.unity"),
             ("Hub 4: Iron Hollow", "Assets/Scenes/Hub_IronHollow.unity"),
-            ("Investigation 01 (placeholder)",
-                "Assets/Scenes/Investigation_01_Placeholder.unity"),
-            ("PrologueRuins (3D)", "Assets/Scenes/PrologueRuins.unity"),
+            ("PrologueRuins (3D)", "Assets/Scenes/3D/PrologueRuins.unity"),
         };
 
         [MenuItem("Morsoul/Dev Menu", priority = 0)]
@@ -51,8 +48,6 @@ namespace Morsoul.Dev.Editor
             EditorGUI.indentLevel++;
             if (GUILayout.Button("Generate hub dialogue (Cases 2-4 + interludes)"))
                 Morsoul.Dialogue.Editor.HubDialogueContentGenerator.Generate();
-            if (GUILayout.Button("Install 2D content into hub scenes"))
-                Morsoul.Hub.Editor.HubContentSetup.Install();
             if (GUILayout.Button("Install case-loop entries"))
                 Morsoul.Hub.Editor.HubCaseLoopSetup.Install();
             if (GUILayout.Button("Install board panels"))
@@ -66,10 +61,6 @@ namespace Morsoul.Dev.Editor
                 Morsoul.Data.Editor.ClueRegistryGenerator.Rebuild();
             if (GUILayout.Button("Audit evidence graphs"))
                 Morsoul.Data.Editor.EvidenceGraphAuditor.AuditAll();
-
-            Section("Stand-ins");
-            if (GUILayout.Button("Build demo stand-in scenes"))
-                Morsoul.Hub.Editor.DemoStandInFactory.BuildAll();
 
             Section("Scenes");
             for (int i = 0; i < Scenes.Length; i++)
