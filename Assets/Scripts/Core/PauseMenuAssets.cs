@@ -29,6 +29,20 @@ namespace Morsoul.Core
         public Font titleFont;
         public Texture2D abilityAetherSightIcon;
         public Texture2D abilityEmotionEchoIcon;
+
+        [Header("Runtime SFX Bank")]
+        public AudioClip sfxUiClick;
+        public AudioClip sfxDialogueBlip;
+        public AudioClip sfxClueCollected;
+        public AudioClip sfxBoardLink;
+        public AudioClip sfxBoardError;
+        public AudioClip sfxBoardSolved;
+        public AudioClip sfxInterrogationStrike;
+        public AudioClip sfxInterrogationBreak;
+        public AudioClip sfxScanPulse;
+        public AudioClip sfxAetherToggle;
+        public AudioClip sfxSkillUnlock;
+        public AudioClip sfxCarriageLoop;
     }
 }
 

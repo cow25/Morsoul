@@ -575,6 +575,11 @@ namespace Morsoul.Board
 
                 var captured = clueId;
                 RegisterNodeInteractions(node, captured);
+                node.RegisterCallback<GeometryChangedEvent>(_ =>
+                {
+                    SyncPinPosition(captured, node);
+                    _linkLayer?.MarkDirtyRepaint();
+                });
                 _nodes[clueId] = node;
                 _canvas.Add(node);
                 var pin = CreatePinElement();
@@ -630,7 +635,7 @@ namespace Morsoul.Board
                 }
                 if (evt.button != 0) return;
                 dragStart = evt.position;
-                nodeStart = new Vector2(node.resolvedStyle.left, node.resolvedStyle.top);
+                nodeStart = new Vector2(node.style.left.value.value, node.style.top.value.value);
                 dragging = false;
                 linking = false;
                 node.CapturePointer(evt.pointerId);
@@ -673,7 +678,8 @@ namespace Morsoul.Board
                 node.ReleasePointer(evt.pointerId);
                 if (dragging)
                 {
-                    _session.SetNodePosition(clueId, node.resolvedStyle.left, node.resolvedStyle.top);
+                    _session.SetNodePosition(clueId, node.style.left.value.value, node.style.top.value.value);
+                    SyncPinPosition(clueId, node);
                     _linkLayer?.MarkDirtyRepaint();
                     StateChanged?.Invoke();
                 }
@@ -757,7 +763,13 @@ namespace Morsoul.Board
         static Vector2 NodePinPos(VisualElement node)
         {
             float w = node.resolvedStyle.width > 0 ? node.resolvedStyle.width : 150f;
-            return new Vector2(node.resolvedStyle.left + w * 0.5f, node.resolvedStyle.top);
+            float left = node.style.left.keyword == StyleKeyword.Null || node.style.left.keyword == StyleKeyword.Undefined
+                ? node.resolvedStyle.left
+                : node.style.left.value.value;
+            float top = node.style.top.keyword == StyleKeyword.Null || node.style.top.keyword == StyleKeyword.Undefined
+                ? node.resolvedStyle.top
+                : node.style.top.value.value;
+            return new Vector2(left + w * 0.5f, top);
         }
 
         void SyncPinPosition(string clueId, VisualElement node)

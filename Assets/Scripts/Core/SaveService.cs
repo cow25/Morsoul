@@ -23,15 +23,31 @@ namespace Morsoul.Core
             _isPersistent = isPersistent;
         }
 
-        /// <summary>Default service writing to persistentDataPath (isolated in Editor).</summary>
-        public static SaveService Persistent =>
-            new SaveService(Path.Combine(Application.persistentDataPath,
+        static int _activeSlot = 1;
+
+        /// <summary>Active save slot (1..3). Defaults to 1.</summary>
+        public static int ActiveSlot
+        {
+            get => _activeSlot;
+            set => _activeSlot = Mathf.Clamp(value, 1, 3);
+        }
+
+        /// <summary>Service for a specific save slot (1..3). Slot 1 includes LauncherDb.</summary>
+        public static SaveService ForSlot(int slot)
+        {
+            int clamped = Mathf.Clamp(slot, 1, 3);
+            string suffix = clamped == 1 ? "" : $"_slot{clamped}";
+            return new SaveService(Path.Combine(Application.persistentDataPath,
 #if UNITY_EDITOR
-                "morsoul_checkpoint_editor.json"
+                $"morsoul_checkpoint{suffix}_editor.json"
 #else
-                "morsoul_checkpoint.json"
+                $"morsoul_checkpoint{suffix}.json"
 #endif
-            ), isPersistent: true);
+            ), isPersistent: clamped == 1);
+        }
+
+        /// <summary>Default service writing to persistentDataPath (isolated in Editor).</summary>
+        public static SaveService Persistent => ForSlot(_activeSlot);
 
         public bool HasSave => File.Exists(_filePath) || (_isPersistent && LauncherDb.HasDatabaseSave());
 

@@ -45,6 +45,7 @@ namespace Morsoul.Hub
         VisualElement _golemEyeRow;
         VisualElement _aetherSightRow;
         VisualElement _emotionEchoRow;
+        VisualElement _bottomLeftPanel;
         Button _escButton;
         Button _deskButton;
         Button _boardButton;
@@ -310,6 +311,8 @@ namespace Morsoul.Hub
                 if (mask != _lastToolMask)
                 {
                     _lastToolMask = mask;
+                    if (_bottomLeftPanel != null)
+                        _bottomLeftPanel.style.display = mask != 0 ? DisplayStyle.Flex : DisplayStyle.None;
                     if (_golemEyeRow != null)
                         _golemEyeRow.style.display = (mask & 1) != 0 ? DisplayStyle.Flex : DisplayStyle.None;
                     if (_aetherSightRow != null)
@@ -393,6 +396,7 @@ namespace Morsoul.Hub
             _golemEyeRow = root.Q<VisualElement>("GolemEyeRow");
             _aetherSightRow = root.Q<VisualElement>("AetherSightRow");
             _emotionEchoRow = root.Q<VisualElement>("EmotionEchoRow");
+            _bottomLeftPanel = root.Q<VisualElement>("BottomLeftPanel");
             _escButton = root.Q<Button>("EscKeyButton");
             _deskButton = root.Q<Button>("DeskKeyButton");
             _boardButton = root.Q<Button>("BoardKeyButton");
@@ -403,6 +407,7 @@ namespace Morsoul.Hub
 
             AppliedCaseText = null;
             AppliedObjective = null;
+            _lastToolMask = -1;
             RefreshObjective();
             SyncSessionHud();
             if (_footerLabel != null) _footerLabel.text = footerText ?? "";

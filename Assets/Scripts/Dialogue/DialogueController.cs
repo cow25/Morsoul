@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Morsoul.Core;
 using Morsoul.Data;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -111,6 +112,7 @@ namespace Morsoul.Dialogue
                 {
                     _pageIndex++;
                     ApplyCurrentPage();
+                    AudioCoordinator.PlayBankSfx(b => b.sfxDialogueBlip, 0.35f);
                 }
             }
             else if (_runner.HasOptions)
@@ -354,6 +356,8 @@ namespace Morsoul.Dialogue
             _pageIndex = 0;
             RenderPortrait(node);
             ApplyCurrentPage();
+            if (!string.IsNullOrEmpty(node.text))
+                AudioCoordinator.PlayBankSfx(b => b.sfxDialogueBlip, 0.35f);
         }
 
         void ApplyCurrentPage()
@@ -391,6 +395,8 @@ namespace Morsoul.Dialogue
             }
             while (remaining.Length > maxChars)
             {
+                if (remaining.Length <= maxChars + 38)
+                    break;
                 int split = FindSplitIndex(remaining, maxChars);
                 pages.Add(remaining.Substring(0, split).TrimEnd());
                 remaining = remaining.Substring(split).TrimStart();

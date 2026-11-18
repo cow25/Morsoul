@@ -71,6 +71,7 @@ namespace Morsoul.Hub
             root.style.justifyContent = Justify.Center;
 
             var cfg = Resources.Load<PauseMenuAssets>("PauseMenuConfig");
+            AudioCoordinator.PlayBankSfx(b => b.sfxSkillUnlock, 0.8f);
             var bodyFont = cfg != null && cfg.bodyFont != null ? cfg.bodyFont : Resources.Load<Font>("EBGaramond");
             var titleFont = cfg != null ? cfg.titleFont : null;
             var iconTex = cfg != null

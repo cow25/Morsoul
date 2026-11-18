@@ -78,6 +78,7 @@ namespace Morsoul.Title
         public event Action QuitRequested;
 
         bool _saveModalIsNewGameMode;
+        int _pendingOverwriteSlot = 1;
 
         // UI Toolkit state
         PanelRenderer _panelRenderer;
@@ -100,6 +101,12 @@ namespace Morsoul.Title
         UitLabel _uitSlot1Title;
         VisualElement _uitSlot1Portrait;
         UitLabel _uitSlot1Subtitle;
+        UitLabel _uitSlot2Title;
+        VisualElement _uitSlot2Portrait;
+        UitLabel _uitSlot2Subtitle;
+        UitLabel _uitSlot3Title;
+        VisualElement _uitSlot3Portrait;
+        UitLabel _uitSlot3Subtitle;
         UitLabel _uitSaveStatus;
         UitButton _uitSaveBackBtn;
 
@@ -294,12 +301,18 @@ namespace Morsoul.Title
             _uitSlot1Title = root.Q<UitLabel>("Slot1Title");
             _uitSlot1Portrait = root.Q<VisualElement>("Slot1Portrait");
             _uitSlot1Subtitle = root.Q<UitLabel>("Slot1Subtitle");
+            _uitSlot2Title = root.Q<UitLabel>("Slot2Title");
+            _uitSlot2Portrait = root.Q<VisualElement>("Slot2Portrait");
+            _uitSlot2Subtitle = root.Q<UitLabel>("Slot2Subtitle");
+            _uitSlot3Title = root.Q<UitLabel>("Slot3Title");
+            _uitSlot3Portrait = root.Q<VisualElement>("Slot3Portrait");
+            _uitSlot3Subtitle = root.Q<UitLabel>("Slot3Subtitle");
             _uitSaveStatus = root.Q<UitLabel>("SaveStatusLabel");
             _uitSaveBackBtn = root.Q<UitButton>("SaveModalBackButton");
 
-            if (_uitSlot1Btn != null) _uitSlot1Btn.clicked += OnSlot1Clicked;
-            if (_uitSlot2Btn != null) _uitSlot2Btn.clicked += () => OnEmptySlotClicked(2);
-            if (_uitSlot3Btn != null) _uitSlot3Btn.clicked += () => OnEmptySlotClicked(3);
+            if (_uitSlot1Btn != null) _uitSlot1Btn.clicked += () => OnSlotClicked(1);
+            if (_uitSlot2Btn != null) _uitSlot2Btn.clicked += () => OnSlotClicked(2);
+            if (_uitSlot3Btn != null) _uitSlot3Btn.clicked += () => OnSlotClicked(3);
             if (_uitSaveBackBtn != null) _uitSaveBackBtn.clicked += CloseSaveSlotModal;
 
             _uitOverwritePrompt = root.Q<VisualElement>("OverwritePrompt");
@@ -311,6 +324,7 @@ namespace Morsoul.Title
                 _uitOverwriteYesBtn.clicked += () =>
                 {
                     if (_uitOverwritePrompt != null) _uitOverwritePrompt.style.display = DisplayStyle.None;
+                    SaveService.ActiveSlot = _pendingOverwriteSlot;
                     CloseSaveSlotModal();
                     RequestNewGame();
                 };
@@ -397,7 +411,10 @@ namespace Morsoul.Title
 
         void RefreshSaveState()
         {
-            SetSaveExists(SaveService.Persistent.HasSave);
+            bool any = SaveService.ForSlot(1).HasSave
+                       || SaveService.ForSlot(2).HasSave
+                       || SaveService.ForSlot(3).HasSave;
+            SetSaveExists(any);
         }
 
         void BindUguiButtons()
@@ -433,9 +450,9 @@ namespace Morsoul.Title
                 RegisterHoverMove(quitButton);
             }
 
-            if (slot1Button != null) slot1Button.onClick.AddListener(OnSlot1Clicked);
-            if (slot2Button != null) slot2Button.onClick.AddListener(() => OnEmptySlotClicked(2));
-            if (slot3Button != null) slot3Button.onClick.AddListener(() => OnEmptySlotClicked(3));
+            if (slot1Button != null) slot1Button.onClick.AddListener(() => OnSlotClicked(1));
+            if (slot2Button != null) slot2Button.onClick.AddListener(() => OnSlotClicked(2));
+            if (slot3Button != null) slot3Button.onClick.AddListener(() => OnSlotClicked(3));
             if (saveModalBackButton != null) saveModalBackButton.onClick.AddListener(CloseSaveSlotModal);
 
             if (overwriteYesButton != null)
@@ -443,6 +460,7 @@ namespace Morsoul.Title
                 overwriteYesButton.onClick.AddListener(() =>
                 {
                     if (overwritePrompt != null) overwritePrompt.SetActive(false);
+                    SaveService.ActiveSlot = _pendingOverwriteSlot;
                     CloseSaveSlotModal();
                     RequestNewGame();
                 });
@@ -468,7 +486,13 @@ namespace Morsoul.Title
         public void OnStartGameClicked()
         {
             RefreshSaveState();
-            if (saveExists) RequestContinue();
+            if (!saveExists) return;
+            if (!SaveService.Persistent.HasSave)
+            {
+                for (int s = 1; s <= 3; s++)
+                    if (SaveService.ForSlot(s).HasSave) { SaveService.ActiveSlot = s; break; }
+            }
+            RequestContinue();
         }
 
         public void OnNewGameClicked()
@@ -507,88 +531,100 @@ namespace Morsoul.Title
             if (saveSlotModal != null) saveSlotModal.SetActive(false);
         }
 
-        public void OnSlot1Clicked()
+        public void OnSlot1Clicked() => OnSlotClicked(1);
+
+        public void OnSlotClicked(int slotNumber)
         {
+            int slot = Mathf.Clamp(slotNumber, 1, 3);
+            var service = SaveService.ForSlot(slot);
+            bool slotHasSave = service.HasSave;
             RefreshSaveState();
+
             if (_saveModalIsNewGameMode)
             {
-                if (saveExists && (_uitOverwritePrompt != null || overwritePrompt != null))
+                if (slotHasSave && (_uitOverwritePrompt != null || overwritePrompt != null))
                 {
+                    _pendingOverwriteSlot = slot;
                     if (_uitOverwritePrompt != null) _uitOverwritePrompt.style.display = DisplayStyle.Flex;
                     if (overwritePrompt != null) overwritePrompt.SetActive(true);
                 }
                 else
                 {
+                    SaveService.ActiveSlot = slot;
                     CloseSaveSlotModal();
                     RequestNewGame();
                 }
             }
             else
             {
-                if (saveExists)
+                if (slotHasSave)
                 {
+                    SaveService.ActiveSlot = slot;
                     CloseSaveSlotModal();
                     RequestContinue();
                 }
                 else
                 {
-                    if (_uitSaveStatus != null) _uitSaveStatus.text = "No save file found in Slot 1.";
-                    if (saveStatusLabel != null) saveStatusLabel.text = "No save file found in Slot 1.";
+                    string msg = $"No save file found in Slot {slot}.";
+                    if (_uitSaveStatus != null) _uitSaveStatus.text = msg;
+                    if (saveStatusLabel != null) saveStatusLabel.text = msg;
                 }
             }
-        }
-
-        void OnEmptySlotClicked(int slotNumber)
-        {
-            if (_saveModalIsNewGameMode && !saveExists)
-            {
-                CloseSaveSlotModal();
-                RequestNewGame();
-                return;
-            }
-            string msg = $"Slot {slotNumber} is currently empty — active profile uses Save 1.";
-            if (_uitSaveStatus != null) _uitSaveStatus.text = msg;
-            if (saveStatusLabel != null) saveStatusLabel.text = msg;
         }
 
         void RefreshSaveSlotCardPreview()
         {
-            string title = saveExists ? "Save 1" : "Empty Slot";
-            string sub = "";
-            if (saveExists)
-            {
-                if (SaveService.Persistent.TryLoad(out SaveState saved, out _) && saved != null)
-                {
-                    string name = string.IsNullOrWhiteSpace(saved.playerName) ? "Detective" : saved.playerName.Trim();
-                    string caseName = saved.currentCase <= 0 ? "Prologue" : $"Case {saved.currentCase}";
-                    sub = $"{caseName}\n{name}";
-                }
-                else
-                {
-                    sub = "Saved Run";
-                }
-            }
+            RefreshUitSlotCard(1, _uitSlot1Btn, _uitSlot1Title, _uitSlot1Portrait, _uitSlot1Subtitle);
+            RefreshUitSlotCard(2, _uitSlot2Btn, _uitSlot2Title, _uitSlot2Portrait, _uitSlot2Subtitle);
+            RefreshUitSlotCard(3, _uitSlot3Btn, _uitSlot3Title, _uitSlot3Portrait, _uitSlot3Subtitle);
 
-            // UI Toolkit
-            if (_uitSlot1Btn != null)
-            {
-                if (saveExists) _uitSlot1Btn.AddToClassList("tarot-card--populated");
-                else _uitSlot1Btn.RemoveFromClassList("tarot-card--populated");
-            }
-            if (_uitSlot1Portrait != null)
-                _uitSlot1Portrait.style.display = saveExists ? DisplayStyle.Flex : DisplayStyle.None;
-            if (_uitSlot1Title != null) _uitSlot1Title.text = title;
-            if (_uitSlot1Subtitle != null) _uitSlot1Subtitle.text = sub;
-
-            // Legacy uGUI
+            // Legacy uGUI (Slot 1)
+            var slot1 = SaveService.ForSlot(1);
+            bool has1 = slot1.HasSave;
+            string title1 = has1 ? "Save 1" : "Empty Slot";
+            string sub1 = ReadSlotSubtitle(slot1, has1, 1);
             if (slot1CardImage != null)
-                slot1CardImage.color = saveExists ? new Color(0.76f, 0.64f, 0.24f, 1f) : new Color(0.08f, 0.08f, 0.09f, 0.96f);
+                slot1CardImage.color = has1 ? new Color(0.76f, 0.64f, 0.24f, 1f) : new Color(0.08f, 0.08f, 0.09f, 0.96f);
             if (slot1PortraitRoot != null)
-                slot1PortraitRoot.SetActive(saveExists);
+                slot1PortraitRoot.SetActive(has1);
             if (slot1TitleLabel != null)
-                slot1TitleLabel.text = title;
+                slot1TitleLabel.text = title1;
             if (slot1SubtitleLabel != null)
-                slot1SubtitleLabel.text = sub;
+                slot1SubtitleLabel.text = sub1;
+        }
+
+        static void RefreshUitSlotCard(int slot, UitButton btn, UitLabel titleLabel, VisualElement portrait, UitLabel subtitleLabel)
+        {
+            var service = SaveService.ForSlot(slot);
+            bool hasSave = service.HasSave;
+            string title = hasSave ? $"Save {slot}" : "Empty Slot";
+            string sub = ReadSlotSubtitle(service, hasSave, slot);
+
+            if (btn != null)
+            {
+                if (hasSave) btn.AddToClassList("tarot-card--populated");
+                else btn.RemoveFromClassList("tarot-card--populated");
+            }
+            if (portrait != null)
+                portrait.style.display = hasSave ? DisplayStyle.Flex : DisplayStyle.None;
+            if (titleLabel != null) titleLabel.text = title;
+            if (subtitleLabel != null)
+            {
+                subtitleLabel.text = sub;
+                subtitleLabel.style.opacity = hasSave ? 1f : 0.45f;
+            }
+        }
+
+        static string ReadSlotSubtitle(SaveService service, bool hasSave, int slot)
+        {
+            if (!hasSave) return $"Slot {slot}";
+            if (service.TryLoad(out SaveState saved, out _) && saved != null)
+            {
+                string name = string.IsNullOrWhiteSpace(saved.playerName) ? "Detective" : saved.playerName.Trim();
+                string caseName = saved.currentCase <= 0 ? "Prologue" : $"Case {saved.currentCase}";
+                return $"{caseName}\n{name}";
+            }
+            return "Saved Run";
         }
 
         public void OpenSettingsModal()
@@ -723,7 +759,9 @@ namespace Morsoul.Title
                 }
                 player.CutsceneEnded += OnDone;
                 if (_uitRoot != null) _uitRoot.style.display = DisplayStyle.None;
-                CutsceneData toPlay = openingCutscene;
+                CutsceneData toPlay = openingCutscene != null
+                    ? openingCutscene
+                    : Resources.Load<CutsceneData>("CS_Opening");
                 if (toPlay == null)
                 {
                     tempData = BuildStandstillOpeningCutscene(out tempBackdrop);

@@ -1,0 +1,66 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b71d7f6f7d77720459e951f4d068c803, type: 3}
+  m_Name: CS_Opening
+  m_EditorClassIdentifier: Morsoul.Cutscene::Morsoul.Cutscene.CutsceneData
+  id: CS_Opening
+  shots:
+  - image: {fileID: -8600697337584467284, guid: 6a2a666dfca9c9d4cbf475095d5873cb, type: 3}
+    video: {fileID: 0}
+    durationSeconds: 0
+    waitForInput: 1
+    caption: "In the lightless expanse of the Mana Abyss, a fractured spark of consciousness drifts alone\u2014stripped of name, stripped of flesh, stripped of time."
+    captionSpeaker: 
+  - image: {fileID: -1209473274661334273, guid: d967d5ae126ccc744b54a1a313dbbcfd, type: 3}
+    video: {fileID: 0}
+    durationSeconds: 0
+    waitForInput: 1
+    caption: "From the surrounding dark, scattered incandescent shards\u2014fragments of instinct, logic, and an unyielding vow\u2014begin to drift inward."
+    captionSpeaker: 
+  - image: {fileID: 7858946771831737424, guid: 8a3cd8230b9c4924e91948574e6c9528, type: 3}
+    video: {fileID: 0}
+    durationSeconds: 0
+    waitForInput: 1
+    caption: (A faint, resonant ripple binds the drifting core... like a distant hand steadying yours before the dark closes in.)
+    captionSpeaker: ???
+  - image: {fileID: -7684088050009103717, guid: 458fc9b0a7e8587499254d87040f2389, type: 3}
+    video: {fileID: 0}
+    durationSeconds: 0
+    waitForInput: 1
+    caption: Mana surges around the mended core, pulling it downward from the astral void toward cold, ancient stone.
+    captionSpeaker: 
+  - image: {fileID: -6608861631650935900, guid: 760adf5cb14895143860352aba5af091, type: 3}
+    video: {fileID: 0}
+    durationSeconds: 0
+    waitForInput: 1
+    caption: ">> CORE RE-INITIALIZATION: OK.\n>> WARNING: MEMORY SECTORS 01\u201399 CORRUPTED.\n>> CHASSIS INTEGRITY: 84%. OPTICAL SENSORS: ONLINE."
+    captionSpeaker: System
+  - image: {fileID: -2976532358473724229, guid: 0189551d477d8c9468a83689767c0fa0, type: 3}
+    video: {fileID: 0}
+    durationSeconds: 0
+    waitForInput: 1
+    caption: "Total darkness\u2014save for thin slivers of daylight bleeding through the cracks of a collapsed stone tomb."
+    captionSpeaker: 
+  - image: {fileID: -3480194338860877638, guid: f8b6e9c1ec15cad49aee2f2667b219cc, type: 3}
+    video: {fileID: 0}
+    durationSeconds: 0
+    waitForInput: 1
+    caption: Heavy boulders shift and give way under stone-on-stone force, widening the breach to the world outside.
+    captionSpeaker: 
+  - image: {fileID: -1536131328863868636, guid: 2f204feeb7dd5314789f3878adfe884a, type: 3}
+    video: {fileID: 0}
+    durationSeconds: 0
+    waitForInput: 1
+    caption: Bright morning light floods the rubble hollow as you drag yourself free into the silent ruins.
+    captionSpeaker: 
+  nextSceneName: 
+  skipToScene: 0

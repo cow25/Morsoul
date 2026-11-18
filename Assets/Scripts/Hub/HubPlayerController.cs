@@ -86,7 +86,6 @@ namespace Morsoul.Hub
             SyncPlayerContext();
 
             UpdatePromptTarget();
-            TickFootsteps(keyboard);
 
             if (!dialoguePlaying && !cutsceneActive && keyboard.eKey.wasPressedThisFrame &&
                 CurrentTarget != null)
@@ -196,7 +195,7 @@ namespace Morsoul.Hub
             bool sprint = keyboard.leftShiftKey.isPressed;
             _stepTimer = stepIntervalSeconds / (sprint ? sprintMultiplier : 1f);
             var clip = footstepClips[Random.Range(0, footstepClips.Length)];
-            if (clip != null) CoreRuntime.Instance?.Audio?.PlaySfx(clip, 0.8f);
+            if (clip != null) CoreRuntime.Instance?.Audio?.PlaySfx(clip, 0.3f);
         }
 
         void OnDisable()

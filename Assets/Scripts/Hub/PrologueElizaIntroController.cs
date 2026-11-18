@@ -38,6 +38,10 @@ namespace Morsoul.Hub
         public bool autoLoadNextScene = true;
         [Min(0.1f)] public float timingScale = 1f;
 
+        [Header("Audio")]
+        public AudioClip tenseMusic;
+        public AudioClip scanSfx;
+
         [Header("Choreography")]
         [Tooltip("Gap kept between the camera's right edge and the bush when the trigger fires.")]
         public float revealMargin = 0.4f;
@@ -213,6 +217,15 @@ namespace Morsoul.Hub
         {
             var dialogue = context != null ? context.dialogue : null;
             var playerTransform = player != null ? player.transform : null;
+            var audio = CoreRuntime.Ensure().Audio;
+            var previousMusic = audio != null ? audio.CurrentMusic : null;
+            if (previousMusic == null)
+            {
+                var sceneAudio = FindAnyObjectByType<SceneAudioLoop>();
+                if (sceneAudio != null) previousMusic = sceneAudio.music;
+            }
+            if (audio != null && tenseMusic != null)
+                audio.PlayMusic(tenseMusic);
 
             // A. Cutaway — Eliza surveying the area near the bush. The player
             // watches her notice him and dive into cover before the camera
@@ -250,6 +263,10 @@ namespace Morsoul.Hub
                 if (scan != null) scan.Configure(playerTransform, bushProp != null ? bushProp : eyeHighlight);
             }
             SetActive(eyeHighlight, true);
+            if (scanSfx != null && audio != null)
+                audio.PlaySfx(scanSfx, 0.45f);
+            else
+                AudioCoordinator.PlayBankSfx(b => b.sfxScanPulse, 0.45f);
             yield return Line("Golem (thought)", "Someone is hiding in that bush.");
             yield return MoveToSpeed(playerTransform,
                 new Vector3(playerCloseX, 0f, 0f), approachSpeed * 0.5f);
@@ -296,6 +313,8 @@ namespace Morsoul.Hub
             yield return Line("???", "You're pretty clever, huh?");
             yield return Line("???",
                 "Name's Eliza. I'm an information broker at the Guild.");
+            if (audio != null && tenseMusic != null)
+                audio.PlayMusic(previousMusic);
             yield return Line("Eliza", "What's yours? Do you even have one?");
 
             if (dialogue != null && dialogue.ShowNamePrompt())

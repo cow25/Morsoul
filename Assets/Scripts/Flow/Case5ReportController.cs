@@ -6,6 +6,7 @@ using Morsoul.Data;
 using Morsoul.Dialogue;
 using Morsoul.Engine;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
 
 namespace Morsoul.Flow
@@ -83,8 +84,9 @@ namespace Morsoul.Flow
             _dialogue = dialogue;
 
             var core = CoreRuntime.Instance;
-            _focus = core != null ? core.Focus.Percent : 100f;
             _maxFocus = core != null ? core.Focus.Maximum : 100f;
+            _focus = _maxFocus;
+            core?.Focus.Restore(_maxFocus, false);
             _runicLogs = core != null ? core.Session.RunicLogCount : 0;
 
             if (_standardBoard != null)
@@ -108,6 +110,32 @@ namespace Morsoul.Flow
                 () => OpenStage(1),
                 ("Eliza", "Ovan's scouts gave us their full district files. Let's connect the four Guild audits first to prove this is one coordinated operation."),
                 ("Golem", "[WARNING]: Focus drain per error is elevated under crisis conditions. Link only verified connections."));
+        }
+
+        void Update()
+        {
+            if (!_active || _waitingDialogue) return;
+            var kb = Keyboard.current;
+            if (kb != null && kb.f2Key.wasPressedThisFrame)
+                ShowDevHint();
+        }
+
+        void ShowDevHint()
+        {
+            foreach (var pair in _nodes)
+            {
+                bool valid = _specs.TryGetValue(pair.Key, out var spec) && spec.IsValid;
+                pair.Value.EnableInClassList("wboard-node--hint", valid);
+            }
+            string hint = _stage switch
+            {
+                1 => "[DEV F2] Stage 1: Link all 4 Guild Audits (ignore Routine Freight Permit), then select 'Coordinated First-Age Strike'.",
+                2 => "[DEV F2] Stage 2: Link Seismic Log + Cult Doctrine + Siphon Readout (ignore Copper Grounding Rod), then select 'Sanctum Core Breach'.",
+                _ => _runicLogs >= EndingResolver.RequiredRunicLogs
+                    ? "[DEV F2] Stage 3: Link Conclusion I + Conclusion II + Runic Logs (4/4), then select 'True Verdict'."
+                    : "[DEV F2] Stage 3: Link Conclusion I + Conclusion II, then select 'Normal Verdict'."
+            };
+            ShowBanner(hint);
         }
 
         void OnDestroy()
@@ -158,7 +186,10 @@ namespace Morsoul.Flow
                 closeBtn.style.display = DisplayStyle.None; // Finale report stays until resolved
 
             if (_active && !_waitingDialogue)
+            {
+                ShowBoard();
                 RefreshAll();
+            }
         }
 
         void OpenStage(int stage)
@@ -301,23 +332,46 @@ namespace Morsoul.Flow
             _pinLayer.style.left = 0; _pinLayer.style.top = 0;
             _pinLayer.style.right = 0; _pinLayer.style.bottom = 0;
 
+            var slots = new List<Vector2>();
+            int slotCount = Mathf.Max(6, _specs.Count);
+            for (int s = 0; s < slotCount; s++)
+                slots.Add(new Vector2(24f + (s % 3) * 200f, 24f + (s / 3) * 124f));
+            for (int s = slots.Count - 1; s > 0; s--)
+            {
+                int j = UnityEngine.Random.Range(0, s + 1);
+                (slots[s], slots[j]) = (slots[j], slots[s]);
+            }
+
             int i = 0;
             foreach (var kv in _specs)
             {
                 var spec = kv.Value;
                 var node = new VisualElement();
                 node.AddToClassList("wboard-node");
-                node.Add(new Label(spec.Title) { pickingMode = PickingMode.Ignore });
-                node[0].AddToClassList("wboard-node-name");
+                var titleLbl = new Label(spec.Title) { pickingMode = PickingMode.Ignore };
+                titleLbl.AddToClassList("wboard-node-name");
+                node.Add(titleLbl);
+                var descLbl = new Label(spec.Desc) { pickingMode = PickingMode.Ignore };
+                descLbl.style.fontSize = 10f;
+                descLbl.style.color = new Color(0.24f, 0.18f, 0.12f, 0.9f);
+                descLbl.style.whiteSpace = WhiteSpace.Normal;
+                descLbl.style.marginTop = 3f;
+                node.Add(descLbl);
                 node.tooltip = spec.Desc;
 
-                float x = 28f + (i % 3) * 200f;
-                float y = 28f + (i / 3) * 116f;
+                Vector2 slot = slots[i++];
+                float x = Mathf.Max(8f, slot.x + UnityEngine.Random.Range(-10f, 16f));
+                float y = Mathf.Max(8f, slot.y + UnityEngine.Random.Range(-8f, 12f));
                 node.style.left = x;
                 node.style.top = y;
-                i++;
 
-                RegisterNodeInteractions(node, spec.Id);
+                string capturedId = spec.Id;
+                RegisterNodeInteractions(node, capturedId);
+                node.RegisterCallback<GeometryChangedEvent>(_ =>
+                {
+                    SyncPinPosition(capturedId, node);
+                    _linkLayer?.MarkDirtyRepaint();
+                });
                 _nodes[spec.Id] = node;
                 _canvas.Add(node);
 
@@ -352,7 +406,7 @@ namespace Morsoul.Flow
                 }
                 if (evt.button != 0) return;
                 dragStart = evt.position;
-                nodeStart = new Vector2(node.resolvedStyle.left, node.resolvedStyle.top);
+                nodeStart = new Vector2(node.style.left.value.value, node.style.top.value.value);
                 dragging = false;
                 linking = false;
                 node.CapturePointer(evt.pointerId);
@@ -429,6 +483,7 @@ namespace Morsoul.Flow
             }
 
             _links.Add((a, b));
+            AudioCoordinator.PlayBankSfx(bank => bank.sfxBoardLink, 0.65f);
             RebuildLinkList();
             _linkLayer?.MarkDirtyRepaint();
         }
@@ -436,6 +491,7 @@ namespace Morsoul.Flow
         void DrainFocusOnError(string msg)
         {
             _errors++;
+            AudioCoordinator.PlayBankSfx(bank => bank.sfxBoardError, 0.65f);
             if (_focus < ErrorFocusDrain)
             {
                 TriggerEnding(1); // Bad Ending: Focus depleted on grave error
@@ -481,9 +537,12 @@ namespace Morsoul.Flow
             _conclusionList.Clear();
             foreach (var c in _conclusions)
             {
-                var card = new Button { text = c.Text };
+                var card = new Button();
                 card.AddToClassList("wboard-conclusion");
                 if (c.Id == _selectedConclusionId) card.AddToClassList("wboard-conclusion--selected");
+                var text = new Label(c.Text) { pickingMode = PickingMode.Ignore };
+                text.AddToClassList("wboard-conclusion-text");
+                card.Add(text);
                 var capturedId = c.Id;
                 card.RegisterCallback<ClickEvent>(_ =>
                 {
@@ -515,6 +574,7 @@ namespace Morsoul.Flow
                     ShowBanner("Connect all four Guild Audit clues before submitting Stage 1.");
                     return;
                 }
+                AudioCoordinator.PlayBankSfx(bank => bank.sfxBoardSolved, 0.7f);
                 HideBoard();
                 PlayBrainstormDialogue(
                     "D_Case5_Stage1_Done",
@@ -531,6 +591,7 @@ namespace Morsoul.Flow
                     ShowBanner("Connect the Guard Seismic Log, Cult Doctrine, and Eliza's Readout first.");
                     return;
                 }
+                AudioCoordinator.PlayBankSfx(bank => bank.sfxBoardSolved, 0.7f);
                 HideBoard();
                 string logHint = _runicLogs >= EndingResolver.RequiredRunicLogs
                     ? "You recovered all four First-Age Runic Logs—link them with our conclusions to uncover the Overseer's true endgame!"
@@ -673,7 +734,13 @@ namespace Morsoul.Flow
         static Vector2 NodePinPos(VisualElement node)
         {
             float w = node.resolvedStyle.width > 0 ? node.resolvedStyle.width : 150f;
-            return new Vector2(node.resolvedStyle.left + w * 0.5f, node.resolvedStyle.top);
+            float left = node.style.left.keyword == StyleKeyword.Null || node.style.left.keyword == StyleKeyword.Undefined
+                ? node.resolvedStyle.left
+                : node.style.left.value.value;
+            float top = node.style.top.keyword == StyleKeyword.Null || node.style.top.keyword == StyleKeyword.Undefined
+                ? node.resolvedStyle.top
+                : node.style.top.value.value;
+            return new Vector2(left + w * 0.5f, top);
         }
 
         void SyncPinPosition(string id, VisualElement node)

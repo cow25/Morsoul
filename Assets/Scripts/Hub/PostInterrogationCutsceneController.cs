@@ -67,6 +67,8 @@ namespace Morsoul.Hub
             }
 
             // Stage player & camera facing the arrest.
+            var playerCol = _player != null ? _player.GetComponent<Collider2D>() : null;
+            if (playerCol != null) playerCol.enabled = false;
             Vector3 playerPos = suspectPos + new Vector3(-2.1f, -0.5f, 0f);
             if (_player != null) MoveTarget(_player.transform, playerPos);
             var cam = FindAnyObjectByType<CameraFollow2D>();
@@ -109,7 +111,7 @@ namespace Morsoul.Hub
             yield return Play(BuildArrestDialogue(caseId));
 
             // Step player, Eliza, and bystanders aside so the guards and culprit pass cleanly without pushing them.
-            Vector3 asideOffset = caseId == 2 ? new Vector3(-1.6f, 0f, 0f) : new Vector3(0f, -1.8f, 0f);
+            Vector3 asideOffset = caseId == 2 ? new Vector3(-1.8f, -1.5f, 0f) : new Vector3(0f, -1.8f, 0f);
             Vector3 asidePlayerPos = playerPos + asideOffset;
             var stepPlayer = _player != null ? StartCoroutine(MoveAtSpeed(_player.transform, asidePlayerPos, 2.8f)) : null;
             var stepEliza = eliza != null ? StartCoroutine(MoveAtSpeed(eliza, asidePlayerPos + new Vector3(-1.2f, 0f, 0f), 2.8f)) : null;
@@ -171,6 +173,7 @@ namespace Morsoul.Hub
             }
 
             yield return FadeTo(dialogue, 1f, 0.5f);
+            if (playerCol != null) playerCol.enabled = true;
             core.Session.SetFlag(PendingFlag(caseId), false);
             core.Bus.Publish(new CaseCompletedEvent { CaseId = caseId, Ending = 0 });
         }
@@ -260,13 +263,24 @@ namespace Morsoul.Hub
 
             if (caseId == 4)
             {
-                if (_player != null)
-                    yield return MoveAtSpeed(_player.transform, suspectPos + new Vector3(0.2f, 1.2f, 0f), 2.8f);
-                Transform brokk = SpawnTempMiner("ChiefEngineerBrokk", suspectPos + new Vector3(1.6f, 2.6f, 0f));
+                var lift = FindActor("DeepShaftLift");
+                Vector3 liftPos = lift != null ? lift.position : new Vector3(16.0f, 4.2f, 0f);
+                Vector3 playerAtLift = liftPos + new Vector3(-2.0f, -0.7f, 0f);
+                var pMove = _player != null ? StartCoroutine(MoveAtSpeed(_player.transform, playerAtLift, 3.4f)) : null;
+                var eMove = eliza != null ? StartCoroutine(MoveAtSpeed(eliza, playerAtLift + new Vector3(-1.1f, -0.2f, 0f), 3.4f)) : null;
+                var tMove = thrun != null ? StartCoroutine(MoveAtSpeed(thrun, playerAtLift + new Vector3(0.4f, -1.1f, 0f), 3.4f)) : null;
+                if (pMove != null) yield return pMove;
+                if (eMove != null) yield return eMove;
+                if (tMove != null) yield return tMove;
+
+                yield return Play(MakeChain("D_C4_BulkheadOpen",
+                    ("Golem", "[ACTUATOR ENGAGED: Applying maximum radial torque to Drift 09 stasis bulkhead... Vault unsealed.]")));
+
+                Transform brokk = SpawnTempMiner("ChiefEngineerBrokk", liftPos + new Vector3(0.4f, 0.2f, 0f));
                 if (brokk != null)
-                    yield return MoveAtSpeed(brokk, suspectPos + new Vector3(1.2f, 0.9f, 0f), 2.4f);
+                    yield return MoveAtSpeed(brokk, liftPos + new Vector3(-1.0f, -0.5f, 0f), 2.4f);
+
                 yield return Play(MakeChain("D_C4_BrokkFreed",
-                    ("Golem", "[ACTUATOR ENGAGED: Applying maximum radial torque to Drift 09 stasis bulkhead... Vault unsealed.]"),
                     ("Chief Engineer Brokk", "(Staggering out through white steam, clutching his welding visor) \"By the mountain's heart... just down to my last breaths of tanked air! Bless you, construct!\""),
                     ("Overseer Thrun", "\"Brokk! You stubborn old mule—you're alive!\""),
                     ("Chief Engineer Brokk", "\"Listen close—those cultists weren't after ore! They brought deep bores straight through the bedrock! The Grand Overseer just rode the heavy freight lift down into the Sanctum Core with Whisperwood's sap—heading right for the ancient Stabilizer Pylons!\"")));

@@ -27,3 +27,15 @@ MonoBehaviour:
   titleFont: {fileID: 12800000, guid: 9c5492c0de01d69479e20601347df005, type: 3}
   abilityAetherSightIcon: {fileID: 2800000, guid: 665f20e0e2290fd4199ca18ce166e398, type: 3}
   abilityEmotionEchoIcon: {fileID: 2800000, guid: 89fe3b5b6f66ced40b692a485e2b1906, type: 3}
+  sfxUiClick: {fileID: 8300000, guid: 32d4b1811dda14a6cb9e059ee8ad17d2, type: 3}
+  sfxDialogueBlip: {fileID: 8300000, guid: c5e2a73ad4706440f93bf05df0b465fe, type: 3}
+  sfxClueCollected: {fileID: 8300000, guid: cc6699269b4c1d44ea1e860518b9bb73, type: 3}
+  sfxBoardLink: {fileID: 8300000, guid: ffb159a21c8a04135a5616979c828fab, type: 3}
+  sfxBoardError: {fileID: 8300000, guid: cabfae866cab347928b74b7d0ca6bfa9, type: 3}
+  sfxBoardSolved: {fileID: 8300000, guid: 79180f511d89441b9aa23ccae1992fe0, type: 3}
+  sfxInterrogationStrike: {fileID: 8300000, guid: b6428d4edb06344ba829da4edd9967c1, type: 3}
+  sfxInterrogationBreak: {fileID: 8300000, guid: 29bde6326b4c34ad8a12da475f79b50a, type: 3}
+  sfxScanPulse: {fileID: 8300000, guid: cc6699269b4c1d44ea1e860518b9bb73, type: 3}
+  sfxAetherToggle: {fileID: 8300000, guid: 7f4aa26d5b55226409cda231ffaf869b, type: 3}
+  sfxSkillUnlock: {fileID: 8300000, guid: 52320e590bf774734a288886eba557ba, type: 3}
+  sfxCarriageLoop: {fileID: 8300000, guid: 1b46c101cacd70a4fa09545bf0d68820, type: 3}

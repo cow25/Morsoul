@@ -579,8 +579,17 @@ namespace Morsoul.Flow
         {
             if (events == null) return;
             foreach (var e in events)
+            {
                 if (e.Kind == Morsoul.Engine.ProgressionEventKind.LinkWrong)
+                {
+                    Core.AudioCoordinator.PlayBankSfx(b => b.sfxBoardError, 0.7f);
                     FocusSpent?.Invoke(Morsoul.Engine.ProgressionConstants.ErrorFocusCost, "Board");
+                }
+                else if (e.Kind == Morsoul.Engine.ProgressionEventKind.LinkOk)
+                {
+                    Core.AudioCoordinator.PlayBankSfx(b => b.sfxBoardLink, 0.65f);
+                }
+            }
         }
 
         /// <summary>
@@ -608,6 +617,7 @@ namespace Morsoul.Flow
         /// </summary>
         public void HandleWeightedBoardSolved(Morsoul.Engine.DeductionCertificate cert)
         {
+            Core.AudioCoordinator.PlayBankSfx(b => b.sfxBoardSolved, 0.75f);
             var caseData = _session != null ? _session.Case : activeCase;
             if (caseData == null) return;
             if (caseData.caseId == 0)
@@ -653,6 +663,7 @@ namespace Morsoul.Flow
             switch (status)
             {
                 case InterrogationStatus.Confessed:
+                    Core.AudioCoordinator.PlayBankSfx(b => b.sfxInterrogationBreak, 0.75f);
                     HandleConfessed();
                     break;
                 case InterrogationStatus.Mistrial:
@@ -703,7 +714,11 @@ namespace Morsoul.Flow
             if (_session == null) return;
             int delta = total - _reportedStrikes;
             _reportedStrikes = total;
-            if (delta > 0) _session.RecordStrikes(delta);
+            if (delta > 0)
+            {
+                Core.AudioCoordinator.PlayBankSfx(b => b.sfxInterrogationStrike, 0.75f);
+                _session.RecordStrikes(delta);
+            }
             Core.CoreRuntime.Instance?.Session.SetInterrogationStrikeCount(
                 _session.Case.caseId, total);
         }

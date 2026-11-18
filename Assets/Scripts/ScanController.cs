@@ -67,8 +67,11 @@ public class ScanController : MonoBehaviour
     {
         if (IsAetherSightActive == active) return;
         IsAetherSightActive = active;
+        bool wasAether = IsAetherSightActive;
         if (active) Shader.EnableKeyword("_AETHER_SIGHT_ACTIVE");
         else Shader.DisableKeyword("_AETHER_SIGHT_ACTIVE");
+        if (active != wasAether)
+            Morsoul.Core.AudioCoordinator.PlayBankSfx(b => b.sfxAetherToggle, 0.7f);
     }
 
     private void Update()
@@ -100,10 +103,13 @@ public class ScanController : MonoBehaviour
         }
 
         // 2. Check for Focus (no strained scanning when Focus is depleted unless zero-cost)
+        bool wasScanning = _isScanning;
         bool canManualScan = manualScan && (zeroCost || !core.Focus.IsDepleted);
         if (canManualScan || forcedScan)
         {
             _isScanning = true;
+            if (!wasScanning)
+                Morsoul.Core.AudioCoordinator.PlayBankSfx(b => b.sfxScanPulse, 0.6f);
             if (canManualScan && !forcedScan)
             {
                 if (!zeroCost)

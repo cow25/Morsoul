@@ -62,6 +62,7 @@ public class DiaryManager : MonoBehaviour
                 }
             }
             Debug.Log($"Added to Diary: {clue.id}. Total clues: {collectedClues.Count}");
+            Morsoul.Core.AudioCoordinator.PlayBankSfx(b => b.sfxClueCollected, 0.3f);
         }
     }
 

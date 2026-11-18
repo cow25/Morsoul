@@ -7802,8 +7802,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fc065444264e1434389ac6324fed4cf8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Morsoul.Core::Morsoul.Core.SceneAudioLoop
-  music: {fileID: 0}
-  ambience: {fileID: 0}
+  music: {fileID: 8300000, guid: fc7476b0a644e0b43beb81ea4b985485, type: 3}
+  ambience: {fileID: 8300000, guid: 6d2e2db0b97a8c84e9b7aba22496d5fe, type: 3}
 --- !u!4 &910123890
 Transform:
   m_ObjectHideFlags: 0
@@ -11053,7 +11053,9 @@ MonoBehaviour:
   interactLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  footstepClips: []
+  footstepClips:
+  - {fileID: 8300000, guid: a0010a1a0c474473b81729eb770c485f, type: 3}
+  - {fileID: 8300000, guid: 7478151cf36724a7dada558f746c3633, type: 3}
   stepIntervalSeconds: 0.42
 --- !u!50 &1351887601
 Rigidbody2D:
@@ -20167,6 +20169,7 @@ GameObject:
   - component: {fileID: 1447275832}
   - component: {fileID: 1447275831}
   - component: {fileID: 1447275830}
+  - component: {fileID: 1447275833}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -20258,6 +20261,14 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!81 &1447275833
+AudioListener:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1447275829}
+  m_Enabled: 1
 --- !u!1 &1451389406
 GameObject:
   m_ObjectHideFlags: 0

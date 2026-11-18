@@ -109,6 +109,30 @@ namespace Morsoul.Core
         public void StopMusic() => PlayMusic(null);
         public void StopAmbience() => PlayAmbience(null);
 
+        static PauseMenuAssets _cachedAssets;
+        static bool _assetsLoaded;
+
+        public static PauseMenuAssets SfxBank
+        {
+            get
+            {
+                if (!_assetsLoaded)
+                {
+                    _assetsLoaded = true;
+                    _cachedAssets = Resources.Load<PauseMenuAssets>("PauseMenuConfig");
+                }
+                return _cachedAssets;
+            }
+        }
+
+        public static void PlayBankSfx(System.Func<PauseMenuAssets, AudioClip> pick, float volume = 0.7f)
+        {
+            var bank = SfxBank;
+            if (bank == null || pick == null) return;
+            var clip = pick(bank);
+            if (clip != null) CoreRuntime.Instance?.Audio?.PlaySfx(clip, volume);
+        }
+
         /// <summary>Fires a one-shot at the SFX channel level.</summary>
         public void PlaySfx(AudioClip clip, float volume = 1f)
         {

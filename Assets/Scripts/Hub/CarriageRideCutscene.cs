@@ -128,6 +128,8 @@ namespace Morsoul.Hub
 
             var createdAssets = new List<UnityEngine.Object>();
             var stage = BuildStage(out var propsToScroll, createdAssets);
+            var carriageClip = AudioCoordinator.SfxBank?.sfxCarriageLoop;
+            if (carriageClip != null) CoreRuntime.Instance?.Audio?.PlayAmbience(carriageClip, true);
 
             var dialogue = ctx != null && ctx.dialogue != null
                 ? ctx.dialogue
