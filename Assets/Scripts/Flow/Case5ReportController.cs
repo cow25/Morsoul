@@ -76,6 +76,7 @@ namespace Morsoul.Flow
         int _uiVersion = -1;
         Action _activeDialogueOnEnd;
         DialogueData _activeDialogueData;
+        Func<bool> _modalBlocker;
 
         public void Begin(GameFlow flow, WeightedBoardController board, DialogueController dialogue)
         {
@@ -85,9 +86,13 @@ namespace Morsoul.Flow
 
             var core = CoreRuntime.Instance;
             _maxFocus = core != null ? core.Focus.Maximum : 100f;
-            _focus = _maxFocus;
-            core?.Focus.Restore(_maxFocus, false);
+            float current = core != null ? core.Focus.Percent : _maxFocus;
+            _focus = Mathf.Clamp(Mathf.Max(current, 60f), 0f, _maxFocus);
+            core?.Focus.Restore(_focus, core.Focus.StrainedScanUsed, _maxFocus);
             _runicLogs = core != null ? core.Session.RunicLogCount : 0;
+
+            _modalBlocker ??= () => _active;
+            PauseMenuController.RegisterExternalModal(_modalBlocker);
 
             if (_standardBoard != null)
             {
@@ -115,9 +120,11 @@ namespace Morsoul.Flow
         void Update()
         {
             if (!_active || _waitingDialogue) return;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             var kb = Keyboard.current;
             if (kb != null && kb.f2Key.wasPressedThisFrame)
                 ShowDevHint();
+#endif
         }
 
         void ShowDevHint()
@@ -140,6 +147,11 @@ namespace Morsoul.Flow
 
         void OnDestroy()
         {
+            if (_modalBlocker != null)
+            {
+                PauseMenuController.UnregisterExternalModal(_modalBlocker);
+                _modalBlocker = null;
+            }
             if (_panelRenderer != null)
                 _panelRenderer.UnregisterUIReloadCallback(OnUIReload);
             if (_dialogue != null && _activeDialogueOnEnd != null)
@@ -184,6 +196,13 @@ namespace Morsoul.Flow
             var closeBtn = root.Q<Button>("CloseBoardButton");
             if (closeBtn != null)
                 closeBtn.style.display = DisplayStyle.None; // Finale report stays until resolved
+
+            var lampRow = root.Q<VisualElement>("LampRow");
+            if (lampRow != null) lampRow.style.display = DisplayStyle.None;
+            var drawer = root.Q<VisualElement>("ClueInspectorDrawer");
+            if (drawer != null) drawer.style.display = DisplayStyle.None;
+            var legend = root.Q<Label>("BoardControlsLegend");
+            if (legend != null) legend.text = "[Drag] Move  |  [Click → Click] or [Right-Drag] Connect  |  [R-Click Row] Sever  |  [Submit]";
 
             if (_active && !_waitingDialogue)
             {

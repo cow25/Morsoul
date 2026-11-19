@@ -33,6 +33,17 @@ namespace Morsoul.Hub
             }
         }
 
+        public override void SetPromptVisible(bool visible)
+        {
+            if (visible && interrogationCaseId >= 1 && interrogationCaseId <= 4)
+            {
+                var core = CoreRuntime.Instance;
+                if (core != null && core.Session.CanStartInterrogation(interrogationCaseId))
+                    promptText = "[E] Confront";
+            }
+            base.SetPromptVisible(visible);
+        }
+
         public override void Interact(HubContext ctx)
         {
             base.Interact(ctx);

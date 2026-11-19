@@ -93,14 +93,14 @@ namespace Morsoul.Tests
             CollectAll();
             var events = _session.DrawLink(new DirectedEdge("d", "e")); // authored, off-S*
             Assert.That(HasEvent(events, ProgressionEventKind.LinkWrong), Is.True);
-            Assert.That(_state.Focus, Is.EqualTo(80f));
+            Assert.That(_state.Focus, Is.EqualTo(100f - ProgressionConstants.ErrorFocusCost));
         }
 
         [Test]
         public void SeverLink_FreeRemoval_RedrawIsNewEvent()
         {
             CollectAll();
-            _session.DrawLink(new DirectedEdge("d", "e")); // error, -20
+            _session.DrawLink(new DirectedEdge("d", "e")); // error
             Assert.IsTrue(_session.SeverLink(new DirectedEdge("d", "e")));
             Assert.That(_state.Links, Is.Empty);
             Assert.IsFalse(_session.SeverLink(new DirectedEdge("d", "e")));
@@ -108,7 +108,7 @@ namespace Morsoul.Tests
             // Re-drawing after a sever is a new draw event — charged again.
             var events = _session.DrawLink(new DirectedEdge("d", "e"));
             Assert.That(HasEvent(events, ProgressionEventKind.LinkWrong), Is.True);
-            Assert.That(_state.Focus, Is.EqualTo(60f));
+            Assert.That(_state.Focus, Is.EqualTo(100f - 2f * ProgressionConstants.ErrorFocusCost));
             Assert.That(_state.CaseErrorCount, Is.EqualTo(2));
         }
 
@@ -182,10 +182,11 @@ namespace Morsoul.Tests
         public void RestAndClosed_ApplyEngineConstants()
         {
             _state.Focus = 50f;
-            _session.ApplyRestTicks(15); // +15
-            Assert.That(_state.Focus, Is.EqualTo(65f));
+            _session.ApplyRestTicks(15); // 15 * RestEnergyPerTick
+            float afterRest = 50f + 15f * ProgressionConstants.RestEnergyPerTick;
+            Assert.That(_state.Focus, Is.EqualTo(afterRest));
             _session.ApplyClosedMinutes(10); // +5
-            Assert.That(_state.Focus, Is.EqualTo(70f));
+            Assert.That(_state.Focus, Is.EqualTo(afterRest + 10f / ProgressionConstants.ClosedMinutesPerEnergy));
         }
 
         [Test]

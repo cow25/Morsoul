@@ -19,7 +19,7 @@ MonoBehaviour:
   acquisition: 0
   requiredTool: 0
   requiredFlag: 
-  description: A sheared section of cast-iron steam conduit. Heavily oxidized and structurally compromised; cannot be used as a lever to pry open the reinforced stone door.
+  description: A sheared section of cast-iron steam conduit. <b>Heavily oxidized and structurally compromised</b>; <b>cannot be used as a lever</b> to pry open the reinforced stone door.
   dissonanceKeyword: 
   isBacktrackingOnly: 0
   hasWorldPosition: 0

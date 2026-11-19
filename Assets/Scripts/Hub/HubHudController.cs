@@ -412,9 +412,12 @@ namespace Morsoul.Hub
             SyncSessionHud();
             if (_footerLabel != null) _footerLabel.text = footerText ?? "";
 
-            // Force a refresh on the next Update.
-            _lastFocus = -1f;
-            _lastFocusMax = -1f;
+            if (Application.isPlaying)
+            {
+                var session = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session : null;
+                if (session == null || string.IsNullOrEmpty(session.ActiveCutsceneId))
+                    TutorialOverlayController.TryShow("TUT_MOVE_2D");
+            }
         }
 
         static MonoBehaviour _cachedJournalMb;
@@ -437,6 +440,12 @@ namespace Morsoul.Hub
             var type = _cachedJournalMb.GetType();
             var isOpenProp = type.GetProperty("IsOpen");
             bool isOpen = isOpenProp != null && (bool)isOpenProp.GetValue(_cachedJournalMb);
+            if (!isOpen)
+            {
+                var openAllowed = type.GetMethod("OpenAllowed");
+                if (openAllowed != null && openAllowed.Invoke(_cachedJournalMb, null) is bool allowed && !allowed)
+                    return;
+            }
             type.GetMethod(isOpen ? "Close" : "Open")?.Invoke(_cachedJournalMb, null);
         }
 

@@ -270,7 +270,11 @@ namespace Morsoul.Flow
             if (interrogation != null)
                 interrogation.InputBlocked = () =>
                     (journalPanel != null && (journalPanel.IsOpen || journalPanel.LastClosedFrame == Time.frameCount)) ||
-                    Core.PauseMenuController.AnyModalOrPauseOpen;
+                    Core.PauseMenuController.IsPaused ||
+                    (Core.TutorialOverlayController.Instance != null && Core.TutorialOverlayController.Instance.IsModalOpen) ||
+                    (resolution != null && resolution.IsVisible) ||
+                    (cutscenePlayer != null && cutscenePlayer.IsPlaying) ||
+                    (dialogue != null && dialogue.IsPlaying);
             if (encounter)
             {
                 weightedBoard?.Close();
@@ -550,9 +554,11 @@ namespace Morsoul.Flow
                 : activeCase != null ? activeCase.caseId : 0;
             if (snapshot != null && session != null)
             {
-                session.SetInterrogationStrikeCount(snapshot.caseId, snapshot.entryStrikeCount);
-                _reportedStrikes = snapshot.entryStrikeCount;
-                _session?.RestoreStrikes(snapshot.entryStrikeCount);
+                int currentStrikes = interrogation != null ? interrogation.EngineStrikesLost : snapshot.strikeCount;
+                int preservedStrikes = Mathf.Max(snapshot.entryStrikeCount, currentStrikes);
+                session.SetInterrogationStrikeCount(snapshot.caseId, preservedStrikes);
+                _reportedStrikes = preservedStrikes;
+                _session?.RestoreStrikes(preservedStrikes);
                 session.SetActiveInterrogation(null);
             }
             if (core == null || caseId < 1 || caseId > 4) return;
@@ -960,16 +966,38 @@ namespace Morsoul.Flow
                     clue.caseId == caseData.caseId ||
                     (caseData.clues != null && Array.IndexOf(caseData.clues, clue) >= 0));
 
+            var referencedEvidence = new HashSet<EvidenceData>();
+            if (interrogationData != null && interrogationData.phases != null)
+                foreach (var phase in interrogationData.phases)
+                    if (phase != null)
+                    {
+                        foreach (var move in phase.validMoves ?? Array.Empty<MoveData>())
+                            if (move != null && move.evidence != null) referencedEvidence.Add(move.evidence);
+                        foreach (var move in phase.invalidMoves ?? Array.Empty<MoveData>())
+                            if (move != null && move.evidence != null) referencedEvidence.Add(move.evidence);
+                    }
+
+            void AddIfRelevant(ClueData clue)
+            {
+                if (clue == null) return;
+                if (referencedEvidence.Count > 0 && !referencedEvidence.Contains(clue))
+                {
+                    if (clue.type == ClueType.Latent) return;
+                    if (!string.IsNullOrEmpty(clue.id) && clue.id.StartsWith("T2_", StringComparison.Ordinal)) return;
+                }
+                Add(clue);
+            }
+
             var session = Core.CoreRuntime.Instance != null
                 ? Core.CoreRuntime.Instance.Session : null;
             if (session != null && caseData != null && caseData.clues != null)
                 foreach (var clue in caseData.clues)
-                    if (clue != null && session.HasClue(clue.id)) Add(clue);
+                    if (clue != null && session.HasClue(clue.id)) AddIfRelevant(clue);
             if (hubJournal != null)
                 foreach (var clue in hubJournal.Collected)
-                    if (BelongsToActiveCase(clue)) Add(clue);
+                    if (BelongsToActiveCase(clue)) AddIfRelevant(clue);
             foreach (var clue in _collectedClues)
-                if (BelongsToActiveCase(clue)) Add(clue);
+                if (BelongsToActiveCase(clue)) AddIfRelevant(clue);
             if (caseData != null && caseData.evidenceGraph == null && board != null && board.Premises != null)
                 foreach (var premise in board.Premises) Add(premise);
             // Weighted boards don't mint PremiseData at runtime — an

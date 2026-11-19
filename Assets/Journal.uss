@@ -104,26 +104,32 @@
     -unity-font-style: bold;
 }
 
+.journal-desc-scroll {
+    flex-grow: 1;
+    min-height: 0;
+    padding-right: 4px;
+}
+
 .journal-desc {
     font-size: 14px;
     color: rgb(32, 22, 14);
     white-space: normal;
-    flex-shrink: 1;
+    flex-shrink: 0;
 }
 
 .journal-footer-hint {
-    margin-top: auto;
+    margin-top: 8px;
     font-size: 12px;
     color: rgb(48, 34, 22);
     -unity-text-align: middle-left;
-    padding-top: 12px;
+    padding-top: 8px;
+    flex-shrink: 0;
 }
 
 .journal-tab-body {
     flex-grow: 1;
     min-height: 0;
     flex-direction: column;
-    overflow: hidden;
     padding-right: 6px;
 }
 

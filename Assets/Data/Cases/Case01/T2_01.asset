@@ -19,7 +19,7 @@ MonoBehaviour:
   acquisition: 2
   requiredTool: 0
   requiredFlag: 
-  description: A rogue infiltrator breached my inner sanctum using volatile dark magic, destroying my entire life's work!
+  description: A rogue infiltrator breached my inner sanctum using <b>volatile dark magic</b>, destroying my entire life's work!
   dissonanceKeyword: volatile dark magic
   isBacktrackingOnly: 0
   hasWorldPosition: 0

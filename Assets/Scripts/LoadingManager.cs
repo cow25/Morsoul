@@ -33,7 +33,11 @@ public class LoadingManager : MonoBehaviour
     private void OnEnable()
     {
         panelRenderer = GetComponent<PanelRenderer>();
-        if (panelRenderer != null) panelRenderer.RegisterUIReloadCallback(OnUIReload);
+        if (panelRenderer != null)
+        {
+            panelRenderer.sortingOrder = 130;
+            panelRenderer.RegisterUIReloadCallback(OnUIReload);
+        }
     }
 
     private void OnDisable()

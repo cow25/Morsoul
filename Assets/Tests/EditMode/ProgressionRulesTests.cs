@@ -51,7 +51,7 @@ namespace Morsoul.Tests
             var events = Draw(_state, _graph, "d", "e"); // authored, but not in S*
             Assert.That(HasEvent(events, ProgressionEventKind.LinkWrong), Is.True);
             Assert.That(_state.CaseErrorCount, Is.EqualTo(1));
-            Assert.That(_state.Focus, Is.EqualTo(80f));
+            Assert.That(_state.Focus, Is.EqualTo(100f - ProgressionConstants.ErrorFocusCost));
         }
 
         [Test]
@@ -59,7 +59,7 @@ namespace Morsoul.Tests
         {
             Draw(_state, _graph, "c", "a"); // not authored at all
             Assert.That(_state.CaseErrorCount, Is.EqualTo(1));
-            Assert.That(_state.Focus, Is.EqualTo(80f));
+            Assert.That(_state.Focus, Is.EqualTo(100f - ProgressionConstants.ErrorFocusCost));
         }
 
         [Test]
@@ -69,7 +69,7 @@ namespace Morsoul.Tests
             var second = Draw(_state, _graph, "c", "a");
             Assert.That(HasEvent(second, ProgressionEventKind.DuplicateLink), Is.True);
             Assert.That(_state.CaseErrorCount, Is.EqualTo(1));
-            Assert.That(_state.Focus, Is.EqualTo(80f));
+            Assert.That(_state.Focus, Is.EqualTo(100f - ProgressionConstants.ErrorFocusCost));
         }
 
         [Test]
@@ -128,7 +128,7 @@ namespace Morsoul.Tests
         [Test]
         public void FocusBoundary_AtTwenty_Charges_ReachesZero_NoLockout()
         {
-            _state.Focus = 20f;
+            _state.Focus = ProgressionConstants.ErrorFocusCost;
             Draw(_state, _graph, "c", "a");
             Assert.That(_state.Focus, Is.EqualTo(0f));
             Assert.That(_state.LinkingLockedOut, Is.False);
@@ -138,7 +138,7 @@ namespace Morsoul.Tests
         [Test]
         public void UnaffordableError_ClearsLinks_LocksOut_UntilTwenty()
         {
-            _state.Focus = 20f;
+            _state.Focus = ProgressionConstants.ErrorFocusCost;
             Draw(_state, _graph, "c", "a");   // -> F 0
             var cleared = Draw(_state, _graph, "d", "c"); // unaffordable
             Assert.That(HasEvent(cleared, ProgressionEventKind.LinksCleared), Is.True);
@@ -146,13 +146,14 @@ namespace Morsoul.Tests
             Assert.That(_state.LinkingLockedOut, Is.True);
             Assert.That(_state.CaseErrorCount, Is.EqualTo(2));
 
-            // Still below 20: draws are blocked and never reach the board.
+            // Below LinkingUnlockFocus: draws are blocked and never reach the board.
+            ProgressionRules.OnRestTicks(_state, 40); // +20 -> still < 30
             var blocked = Draw(_state, _graph, "a", "b");
             Assert.That(HasEvent(blocked, ProgressionEventKind.Blocked), Is.True);
             Assert.That(_state.Links, Is.Empty);
 
-            // Restoring to exactly 20 unlatches on the next draw.
-            ProgressionRules.OnRestTicks(_state, 20); // +20 -> F 20
+            // Restoring to LinkingUnlockFocus (30) unlatches on the next draw.
+            ProgressionRules.OnRestTicks(_state, 20); // +10 -> F 30
             var drawn = Draw(_state, _graph, "a", "b");
             Assert.That(HasEvent(drawn, ProgressionEventKind.LinkOk), Is.True);
             Assert.That(_state.LinkingLockedOut, Is.False);
@@ -178,14 +179,14 @@ namespace Morsoul.Tests
         [Test]
         public void Tier1_AtFiveErrors_GrantsTwentyFocus_Once()
         {
-            // 5 errors at 20 each from F 100 -> the 5th is affordable, then +20 tier reward.
+            // 5 errors at 15 each from F 100 -> qualitative nudge with +0 Focus tier reward.
             string[] wrong = { "c", "a", "d", "c", "e", "b", "a", "e", "b", "d" };
             var fired = new List<ProgressionEvent>();
             for (int i = 0; i < 5; i++)
                 fired.AddRange(Draw(_state, _graph, wrong[i * 2], wrong[i * 2 + 1]));
 
             Assert.That(_state.CaseErrorCount, Is.EqualTo(5));
-            Assert.That(_state.Focus, Is.EqualTo(20f)); // 100 - 100 + 20
+            Assert.That(_state.Focus, Is.EqualTo(100f - 5f * ProgressionConstants.ErrorFocusCost + ProgressionConstants.TierOneEnergyReward));
             Assert.That(_state.FiredHintTiers, Is.EqualTo(new[] { 1 }));
             Assert.That(fired.Count(e => e.Kind == ProgressionEventKind.HintTierFired && e.Tier == 1),
                 Is.EqualTo(1));
@@ -249,7 +250,7 @@ namespace Morsoul.Tests
             var events = Draw(restored, _graph, "c", "a"); // error 6 — no tier fires
             Assert.That(restored.CaseErrorCount, Is.EqualTo(6));
             Assert.That(events.Any(e => e.Kind == ProgressionEventKind.HintTierFired), Is.False);
-            Assert.That(restored.Focus, Is.EqualTo(before - 20f));
+            Assert.That(restored.Focus, Is.EqualTo(before - ProgressionConstants.ErrorFocusCost));
         }
 
         [Test]
@@ -269,10 +270,10 @@ namespace Morsoul.Tests
         public void RestAndReopen_ApplySpecAmounts()
         {
             _state.Focus = 10f;
-            ProgressionRules.OnRestTicks(_state, 15); // +15
-            Assert.That(_state.Focus, Is.EqualTo(25f));
+            ProgressionRules.OnRestTicks(_state, 15); // +7.5
+            Assert.That(_state.Focus, Is.EqualTo(10f + 15f * ProgressionConstants.RestEnergyPerTick));
             ProgressionRules.OnReopen(_state, 7); // floor(7/2) = +3
-            Assert.That(_state.Focus, Is.EqualTo(28f));
+            Assert.That(_state.Focus, Is.EqualTo(10f + 15f * ProgressionConstants.RestEnergyPerTick + 3f));
             _state.Focus = 95f;
             ProgressionRules.OnReopen(_state, 100); // would +50, capped at 100
             Assert.That(_state.Focus, Is.EqualTo(100f));

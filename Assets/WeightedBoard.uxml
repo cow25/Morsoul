@@ -15,6 +15,15 @@
             <ui:VisualElement name="BoardMainRow" class="wboard-main-row">
                 <ui:VisualElement name="CanvasColumn" class="wboard-canvas-column">
                     <ui:VisualElement name="NodeCanvas" class="wboard-canvas"/>
+                    <ui:VisualElement name="ClueInspectorDrawer" class="wboard-clue-drawer">
+                        <ui:VisualElement class="wboard-clue-drawer-header">
+                            <ui:Label name="SelectedClueTitle" text="Select a Clue Card to inspect details" class="wboard-clue-drawer-title"/>
+                            <ui:Label name="SelectedClueMeta" text="" class="wboard-clue-drawer-meta"/>
+                        </ui:VisualElement>
+                        <ui:ScrollView name="SelectedClueScroll" class="wboard-clue-drawer-scroll">
+                            <ui:Label name="SelectedClueDesc" text="Click any card to inspect its forensic notes, then click a second card (or Right-Drag) to link Cause → Effect." class="wboard-clue-drawer-desc"/>
+                        </ui:ScrollView>
+                    </ui:VisualElement>
                 </ui:VisualElement>
 
                 <ui:VisualElement name="SideLedger" class="wboard-side-ledger">
@@ -37,6 +46,7 @@
                 <ui:Label name="FeedbackLabel" text="" class="wboard-feedback-text"/>
                 <ui:Label name="HintLabel" text="" class="wboard-banner-hint" style="display: none;"/>
             </ui:VisualElement>
+            <ui:Label name="BoardControlsLegend" text="[Drag] Move  |  [Click → Click] or [Right-Drag] Link (Cause → Effect)  |  [R-Click Row] Sever  |  [Space] Submit" class="wboard-controls-legend"/>
         </ui:VisualElement>
 
         <ui:VisualElement name="HintPopup" class="wboard-hint-popup" style="display: none;">

@@ -147,6 +147,8 @@ namespace Morsoul.Journal
         /// </summary>
         public bool OpenAllowed()
         {
+            if (PauseMenuController.IsPaused) return false;
+            if (TutorialOverlayController.Instance != null && TutorialOverlayController.Instance.IsModalOpen) return false;
             if (context != null && context.UiBlocked) return false;
             var session = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session : null;
             if (session != null && !string.IsNullOrEmpty(session.ActiveCutsceneId)) return false;
@@ -234,7 +236,8 @@ namespace Morsoul.Journal
             Time.timeScale = 0f; // journal pauses the sim per GDD
             RefreshTabButtons();
             RebuildBody();
-            ClearDetail();
+            if (_cards.Count > 0) SelectCard(0);
+            else ClearDetail();
             if (_root != null) _root.style.display = DisplayStyle.Flex;
             if (manageCursor)
             {
@@ -268,7 +271,8 @@ namespace Morsoul.Journal
             _tocPage = 0;
             RefreshTabButtons();
             RebuildBody();
-            ClearDetail();
+            if (_cards.Count > 0) SelectCard(0);
+            else ClearDetail();
         }
 
         void ChangeTocPage(int delta)
@@ -509,10 +513,17 @@ namespace Morsoul.Journal
             _detailClue = clue;
             if (_detailTitle != null) _detailTitle.text = clue.displayName;
             if (_detailType != null)
-                _detailType.text = string.IsNullOrEmpty(clue.id)
-                    ? clue.type.ToString()
-                    : $"{clue.type} — {clue.id}";
-            if (_detailDesc != null) _detailDesc.text = clue.description;
+            {
+                string scope = clue.caseId == 0 ? "Prologue" : $"Case {clue.caseId}";
+                string cat = ClueHighlightFormatter.FriendlyCategory(clue);
+                string tool = clue.requiredTool != Tool.None ? $"  •  {ClueHighlightFormatter.FriendlyTool(clue.requiredTool)}" : "";
+                _detailType.text = $"{scope}  •  {cat}{tool}";
+            }
+            if (_detailDesc != null)
+            {
+                string playerName = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session.PlayerName : "";
+                _detailDesc.text = ClueHighlightFormatter.FormatDescription(clue, playerName, darkBackground: false);
+            }
         }
 
         void ShowTextDetail(string title, string subtitle, string body)
@@ -566,7 +577,8 @@ namespace Morsoul.Journal
                 _root.style.display = _isOpen ? DisplayStyle.Flex : DisplayStyle.None;
             RefreshTabButtons();
             RebuildBody();
-            ClearDetail();
+            if (_cards.Count > 0) SelectCard(0);
+            else ClearDetail();
         }
     }
 }

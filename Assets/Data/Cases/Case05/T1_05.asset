@@ -19,7 +19,7 @@ MonoBehaviour:
   acquisition: 7
   requiredTool: 0
   requiredFlag: 
-  description: '{PlayerName}, the ritual circle isn''t drawing energy from the earth. It''s back-feeding harvested mana to break the ancient stabilizer locks! You must sever the pylons first!'
+  description: '{PlayerName}, the ritual circle isn''t drawing energy from the earth. It''s <b>back-feeding harvested mana to break the ancient stabilizer locks</b>! You must <b>sever the pylons first</b>!'
   dissonanceKeyword: 
   isBacktrackingOnly: 0
   hasWorldPosition: 0

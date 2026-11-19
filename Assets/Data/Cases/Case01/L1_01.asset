@@ -19,7 +19,7 @@ MonoBehaviour:
   acquisition: 5
   requiredTool: 3
   requiredFlag: 
-  description: Pre-cataclysm formula on synthetic mana solvent flash points and sublimation rates. Required for Ending 3.
+  description: Pre-cataclysm formula on <b>synthetic mana solvent flash points and sublimation rates</b>. Required for Ending 3.
   dissonanceKeyword: 
   isBacktrackingOnly: 1
   hasWorldPosition: 1

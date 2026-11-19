@@ -459,10 +459,16 @@ namespace Morsoul.Core
 
         void OnMistrialRetry(MistrialRetryEvent _)
         {
-            // "Retry from Checkpoint": reload the Zone B entry checkpoint —
-            // composure and strikes reset with the scene.
+            // "Retry from Checkpoint": reload the pre-interrogation hub or checkpoint scene
+            // rather than reloading CaseLoop directly.
             string scene = CurrentSave.checkpointSceneName;
-            if (string.IsNullOrEmpty(scene)) scene = SceneManager.GetActiveScene().name;
+            if (string.IsNullOrEmpty(scene) || string.Equals(scene, "CaseLoop", StringComparison.OrdinalIgnoreCase))
+            {
+                string hubRoute = RouteKeys.Hub(CurrentSave.currentCase);
+                if (!string.IsNullOrEmpty(hubRoute) && GoToRoute(hubRoute, GameFlowState.Hub))
+                    return;
+                scene = SceneManager.GetActiveScene().name;
+            }
             if (string.IsNullOrEmpty(scene))
             {
                 Debug.LogWarning("GameStateManager: mistrial retry but no scene to reload.", this);

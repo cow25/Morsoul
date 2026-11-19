@@ -47,6 +47,9 @@ namespace Morsoul.Cutscene
         Coroutine _shotRoutine;
         float _skipHold;
         int _uiVersion;
+        Func<bool> _modalBlocker;
+        CursorLockMode _prevCursorLock = CursorLockMode.Locked;
+        bool _prevCursorVisible;
 
         public bool IsPlaying => _isPlaying;
         public int CurrentShotIndex => _shotIndex;
@@ -54,13 +57,20 @@ namespace Morsoul.Cutscene
         void OnEnable()
         {
             _panelRenderer = GetComponent<PanelRenderer>();
-            if (_panelRenderer != null) _panelRenderer.RegisterUIReloadCallback(OnUIReload);
+            if (_panelRenderer != null)
+            {
+                _panelRenderer.sortingOrder = 100;
+                _panelRenderer.RegisterUIReloadCallback(OnUIReload);
+            }
             _videoPlayer = GetComponent<VideoPlayer>();
+            _modalBlocker ??= () => _isPlaying;
+            PauseMenuController.RegisterExternalModal(_modalBlocker);
         }
 
         void OnDisable()
         {
             if (_panelRenderer != null) _panelRenderer.UnregisterUIReloadCallback(OnUIReload);
+            if (_modalBlocker != null) PauseMenuController.UnregisterExternalModal(_modalBlocker);
         }
 
         void OnDestroy()
@@ -117,6 +127,8 @@ namespace Morsoul.Cutscene
             if (_root != null) _root.style.display = DisplayStyle.Flex;
             if (manageCursor)
             {
+                _prevCursorLock = UnityEngine.Cursor.lockState;
+                _prevCursorVisible = UnityEngine.Cursor.visible;
                 UnityEngine.Cursor.lockState = CursorLockMode.None;
                 UnityEngine.Cursor.visible = true;
             }
@@ -208,9 +220,10 @@ namespace Morsoul.Cutscene
             if (_root != null) _root.style.display = DisplayStyle.None;
             if (manageCursor)
             {
-                UnityEngine.Cursor.lockState = CursorLockMode.Locked;
-                UnityEngine.Cursor.visible = false;
+                UnityEngine.Cursor.lockState = _prevCursorLock;
+                UnityEngine.Cursor.visible = _prevCursorVisible;
             }
+            PauseMenuController.NotifyExternalModalClosed();
         }
 
         void StopShotRoutine()

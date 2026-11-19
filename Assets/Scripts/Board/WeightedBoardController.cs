@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Morsoul.Core;
 using Morsoul.Data;
 using Morsoul.Engine;
 using UnityEngine;
@@ -49,6 +50,7 @@ namespace Morsoul.Board
         EvidenceGraph _graph;
         readonly Dictionary<string, VisualElement> _nodes = new Dictionary<string, VisualElement>();
         readonly Dictionary<string, string> _clueNames = new Dictionary<string, string>(StringComparer.Ordinal);
+        readonly Dictionary<string, ClueData> _clueData = new Dictionary<string, ClueData>(StringComparer.Ordinal);
 
         VisualElement _root;
         VisualElement _canvas;
@@ -66,10 +68,16 @@ namespace Morsoul.Board
         Label _hintLabel;
         Label _hintSpeaker;
         Label _hintText;
+        Label _selectedClueTitle;
+        Label _selectedClueMeta;
+        Label _selectedClueDesc;
         Button _submitButton;
         Button _hintClose;
 
         bool _isOpen;
+        CursorLockMode _prevCursorLock = CursorLockMode.None;
+        bool _prevCursorVisible = true;
+        string _inspectedClueId;
         string _pendingSource;
         string _dragLinkSource;
         Vector2 _dragLinkPointer;
@@ -229,6 +237,7 @@ namespace Morsoul.Board
         public void SetClues(IEnumerable<ClueData> clues)
         {
             _clueNames.Clear();
+            _clueData.Clear();
             var ids = new List<string>();
             if (clues != null)
                 foreach (var clue in clues)
@@ -236,6 +245,7 @@ namespace Morsoul.Board
                     if (clue == null || string.IsNullOrEmpty(clue.id)) continue;
                     _clueNames[clue.id] = string.IsNullOrEmpty(clue.displayName)
                         ? clue.id : clue.displayName;
+                    _clueData[clue.id] = clue;
                     ids.Add(clue.id);
                 }
             if (_session != null)
@@ -248,7 +258,7 @@ namespace Morsoul.Board
 
         public void Open()
         {
-            if (!Authorized) return;
+            if (!Authorized || PauseMenuController.AnyModalOrPauseOpen) return;
             // Re-run the lazy hook on every open so freshly collected clues
             // and focus state sync into a live session, not just the first.
             if (EnsureSession != null && !EnsureSession())
@@ -263,6 +273,7 @@ namespace Morsoul.Board
                     $"WeightedBoardController: no evidence graph on '{caseData.title}'; board stays closed.", this);
                 return;
             }
+            SyncFocusIn();
             _isOpen = true;
             _pendingSource = null;
             _session.Solve();
@@ -270,9 +281,14 @@ namespace Morsoul.Board
             if (_root != null) _root.style.display = DisplayStyle.Flex;
             if (manageCursor)
             {
+                _prevCursorLock = UnityEngine.Cursor.lockState;
+                _prevCursorVisible = UnityEngine.Cursor.visible;
                 UnityEngine.Cursor.lockState = CursorLockMode.None;
                 UnityEngine.Cursor.visible = true;
             }
+            TutorialOverlayController.TryShow("TUT_BOARD_BASICS");
+            if (caseData != null && caseData.caseId >= 1)
+                TutorialOverlayController.TryShow("TUT_BOARD_LOGIC");
         }
 
         public void Close()
@@ -283,9 +299,10 @@ namespace Morsoul.Board
             if (_root != null) _root.style.display = DisplayStyle.None;
             if (manageCursor)
             {
-                UnityEngine.Cursor.lockState = CursorLockMode.Locked;
-                UnityEngine.Cursor.visible = false;
+                UnityEngine.Cursor.lockState = _prevCursorLock;
+                UnityEngine.Cursor.visible = _prevCursorVisible;
             }
+            PauseMenuController.NotifyExternalModalClosed();
         }
 
         // --- Interactions (public for tests) ---------------------------------
@@ -422,13 +439,13 @@ namespace Morsoul.Board
                         break;
                     case ProgressionEventKind.Blocked:
                         ShowBanner(BannerErrorClass,
-                            $"Linking locked — Focus below {ProgressionConstants.ErrorFocusCost:0}. Rest to recover.");
+                            $"Linking locked — Focus below {ProgressionConstants.LinkingUnlockFocus:0}. Rest at a bench or recover Focus before continuing.");
                         break;
                     case ProgressionEventKind.DuplicateLink:
                         ShowBanner(BannerInfoClass, "Link already on the board.");
                         break;
                     case ProgressionEventKind.LinkOk:
-                        ShowBanner(BannerInfoClass, "The connection holds.");
+                        ShowBanner(BannerInfoClass, "Connection recorded on the board.");
                         break;
                     case ProgressionEventKind.LinkWrong:
                         ShowBanner(BannerErrorClass,
@@ -436,7 +453,7 @@ namespace Morsoul.Board
                         break;
                     case ProgressionEventKind.LinksCleared:
                         ShowBanner(BannerErrorClass,
-                            $"Focus can't absorb the error — the board is wiped and linking is locked until Focus reaches {ProgressionConstants.ErrorFocusCost:0}.");
+                            $"Focus can't absorb the error — the board is wiped and linking is locked until Focus reaches {ProgressionConstants.LinkingUnlockFocus:0}.");
                         break;
                     case ProgressionEventKind.ResolveEnding:
                         resolveEnding = true;
@@ -460,7 +477,7 @@ namespace Morsoul.Board
             {
                 case 1:
                     ShowBanner(BannerInfoClass,
-                        $"Eliza helps you refocus. (+{ProgressionConstants.TierOneEnergyReward:0} Focus)");
+                        "Pause and re-read your Clue Notes — check tools, mechanisms, and witness timelines.");
                     break;
                 case 2:
                 case 3:
@@ -489,6 +506,7 @@ namespace Morsoul.Board
             RebuildLinkList();
             RefreshConclusions();
             RefreshLamp();
+            RefreshClueInspector();
             ApplyBanner();
             ApplyHintPopup();
         }
@@ -577,6 +595,7 @@ namespace Morsoul.Board
                 RegisterNodeInteractions(node, captured);
                 node.RegisterCallback<GeometryChangedEvent>(_ =>
                 {
+                    ClampNodeElement(node, captured);
                     SyncPinPosition(captured, node);
                     _linkLayer?.MarkDirtyRepaint();
                 });
@@ -653,9 +672,9 @@ namespace Morsoul.Board
                 if (!dragging && delta.magnitude > 4f) dragging = true;
                 if (dragging)
                 {
-                    var p = nodeStart + delta;
-                    node.style.left = Mathf.Max(0, p.x);
-                    node.style.top = Mathf.Max(0, p.y);
+                    var clamped = ClampPositionToCanvas(node, nodeStart + delta);
+                    node.style.left = clamped.x;
+                    node.style.top = clamped.y;
                     SyncPinPosition(clueId, node);
                     _linkLayer?.MarkDirtyRepaint();
                 }
@@ -693,6 +712,8 @@ namespace Morsoul.Board
         void OnNodeClicked(string clueId)
         {
             if (_session == null) return;
+            _inspectedClueId = clueId;
+            RefreshClueInspector();
             if (_pendingSource == null)
             {
                 _pendingSource = clueId;
@@ -708,6 +729,26 @@ namespace Morsoul.Board
             string source = _pendingSource;
             _pendingSource = null;
             DrawLink(source, clueId);
+        }
+
+        void RefreshClueInspector()
+        {
+            if (_selectedClueTitle == null || _selectedClueDesc == null) return;
+            if (string.IsNullOrEmpty(_inspectedClueId) || !_clueData.TryGetValue(_inspectedClueId, out var clue) || clue == null)
+            {
+                _selectedClueTitle.text = "Select a Clue Card to inspect details";
+                if (_selectedClueMeta != null) _selectedClueMeta.text = "";
+                _selectedClueDesc.text = "Click any card to read its highlighted forensic notes, then click a target card (or Right-Drag) to connect Cause → Effect.";
+                return;
+            }
+            _selectedClueTitle.text = string.IsNullOrEmpty(clue.displayName) ? clue.id : clue.displayName;
+            if (_selectedClueMeta != null)
+            {
+                string tool = clue.requiredTool != Tool.None ? $" • {ClueHighlightFormatter.FriendlyTool(clue.requiredTool)}" : "";
+                _selectedClueMeta.text = $"{ClueHighlightFormatter.FriendlyCategory(clue)}{tool}";
+            }
+            string playerName = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session.PlayerName : "";
+            _selectedClueDesc.text = ClueHighlightFormatter.FormatDescription(clue, playerName, darkBackground: false);
         }
 
         void RefreshNodeStates()
@@ -729,9 +770,7 @@ namespace Morsoul.Board
             {
                 var row = new VisualElement();
                 row.AddToClassList("wboard-link-row");
-                if (_graph != null && _graph.IsSolutionLink(link))
-                    row.AddToClassList("wboard-link-row--solution");
-                else if (_graph != null && !_graph.IsAuthoredLink(link))
+                if (_graph != null && !_graph.IsAuthoredLink(link))
                     row.AddToClassList("wboard-link-row--invented");
 
                 var text = new Label($"{NameOf(link.sourceId)}  →  {NameOf(link.targetId)}");
@@ -750,6 +789,35 @@ namespace Morsoul.Board
                 _linkList.Add(row);
             }
             _linkLayer?.MarkDirtyRepaint();
+        }
+
+        Vector2 ClampPositionToCanvas(VisualElement node, Vector2 pos)
+        {
+            if (_canvas == null)
+                return new Vector2(Mathf.Max(4f, pos.x), Mathf.Max(8f, pos.y));
+            float cw = _canvas.layout.width;
+            float ch = _canvas.layout.height;
+            float nw = node.layout.width > 1f ? node.layout.width : 155f;
+            float nh = node.layout.height > 1f ? node.layout.height : 48f;
+            float maxX = cw > nw + 8f ? cw - nw - 4f : Mathf.Max(4f, pos.x);
+            float maxY = ch > nh + 12f ? ch - nh - 4f : Mathf.Max(8f, pos.y);
+            return new Vector2(Mathf.Clamp(pos.x, 4f, maxX), Mathf.Clamp(pos.y, 8f, maxY));
+        }
+
+        void ClampNodeElement(VisualElement node, string clueId)
+        {
+            if (_canvas == null || _canvas.layout.width <= 1f || _canvas.layout.height <= 1f) return;
+            float left = node.style.left.keyword == StyleKeyword.Null || node.style.left.keyword == StyleKeyword.Undefined
+                ? node.resolvedStyle.left : node.style.left.value.value;
+            float top = node.style.top.keyword == StyleKeyword.Null || node.style.top.keyword == StyleKeyword.Undefined
+                ? node.resolvedStyle.top : node.style.top.value.value;
+            var clamped = ClampPositionToCanvas(node, new Vector2(left, top));
+            if (Mathf.Abs(clamped.x - left) > 0.5f || Mathf.Abs(clamped.y - top) > 0.5f)
+            {
+                node.style.left = clamped.x;
+                node.style.top = clamped.y;
+                _session?.SetNodePosition(clueId, clamped.x, clamped.y);
+            }
         }
 
         string FindNodeAt(Vector2 worldPos)
@@ -804,11 +872,21 @@ namespace Morsoul.Board
 
         static void DrawLine(Painter2D painter, Vector2 from, Vector2 to, Color color)
         {
-            if ((to - from).sqrMagnitude < 4f) return;
+            Vector2 delta = to - from;
+            if (delta.sqrMagnitude < 4f) return;
             painter.strokeColor = color;
             painter.BeginPath();
             painter.MoveTo(from);
             painter.LineTo(to);
+
+            Vector2 dir = delta.normalized;
+            Vector2 perp = new Vector2(-dir.y, dir.x);
+            Vector2 tip = to - dir * 8f;
+            Vector2 wingA = tip - dir * 10f + perp * 6f;
+            Vector2 wingB = tip - dir * 10f - perp * 6f;
+            painter.MoveTo(wingA);
+            painter.LineTo(tip);
+            painter.LineTo(wingB);
             painter.Stroke();
         }
 
@@ -869,7 +947,7 @@ namespace Morsoul.Board
             _lampLabel.AddToClassList(cls);
             _lampLabel.text = $"Lamp: {name}";
             if (_supportLabel != null)
-                _supportLabel.text = $"Support: {cert.SelectedSupport:P0}  ({cert.Verdict})";
+                _supportLabel.text = $"Support: {cert.SelectedSupport:P0}";
         }
 
         string NameOf(string clueId) =>
@@ -968,6 +1046,9 @@ namespace Morsoul.Board
             _hintLabel = root.Q<Label>("HintLabel");
             _hintSpeaker = root.Q<Label>("HintSpeaker");
             _hintText = root.Q<Label>("HintText");
+            _selectedClueTitle = root.Q<Label>("SelectedClueTitle");
+            _selectedClueMeta = root.Q<Label>("SelectedClueMeta");
+            _selectedClueDesc = root.Q<Label>("SelectedClueDesc");
 
             _submitButton = root.Q<Button>("SubmitButton");
             if (_submitButton != null)
