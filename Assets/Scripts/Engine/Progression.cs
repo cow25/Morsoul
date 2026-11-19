@@ -11,19 +11,19 @@ namespace Morsoul.Engine
     public static class ProgressionConstants
     {
         /// <summary>Focus lost per erroneous link (Pwrong).</summary>
-        public const float ErrorFocusCost = 20f;
-        /// <summary>Focus regained per completed Focus rest tick.</summary>
-        public const float RestEnergyPerTick = 1f;
+        public const float ErrorFocusCost = 15f;
+        /// <summary>Focus regained per completed Focus rest tick (5 Focus/sec).</summary>
+        public const float RestEnergyPerTick = 0.5f;
         /// <summary>Whole closed minutes required per recovered Focus point.</summary>
         public const int ClosedMinutesPerEnergy = 2;
         /// <summary>Case error counts at which hint tiers fire, once each.</summary>
         public static readonly int[] ErrorTierThresholds = { 5, 10, 20 };
-        /// <summary>Tier 1 (5 errors): one-time Focus grant, capped at max.</summary>
-        public const float TierOneEnergyReward = 20f;
+        /// <summary>Tier 1 (5 errors): qualitative focus nudge only (+0 Focus to prevent brute-force bounce).</summary>
+        public const float TierOneEnergyReward = 0f;
         /// <summary>Supported complete submission: capacity bonus + full refill.</summary>
         public const float CompleteSubmissionCapacityBonus = 10f;
-        /// <summary>Focus required before linking is allowed (same as the error cost).</summary>
-        public const float LinkingUnlockFocus = ErrorFocusCost;
+        /// <summary>Focus required before linking is unlocked after a lockout.</summary>
+        public const float LinkingUnlockFocus = 30f;
     }
 
     /// <summary>Serializable board node position (engine-side; no Unity types).</summary>
@@ -151,7 +151,7 @@ namespace Morsoul.Engine
             }
 
             if (graph.CaseId != 0 && state.LinkingLockedOut &&
-                state.Focus < ProgressionConstants.ErrorFocusCost)
+                state.Focus < ProgressionConstants.LinkingUnlockFocus)
             {
                 events.Add(new ProgressionEvent { Kind = ProgressionEventKind.Blocked });
                 return events;

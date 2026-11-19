@@ -19,7 +19,7 @@ MonoBehaviour:
   acquisition: 7
   requiredTool: 0
   requiredFlag: 
-  description: Critical containment pressure at the planetary breach makes manual calibration impossible without pre-cataclysm stabilizer equations.
+  description: <b>Critical containment pressure</b> at the planetary breach makes manual calibration impossible without <b>pre-cataclysm stabilizer equations</b>.
   dissonanceKeyword: 
   isBacktrackingOnly: 0
   hasWorldPosition: 0

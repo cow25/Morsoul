@@ -24,6 +24,8 @@ namespace Morsoul.Hub
         HubContext _context;
         System.Func<bool> _restBlocker;
         int _restStartFrame = -1;
+        float _sessionTargetFocus;
+        string _statusMessage;
 
         void Reset()
         {
@@ -33,6 +35,30 @@ namespace Morsoul.Hub
         void Awake()
         {
             _player = FindAnyObjectByType<HubPlayerController>();
+        }
+
+        public override void SetPromptVisible(bool visible)
+        {
+            if (visible)
+            {
+                promptText = BuildDynamicPrompt();
+                TutorialOverlayController.TryShow("TUT_REST_SPOT");
+            }
+            base.SetPromptVisible(visible);
+        }
+
+        string BuildDynamicPrompt()
+        {
+            var core = CoreRuntime.Instance;
+            if (core == null) return "[E] Rest";
+            int caseId = core.Session.CurrentCase;
+            int remaining = core.Session.GetRemainingRests(caseId);
+            if (!string.IsNullOrEmpty(_statusMessage)) return _statusMessage;
+            if (remaining <= 0) return "Rest used up for this case";
+            float cd = core.Session.RestCooldownRemaining(Time.unscaledTime);
+            if (cd > 0.5f) return $"Rest cooling down ({Mathf.CeilToInt(cd)}s)";
+            if (core.Focus.Percent >= core.Focus.Maximum) return "Focus Full";
+            return $"[E] Rest ({remaining}/{FocusTuning.RestMaxPerCase} left)";
         }
 
         public override void Interact(HubContext ctx)
@@ -50,18 +76,48 @@ namespace Morsoul.Hub
             else StartResting();
         }
 
-        /// <summary>Begins the rest loop; no-op when already resting or Focus is full.</summary>
+        /// <summary>Begins the rest loop; enforces per-case limit, cooldown, and gain cap.</summary>
         public void StartResting()
         {
             if (IsResting) return;
+            _statusMessage = null;
             var core = CoreRuntime.Instance;
-            if (core == null || core.Focus.Percent >= core.Focus.Maximum) return;
+            if (core == null || core.Focus.Percent >= core.Focus.Maximum)
+            {
+                _statusMessage = "Focus already full";
+                SetPromptVisible(true);
+                return;
+            }
+
+            int caseId = core.Session.CurrentCase;
+            if (core.Session.GetRemainingRests(caseId) <= 0)
+            {
+                _statusMessage = $"No rests left for Case {caseId}";
+                SetPromptVisible(true);
+                TutorialOverlayController.TryShow("TUT_REST_SPOT");
+                return;
+            }
+
+            float cd = core.Session.RestCooldownRemaining(Time.unscaledTime);
+            if (cd > 0.05f)
+            {
+                _statusMessage = $"Rest cooling down ({Mathf.CeilToInt(cd)}s)";
+                SetPromptVisible(true);
+                return;
+            }
+
+            core.Session.RecordRestUse(caseId, Time.unscaledTime);
+            _sessionTargetFocus = Mathf.Min(
+                core.Focus.Maximum,
+                core.Focus.Percent + FocusTuning.RestGainCapPerUse);
+
             IsResting = true;
             _restStartFrame = Time.frameCount;
             if (restCue != null) core.Audio?.PlaySfx(restCue);
             if (_player == null) _player = FindAnyObjectByType<HubPlayerController>();
             if (_player != null) _player.enabled = false;
             if (restingIndicator != null) restingIndicator.SetActive(true);
+            TutorialOverlayController.TryShow("TUT_REST_SPOT");
         }
 
         /// <summary>Stops resting; safe to call even when not resting.</summary>
@@ -69,6 +125,7 @@ namespace Morsoul.Hub
         {
             if (!IsResting) return;
             IsResting = false;
+            _statusMessage = null;
             if (_player != null) _player.enabled = true;
             if (restingIndicator != null) restingIndicator.SetActive(false);
         }
@@ -94,8 +151,10 @@ namespace Morsoul.Hub
                 return;
             }
 
-            if (core.Focus.Percent >= core.Focus.Maximum)
+            if (core.Focus.Percent >= _sessionTargetFocus || core.Focus.Percent >= core.Focus.Maximum)
             {
+                if (core.Focus.Percent > _sessionTargetFocus)
+                    core.Focus.Sync(_sessionTargetFocus, core.Focus.Maximum);
                 StopResting();
             }
         }

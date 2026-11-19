@@ -46,7 +46,7 @@ MonoBehaviour:
       strikeCost: 0
       isCoreContradiction: 0
       responseDialogue: Alchemical houses pay fortunes for raw spirit-resin! I am an opportunist, nothing more! Smuggling contraband is a municipal civil infraction, not a hanging offense!
-      emotionAura: 1
+      emotionAura: 2
     - verb: 2
       evidence: {fileID: 11400000, guid: ea15b44cd77416a47b8f1f5ee72666b1, type: 2}
       breaksComposureSegment: 1
@@ -72,7 +72,7 @@ MonoBehaviour:
       strikeCost: 0
       isCoreContradiction: 0
       responseDialogue: Nature dies to make way for the strong! This woodland decay is localized, irrelevant, and forgotten by tomorrow's sunrise!
-      emotionAura: 2
+      emotionAura: 1
     - verb: 1
       evidence: {fileID: 11400000, guid: 8fe96e21dca72614abfb619ab90c3d83, type: 2}
       breaksComposureSegment: 1

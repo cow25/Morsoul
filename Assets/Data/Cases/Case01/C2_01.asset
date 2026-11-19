@@ -19,7 +19,7 @@ MonoBehaviour:
   acquisition: 1
   requiredTool: 1
   requiredFlag: 
-  description: "Rapid-sublimating synthetic solvent residue releasing harmless purple vapor \u2014 not dark magic."
+  description: "<b>Rapid-sublimating synthetic solvent residue</b> releasing <b>harmless purple vapor</b> \u2014 <b>not dark magic</b>."
   dissonanceKeyword: 
   isBacktrackingOnly: 0
   hasWorldPosition: 1

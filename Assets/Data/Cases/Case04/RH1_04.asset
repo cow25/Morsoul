@@ -19,7 +19,7 @@ MonoBehaviour:
   acquisition: 3
   requiredTool: 0
   requiredFlag: 
-  description: A snapped pneumatic drill head with heavy metal fatigue and abrasive wear. Ordinary wear, unrelated to chemically melted junction relays.
+  description: A snapped pneumatic drill head with heavy metal fatigue and abrasive wear. <b>Ordinary wear</b>, unrelated to chemically melted junction relays.
   dissonanceKeyword: 
   isBacktrackingOnly: 0
   hasWorldPosition: 0

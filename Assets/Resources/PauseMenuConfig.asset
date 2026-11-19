@@ -19,6 +19,7 @@ MonoBehaviour:
   boardUxml: {fileID: 9197481963319205126, guid: a28fc3fdf762bb141b9f45b9c5452914, type: 3}
   interrogationUxml: {fileID: 9197481963319205126, guid: b780d0feeeff1cd44aa18cb338f3d728, type: 3}
   resolutionUxml: {fileID: 9197481963319205126, guid: a1d824de0ff77ed4e8c7b2f61601346b, type: 3}
+  tutorialOverlayUxml: {fileID: 9197481963319205126, guid: e2228f9cb9c37384e86ec27a91e5aa98, type: 3}
   elizaProfile: {fileID: 11400000, guid: f17d555b8efaad544a0e47fdcfe2d220, type: 2}
   carrierWagonTexture: {fileID: 2800000, guid: 06a4250953de47c49acceaee55db7273, type: 3}
   horseTrotSheetTexture: {fileID: 2800000, guid: 083e5b6de5e36fc45a1248017f42d332, type: 3}

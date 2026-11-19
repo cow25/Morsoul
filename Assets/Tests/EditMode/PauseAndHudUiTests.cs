@@ -105,11 +105,18 @@ namespace Morsoul.Tests
                 "PauseMenu-Root", "DossierName", "DossierSpecies", "DossierActiveCase", "DossierCasesSolved",
                 "FocusLevelLabel", "FocusBarFill", "FocusPointsLabel",
                 "DossierCluesLogged", "DossierRunicLogs", "DossierTitle", "PauseStatusBanner",
-                "ActionsPage", "SaveStateButton", "SettingsButton", "QuitGameButton", "ResumeButton",
+                "ActionsPage", "SaveStateButton", "SettingsButton", "TutorialLogsButton", "QuitGameButton", "ResumeButton",
                 "QuitConfirmRow", "ReturnTitleButton", "ExitAppButton", "QuitCancelButton",
                 "SettingsPage", "MasterFill", "MusicFill", "SfxFill",
                 "MasterValueLabel", "MusicValueLabel", "SfxValueLabel",
-                "FullscreenToggleButton", "SettingsBackButton");
+                "FullscreenToggleButton", "SettingsBackButton",
+                "TutorialsPage", "TutorialFilterRow", "TutorialListScroll", "TutorialDetailTitle",
+                "TutorialDetailKeys", "TutorialDetailBody", "AutoTutorialsToggleButton", "TutorialsBackButton");
+
+            AssertUxmlElements("Assets/Panels/TutorialOverlay.uxml",
+                "TutorialOverlay-Root", "TutorialBackdrop", "TutorialCard", "TutorialCategoryLabel",
+                "TutorialTitleLabel", "TutorialKeysLabel", "TutorialSummaryLabel", "TutorialStepsList",
+                "TutorialMuteButton", "TutorialDismissButton");
 
             AssertUxmlElements("Assets/Dialogue.uxml",
                 "Dialogue-Root", "SpeakerPortrait", "OptionsContainer", "OptionButton0", "OptionButton1",
@@ -131,7 +138,8 @@ namespace Morsoul.Tests
                 "WeightedBoard-Root", "NodeCanvas", "LinkList", "ConclusionList", "FeedbackBanner",
                 "HintPopup", "HintPortrait", "CaseTitleLabel", "ErrorCountLabel", "FocusLabel",
                 "LampLabel", "SupportLabel", "FeedbackLabel", "HintLabel", "HintSpeaker", "HintText",
-                "SubmitButton", "HintClose", "CloseBoardButton");
+                "SubmitButton", "HintClose", "CloseBoardButton", "AutoAlignButton",
+                "ClueInspectorDrawer", "SelectedClueTitle", "SelectedClueMeta", "SelectedClueDesc", "BoardControlsLegend");
         }
 
         [Test]
@@ -206,6 +214,7 @@ namespace Morsoul.Tests
             Assert.IsNotNull(config.boardUxml);
             Assert.IsNotNull(config.interrogationUxml);
             Assert.IsNotNull(config.resolutionUxml);
+            Assert.IsNotNull(config.tutorialOverlayUxml);
         }
 
         static UguiButton NewUguiButton(string name, Transform parent)

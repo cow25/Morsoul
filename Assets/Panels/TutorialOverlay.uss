@@ -1,0 +1,142 @@
+.tut-root {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    -unity-font-definition: url("project://database/Assets/Fonts/EBGaramond.ttf");
+    align-items: flex-end;
+    justify-content: flex-start;
+    padding: 86px 26px 24px 24px;
+}
+
+.tut-root--modal {
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.tut-backdrop {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(8, 10, 14, 0.56);
+}
+
+.tut-card {
+    width: 390px;
+    max-width: 92%;
+    background-color: rgba(20, 22, 28, 0.94);
+    border-color: rgba(114, 206, 224, 0.85);
+    border-width: 1.5px;
+    border-radius: 6px;
+    padding: 14px 18px 14px 18px;
+}
+
+.tut-root--modal .tut-card {
+    width: 500px;
+    padding: 20px 24px;
+}
+
+.tut-header-row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+.tut-category {
+    font-size: 11px;
+    color: rgb(118, 212, 228);
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+}
+
+.tut-badge {
+    font-size: 10px;
+    color: rgb(22, 24, 28);
+    background-color: rgb(232, 198, 114);
+    border-radius: 3px;
+    padding: 1px 6px;
+    -unity-font-style: bold;
+}
+
+.tut-title {
+    -unity-font-definition: url("project://database/Assets/Fonts/Middleearth.ttf");
+    font-size: 17px;
+    color: rgb(246, 240, 226);
+    -unity-font-style: bold;
+    white-space: normal;
+    margin-bottom: 4px;
+}
+
+.tut-keys {
+    font-size: 12px;
+    color: rgb(238, 206, 132);
+    background-color: rgba(255, 255, 255, 0.06);
+    border-radius: 3px;
+    padding: 4px 8px;
+    margin-bottom: 8px;
+    white-space: normal;
+}
+
+.tut-summary {
+    font-size: 13px;
+    color: rgb(220, 224, 232);
+    white-space: normal;
+    margin-bottom: 8px;
+}
+
+.tut-steps-list {
+    flex-direction: column;
+    margin-bottom: 10px;
+}
+
+.tut-step {
+    font-size: 12px;
+    color: rgb(196, 204, 216);
+    white-space: normal;
+    margin-bottom: 4px;
+    padding-left: 4px;
+}
+
+.tut-footer-row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 6px;
+    border-top-width: 1px;
+    border-top-color: rgba(255, 255, 255, 0.12);
+}
+
+.tut-btn {
+    border-radius: 4px;
+    padding: 5px 12px;
+    font-size: 12px;
+    border-width: 1px;
+}
+
+.tut-btn--primary {
+    background-color: rgba(62, 168, 192, 0.30);
+    border-color: rgb(114, 206, 224);
+    color: rgb(242, 248, 252);
+    -unity-font-style: bold;
+}
+
+.tut-btn--primary:hover {
+    background-color: rgba(82, 194, 218, 0.45);
+}
+
+.tut-btn--subtle {
+    background-color: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.20);
+    color: rgb(186, 194, 206);
+}
+
+.tut-btn--subtle:hover {
+    background-color: rgba(255, 255, 255, 0.14);
+    color: rgb(236, 240, 246);
+}
+

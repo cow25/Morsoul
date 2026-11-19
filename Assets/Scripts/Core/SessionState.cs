@@ -218,6 +218,39 @@ namespace Morsoul.Core
         /// <summary>True when a strained scan was used during the case.</summary>
         public bool IsStrainedScanUsed(int caseId) => HasFlag(StrainedScanFlagFor(caseId));
 
+        /// <summary>Per-case hub Rest Spot activation tracking (persisted in session flags).</summary>
+        public int GetRestCount(int caseId)
+        {
+            int count = 0;
+            for (int i = 1; i <= FocusTuning.RestMaxPerCase; i++)
+                if (HasFlag($"Session.Rest.{caseId}.{i}")) count++;
+            return count;
+        }
+
+        public int GetRemainingRests(int caseId) => Math.Max(0, FocusTuning.RestMaxPerCase - GetRestCount(caseId));
+
+        public void RecordRestUse(int caseId, float realtimeNow)
+        {
+            for (int i = 1; i <= FocusTuning.RestMaxPerCase; i++)
+            {
+                string key = $"Session.Rest.{caseId}.{i}";
+                if (!HasFlag(key))
+                {
+                    SetFlag(key, true);
+                    break;
+                }
+            }
+            LastRestRealtime = realtimeNow;
+        }
+
+        public float LastRestRealtime { get; private set; } = -999f;
+
+        public float RestCooldownRemaining(float realtimeNow)
+        {
+            float elapsed = realtimeNow - LastRestRealtime;
+            return Math.Max(0f, FocusTuning.RestCooldownSeconds - elapsed);
+        }
+
         // --- Board / logs / grades / tools ------------------------------------
 
         /// <summary>Merges validated board node ids (DeductionBoard.ValidatedNodeIds).</summary>
@@ -630,6 +663,7 @@ namespace Morsoul.Core
             _interrogationStrikes.Clear();
             _caseGradeStates.Clear();
             _tools.Clear();
+            LastRestRealtime = -999f;
         }
     }
 }

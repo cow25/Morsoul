@@ -337,6 +337,7 @@ public class HUDManager : MonoBehaviour
             _journalController.CanOpen = () =>
                 (prevCanOpen == null || prevCanOpen()) &&
                 !PauseMenuController.IsPaused &&
+                !InspectManager.IsAnyInspecting &&
                 !(_weightedBoard != null && _weightedBoard.IsOpen) &&
                 !(_legacyBoard != null && _legacyBoard.IsOpen);
             SyncSessionCluesToHubJournal();
@@ -382,6 +383,7 @@ public class HUDManager : MonoBehaviour
         _weightedBoard.CanUse = () =>
             (baseCanUse == null || baseCanUse()) &&
             !PauseMenuController.IsPaused &&
+            !InspectManager.IsAnyInspecting &&
             !(_journalController != null && _journalController.IsOpen);
 
         var baseEnsure = _weightedBoard.EnsureSession;
@@ -394,6 +396,7 @@ public class HUDManager : MonoBehaviour
                     CoreRuntime.Instance != null &&
                     CoreRuntime.Instance.Session.CurrentSceneMode == SceneMode.Mode3D &&
                     !PauseMenuController.IsPaused &&
+                    !InspectManager.IsAnyInspecting &&
                     !(_journalController != null && _journalController.IsOpen);
                 return ok;
             };
@@ -525,7 +528,7 @@ public class HUDManager : MonoBehaviour
             _journalController.Close();
             return;
         }
-        if (PauseMenuController.IsPaused) return;
+        if (PauseMenuController.IsPaused || InspectManager.IsAnyInspecting) return;
         if (_weightedBoard != null && _weightedBoard.IsOpen)
             _weightedBoard.Close();
         if (_legacyBoard != null && _legacyBoard.IsOpen)
@@ -540,7 +543,7 @@ public class HUDManager : MonoBehaviour
     public void ToggleBoard()
     {
         if (_weightedBoard == null && _legacyBoard == null) EnsureOverlayPanels();
-        if (PauseMenuController.IsPaused) return;
+        if (PauseMenuController.IsPaused || InspectManager.IsAnyInspecting) return;
         if (_journalController != null && _journalController.IsOpen)
             _journalController.Close();
 

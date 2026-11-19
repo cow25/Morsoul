@@ -19,7 +19,7 @@ MonoBehaviour:
   acquisition: 0
   requiredTool: 1
   requiredFlag: 
-  description: Heavy Dwarven multi-pin cylinder lock; tumblers and pins pristine with zero tool marks, shearing, or acid burns. Must have been opened with an authentic key.
+  description: Heavy Dwarven multi-pin cylinder lock; tumblers and pins pristine with <b>zero tool marks, shearing, or acid burns</b>. Must have been <b>opened with an authentic key</b>.
   dissonanceKeyword: 
   isBacktrackingOnly: 0
   hasWorldPosition: 1

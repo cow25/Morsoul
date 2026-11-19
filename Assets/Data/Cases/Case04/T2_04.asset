@@ -19,7 +19,7 @@ MonoBehaviour:
   acquisition: 2
   requiredTool: 0
   requiredFlag: 
-  description: I was contracted solely for structural bedrock reinforcement on the upper tier. I never touched the subterranean steam conduits or engineering bypasses!
+  description: I was contracted solely for structural bedrock reinforcement on the upper tier. I <b>never touched the subterranean conduits</b> or engineering bypasses!
   dissonanceKeyword: never touched the subterranean conduits
   isBacktrackingOnly: 0
   hasWorldPosition: 0

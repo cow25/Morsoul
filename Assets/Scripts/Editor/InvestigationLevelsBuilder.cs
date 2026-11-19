@@ -695,9 +695,10 @@ namespace Morsoul.Editor
                 new Vector3(-5.5f, 0.45f, 9.6f), new Vector3(1.6f, 1.0f, 1.6f), clues, cloak, useGroundEmbers: true);
 
             // L3_03: Central Altar Ground (center of spell circle) — concealed until AetherSight is unlocked (yellow embers)
+            var log3Visual = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(Dfk + "Lightsources/dfk_crystal_01_blue.prefab");
             CreateClueNode("L3_RunicLog3_AltarGround", "L3_03", ClueNode.Kind.Physical, ClueNode.Tool.AetherSight, ClueNode.State.Hidden,
                 "Buried pre-cataclysm telemetry beneath the altar: Displacement Device Telemetry (Runic Log #3).",
-                new Vector3(0f, 0.45f, 7.5f), new Vector3(1.8f, 1.2f, 1.8f), clues, visualChild: clues.gameObject, useGroundEmbers: true, isRunic: true);
+                new Vector3(0f, 0.45f, 7.5f), new Vector3(1.8f, 1.2f, 1.8f), clues, visualChild: log3Visual, useGroundEmbers: true, isRunic: true);
 
             // Open Trail Exit back to Whisperwood Trail
             CreateExitPortal("Exit_WhisperwoodTrail", 3, "Hub_Wilderness",

@@ -19,7 +19,7 @@ MonoBehaviour:
   acquisition: 0
   requiredTool: 0
   requiredFlag: 
-  description: Batch numbers for shipment #408 prove the potions were never manufactured.
+  description: <b>Batch numbers for shipment #408</b> prove the <b>potions were never manufactured</b>.
   dissonanceKeyword: 
   isBacktrackingOnly: 0
   hasWorldPosition: 1

@@ -66,7 +66,7 @@ namespace Morsoul.Hub
         }
 
         /// <summary>Shows/hides the assigned prompt indicator, if any.</summary>
-        public void SetPromptVisible(bool visible)
+        public virtual void SetPromptVisible(bool visible)
         {
             if (promptIndicator == null) return;
             // Text prompts (TMP labels) mirror promptText whenever shown, so

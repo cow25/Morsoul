@@ -66,12 +66,14 @@ public class ScanController : MonoBehaviour
     private void SetAetherSight(bool active)
     {
         if (IsAetherSightActive == active) return;
-        IsAetherSightActive = active;
         bool wasAether = IsAetherSightActive;
+        IsAetherSightActive = active;
         if (active) Shader.EnableKeyword("_AETHER_SIGHT_ACTIVE");
         else Shader.DisableKeyword("_AETHER_SIGHT_ACTIVE");
         if (active != wasAether)
             Morsoul.Core.AudioCoordinator.PlayBankSfx(b => b.sfxAetherToggle, 0.7f);
+        if (active)
+            Morsoul.Core.TutorialOverlayController.TryShow("TUT_AETHER_COMBO");
     }
 
     private void Update()
@@ -80,12 +82,29 @@ public class ScanController : MonoBehaviour
             Morsoul.Dev.DevMenuOverlay.IsOpen)
             return;
 
-        var session = Morsoul.Core.CoreRuntime.Instance?.Session;
+        var core = Morsoul.Core.CoreRuntime.Ensure();
+        var session = core.Session;
+        bool zeroCost = core.ZeroScanFocusCost;
         bool hasAether = session != null && session.Tools.Contains(Morsoul.Data.Tool.AetherSight);
         if (!hasAether && IsAetherSightActive)
             SetAetherSight(false);
         else if (hasAether && Keyboard.current != null && Keyboard.current.digit1Key.wasPressedThisFrame)
-            SetAetherSight(!IsAetherSightActive);
+        {
+            if (!IsAetherSightActive && !zeroCost && core.Focus.IsDepleted)
+                SetAetherSight(false);
+            else
+                SetAetherSight(!IsAetherSightActive);
+        }
+
+        if (IsAetherSightActive && !zeroCost)
+        {
+            core.Focus.TickAetherSight(Time.deltaTime);
+            currentFocus = core.Focus.Percent;
+            maxFocus = core.Focus.Maximum;
+            HUDManager.Instance?.UpdateFocus(Mathf.RoundToInt(currentFocus), Mathf.RoundToInt(maxFocus));
+            if (core.Focus.IsDepleted)
+                SetAetherSight(false);
+        }
 
         if (_forcedScanTimer > 0f)
             _forcedScanTimer = Mathf.Max(0f, _forcedScanTimer - Time.deltaTime);
@@ -94,17 +113,16 @@ public class ScanController : MonoBehaviour
         bool manualScan = Keyboard.current != null && Keyboard.current.tabKey.isPressed;
         bool forcedScan = _forcedScanTimer > 0f;
 
-        var core = Morsoul.Core.CoreRuntime.Ensure();
-        bool zeroCost = core.ZeroScanFocusCost;
         if (zeroCost != _lastZeroCost)
         {
             _lastZeroCost = zeroCost;
             HUDManager.Instance?.UpdateFocusCost(zeroCost ? 0f : FocusDrainRate);
         }
 
-        // 2. Check for Focus (no strained scanning when Focus is depleted unless zero-cost)
+        // 2. Check for Focus: Prologue reboots on 0 Focus; Cases 1+ allow strained scan when held empty (latches StrainedScanUsed).
         bool wasScanning = _isScanning;
-        bool canManualScan = manualScan && (zeroCost || !core.Focus.IsDepleted);
+        bool isPrologue = session != null && session.CurrentCase == 0;
+        bool canManualScan = manualScan && (zeroCost || !core.Focus.IsDepleted || !isPrologue);
         if (canManualScan || forcedScan)
         {
             _isScanning = true;
@@ -113,7 +131,12 @@ public class ScanController : MonoBehaviour
             if (canManualScan && !forcedScan)
             {
                 if (!zeroCost)
+                {
+                    bool wasStrained = core.Focus.StrainedScanUsed;
                     core.Focus.TickScan(Time.deltaTime);
+                    if (!wasStrained && core.Focus.StrainedScanUsed && session != null)
+                        session.MarkStrainedScan(session.CurrentCase);
+                }
                 currentFocus = core.Focus.Percent;
                 maxFocus = core.Focus.Maximum;
                 HUDManager.Instance?.UpdateFocus(Mathf.RoundToInt(currentFocus), Mathf.RoundToInt(maxFocus));

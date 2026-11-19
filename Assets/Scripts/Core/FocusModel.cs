@@ -23,6 +23,7 @@ namespace Morsoul.Core
     public class FocusModel
     {
         float _tickAccumulator;
+        float _aetherAccumulator;
         float _restRemainderSeconds;
 
         /// <summary>Current energy, 0–Maximum.</summary>
@@ -80,7 +81,23 @@ namespace Morsoul.Core
         }
 
         /// <summary>
-        /// Rest-spot regen: +1 per completed Focus tick. Sub-tick time is
+        /// Advances active Aether Sight drain by <paramref name="deltaSeconds"/>.
+        /// Clamps at 0 without latching StrainedScanUsed (Golem Eye strained scans handle that).
+        /// </summary>
+        public void TickAetherSight(float deltaSeconds)
+        {
+            if (deltaSeconds <= 0f) return;
+            _aetherAccumulator += deltaSeconds;
+            while (_aetherAccumulator >= FocusTuning.FocusTickSeconds)
+            {
+                _aetherAccumulator -= FocusTuning.FocusTickSeconds;
+                if (!IsDepleted)
+                    Percent = Math.Max(0f, Percent - FocusTuning.AetherSightDrainPerTick);
+            }
+        }
+
+        /// <summary>
+        /// Rest-spot regen: +RestEnergyPerTick per completed Focus tick. Sub-tick time is
         /// kept in the remainder so saves and scene transitions lose nothing.
         /// </summary>
         public void TickRest(float deltaSeconds)
@@ -192,6 +209,7 @@ namespace Morsoul.Core
             Percent = Math.Clamp(percent, 0f, Maximum);
             StrainedScanUsed = strainedScanUsed;
             _tickAccumulator = 0f;
+            _aetherAccumulator = 0f;
             _restRemainderSeconds = Math.Max(0f, restRemainderSeconds);
             ClosedAtUtc = closedAtUtc;
             LastTrustedUtc = lastTrustedUtc;

@@ -16773,7 +16773,7 @@ MonoBehaviour:
   defaultDescription: 'Buried pre-cataclysm telemetry beneath the altar: Displacement Device Telemetry (Runic Log #3).'
   state: 0
   scanParticles: {fileID: 1075510563}
-  inspectVisual: {fileID: 0}
+  inspectVisual: {fileID: 1165959372330002, guid: b29ecf6c6d8bc074fb2fa0418d400134, type: 3}
 --- !u!65 &643838542
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -21396,7 +21396,7 @@ MonoBehaviour:
   defaultDescription: Vane's discarded ritual cloak. Lingers with fanatical zeal and deceit tying him to the Sanctum Core ritual.
   state: 1
   scanParticles: {fileID: 1224037951}
-  inspectVisual: {fileID: 1039829384}
+  inspectVisual: {fileID: 1013803126987112, guid: 70eb0852fd599cc4d8fa9ce8901a90ff, type: 3}
 --- !u!65 &934640021
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -24819,11 +24819,6 @@ PrefabInstance:
       addedObject: {fileID: 1520901386}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 3d0e048f29527f243b99783f25df9eb1, type: 3}
---- !u!1 &1039829384 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1276330849123174, guid: 3d0e048f29527f243b99783f25df9eb1, type: 3}
-  m_PrefabInstance: {fileID: 1039829383}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1039829385 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4097500270151942, guid: 3d0e048f29527f243b99783f25df9eb1, type: 3}
@@ -39796,6 +39791,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: SharedRoot
       objectReference: {fileID: 0}
+    - target: {fileID: 1831669827363122928, guid: 28b3a9b166728ee48a4e6c7ed782ecb0, type: 3}
+      propertyPath: maxZoom
+      value: -3.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1831669827363122928, guid: 28b3a9b166728ee48a4e6c7ed782ecb0, type: 3}
+      propertyPath: minZoom
+      value: -1.1
+      objectReference: {fileID: 0}
     - target: {fileID: 1975298993140540547, guid: 28b3a9b166728ee48a4e6c7ed782ecb0, type: 3}
       propertyPath: m_LocalPosition.x
       value: 1.26062
@@ -39855,6 +39858,18 @@ PrefabInstance:
     - target: {fileID: 8067190703483042536, guid: 28b3a9b166728ee48a4e6c7ed782ecb0, type: 3}
       propertyPath: m_BackGroundColor.r
       value: 0.06
+      objectReference: {fileID: 0}
+    - target: {fileID: 8892104410900336796, guid: 28b3a9b166728ee48a4e6c7ed782ecb0, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8892104410900336796, guid: 28b3a9b166728ee48a4e6c7ed782ecb0, type: 3}
+      propertyPath: field of view
+      value: 45
+      objectReference: {fileID: 0}
+    - target: {fileID: 8892104410900336796, guid: 28b3a9b166728ee48a4e6c7ed782ecb0, type: 3}
+      propertyPath: near clip plane
+      value: 0.02
       objectReference: {fileID: 0}
     - target: {fileID: 8892104410900336796, guid: 28b3a9b166728ee48a4e6c7ed782ecb0, type: 3}
       propertyPath: m_BackGroundColor.a

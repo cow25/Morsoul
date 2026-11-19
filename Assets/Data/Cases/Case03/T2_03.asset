@@ -19,7 +19,7 @@ MonoBehaviour:
   acquisition: 2
   requiredTool: 0
   requiredFlag: 
-  description: I am merely a wandering botanical researcher studying natural forest blight. You meddling guild hounds are disturbing a sanctioned ecological survey!
+  description: I am merely a wandering botanical researcher studying natural forest blight. You meddling guild hounds are disturbing a <b>sanctioned ecological survey</b>!
   dissonanceKeyword: sanctioned ecological survey
   isBacktrackingOnly: 0
   hasWorldPosition: 0

@@ -19,7 +19,7 @@ MonoBehaviour:
   acquisition: 0
   requiredTool: 0
   requiredFlag: 
-  description: A reinforced titanium-alloy blast door hidden behind blown-out rock strata. Its emergency lock was tampered with from outside to force stasis lockdown over the engineering bay.
+  description: A reinforced <b>titanium-alloy blast door hidden behind blown-out rock strata</b>. Its emergency lock was <b>tampered with from outside</b> to force stasis lockdown over the engineering bay.
   dissonanceKeyword: 
   isBacktrackingOnly: 0
   hasWorldPosition: 0

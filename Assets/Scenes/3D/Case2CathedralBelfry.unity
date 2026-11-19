@@ -1375,7 +1375,7 @@ MonoBehaviour:
   defaultDescription: 'Ancient harmonic rune etched into the rear masonry beam: Acoustic Stabilization equations (Runic Log #2).'
   state: 0
   scanParticles: {fileID: 2023312079}
-  inspectVisual: {fileID: 0}
+  inspectVisual: {fileID: 5754980488530693964, guid: daf2d72bb11e11fc32d7a8b3ddd883a9, type: 3}
 --- !u!65 &173269183
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -11481,6 +11481,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: SharedRoot
       objectReference: {fileID: 0}
+    - target: {fileID: 1831669827363122928, guid: 28b3a9b166728ee48a4e6c7ed782ecb0, type: 3}
+      propertyPath: maxZoom
+      value: -3.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1831669827363122928, guid: 28b3a9b166728ee48a4e6c7ed782ecb0, type: 3}
+      propertyPath: minZoom
+      value: -1.1
+      objectReference: {fileID: 0}
     - target: {fileID: 1975298993140540547, guid: 28b3a9b166728ee48a4e6c7ed782ecb0, type: 3}
       propertyPath: m_LocalPosition.x
       value: 1.26062
@@ -11520,6 +11528,18 @@ PrefabInstance:
     - target: {fileID: 1975298993140540547, guid: 28b3a9b166728ee48a4e6c7ed782ecb0, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8892104410900336796, guid: 28b3a9b166728ee48a4e6c7ed782ecb0, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8892104410900336796, guid: 28b3a9b166728ee48a4e6c7ed782ecb0, type: 3}
+      propertyPath: field of view
+      value: 45
+      objectReference: {fileID: 0}
+    - target: {fileID: 8892104410900336796, guid: 28b3a9b166728ee48a4e6c7ed782ecb0, type: 3}
+      propertyPath: near clip plane
+      value: 0.02
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 1656219550991117146, guid: 28b3a9b166728ee48a4e6c7ed782ecb0, type: 3}
