@@ -178,7 +178,8 @@ namespace Morsoul.Core
 
         public static bool HasDatabaseSave()
         {
-#if !UNITY_EDITOR && (UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN)
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+            if (Application.isEditor) return false;
             return TryLoad(out _);
 #else
             return false;
@@ -188,7 +189,8 @@ namespace Morsoul.Core
         public static bool TryLoad(out SaveState state)
         {
             state = null;
-#if !UNITY_EDITOR && (UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN)
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+            if (Application.isEditor) return false;
             if (!TryOpen(true, out IntPtr db)) return false;
             try
             {
@@ -221,7 +223,8 @@ namespace Morsoul.Core
 
         public static bool TrySave(SaveState state, string sealedCheckpointJson)
         {
-#if !UNITY_EDITOR && (UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN)
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+            if (Application.isEditor) return false;
             if (state == null || string.IsNullOrEmpty(sealedCheckpointJson)) return false;
             if (!TryOpen(false, out IntPtr db)) return false;
             try
@@ -288,15 +291,17 @@ namespace Morsoul.Core
                     }
                 }
 
-                if (ok && state.caseGradeStates != null)
+                if (ok && state.caseGrades != null)
                 {
-                    foreach (var g in state.caseGradeStates)
+                    for (int i = 0; i < state.caseGrades.Count; i++)
                     {
-                        if (g == null || g.grade == Morsoul.Data.Grade.Ungraded) continue;
+                        var grade = state.caseGrades[i];
+                        if (grade == Morsoul.Data.Grade.Ungraded) continue;
+                        int cId = i + 1;
                         RunStmt(db,
                             "INSERT OR REPLACE INTO case_results (profile_id, case_id, conclusion_id, correct, flawed, strikes, attempts, completed_at) " +
                             "VALUES (?1, ?2, '', 1, ?3, 0, 1, ?4);",
-                            s => { BindStr(s, 1, profileId); BindStr(s, 2, $"case_{g.caseId:D2}"); _bindInt(s, 3, g.grade == Morsoul.Data.Grade.Flawed ? 1 : 0); _bindInt64(s, 4, now); });
+                            s => { BindStr(s, 1, profileId); BindStr(s, 2, $"case_{cId:D2}"); _bindInt(s, 3, grade == Morsoul.Data.Grade.Flawed ? 1 : 0); _bindInt64(s, 4, now); });
                     }
                 }
 
