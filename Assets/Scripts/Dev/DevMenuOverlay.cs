@@ -16,10 +16,9 @@ using UnityEngine.UIElements;
 namespace Morsoul.Dev
 {
     /// <summary>
-    /// F1-toggled IMGUI dev menu. Auto-spawns on play in the editor and
-    /// development builds only; stripped from release builds by the
-    /// conditional below. Tabs: Scenes / Session / Flags / Clues / Focus /
-    /// Hub / Scenarios / Sequences.
+    /// F1-toggled IMGUI dev menu. Auto-spawns on play in all builds (enabled for
+    /// demo access; re-gate behind UNITY_EDITOR || DEVELOPMENT_BUILD before final
+    /// release). Tabs: Scenes / Session / Flags / Clues / Focus / Hub / Scenarios / Sequences.
     /// </summary>
     public class DevMenuOverlay : MonoBehaviour
     {
@@ -60,10 +59,9 @@ namespace Morsoul.Dev
         static readonly string[] Tabs =
             { "Scenes", "Session", "Flags", "Clues", "Focus", "Hub", "UI Preview", "Scenarios", "Sequences" };
 
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // shortcut: enabled in release builds for demo; restore #if UNITY_EDITOR || DEVELOPMENT_BUILD after demo
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void Bootstrap() => Ensure();
-#endif
 
         public static DevMenuOverlay Ensure()
         {
