@@ -1,4 +1,5 @@
 using System.IO;
+using Morsoul.Core;
 using Morsoul.Cutscene;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -78,6 +79,11 @@ namespace Morsoul.Title.Editor
                 cutsceneCtrl = cutsceneGo.AddComponent<CutscenePlayerController>();
             }
             menuCtrl.openingCutscenePlayer = cutsceneCtrl;
+
+            var audioGo = new GameObject("SceneAudio");
+            var audioLoop = audioGo.AddComponent<SceneAudioLoop>();
+            audioLoop.music = AssetDatabase.LoadAssetAtPath<AudioClip>(
+                "Assets/Music Loops Mini Set/Mystical Music Loops/Mystical  Loop #1.wav");
 
             if (!AssetDatabase.IsValidFolder("Assets/Scenes"))
                 AssetDatabase.CreateFolder("Assets", "Scenes");

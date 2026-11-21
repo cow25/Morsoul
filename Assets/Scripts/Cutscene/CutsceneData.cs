@@ -14,6 +14,7 @@ namespace Morsoul.Cutscene
     {
         public string id;
         public CutsceneShotData[] shots;
+        public AudioClip music;
         public string nextSceneName;
         public bool skipToScene;
     }

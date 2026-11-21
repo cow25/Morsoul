@@ -72,6 +72,7 @@ namespace Morsoul.Flow
         string _dragLinkSource;
         Vector2 _dragLinkPointer;
         bool _active;
+        public bool IsActive => _active;
         bool _waitingDialogue;
         int _uiVersion = -1;
         Action _activeDialogueOnEnd;
@@ -120,12 +121,19 @@ namespace Morsoul.Flow
         void Update()
         {
             if (!_active || _waitingDialogue) return;
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
             var kb = Keyboard.current;
             if (kb != null && kb.f2Key.wasPressedThisFrame)
                 ShowDevHint();
-#endif
         }
+
+        public string GetDevHintText() => _stage switch
+        {
+            1 => "[DEV F2] Stage 1: Link all 4 Guild Audits (ignore Routine Freight Permit), then select 'Coordinated First-Age Strike'.",
+            2 => "[DEV F2] Stage 2: Link Seismic Log + Cult Doctrine + Siphon Readout (ignore Copper Grounding Rod), then select 'Sanctum Core Breach'.",
+            _ => _runicLogs >= EndingResolver.RequiredRunicLogs
+                ? "[DEV F2] Stage 3: Link Conclusion I + Conclusion II + Runic Logs (4/4), then select 'True Verdict'."
+                : "[DEV F2] Stage 3: Link Conclusion I + Conclusion II, then select 'Normal Verdict'."
+        };
 
         void ShowDevHint()
         {
@@ -134,15 +142,7 @@ namespace Morsoul.Flow
                 bool valid = _specs.TryGetValue(pair.Key, out var spec) && spec.IsValid;
                 pair.Value.EnableInClassList("wboard-node--hint", valid);
             }
-            string hint = _stage switch
-            {
-                1 => "[DEV F2] Stage 1: Link all 4 Guild Audits (ignore Routine Freight Permit), then select 'Coordinated First-Age Strike'.",
-                2 => "[DEV F2] Stage 2: Link Seismic Log + Cult Doctrine + Siphon Readout (ignore Copper Grounding Rod), then select 'Sanctum Core Breach'.",
-                _ => _runicLogs >= EndingResolver.RequiredRunicLogs
-                    ? "[DEV F2] Stage 3: Link Conclusion I + Conclusion II + Runic Logs (4/4), then select 'True Verdict'."
-                    : "[DEV F2] Stage 3: Link Conclusion I + Conclusion II, then select 'Normal Verdict'."
-            };
-            ShowBanner(hint);
+            ShowBanner(GetDevHintText());
         }
 
         void OnDestroy()

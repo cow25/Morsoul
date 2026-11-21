@@ -990,12 +990,17 @@ namespace Morsoul.Dev
 
         void DrawDevHintsOverlay()
         {
+            Case5ReportController c5 = null;
+            foreach (var c in Object.FindObjectsByType<Case5ReportController>())
+                if (c != null && c.IsActive) { c5 = c; break; }
+
             WeightedBoardController wb = null;
-            foreach (var c in Object.FindObjectsByType<WeightedBoardController>())
-                if (c != null && c.IsOpen && c.Session != null) { wb = c; break; }
+            if (c5 == null)
+                foreach (var c in Object.FindObjectsByType<WeightedBoardController>())
+                    if (c != null && c.IsOpen && c.Session != null) { wb = c; break; }
 
             BoardController bc = null;
-            if (wb == null)
+            if (c5 == null && wb == null)
                 foreach (var c in Object.FindObjectsByType<BoardController>())
                     if (c != null && c.IsOpen && c.caseData != null) { bc = c; break; }
 
@@ -1003,17 +1008,22 @@ namespace Morsoul.Dev
             foreach (var c in Object.FindObjectsByType<InterrogationController>())
                 if (c != null && c.IsOpen && c.Engine != null) { ic = c; break; }
 
-            if (wb == null && bc == null && ic == null) return;
+            if (c5 == null && wb == null && bc == null && ic == null) return;
 
             var rect = new Rect(Mathf.Max(16f, Screen.width - 436f), 16f, 420f, 360f);
             GUILayout.BeginArea(rect, "DEV HINTS  [F2 to hide]", GUI.skin.window);
 
-            if (wb != null) DrawWeightedBoardHints(wb);
+            if (c5 != null)
+            {
+                Section("Case 5 — Sanctum Core Report");
+                GUILayout.Label(c5.GetDevHintText());
+            }
+            else if (wb != null) DrawWeightedBoardHints(wb);
             else if (bc != null) DrawLegacyBoardHints(bc);
 
             if (ic != null)
             {
-                if (wb != null || bc != null) GUILayout.Space(8);
+                if (c5 != null || wb != null || bc != null) GUILayout.Space(8);
                 DrawInterrogationHints(ic.Engine);
             }
 

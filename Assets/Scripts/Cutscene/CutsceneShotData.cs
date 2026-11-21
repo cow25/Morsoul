@@ -16,6 +16,7 @@ namespace Morsoul.Cutscene
     {
         public Sprite image;
         public VideoClip video;
+        public AudioClip sfx;
         public float durationSeconds = 4f;
         public bool waitForInput;
         [TextArea] public string caption;
