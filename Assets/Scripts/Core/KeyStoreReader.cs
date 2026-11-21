@@ -39,20 +39,25 @@ namespace Morsoul.Core
         {
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
             // 1 = CRED_TYPE_GENERIC
-            if (CredRead("morsoul", 1, 0, out IntPtr credPtr))
+            string[] targets = { "morsoul:db-key", "db-key@morsoul", "morsoul" };
+            foreach (string target in targets)
             {
-                try
+                if (CredRead(target, 1, 0, out IntPtr credPtr))
                 {
-                    var cred = Marshal.PtrToStructure<CREDENTIAL>(credPtr);
-                    if (cred.CredentialBlob == IntPtr.Zero || cred.CredentialBlobSize <= 0)
-                        return null;
-                    byte[] bytes = new byte[cred.CredentialBlobSize];
-                    Marshal.Copy(cred.CredentialBlob, bytes, 0, cred.CredentialBlobSize);
-                    return Encoding.Unicode.GetString(bytes).TrimEnd('\0');
-                }
-                finally
-                {
-                    CredFree(credPtr);
+                    try
+                    {
+                        var cred = Marshal.PtrToStructure<CREDENTIAL>(credPtr);
+                        if (cred.CredentialBlob == IntPtr.Zero || cred.CredentialBlobSize <= 0)
+                            continue;
+                        byte[] bytes = new byte[cred.CredentialBlobSize];
+                        Marshal.Copy(cred.CredentialBlob, bytes, 0, cred.CredentialBlobSize);
+                        string key = Encoding.Unicode.GetString(bytes).TrimEnd('\0');
+                        if (!string.IsNullOrEmpty(key)) return key;
+                    }
+                    finally
+                    {
+                        CredFree(credPtr);
+                    }
                 }
             }
 #endif

@@ -35,7 +35,6 @@
 
                     <ui:VisualElement name="LampRow" class="wboard-lamp-row">
                         <ui:Label name="LampLabel" text="Lamp: Cold" class="wboard-lamp wboard-lamp--cold"/>
-                        <ui:Label name="SupportLabel" text="Support: 0%" class="wboard-support-label"/>
                     </ui:VisualElement>
 
                     <ui:Button name="SubmitButton" text="Submit Conclusion" class="wboard-submit-button"/>

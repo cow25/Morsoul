@@ -63,7 +63,6 @@ namespace Morsoul.Board
         Label _errorCountLabel;
         Label _focusLabel;
         Label _lampLabel;
-        Label _supportLabel;
         Label _feedbackLabel;
         Label _hintLabel;
         Label _hintSpeaker;
@@ -946,8 +945,6 @@ namespace Morsoul.Board
             }
             _lampLabel.AddToClassList(cls);
             _lampLabel.text = $"Lamp: {name}";
-            if (_supportLabel != null)
-                _supportLabel.text = $"Support: {cert.SelectedSupport:P0}";
         }
 
         string NameOf(string clueId) =>
@@ -1041,7 +1038,6 @@ namespace Morsoul.Board
             _errorCountLabel = root.Q<Label>("ErrorCountLabel");
             _focusLabel = root.Q<Label>("FocusLabel");
             _lampLabel = root.Q<Label>("LampLabel");
-            _supportLabel = root.Q<Label>("SupportLabel");
             _feedbackLabel = root.Q<Label>("FeedbackLabel");
             _hintLabel = root.Q<Label>("HintLabel");
             _hintSpeaker = root.Q<Label>("HintSpeaker");

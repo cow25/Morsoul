@@ -268,7 +268,7 @@
 .wboard-lamp-row {
     flex-direction: row;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-start;
     margin-bottom: 8px;
     padding: 6px 8px;
     background-color: rgba(224, 208, 178, 0.78);
@@ -295,11 +295,6 @@
 .wboard-lamp--hot {
     color: rgb(146, 32, 26);
     background-color: rgba(246, 184, 178, 0.85);
-}
-
-.wboard-support-label {
-    font-size: 12px;
-    color: rgb(44, 32, 22);
 }
 
 .wboard-submit-button {
