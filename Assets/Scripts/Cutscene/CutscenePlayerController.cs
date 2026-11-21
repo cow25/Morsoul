@@ -43,6 +43,7 @@ namespace Morsoul.Cutscene
 
         // Playback state.
         bool _isPlaying;
+        bool _ownsCutsceneMusic;
         int _shotIndex = -1;
         Coroutine _shotRoutine;
         float _skipHold;
@@ -102,7 +103,11 @@ namespace Morsoul.Cutscene
                 _skipHold = 0f;
             }
 
-            if (keyboard.eKey.wasPressedThisFrame) Advance();
+            if (keyboard.eKey.wasPressedThisFrame)
+            {
+                AudioCoordinator.PlayBankSfx(b => b.sfxUiClick, 0.5f);
+                Advance();
+            }
         }
 
         /// <summary>Plays the assigned <see cref="cutsceneData"/>.</summary>
@@ -123,7 +128,17 @@ namespace Morsoul.Cutscene
             }
             _isPlaying = true;
             _skipHold = 0f;
-            CoreRuntime.Instance?.Audio?.SetDucked(true);
+            var audio = CoreRuntime.Instance != null ? CoreRuntime.Instance.Audio : null;
+            if (data.music != null && audio != null)
+            {
+                audio.SetDucked(false);
+                audio.PlayMusic(data.music);
+                _ownsCutsceneMusic = true;
+            }
+            else
+            {
+                audio?.SetDucked(true);
+            }
             if (_root != null) _root.style.display = DisplayStyle.Flex;
             if (manageCursor)
             {
@@ -176,6 +191,13 @@ namespace Morsoul.Cutscene
             }
             var shot = cutsceneData.shots[index];
             RenderShot(shot);
+            if (shot != null)
+            {
+                if (shot.sfx != null)
+                    CoreRuntime.Instance?.Audio?.PlaySfx(shot.sfx, 0.8f);
+                else if (!string.IsNullOrEmpty(shot.caption))
+                    AudioCoordinator.PlayBankSfx(b => b.sfxDialogueBlip, 0.35f);
+            }
             if (!shot.waitForInput)
                 _shotRoutine = StartCoroutine(AutoAdvanceAfter(Mathf.Max(0f, shot.durationSeconds)));
         }
@@ -213,7 +235,16 @@ namespace Morsoul.Cutscene
             _isPlaying = false;
             _shotIndex = -1;
             _skipHold = 0f;
-            CoreRuntime.Instance?.Audio?.SetDucked(false);
+            var audio = CoreRuntime.Instance != null ? CoreRuntime.Instance.Audio : null;
+            if (_ownsCutsceneMusic)
+            {
+                _ownsCutsceneMusic = false;
+                audio?.StopMusic();
+            }
+            else
+            {
+                audio?.SetDucked(false);
+            }
             StopShotRoutine();
             StopVideo();
             HideCaption();

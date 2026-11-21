@@ -244,7 +244,15 @@ namespace Morsoul.Core
                 }
             }
             _wasExternalModalOpenPrevFrame = anyExternal;
+
+            if (_isOpen && Screen.fullScreen != _lastObservedFullscreen)
+            {
+                _lastObservedFullscreen = Screen.fullScreen;
+                UpdateFullscreenLabel(Screen.fullScreen);
+            }
         }
+
+        bool _lastObservedFullscreen;
 
         static bool IsCutsceneActive()
         {
@@ -412,8 +420,14 @@ namespace Morsoul.Core
             UpdateVolumeBar(_musicFill, _musicValueLabel, music);
             UpdateVolumeBar(_sfxFill, _sfxValueLabel, sfx);
 
+            _lastObservedFullscreen = Screen.fullScreen;
+            UpdateFullscreenLabel(Screen.fullScreen);
+        }
+
+        void UpdateFullscreenLabel(bool isFullscreen)
+        {
             if (_fullscreenButton != null)
-                _fullscreenButton.text = Screen.fullScreen ? "Fullscreen: ON" : "Fullscreen: OFF";
+                _fullscreenButton.text = isFullscreen ? "Fullscreen: ON" : "Fullscreen: OFF";
         }
 
         static void UpdateVolumeBar(VisualElement fill, Label label, float val)
@@ -437,9 +451,38 @@ namespace Morsoul.Core
 
         void ToggleFullscreen()
         {
-            Screen.fullScreen = !Screen.fullScreen;
-            if (_fullscreenButton != null)
-                _fullscreenButton.text = Screen.fullScreen ? "Fullscreen: ON" : "Fullscreen: OFF";
+            _lastObservedFullscreen = Screen.fullScreen;
+            bool next = ToggleDisplayFullscreen();
+            UpdateFullscreenLabel(next);
+        }
+
+        /// <summary>
+        /// Switches between FullScreenWindow (native) and Windowed (1280x720 scaled)
+        /// and returns the target fullscreen state immediately.
+        /// </summary>
+        public static bool ToggleDisplayFullscreen()
+        {
+            bool next = !Screen.fullScreen;
+            if (next)
+            {
+                int w = Display.main.systemWidth > 0 ? Display.main.systemWidth : Screen.currentResolution.width;
+                int h = Display.main.systemHeight > 0 ? Display.main.systemHeight : Screen.currentResolution.height;
+                Screen.SetResolution(w, h, FullScreenMode.FullScreenWindow);
+            }
+            else
+            {
+                int sysW = Display.main.systemWidth > 0 ? Display.main.systemWidth : 1920;
+                int sysH = Display.main.systemHeight > 0 ? Display.main.systemHeight : 1080;
+                int w = Mathf.Min(1280, Mathf.Max(640, sysW - 160));
+                int h = Mathf.RoundToInt(w * 9f / 16f);
+                if (h > sysH - 120)
+                {
+                    h = Mathf.Max(360, sysH - 120);
+                    w = Mathf.RoundToInt(h * 16f / 9f);
+                }
+                Screen.SetResolution(w, h, FullScreenMode.Windowed);
+            }
+            return next;
         }
 
         void SetStatus(string msg)

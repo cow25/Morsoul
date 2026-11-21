@@ -132,6 +132,7 @@ namespace Morsoul.Title
 
         void Awake()
         {
+            if (Application.isPlaying) CoreRuntime.Ensure();
             EnsureMenuCursorReady();
             BindUguiButtons();
             RefreshUguiMenuIndicators();
@@ -177,9 +178,16 @@ namespace Morsoul.Title
                 MoveSelectionIndicator(newGameButton.GetComponent<RectTransform>());
         }
 
+        bool _lastObservedFullscreen;
+
         void Update()
         {
             if (_startingNewGameCutscene) return;
+            if (IsSettingsModalOpen && Screen.fullScreen != _lastObservedFullscreen)
+            {
+                _lastObservedFullscreen = Screen.fullScreen;
+                RefreshSettingsLabels(Screen.fullScreen);
+            }
             var kb = Keyboard.current;
             if (kb == null) return;
 
@@ -205,7 +213,10 @@ namespace Morsoul.Title
                 {
                     var entry = _menuEntries[_selectedMenuIndex];
                     if (IsMenuEntrySelectable(entry))
+                    {
+                        PlayUiClick();
                         entry.onActivate?.Invoke();
+                    }
                 }
             }
         }
@@ -356,7 +367,10 @@ namespace Morsoul.Title
             SetActiveMenuIndex(0);
             RefreshSaveState();
             RefreshSettingsLabels();
+            root.Query<UitButton>().ForEach(b => b.clicked += PlayUiClick);
         }
+
+        static void PlayUiClick() => AudioCoordinator.PlayBankSfx(b => b.sfxUiClick, 0.7f);
 
         UitButton BindUitMenuRow(string rowName, string btnName, int index, Action onClick)
         {
@@ -656,17 +670,20 @@ namespace Morsoul.Title
 
         void ToggleFullscreen()
         {
-            Screen.fullScreen = !Screen.fullScreen;
-            RefreshSettingsLabels();
+            bool next = PauseMenuController.ToggleDisplayFullscreen();
+            RefreshSettingsLabels(next);
         }
 
-        void RefreshSettingsLabels()
+        void RefreshSettingsLabels() => RefreshSettingsLabels(Screen.fullScreen);
+
+        void RefreshSettingsLabels(bool fullscreenState)
         {
+            _lastObservedFullscreen = Screen.fullScreen;
             var audio = CoreRuntime.Ensure().Audio;
             int masterPct = Mathf.RoundToInt(audio.MasterVolume * 100f);
             int musicPct = Mathf.RoundToInt(audio.MusicVolume * 100f);
             int sfxPct = Mathf.RoundToInt(audio.SfxVolume * 100f);
-            string fsText = Screen.fullScreen ? "Fullscreen: ON" : "Fullscreen: OFF";
+            string fsText = fullscreenState ? "Fullscreen: ON" : "Fullscreen: OFF";
 
             if (_uitMasterFill != null) _uitMasterFill.style.width = Length.Percent(masterPct);
             if (_uitMusicFill != null) _uitMusicFill.style.width = Length.Percent(musicPct);

@@ -162,6 +162,7 @@ namespace Morsoul.Flow
                         board.Solve();
                         board.SelectConclusion(graph.CompleteConclusionId);
                         board.Submit(out _);
+                        core.Focus.Sync(state.Focus, state.MaxFocus);
                         state.BoardSolved = true;
                         state.SubmittedConclusionId = graph.CompleteConclusionId;
 
