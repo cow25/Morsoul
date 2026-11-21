@@ -137,7 +137,7 @@ namespace Morsoul.Tests
             AssertUxmlElements("Assets/WeightedBoard.uxml",
                 "WeightedBoard-Root", "NodeCanvas", "LinkList", "ConclusionList", "FeedbackBanner",
                 "HintPopup", "HintPortrait", "CaseTitleLabel", "ErrorCountLabel", "FocusLabel",
-                "LampLabel", "SupportLabel", "FeedbackLabel", "HintLabel", "HintSpeaker", "HintText",
+                "LampLabel", "FeedbackLabel", "HintLabel", "HintSpeaker", "HintText",
                 "SubmitButton", "HintClose", "CloseBoardButton", "AutoAlignButton",
                 "ClueInspectorDrawer", "SelectedClueTitle", "SelectedClueMeta", "SelectedClueDesc", "BoardControlsLegend");
         }

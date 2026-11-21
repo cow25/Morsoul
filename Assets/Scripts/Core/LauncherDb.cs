@@ -18,6 +18,7 @@ namespace Morsoul.Core
         const int SQLITE_ROW = 100;
         const int SQLITE_OPEN_READWRITE = 0x00000002;
         const int SQLITE_OPEN_READONLY = 0x00000001;
+        const int SQLITE_OPEN_CREATE = 0x00000004;
         static readonly IntPtr SQLITE_TRANSIENT = new IntPtr(-1);
 
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
@@ -119,11 +120,18 @@ namespace Morsoul.Core
         static bool TryOpen(bool readOnly, out IntPtr db)
         {
             db = IntPtr.Zero;
-            if (!File.Exists(GameLock.DatabasePath) || !EnsureNativeLoaded()) return false;
+            if ((readOnly && !File.Exists(GameLock.DatabasePath)) || !EnsureNativeLoaded()) return false;
             string hexKey = KeyStoreReader.GetDatabaseHexKey();
             if (string.IsNullOrEmpty(hexKey)) return false;
 
-            int flags = readOnly ? SQLITE_OPEN_READONLY : SQLITE_OPEN_READWRITE;
+            if (!readOnly)
+            {
+                string dir = Path.GetDirectoryName(GameLock.DatabasePath);
+                if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+                    Directory.CreateDirectory(dir);
+            }
+
+            int flags = readOnly ? SQLITE_OPEN_READONLY : (SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
             if (_openV2(Utf8(GameLock.DatabasePath), out db, flags, IntPtr.Zero) != SQLITE_OK || db == IntPtr.Zero)
             {
                 if (db != IntPtr.Zero) _closeV2(db);
@@ -135,13 +143,48 @@ namespace Morsoul.Core
                 !Exec(db, "PRAGMA foreign_keys = ON;") ||
                 !Exec(db, "PRAGMA journal_mode = WAL;") ||
                 !Exec(db, "PRAGMA synchronous = FULL;") ||
-                !Exec(db, "PRAGMA busy_timeout = 5000;"))
+                !Exec(db, "PRAGMA busy_timeout = 5000;") ||
+                (!readOnly && !EnsureSchema(db)))
             {
                 _closeV2(db);
                 db = IntPtr.Zero;
                 return false;
             }
             return true;
+        }
+
+        static bool EnsureSchema(IntPtr db)
+        {
+            const string ddl =
+                "CREATE TABLE IF NOT EXISTS profiles (" +
+                "profile_id TEXT PRIMARY KEY, display_name TEXT NOT NULL, created_at INTEGER NOT NULL);" +
+                "CREATE TABLE IF NOT EXISTS profile_state (" +
+                "profile_id TEXT PRIMARY KEY, revision INTEGER NOT NULL DEFAULT 1, updated_at INTEGER NOT NULL, " +
+                "playtime REAL NOT NULL DEFAULT 0, reputation INTEGER NOT NULL DEFAULT 0, " +
+                "current_case_id TEXT NOT NULL DEFAULT '', ending TEXT NOT NULL DEFAULT '', " +
+                "focus_energy REAL NOT NULL DEFAULT 100.0, focus_as_of_playtime REAL NOT NULL DEFAULT 0, " +
+                "dialogue_json TEXT NOT NULL DEFAULT '{}', board_json TEXT NOT NULL DEFAULT '{}', " +
+                "puzzles_json TEXT NOT NULL DEFAULT '{}', notes_json TEXT NOT NULL DEFAULT '[]', " +
+                "checkpoint_json TEXT NOT NULL DEFAULT '');" +
+                "CREATE TABLE IF NOT EXISTS case_progress (" +
+                "profile_id TEXT NOT NULL, case_id TEXT NOT NULL, status TEXT NOT NULL, " +
+                "progress_version INTEGER NOT NULL DEFAULT 1, objective_id TEXT NOT NULL DEFAULT '', " +
+                "warrant_granted INTEGER NOT NULL DEFAULT 0, failed_attempts INTEGER NOT NULL DEFAULT 0, " +
+                "hint_tier INTEGER NOT NULL DEFAULT 0, updated_at INTEGER NOT NULL, " +
+                "PRIMARY KEY (profile_id, case_id));" +
+                "CREATE TABLE IF NOT EXISTS deduction_links (" +
+                "profile_id TEXT NOT NULL, case_id TEXT NOT NULL, source_id TEXT NOT NULL, target_id TEXT NOT NULL, " +
+                "PRIMARY KEY (profile_id, case_id, source_id, target_id));" +
+                "CREATE TABLE IF NOT EXISTS clues_found (" +
+                "profile_id TEXT NOT NULL, clue_id TEXT NOT NULL, case_id TEXT NOT NULL, " +
+                "collected_at INTEGER NOT NULL, via TEXT NOT NULL DEFAULT 'examine', " +
+                "PRIMARY KEY (profile_id, clue_id));" +
+                "CREATE TABLE IF NOT EXISTS case_results (" +
+                "profile_id TEXT NOT NULL, case_id TEXT NOT NULL, conclusion_id TEXT NOT NULL DEFAULT '', " +
+                "correct INTEGER NOT NULL DEFAULT 1, flawed INTEGER NOT NULL DEFAULT 0, " +
+                "strikes INTEGER NOT NULL DEFAULT 0, attempts INTEGER NOT NULL DEFAULT 1, completed_at INTEGER NOT NULL, " +
+                "PRIMARY KEY (profile_id, case_id));";
+            return Exec(db, ddl);
         }
 
         static bool Exec(IntPtr db, string sql)
