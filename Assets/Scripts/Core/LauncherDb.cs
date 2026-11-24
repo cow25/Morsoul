@@ -273,7 +273,9 @@ namespace Morsoul.Core
             try
             {
                 if (!Exec(db, "BEGIN IMMEDIATE;")) return false;
-                string profileId = string.IsNullOrEmpty(state.profileId) ? "local" : state.profileId;
+                string profileId = string.IsNullOrEmpty(state.profileId)
+                    ? Guid.NewGuid().ToString()
+                    : state.profileId;
                 string displayName = string.IsNullOrEmpty(state.playerName) ? "Detective" : state.playerName;
                 long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
                 string caseIdStr = $"case_{state.currentCase:D2}";

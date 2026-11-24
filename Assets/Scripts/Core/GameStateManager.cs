@@ -106,7 +106,7 @@ namespace Morsoul.Core
             _core.Session.Reset();
             _core.Session.PlayerName = playerName;
             _core.Session.UnlockTool(Morsoul.Data.Tool.GolemEye);
-            CurrentSave = new SaveState { playerName = playerName };
+            CurrentSave = new SaveState { playerName = playerName, profileId = Guid.NewGuid().ToString() };
             _core.Focus.Restore(FocusTuning.FocusMax, false);
             _runStateLoaded = true;
             WriteCheckpoint("NewGame", null);
