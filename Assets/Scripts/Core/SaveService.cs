@@ -23,13 +23,24 @@ namespace Morsoul.Core
             _isPersistent = isPersistent;
         }
 
-        static int _activeSlot = 1;
+        const string LastSlotPrefKey = "Morsoul.LastSaveSlot";
+        static int _activeSlot = -1;
 
-        /// <summary>Active save slot (1..3). Defaults to 1.</summary>
+        /// <summary>Active save slot (1..3). Persists across sessions via PlayerPrefs.</summary>
         public static int ActiveSlot
         {
-            get => _activeSlot;
-            set => _activeSlot = Mathf.Clamp(value, 1, 3);
+            get
+            {
+                if (_activeSlot < 1)
+                    _activeSlot = Mathf.Clamp(PlayerPrefs.GetInt(LastSlotPrefKey, 1), 1, 3);
+                return _activeSlot;
+            }
+            set
+            {
+                _activeSlot = Mathf.Clamp(value, 1, 3);
+                PlayerPrefs.SetInt(LastSlotPrefKey, _activeSlot);
+                PlayerPrefs.Save();
+            }
         }
 
         /// <summary>Service for a specific save slot (1..3). Slot 1 includes LauncherDb.</summary>

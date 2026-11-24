@@ -251,6 +251,29 @@ namespace Morsoul.Core
             return Math.Max(0f, FocusTuning.RestCooldownSeconds - elapsed);
         }
 
+        /// <summary>
+        /// Emergency reboot fallback when out of both Focus and rests: clears
+        /// unsolved board links for the case, resets rest count, and marks Flawed.
+        /// </summary>
+        public void ApplyEmergencyCaseReboot(int caseId)
+        {
+            if (caseId >= 1 && caseId <= 4)
+            {
+                MarkStrainedScan(caseId);
+                SetGrade(caseId, Data.Grade.Flawed);
+            }
+            for (int i = 1; i <= FocusTuning.RestMaxPerCase; i++)
+                SetFlag($"Session.Rest.{caseId}.{i}", false);
+            LastRestRealtime = -999f;
+            var board = GetOrCreateBoardState(caseId);
+            if (!board.BoardSolved)
+            {
+                board.Links.Clear();
+                board.LinkingLockedOut = false;
+                board.SelectedConclusionId = null;
+            }
+        }
+
         // --- Board / logs / grades / tools ------------------------------------
 
         /// <summary>Merges validated board node ids (DeductionBoard.ValidatedNodeIds).</summary>

@@ -476,7 +476,7 @@ namespace Morsoul.Board
             {
                 case 1:
                     ShowBanner(BannerInfoClass,
-                        "Pause and re-read your Clue Notes — check tools, mechanisms, and witness timelines.");
+                        $"Pause and re-read your Clue Notes — check tools, mechanisms, and witness timelines. (+{ProgressionConstants.TierOneEnergyReward:0} Focus)");
                     break;
                 case 2:
                 case 3:

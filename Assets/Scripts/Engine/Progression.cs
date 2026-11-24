@@ -18,8 +18,8 @@ namespace Morsoul.Engine
         public const int ClosedMinutesPerEnergy = 2;
         /// <summary>Case error counts at which hint tiers fire, once each.</summary>
         public static readonly int[] ErrorTierThresholds = { 5, 10, 20 };
-        /// <summary>Tier 1 (5 errors): qualitative focus nudge only (+0 Focus to prevent brute-force bounce).</summary>
-        public const float TierOneEnergyReward = 0f;
+        /// <summary>Focus restored when an error hint tier (1, 2, or 3) fires in Cases 1-5.</summary>
+        public const float TierOneEnergyReward = 20f;
         /// <summary>Supported complete submission: capacity bonus + full refill.</summary>
         public const float CompleteSubmissionCapacityBonus = 10f;
         /// <summary>Focus required before linking is unlocked after a lockout.</summary>
@@ -196,12 +196,9 @@ namespace Morsoul.Engine
                     Kind = ProgressionEventKind.HintTierFired,
                     Tier = tierId,
                 };
-                if (tierId == 1)
-                {
-                    state.Focus = Math.Min(state.MaxFocus,
-                        state.Focus + ProgressionConstants.TierOneEnergyReward);
-                }
-                else
+                state.Focus = Math.Min(state.MaxFocus,
+                    state.Focus + ProgressionConstants.TierOneEnergyReward);
+                if (tierId > 1)
                 {
                     tierEvent.HintClueId = tierId == 2
                         ? graph.NextUnfinishedSolutionClue(state.Links)

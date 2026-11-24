@@ -13,7 +13,7 @@
             <ui:VisualElement name="TutorialStepsList" class="tut-steps-list" picking-mode="Ignore"/>
             <ui:VisualElement class="tut-footer-row">
                 <ui:Button name="TutorialMuteButton" text="Disable Auto-Tips" class="tut-btn tut-btn--subtle"/>
-                <ui:Button name="TutorialDismissButton" text="Got it  [F1]" class="tut-btn tut-btn--primary"/>
+                <ui:Button name="TutorialDismissButton" text="Got it  [T]" class="tut-btn tut-btn--primary"/>
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>

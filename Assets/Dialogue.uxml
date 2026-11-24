@@ -17,7 +17,7 @@
                             <ui:TextField name="NameInputField" class="dialogue-name-field"/>
                             <ui:Button name="NameInputConfirm" text="Confirm" class="dialogue-option-button dialogue-confirm-button"/>
                         </ui:VisualElement>
-                        <ui:Label name="ContinueHint" text="(E) continue" class="dialogue-continue-hint"/>
+                        <ui:Label name="ContinueHint" text="[E / Space] Continue" class="dialogue-continue-hint"/>
                     </ui:VisualElement>
                 </ui:VisualElement>
             </ui:VisualElement>
