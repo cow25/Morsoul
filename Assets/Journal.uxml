@@ -21,7 +21,8 @@
                         <ui:ScrollView name="JournalDescScroll" class="journal-desc-scroll">
                             <ui:Label name="JournalDesc" text="Inspect collected physical evidence, witness testimonies, decoded runic logs, and NPC dossiers." class="journal-desc" style="white-space: normal;"/>
                         </ui:ScrollView>
-                        <ui:Label name="JournalFooterHint" text="[1-4] or [Q/E] Tabs  |  [W/S] Select  |  [G] or [ESC] Close" class="journal-footer-hint" style="white-space: normal;"/>
+                        <ui:Button name="ReinspectButton" text="Inspect Model  [Enter / R]" class="journal-reinspect-btn" style="display: none;"/>
+                        <ui:Label name="JournalFooterHint" text="[1-4] or [Q/E] Tabs  |  [W/S] Select  |  [Enter/R] Inspect  |  [G] or [ESC] Close" class="journal-footer-hint" style="white-space: normal;"/>
                     </ui:VisualElement>
                 </ui:VisualElement>
             </ui:VisualElement>

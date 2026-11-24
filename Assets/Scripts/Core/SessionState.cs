@@ -251,6 +251,47 @@ namespace Morsoul.Core
             return Math.Max(0f, FocusTuning.RestCooldownSeconds - elapsed);
         }
 
+        /// <summary>
+        /// Emergency reboot fallback when out of both Focus and rests: clears
+        /// unsolved board links, resets rest count, wipes non-preloaded case
+        /// clues (full case restart), and marks StrainedScanUsed (forfeits Clean).
+        /// </summary>
+        public void ApplyEmergencyCaseReboot(int caseId, ICollection<string> preserveClueIds = null)
+        {
+            if (caseId >= 1 && caseId <= 4)
+                MarkStrainedScan(caseId);
+            for (int i = 1; i <= FocusTuning.RestMaxPerCase; i++)
+                SetFlag($"Session.Rest.{caseId}.{i}", false);
+            LastRestRealtime = -999f;
+
+            string suffix = $"_0{caseId}";
+            var toRemove = new List<string>();
+            foreach (string id in _clueIds)
+            {
+                if (preserveClueIds != null && preserveClueIds.Contains(id)) continue;
+                bool matchesCase = (_clueAssets.TryGetValue(id, out var clue) && clue != null && clue.caseId == caseId)
+                                   || id.EndsWith(suffix, StringComparison.Ordinal);
+                if (matchesCase) toRemove.Add(id);
+            }
+            foreach (string id in toRemove)
+            {
+                _clueIds.Remove(id);
+                _clueAssets.Remove(id);
+            }
+
+            var board = GetOrCreateBoardState(caseId);
+            if (!board.BoardSolved)
+            {
+                board.Links.Clear();
+                board.LinkingLockedOut = false;
+                board.SelectedConclusionId = null;
+                board.CaseErrorCount = 0;
+                board.FiredHintTiers.Clear();
+                board.CollectedClueIds.RemoveAll(id => !_clueIds.Contains(id));
+                board.VisibleClueIds.RemoveAll(id => !_clueIds.Contains(id));
+            }
+        }
+
         // --- Board / logs / grades / tools ------------------------------------
 
         /// <summary>Merges validated board node ids (DeductionBoard.ValidatedNodeIds).</summary>

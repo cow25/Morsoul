@@ -20,6 +20,8 @@ namespace Morsoul.Core
         public VisualTreeAsset interrogationUxml;
         public VisualTreeAsset resolutionUxml;
         public VisualTreeAsset tutorialOverlayUxml;
+        public VisualTreeAsset inspectUxml;
+        public RenderTexture inspectRT;
 
         [Header("Runtime Fallback Assets (Standalone Builds)")]
         public ScriptableObject elizaProfile;

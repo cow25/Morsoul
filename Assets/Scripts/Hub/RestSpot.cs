@@ -1,14 +1,14 @@
 using Morsoul.Core;
+using Morsoul.Dialogue;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 namespace Morsoul.Hub
 {
     /// <summary>
-    /// Bench/seat rest spot (Algorithm.md B2, GDD §6.4): interact to start
-    /// resting, Focus regenerates +1 per Focus tick while resting, any
-    /// movement key, the interact key or Escape cancels. Resting blocks
-    /// player movement (no auto-refill — capped at the current maximum).
+    /// Bench/seat rest spot: pressing [E] opens a confirmation dialogue;
+    /// confirming locks movement until Focus Energy refills to maximum.
+    /// When out of rests and critically low on Focus (&lt; LinkingUnlockFocus),
+    /// offers an emergency reserve recharge fallback to prevent soft-locks.
     /// </summary>
     public class RestSpot : Interactable2D
     {
@@ -23,9 +23,9 @@ namespace Morsoul.Hub
         HubPlayerController _player;
         HubContext _context;
         System.Func<bool> _restBlocker;
-        int _restStartFrame = -1;
         float _sessionTargetFocus;
         string _statusMessage;
+        bool _prompting;
 
         void Reset()
         {
@@ -49,34 +49,147 @@ namespace Morsoul.Hub
 
         string BuildDynamicPrompt()
         {
+            if (IsResting) return "Resting... Recovering Focus Energy";
             var core = CoreRuntime.Instance;
             if (core == null) return "[E] Rest";
             int caseId = core.Session.CurrentCase;
             int remaining = core.Session.GetRemainingRests(caseId);
             if (!string.IsNullOrEmpty(_statusMessage)) return _statusMessage;
-            if (remaining <= 0) return "Rest used up for this case";
+            if (core.Focus.Percent >= core.Focus.Maximum) return "Focus Full";
+            if (remaining <= 0)
+            {
+                return core.Focus.Percent < Morsoul.Engine.ProgressionConstants.LinkingUnlockFocus
+                    ? "[E] Emergency Reboot (Out of Rests)"
+                    : "Rest used up for this case";
+            }
             float cd = core.Session.RestCooldownRemaining(Time.unscaledTime);
             if (cd > 0.5f) return $"Rest cooling down ({Mathf.CeilToInt(cd)}s)";
-            if (core.Focus.Percent >= core.Focus.Maximum) return "Focus Full";
             return $"[E] Rest ({remaining}/{FocusTuning.RestMaxPerCase} left)";
         }
 
         public override void Interact(HubContext ctx)
         {
             base.Interact(ctx);
-            // Register once so UiBlocked (and the journal's open gate) covers
-            // the resting state — resting blocks interaction like an overlay.
+            if (IsResting || _prompting) return;
             if (ctx != null && _restBlocker == null)
             {
                 _restBlocker = () => IsResting;
                 ctx.AddUiBlocker(_restBlocker);
                 _context = ctx;
             }
-            if (IsResting) StopResting();
-            else StartResting();
+
+            var core = CoreRuntime.Instance;
+            if (core == null) { StartResting(); return; }
+
+            if (core.Focus.Percent >= core.Focus.Maximum)
+            {
+                _statusMessage = "Focus already full";
+                SetPromptVisible(true);
+                return;
+            }
+
+            int caseId = core.Session.CurrentCase;
+            int remaining = core.Session.GetRemainingRests(caseId);
+            if (remaining <= 0)
+            {
+                if (core.Focus.Percent < Morsoul.Engine.ProgressionConstants.LinkingUnlockFocus)
+                    ShowConfirmation(ctx, isEmergency: true, remaining: 0);
+                else
+                {
+                    _statusMessage = $"No rests left for Case {caseId}";
+                    SetPromptVisible(true);
+                    TutorialOverlayController.TryShow("TUT_REST_SPOT");
+                }
+                return;
+            }
+
+            float cd = core.Session.RestCooldownRemaining(Time.unscaledTime);
+            if (cd > 0.05f)
+            {
+                _statusMessage = $"Rest cooling down ({Mathf.CeilToInt(cd)}s)";
+                SetPromptVisible(true);
+                return;
+            }
+
+            if (ctx != null && ctx.dialogue != null)
+                ShowConfirmation(ctx, isEmergency: false, remaining: remaining);
+            else
+                StartResting();
         }
 
-        /// <summary>Begins the rest loop; enforces per-case limit, cooldown, and gain cap.</summary>
+        void ShowConfirmation(HubContext ctx, bool isEmergency, int remaining)
+        {
+            var core = CoreRuntime.Instance;
+            if (core == null || ctx == null || ctx.dialogue == null) return;
+
+            const string confirmFlag = "RestSpot.Confirmed";
+            core.Session.SetFlag(confirmFlag, false);
+
+            var data = ScriptableObject.CreateInstance<DialogueData>();
+            data.hideFlags = HideFlags.DontSave;
+            data.id = isEmergency ? "RestSpot_Emergency" : "RestSpot_Confirm";
+            data.startNodeId = "n1";
+
+            string promptBody = isEmergency
+                ? $"All rests for this case are used up and your Focus Energy is critically low ({Mathf.RoundToInt(core.Focus.Percent)}/{Mathf.RoundToInt(core.Focus.Maximum)}). Triggering an Emergency Reboot will wipe your current Deduction Board links, reset rests for this case, and forfeit a Clean grade (Flawed). Proceed?"
+                : $"Rest here until your Focus Energy is completely full ({Mathf.RoundToInt(core.Focus.Percent)}/{Mathf.RoundToInt(core.Focus.Maximum)})? ({remaining}/{FocusTuning.RestMaxPerCase} rests left)";
+
+            data.nodes = new[]
+            {
+                new DialogueNodeData
+                {
+                    id = "n1",
+                    speakerName = "Rest Spot",
+                    text = promptBody,
+                    options = new[]
+                    {
+                        new DialogueOptionData { label = isEmergency ? "Yes, reboot case (forfeit Clean & board)." : "Yes, rest until full.", nextNodeId = "yes" },
+                        new DialogueOptionData { label = "No, not now.", nextNodeId = "no" }
+                    }
+                },
+                new DialogueNodeData
+                {
+                    id = "yes",
+                    speakerName = "Rest Spot",
+                    text = isEmergency ? "Emergency reboot initiated — board links cleared." : "Settling in to recover Focus Energy...",
+                    setsFlag = confirmFlag
+                },
+                new DialogueNodeData
+                {
+                    id = "no",
+                    speakerName = "Rest Spot",
+                    text = "You step away from the rest spot."
+                }
+            };
+
+            _prompting = true;
+            var dlg = ctx.dialogue;
+            void OnEnded()
+            {
+                dlg.DialogueEnded -= OnEnded;
+                _prompting = false;
+                Destroy(data);
+                if (!core.Session.HasFlag(confirmFlag)) return;
+                core.Session.SetFlag(confirmFlag, false);
+                if (isEmergency) TriggerEmergencyReserve();
+                else StartResting();
+            }
+            dlg.DialogueEnded += OnEnded;
+            ctx.PlayDialogue(data);
+        }
+
+        /// <summary>Fallback when out of both Focus and rests: wipes unsolved board links, marks Flawed, and resets rests.</summary>
+        public void TriggerEmergencyReserve()
+        {
+            var core = CoreRuntime.Instance;
+            if (core == null) return;
+            int caseId = core.Session.CurrentCase;
+            core.Session.ApplyEmergencyCaseReboot(caseId);
+            _statusMessage = null;
+            StartResting();
+        }
+
+        /// <summary>Begins the rest loop; enforces per-case limit, cooldown, and fills to maximum.</summary>
         public void StartResting()
         {
             if (IsResting) return;
@@ -107,16 +220,14 @@ namespace Morsoul.Hub
             }
 
             core.Session.RecordRestUse(caseId, Time.unscaledTime);
-            _sessionTargetFocus = Mathf.Min(
-                core.Focus.Maximum,
-                core.Focus.Percent + FocusTuning.RestGainCapPerUse);
+            _sessionTargetFocus = core.Focus.Maximum;
 
             IsResting = true;
-            _restStartFrame = Time.frameCount;
             if (restCue != null) core.Audio?.PlaySfx(restCue);
             if (_player == null) _player = FindAnyObjectByType<HubPlayerController>();
             if (_player != null) _player.enabled = false;
             if (restingIndicator != null) restingIndicator.SetActive(true);
+            SetPromptVisible(true);
             TutorialOverlayController.TryShow("TUT_REST_SPOT");
         }
 
@@ -135,21 +246,7 @@ namespace Morsoul.Hub
             if (!IsResting) return;
             var core = CoreRuntime.Instance;
             if (core == null) { StopResting(); return; }
-            core.Focus.TickRest(Time.deltaTime);
-
-            // Skip the frame rest started on — the interact press that
-            // opened it would otherwise cancel immediately.
-            if (Time.frameCount == _restStartFrame) return;
-            var kb = Keyboard.current;
-            if (kb != null && (kb.eKey.wasPressedThisFrame || kb.escapeKey.wasPressedThisFrame ||
-                               kb.wKey.wasPressedThisFrame || kb.aKey.wasPressedThisFrame ||
-                               kb.sKey.wasPressedThisFrame || kb.dKey.wasPressedThisFrame ||
-                               kb.leftArrowKey.wasPressedThisFrame || kb.rightArrowKey.wasPressedThisFrame ||
-                               kb.upArrowKey.wasPressedThisFrame || kb.downArrowKey.wasPressedThisFrame))
-            {
-                StopResting();
-                return;
-            }
+            core.Focus.TickRest(Time.deltaTime * 2f);
 
             if (core.Focus.Percent >= _sessionTargetFocus || core.Focus.Percent >= core.Focus.Maximum)
             {

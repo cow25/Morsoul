@@ -126,6 +126,24 @@
     flex-shrink: 0;
 }
 
+.journal-reinspect-btn {
+    align-self: flex-start;
+    margin-top: 8px;
+    padding: 6px 14px;
+    background-color: rgba(168, 128, 72, 0.28);
+    border-color: rgba(118, 78, 32, 0.75);
+    border-width: 1px;
+    border-radius: 4px;
+    color: rgb(38, 24, 14);
+    font-size: 13px;
+    -unity-font-style: bold;
+    flex-shrink: 0;
+}
+
+.journal-reinspect-btn:hover {
+    background-color: rgba(196, 152, 86, 0.45);
+}
+
 .journal-tab-body {
     flex-grow: 1;
     min-height: 0;

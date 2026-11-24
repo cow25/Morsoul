@@ -68,6 +68,8 @@ public class PrologueTutorialController : MonoBehaviour
 
     private Vector3 _checkpointPos;
     private Quaternion _checkpointRot;
+    private Vector3 _initialSpawnPos;
+    private Quaternion _initialSpawnRot;
 
     private VisualElement _dialogueBox;
     private Label _dialogueTextLabel;
@@ -109,6 +111,8 @@ public class PrologueTutorialController : MonoBehaviour
             _characterController = _playerController.GetComponent<CharacterController>();
             _checkpointPos = _playerTransform.position;
             _checkpointRot = _playerTransform.rotation;
+            _initialSpawnPos = _checkpointPos;
+            _initialSpawnRot = _checkpointRot;
         }
 
         EnsureCradleAnchor();
@@ -152,7 +156,10 @@ public class PrologueTutorialController : MonoBehaviour
         if (HUDManager.Instance != null)
             HUDManager.Instance.HudLoaded -= OnHudLoaded;
         if (_boardController != null)
+        {
             _boardController.BoardLoaded -= OnBoardLoaded;
+            _boardController.EmergencyRebootRequested -= OnBoardEmergencyReboot;
+        }
         if (_robeMaterial != null)
         {
             Destroy(_robeMaterial);
@@ -484,16 +491,6 @@ public class PrologueTutorialController : MonoBehaviour
                 TutorialOverlayController.TryShow("TUT_INVESTIGATE");
             }
         }
-
-        // Anti-hardstuck fallback: if Focus Energy hits 0, power down and reboot at last checkpoint.
-        if (_scanController != null && _scanController.currentFocus <= 0.01f && Time.timeScale > 0f)
-        {
-            _phase = Phase.PowerDownBlackout;
-            _blackoutTimer = 0f;
-            Shader.SetGlobalFloat("_ScanProgress", 0f);
-            SetGameplayControl(false, unlockCursor: false);
-            RefreshOverlays();
-        }
     }
 
     private void UpdateBlackout()
@@ -550,6 +547,8 @@ public class PrologueTutorialController : MonoBehaviour
             _lastClueCount = session.ClueIds.Count;
             _checkpointPos = _playerTransform.position;
             _checkpointRot = _playerTransform.rotation;
+            _initialSpawnPos = _checkpointPos;
+            _initialSpawnRot = _checkpointRot;
         }
     }
 
@@ -564,8 +563,32 @@ public class PrologueTutorialController : MonoBehaviour
         _boardController.hintSpeaker = "Internal Diagnostic";
         _boardController.diagnosticSpeaker = "Internal Diagnostic";
         _boardController.BoardLoaded += OnBoardLoaded;
+        _boardController.EmergencyRebootRequested += OnBoardEmergencyReboot;
         if (_boardController.Root != null)
             BuildBoardStrip(_boardController.Root);
+    }
+
+    private void OnBoardEmergencyReboot(int caseId)
+    {
+        if (caseId != 0) return;
+        var session = CoreRuntime.Instance?.Session;
+        foreach (var node in FindObjectsByType<ClueNode>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (node == null || string.IsNullOrEmpty(node.id)) continue;
+            if (session == null || !session.HasClue(node.id))
+            {
+                node.state = ClueNode.State.Hidden;
+                node.gameObject.SetActive(true);
+            }
+        }
+        _lastClueCount = session != null ? session.ClueIds.Count : 0;
+        _checkpointPos = _initialSpawnPos;
+        _checkpointRot = _initialSpawnRot;
+        _phase = Phase.PowerDownBlackout;
+        _blackoutTimer = 0f;
+        Shader.SetGlobalFloat("_ScanProgress", 0f);
+        SetGameplayControl(false, unlockCursor: false);
+        RefreshOverlays();
     }
 
     private void RefreshOverlays()

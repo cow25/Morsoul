@@ -408,8 +408,17 @@ namespace Morsoul.Hub
             AppliedCaseText = null;
             AppliedObjective = null;
             _lastToolMask = -1;
+            _lastFocus = -1f;
+            _lastFocusMax = -1f;
             RefreshObjective();
             SyncSessionHud();
+            var focus = CoreRuntime.Instance != null ? CoreRuntime.Instance.Focus : null;
+            if (focus != null)
+            {
+                _lastFocus = focus.Percent;
+                _lastFocusMax = focus.Maximum;
+                ApplyFocus(focus.Percent, focus.Maximum, focus.Normalized);
+            }
             if (_footerLabel != null) _footerLabel.text = footerText ?? "";
 
             if (Application.isPlaying)

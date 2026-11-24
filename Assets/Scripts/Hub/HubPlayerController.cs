@@ -105,11 +105,11 @@ namespace Morsoul.Hub
         static Vector2 ReadMoveInput(Keyboard keyboard)
         {
             var input = Vector2.zero;
-            if (keyboard.aKey.isPressed) input.x -= 1f;
-            if (keyboard.dKey.isPressed) input.x += 1f;
-            if (keyboard.sKey.isPressed) input.y -= 1f;
-            if (keyboard.wKey.isPressed) input.y += 1f;
-            return AxisLock(input);
+            if (keyboard.aKey.isPressed || keyboard.leftArrowKey.isPressed) input.x -= 1f;
+            if (keyboard.dKey.isPressed || keyboard.rightArrowKey.isPressed) input.x += 1f;
+            if (keyboard.sKey.isPressed || keyboard.downArrowKey.isPressed) input.y -= 1f;
+            if (keyboard.wKey.isPressed || keyboard.upArrowKey.isPressed) input.y += 1f;
+            return input;
         }
 
         /// <summary>Sharp 90° movement (Undertale-style): only one axis may be

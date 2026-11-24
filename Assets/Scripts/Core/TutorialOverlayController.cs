@@ -251,7 +251,7 @@ namespace Morsoul.Core
             var kb = Keyboard.current;
             if (kb == null) return;
 
-            if (kb.f1Key.wasPressedThisFrame)
+            if (kb.tKey.wasPressedThisFrame)
             {
                 Dismiss();
                 return;
@@ -305,7 +305,7 @@ namespace Morsoul.Core
             }
 
             if (_dismissBtn != null)
-                _dismissBtn.text = _isModal ? "Continue  [E / Space]" : "Got it  [F1]";
+                _dismissBtn.text = _isModal ? "Continue  [E / Space]" : "Got it  [T]";
             if (_muteBtn != null)
                 _muteBtn.style.display = TutorialCatalog.AutoTutorialsSuppressed ? DisplayStyle.None : DisplayStyle.Flex;
 

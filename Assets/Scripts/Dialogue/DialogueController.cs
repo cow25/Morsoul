@@ -106,9 +106,10 @@ namespace Morsoul.Dialogue
             }
             if (!_isPlaying || _runner == null) return;
 
+            bool advancePressed = keyboard.eKey.wasPressedThisFrame || keyboard.spaceKey.wasPressedThisFrame;
             if (_pageIndex < _pages.Count - 1)
             {
-                if (keyboard.eKey.wasPressedThisFrame)
+                if (advancePressed)
                 {
                     _pageIndex++;
                     ApplyCurrentPage();
@@ -121,7 +122,7 @@ namespace Morsoul.Dialogue
                 else if (keyboard.digit2Key.wasPressedThisFrame) TryChoose(1);
                 else if (keyboard.digit3Key.wasPressedThisFrame) TryChoose(2);
             }
-            else if (keyboard.eKey.wasPressedThisFrame)
+            else if (advancePressed)
             {
                 _runner.Advance();
             }
