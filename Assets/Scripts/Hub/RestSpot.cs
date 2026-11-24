@@ -185,12 +185,8 @@ namespace Morsoul.Hub
             if (core == null) return;
             int caseId = core.Session.CurrentCase;
             core.Session.ApplyEmergencyCaseReboot(caseId);
-            float target = Mathf.Min(core.Focus.Maximum,
-                Mathf.Max(core.Focus.Percent, Morsoul.Engine.ProgressionConstants.LinkingUnlockFocus));
-            core.Focus.Sync(target, core.Focus.Maximum);
-            if (restCue != null) core.Audio?.PlaySfx(restCue);
             _statusMessage = null;
-            SetPromptVisible(true);
+            StartResting();
         }
 
         /// <summary>Begins the rest loop; enforces per-case limit, cooldown, and fills to maximum.</summary>

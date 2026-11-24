@@ -96,12 +96,6 @@ public class InteractionProbe : MonoBehaviour
                     interactable.Interact();
                 }
             }
-            else if (hit.collider.TryGetComponent(out RestSpot3D restSpot))
-            {
-                if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
-                    restSpot.Interact();
-                HUDManager.Instance.ShowInteractionPrompt(restSpot.GetPromptAction(), restSpot.GetPromptDescription());
-            }
         }
         else if (HUDManager.Instance != null)
         {

@@ -79,6 +79,7 @@ namespace Morsoul.Journal
         Label _detailTitle;
         Label _detailType;
         Label _detailDesc;
+        Button _reinspectButton;
         readonly Button[] _tabButtons = new Button[4];
         readonly List<(Button card, Action activate)> _cards = new List<(Button, Action)>();
 
@@ -86,6 +87,8 @@ namespace Morsoul.Journal
 
         // Interaction state.
         bool _isOpen;
+        bool _reinspecting;
+        int _reinspectCloseFrame = -1;
         JournalTab _activeTab = JournalTab.Physical;
         ClueData _detailClue;
         int _selectedIndex = -1;
@@ -101,6 +104,8 @@ namespace Morsoul.Journal
         public bool IsOpen => _isOpen;
         public int LastClosedFrame { get; private set; } = -1;
         public JournalTab ActiveTab => _activeTab;
+        /// <summary>Bridge invoked when the player reinspects a clue from the Journal.</summary>
+        public static Action<ClueData, Action> ReinspectHandler;
 
         void OnEnable()
         {
@@ -157,6 +162,7 @@ namespace Morsoul.Journal
 
         void Update()
         {
+            if (_reinspecting || _reinspectCloseFrame == Time.frameCount) return;
             var keyboard = Keyboard.current;
             if (keyboard == null) return;
 
@@ -180,7 +186,15 @@ namespace Morsoul.Journal
             else if (keyboard.sKey.wasPressedThisFrame || keyboard.downArrowKey.wasPressedThisFrame) MoveSelection(1);
             else if (keyboard.aKey.wasPressedThisFrame || keyboard.leftArrowKey.wasPressedThisFrame) ChangeTocPage(-1);
             else if (keyboard.dKey.wasPressedThisFrame || keyboard.rightArrowKey.wasPressedThisFrame) ChangeTocPage(1);
-            else if (keyboard.enterKey.wasPressedThisFrame || keyboard.numpadEnterKey.wasPressedThisFrame) ActivateSelected();
+            else if (keyboard.enterKey.wasPressedThisFrame || keyboard.numpadEnterKey.wasPressedThisFrame)
+            {
+                if (_detailClue != null) RequestReinspectSelected();
+                else ActivateSelected();
+            }
+            else if (keyboard.rKey.wasPressedThisFrame && _detailClue != null)
+            {
+                RequestReinspectSelected();
+            }
         }
 
         /// <summary>Swaps the clue store (e.g. when entering a new hub scene).</summary>
@@ -328,7 +342,23 @@ namespace Morsoul.Journal
         {
             int idx = _cards.Count;
             _cards.Add((card, activate));
-            card.RegisterCallback<ClickEvent>(_ => SelectCard(idx));
+            card.RegisterCallback<ClickEvent>(evt =>
+            {
+                SelectCard(idx);
+                if (evt.clickCount >= 2 && _detailClue != null)
+                    RequestReinspectSelected();
+            });
+        }
+
+        public void RequestReinspectSelected()
+        {
+            if (!_isOpen || _reinspecting || _detailClue == null || ReinspectHandler == null) return;
+            _reinspecting = true;
+            ReinspectHandler.Invoke(_detailClue, () =>
+            {
+                _reinspecting = false;
+                _reinspectCloseFrame = Time.frameCount;
+            });
         }
 
         void SelectCard(int idx)
@@ -524,6 +554,8 @@ namespace Morsoul.Journal
                 string playerName = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session.PlayerName : "";
                 _detailDesc.text = ClueHighlightFormatter.FormatDescription(clue, playerName, darkBackground: false);
             }
+            if (_reinspectButton != null)
+                _reinspectButton.style.display = ReinspectHandler != null ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
         void ShowTextDetail(string title, string subtitle, string body)
@@ -532,6 +564,7 @@ namespace Morsoul.Journal
             if (_detailTitle != null) _detailTitle.text = title ?? "";
             if (_detailType != null) _detailType.text = subtitle ?? "";
             if (_detailDesc != null) _detailDesc.text = body ?? "";
+            if (_reinspectButton != null) _reinspectButton.style.display = DisplayStyle.None;
         }
 
         void ClearDetail()
@@ -540,6 +573,7 @@ namespace Morsoul.Journal
             if (_detailTitle != null) _detailTitle.text = "Clue Journal";
             if (_detailType != null) _detailType.text = "";
             if (_detailDesc != null) _detailDesc.text = "Select an entry.";
+            if (_reinspectButton != null) _reinspectButton.style.display = DisplayStyle.None;
         }
 
         // --- Tabs ---------------------------------------------------------------
@@ -563,6 +597,9 @@ namespace Morsoul.Journal
             _detailTitle = root.Q<Label>("JournalTitle");
             _detailType = root.Q<Label>("JournalType");
             _detailDesc = root.Q<Label>("JournalDesc");
+            _reinspectButton = root.Q<Button>("ReinspectButton");
+            if (_reinspectButton != null)
+                _reinspectButton.clicked += RequestReinspectSelected;
 
             for (int i = 0; i < _tabButtons.Length; i++)
             {

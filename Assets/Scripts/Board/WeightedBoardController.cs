@@ -35,6 +35,8 @@ namespace Morsoul.Board
         public event Action<IReadOnlyList<ProgressionEvent>> LinkResolved;
         /// <summary>Raised when an unaffordable error on Case 5 requests the Ending Resolver.</summary>
         public event Action EndingResolveRequested;
+        /// <summary>Raised when board lockout triggers an Emergency Reboot (Prologue or Cases 1-4).</summary>
+        public event Action<int> EmergencyRebootRequested;
         /// <summary>Raised when a supported complete submission solves the board.</summary>
         public event Action<DeductionCertificate> BoardSolved;
         /// <summary>Raised whenever the session state changed (links, selection, focus).</summary>
@@ -275,6 +277,7 @@ namespace Morsoul.Board
             SyncFocusIn();
             _isOpen = true;
             _pendingSource = null;
+            TryTriggerBoardLockoutFallback();
             _session.Solve();
             RefreshAll();
             if (_root != null) _root.style.display = DisplayStyle.Flex;
@@ -437,8 +440,9 @@ namespace Morsoul.Board
                         ShowBanner(BannerInfoClass, AuthoredTutorialLinkFeedback(attemptedLink));
                         break;
                     case ProgressionEventKind.Blocked:
-                        ShowBanner(BannerErrorClass,
-                            $"Linking locked — Focus below {ProgressionConstants.LinkingUnlockFocus:0}. Rest at a bench or recover Focus before continuing.");
+                        if (!TryTriggerBoardLockoutFallback())
+                            ShowBanner(BannerErrorClass,
+                                $"Linking locked — Focus below {ProgressionConstants.LinkingUnlockFocus:0}. Rest at a bench or recover Focus before continuing.");
                         break;
                     case ProgressionEventKind.DuplicateLink:
                         ShowBanner(BannerInfoClass, "Link already on the board.");
@@ -451,8 +455,9 @@ namespace Morsoul.Board
                             $"The connection doesn't hold. (-{ProgressionConstants.ErrorFocusCost:0} Focus)");
                         break;
                     case ProgressionEventKind.LinksCleared:
-                        ShowBanner(BannerErrorClass,
-                            $"Focus can't absorb the error — the board is wiped and linking is locked until Focus reaches {ProgressionConstants.LinkingUnlockFocus:0}.");
+                        if (!TryTriggerBoardLockoutFallback())
+                            ShowBanner(BannerErrorClass,
+                                $"Focus can't absorb the error — the board is wiped and linking is locked until Focus reaches {ProgressionConstants.LinkingUnlockFocus:0}.");
                         break;
                     case ProgressionEventKind.ResolveEnding:
                         resolveEnding = true;
@@ -468,6 +473,117 @@ namespace Morsoul.Board
             LinkResolved?.Invoke(events);
             StateChanged?.Invoke();
             if (resolveEnding) EndingResolveRequested?.Invoke();
+        }
+
+        bool TryTriggerBoardLockoutFallback()
+        {
+            if (_session == null) return false;
+            var state = _session.State;
+            if (!state.LinkingLockedOut || state.Focus >= ProgressionConstants.LinkingUnlockFocus)
+                return false;
+
+            var core = CoreRuntime.Instance;
+            if (core == null) return false;
+            int caseId = caseData != null ? caseData.caseId : state.CaseId;
+            if (caseId > 4) return false;
+            if (caseId != 0 && core.Session.GetRemainingRests(caseId) > 0)
+                return false;
+
+            var preserveIds = new HashSet<string>(StringComparer.Ordinal);
+            if (caseData != null && caseData.preloadedClues != null)
+                foreach (var c in caseData.preloadedClues)
+                    if (c != null && !string.IsNullOrEmpty(c.id)) preserveIds.Add(c.id);
+
+            core.Session.ApplyEmergencyCaseReboot(caseId, preserveIds);
+            state.Links.Clear();
+            state.LinkingLockedOut = false;
+            state.SelectedConclusionId = null;
+
+            if (EmergencyRebootRequested != null)
+            {
+                Close();
+                EmergencyRebootRequested.Invoke(caseId);
+                return true;
+            }
+
+            if (caseId >= 1 && caseId <= 4)
+            {
+                Close();
+                StartCoroutine(RebootCaseTransitionRoutine(caseId));
+                return true;
+            }
+
+            SyncFocusOut();
+            ShowBanner(BannerErrorClass, "Board locked — Emergency Reboot cleared your board links.");
+            return true;
+        }
+
+        System.Collections.IEnumerator RebootCaseTransitionRoutine(int caseId)
+        {
+            var host = _root != null ? _root.parent : null;
+            VisualElement overlay = null;
+            if (host != null)
+            {
+                overlay = new VisualElement
+                {
+                    style =
+                    {
+                        position = Position.Absolute,
+                        left = 0, top = 0, right = 0, bottom = 0,
+                        backgroundColor = new Color(0f, 0f, 0f, 0f),
+                        alignItems = Align.Center,
+                        justifyContent = Justify.Center
+                    }
+                };
+                var label = new Label("CASE OVER — FOCUS & RESTS EXHAUSTED\nRESTARTING CASE FROM DISTRICT HUB...")
+                {
+                    style =
+                    {
+                        color = new Color(0.95f, 0.85f, 0.65f, 1f),
+                        fontSize = 24,
+                        unityTextAlign = TextAnchor.MiddleCenter,
+                        whiteSpace = WhiteSpace.Normal
+                    }
+                };
+                overlay.Add(label);
+                host.Add(overlay);
+            }
+
+            float elapsed = 0f;
+            while (elapsed < 0.6f)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                if (overlay != null)
+                    overlay.style.backgroundColor = new Color(0f, 0f, 0f, Mathf.Clamp01(elapsed / 0.6f));
+                yield return null;
+            }
+            if (overlay != null) overlay.style.backgroundColor = Color.black;
+
+            float hold = 0f;
+            while (hold < 1.4f)
+            {
+                hold += Time.unscaledDeltaTime;
+                yield return null;
+            }
+
+            var core = CoreRuntime.Instance;
+            if (core != null)
+            {
+                core.Focus.Refill();
+                state_SyncRefill(core);
+                var gsm = GameStateManager.Ensure();
+                if (core.Session.CurrentSceneMode == SceneMode.Mode3D)
+                    gsm.ReturnFromInvestigation(caseId);
+                else
+                    gsm.GoToRoute(RouteKeys.Hub(caseId), GameFlowState.Hub);
+            }
+            overlay?.RemoveFromHierarchy();
+        }
+
+        void state_SyncRefill(CoreRuntime core)
+        {
+            if (_session != null && core != null)
+                _session.SyncFocus(core.Focus.Percent, core.Focus.Maximum);
         }
 
         void ApplyHintTier(ProgressionEvent e)

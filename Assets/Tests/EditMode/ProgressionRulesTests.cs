@@ -100,14 +100,13 @@ namespace Morsoul.Tests
         }
 
         [Test]
-        public void Case0OffSolutionDraw_IsTutorialRejected_NotAnError()
+        public void Case0OffSolutionDraw_AppliesStandardErrorPenalty()
         {
             var def = TestGraphs.FiveClueDef();
             def.CaseId = 0;
             var g0 = TestGraphs.BuildValid(def);
             _state.CaseId = 0;
-            _state.Focus = 10f;
-            _state.LinkingLockedOut = true; // stale state must not trap the tutorial
+            _state.Focus = 100f;
             _state.Links.Add(new DirectedEdge("a", "b"));
 
             var authored = Draw(_state, g0, "d", "e");
@@ -115,13 +114,13 @@ namespace Morsoul.Tests
             var duplicate = Draw(_state, g0, "a", "b");
             var solution = Draw(_state, g0, "b", "c");
 
-            Assert.That(HasEvent(authored, ProgressionEventKind.TutorialLinkRejected), Is.True);
-            Assert.That(HasEvent(invented, ProgressionEventKind.TutorialLinkRejected), Is.True);
+            Assert.That(HasEvent(authored, ProgressionEventKind.LinkWrong), Is.True);
+            Assert.That(HasEvent(invented, ProgressionEventKind.LinkWrong), Is.True);
             Assert.That(HasEvent(duplicate, ProgressionEventKind.DuplicateLink), Is.True);
             Assert.That(HasEvent(solution, ProgressionEventKind.LinkOk), Is.True);
-            Assert.That(_state.CaseErrorCount, Is.EqualTo(0));
-            Assert.That(_state.Focus, Is.EqualTo(10f));
-            Assert.That(_state.Links, Has.Count.EqualTo(2));
+            Assert.That(_state.CaseErrorCount, Is.EqualTo(2));
+            Assert.That(_state.Focus, Is.EqualTo(100f - 2f * ProgressionConstants.ErrorFocusCost));
+            Assert.That(_state.Links, Has.Count.EqualTo(4));
             Assert.That(_state.LinkingLockedOut, Is.False);
         }
 

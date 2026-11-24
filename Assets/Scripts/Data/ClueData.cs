@@ -16,5 +16,7 @@ namespace Morsoul.Data
         public bool isBacktrackingOnly;
         public bool hasWorldPosition;
         public Vector2 worldPosition;
+        [Tooltip("Optional 3D prefab/model used when reinspecting this clue from the Journal across scenes.")]
+        public GameObject inspectPrefab;
     }
 }

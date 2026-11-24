@@ -57,11 +57,11 @@ namespace Morsoul.Core
                 Category = TutorialCategory.MovementAndControls,
                 Title = "2D Hub Navigation & Interaction",
                 Keybinds = "[WASD] Move  •  [Left Shift] Sprint  •  [E] Interact",
-                Summary = "District hubs use crisp 4-directional movement instead of camera look.",
+                Summary = "District hubs use top-down movement instead of camera look.",
                 AlwaysUnlockedInLogs = true,
                 Steps = new[]
                 {
-                    "Use [W][A][S][D] to walk north, south, east, or west (2D hubs do not use camera-look or diagonal shortcuts).",
+                    "Use [W][A][S][D] or Arrow Keys to walk smoothly in any direction across 2D hubs.",
                     "Hold [Left Shift] to sprint quickly between witnesses, benches, and Carriers.",
                     "When an [E] prompt appears near an NPC, Carrier, Quest Board, or Bench, press [E] to interact."
                 }
@@ -116,14 +116,14 @@ namespace Morsoul.Core
                 Id = "TUT_INVESTIGATE",
                 Category = TutorialCategory.InvestigationAndJournal,
                 Title = "Clues, Key Highlights & Journal",
-                Keybinds = "[G] Open Journal  •  [1–4 / Q / E] Tabs  •  [W/S] Select",
-                Summary = "Collect physical evidence, compare testimonies, and read highlighted forensic details.",
+                Keybinds = "[G] Open Journal  •  [1–4 / Q / E] Tabs  •  [W/S] Select  •  [Enter/R] Reinspect",
+                Summary = "Collect physical evidence, compare testimonies, and reinspect clues from your Journal.",
                 AlwaysUnlockedInLogs = true,
                 Steps = new[]
                 {
                     "Click highlighted objects to log them into your Journal (items taken for analysis move safely into Physical notes).",
-                    "Open the Journal [G] anytime outside Inspect to review Physical clues, Testimonies, Runic Logs, and Dossiers.",
-                    "Watch for highlighted facts (timestamps, tools, signatures, contradictions)—not every collected item is relevant!"
+                    "Open the Journal [G] anytime to review Physical clues, Testimonies, Runic Logs, and Dossiers.",
+                    "Select a discovered clue and press [Enter], [R], double-click, or click [Inspect Model] to reopen its 3D/2D inspect view."
                 }
             },
             new TutorialEntry
@@ -146,13 +146,13 @@ namespace Morsoul.Core
             {
                 Id = "TUT_BOARD_LOGIC",
                 Category = TutorialCategory.DeductionBoard,
-                Title = "Logical Deduction vs Guessing (Cases 1–5)",
+                Title = "Logical Deduction vs Guessing",
                 Keybinds = "Check Lamp & Clue Details Before Linking",
-                Summary = "From Case 1 onward, unsupported links drain Focus Energy (-15 per error; -25 in Case 5).",
+                Summary = "Unsupported links drain Focus Energy (-15 per error; -25 in Case 5) across all cases, including Prologue.",
                 AlwaysUnlockedInLogs = false,
                 Steps = new[]
                 {
-                    "Unlike the Prologue training chamber, Cases 1–5 penalize false links immediately from your Focus bar.",
+                    "False links penalize your Focus bar immediately in every case (including Prologue). In Cases 1–5, hint tiers at 5, 10, and 20 errors also restore +20 Focus once each.",
                     "If Focus drops too low for an error, all board links clear and linking locks until you recover to 30 Focus.",
                     "Read clue mechanisms and witness contradictions carefully in your Journal [G] or Card Inspector instead of brute-forcing pairs."
                 }
@@ -162,14 +162,14 @@ namespace Morsoul.Core
                 Id = "TUT_REST_SPOT",
                 Category = TutorialCategory.FocusAndRest,
                 Title = "Rest Spots & Recovery Limits",
-                Keybinds = "[E] Rest at Bench (2D Hubs)",
-                Summary = "Hub benches restore Focus for real investigation fatigue, with strict limits against guesswork.",
+                Keybinds = "[E] Rest at Bench / Campfire",
+                Summary = "Rest spots refill your Focus Energy to full after confirmation, with strict per-case limits.",
                 AlwaysUnlockedInLogs = true,
                 Steps = new[]
                 {
-                    "Look for Rest Benches in 2D district hubs and press [E] while nearby to recover Focus (5/sec).",
-                    "To keep deduction meaningful, benches allow 2 Rests per active case (up to +50 Focus each) with a 30s cooldown.",
-                    "Save your Focus for genuine scanning and reasoned board deductions—resting cannot fund endless trial-and-error."
+                    "Approach a Rest Bench or Campfire, press [E], and confirm to rest until Focus Energy is completely full (10/sec).",
+                    "Benches allow 2 Rests per active case with a 30s cooldown—movement is locked until resting finishes.",
+                    "If you exhaust all rests and drop below 30 Focus, interacting offers an Emergency Reboot (wipes current board links and forfeits Clean grade)."
                 }
             },
             new TutorialEntry

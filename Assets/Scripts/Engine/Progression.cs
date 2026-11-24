@@ -144,13 +144,7 @@ namespace Morsoul.Engine
                 return events;
             }
 
-            if (graph.CaseId == 0 && !graph.IsSolutionLink(link))
-            {
-                events.Add(new ProgressionEvent { Kind = ProgressionEventKind.TutorialLinkRejected });
-                return events;
-            }
-
-            if (graph.CaseId != 0 && state.LinkingLockedOut &&
+            if (state.LinkingLockedOut &&
                 state.Focus < ProgressionConstants.LinkingUnlockFocus)
             {
                 events.Add(new ProgressionEvent { Kind = ProgressionEventKind.Blocked });
