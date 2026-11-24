@@ -73,8 +73,8 @@
                 <ui:VisualElement style="width: 4px; height: 4px; background-color: white; border-radius: 2px;" picking-mode="Ignore"/>
             </ui:VisualElement>
             <ui:VisualElement name="InteractionContainer" style="position: absolute; top: 20px; align-items: center; display: none;" picking-mode="Ignore">
-                <ui:Label name="InteractionText" text="[L-Click] Inspect" style="font-size: 15px; color: white; -unity-text-outline-width: 1px; -unity-text-outline-color: black; margin-bottom: 5px;" picking-mode="Ignore"/>
-                <ui:Label name="ItemDescriptionText" text="Item Description" style="font-size: 13px; color: rgb(200, 200, 200); -unity-text-outline-width: 1px; -unity-text-outline-color: black; max-width: 400px; white-space: normal; -unity-text-align: middle-center;" picking-mode="Ignore"/>
+                <ui:Label name="InteractionText" text="[L-Click] Inspect" style="font-size: 15px; color: white; margin-bottom: 5px;" picking-mode="Ignore"/>
+                <ui:Label name="ItemDescriptionText" text="Item Description" style="font-size: 13px; color: rgb(200, 200, 200); max-width: 400px; white-space: normal; -unity-text-align: middle-center;" picking-mode="Ignore"/>
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>

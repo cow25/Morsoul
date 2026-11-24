@@ -10,15 +10,74 @@ namespace Morsoul.Core
     /// </summary>
     public static class GameLock
     {
-        public static string LockPath => Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "Morsoul",
-            "game.lock");
+        static string _cachedDatabasePath;
 
-        public static string DatabasePath => Path.Combine(
+        static string LocalDataDir => Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "Morsoul",
-            "game.db");
+            "Morsoul");
+
+        public static string LockPath => Path.Combine(LocalDataDir, "game.lock");
+
+        public static string DatabasePath =>
+            _cachedDatabasePath ??= ResolveDatabasePath(Environment.GetCommandLineArgs());
+
+        /// <summary>
+        /// Resolves the SQLCipher database path from launcher CLI arguments
+        /// (--db, --user, --user-id, -user), falling back to game.db.
+        /// </summary>
+        public static string ResolveDatabasePath(string[] args, string baseDir = null)
+        {
+            string dir = string.IsNullOrEmpty(baseDir) ? LocalDataDir : baseDir;
+            string dbArg = ReadArg(args, "--db", "-db");
+            if (!string.IsNullOrWhiteSpace(dbArg))
+                return Path.IsPathRooted(dbArg) ? dbArg : Path.Combine(dir, dbArg);
+
+            string userArg = ReadArg(args, "--user", "-user", "--user-id");
+            if (string.IsNullOrWhiteSpace(userArg))
+                return Path.Combine(dir, "game.db");
+
+            if (userArg.EndsWith(".db", StringComparison.OrdinalIgnoreCase))
+                return Path.IsPathRooted(userArg) ? userArg : Path.Combine(dir, Path.GetFileName(userArg));
+
+            string safeUser = SanitizeFileSegment(userArg);
+            if (string.IsNullOrEmpty(safeUser))
+                return Path.Combine(dir, "game.db");
+
+            string prefixed = Path.Combine(dir, $"game_{safeUser}.db");
+            string direct = Path.Combine(dir, $"{safeUser}.db");
+            return !File.Exists(prefixed) && File.Exists(direct) ? direct : prefixed;
+        }
+
+        static string ReadArg(string[] args, params string[] names)
+        {
+            if (args == null) return null;
+            for (int i = 0; i < args.Length; i++)
+            {
+                string a = args[i];
+                if (string.IsNullOrEmpty(a)) continue;
+                foreach (string name in names)
+                {
+                    if (string.Equals(a, name, StringComparison.OrdinalIgnoreCase) && i + 1 < args.Length)
+                        return args[i + 1].Trim();
+                    if (a.StartsWith(name + "=", StringComparison.OrdinalIgnoreCase))
+                        return a.Substring(name.Length + 1).Trim();
+                }
+            }
+            return null;
+        }
+
+        static string SanitizeFileSegment(string raw)
+        {
+            string trimmed = raw.Trim();
+            char[] invalid = Path.GetInvalidFileNameChars();
+            var chars = trimmed.ToCharArray();
+            for (int i = 0; i < chars.Length; i++)
+            {
+                if (chars[i] == '/' || chars[i] == '\\' || Array.IndexOf(invalid, chars[i]) >= 0)
+                    chars[i] = '_';
+            }
+            return new string(chars).Replace("..", "_");
+        }
 
         public static void Acquire()
         {

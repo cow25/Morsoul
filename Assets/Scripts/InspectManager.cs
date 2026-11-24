@@ -177,8 +177,13 @@ public class InspectManager : MonoBehaviour
             inspectCamera.enabled = true;
             _currentZoom = Mathf.Clamp(defaultInspectDistance, EffectiveMaxZoom(), EffectiveMinZoom());
             if (inspectOrigin != null)
+            {
                 inspectCamera.transform.position = inspectOrigin.position + new Vector3(0f, 0f, _currentZoom);
+                inspectCamera.transform.LookAt(inspectOrigin.position);
+            }
+            inspectCamera.Render();
         }
+        _inspectImage?.MarkDirtyRepaint();
     }
 
     public void CloseInspect()
@@ -207,6 +212,7 @@ public class InspectManager : MonoBehaviour
     private void Update()
     {
         if (!_isInspecting) return;
+        _inspectImage?.MarkDirtyRepaint();
 
         if (Keyboard.current != null &&
             (Keyboard.current.escapeKey.wasPressedThisFrame || Keyboard.current.eKey.wasPressedThisFrame))
@@ -265,12 +271,14 @@ public class InspectManager : MonoBehaviour
         _inspectPivot.transform.rotation = Quaternion.identity;
 
         _currentClone = Instantiate(source != null ? source : clue.gameObject, _inspectPivot.transform);
+        _currentClone.SetActive(true);
         _currentClone.transform.localPosition = Vector3.zero;
 
-        foreach (var col in _currentClone.GetComponentsInChildren<Collider>(true)) Destroy(col);
-        foreach (var cn in _currentClone.GetComponentsInChildren<ClueNode>(true)) Destroy(cn);
-        foreach (var rb in _currentClone.GetComponentsInChildren<Rigidbody>(true)) Destroy(rb);
-        foreach (var ps in _currentClone.GetComponentsInChildren<ParticleSystem>(true)) Destroy(ps);
+        foreach (var col in _currentClone.GetComponentsInChildren<Collider>(true)) DestroyImmediate(col);
+        foreach (var cn in _currentClone.GetComponentsInChildren<ClueNode>(true)) DestroyImmediate(cn);
+        foreach (var rb in _currentClone.GetComponentsInChildren<Rigidbody>(true)) DestroyImmediate(rb);
+        foreach (var ps in _currentClone.GetComponentsInChildren<ParticleSystem>(true)) DestroyImmediate(ps);
+        foreach (var psr in _currentClone.GetComponentsInChildren<ParticleSystemRenderer>(true)) DestroyImmediate(psr);
 
         int inspectLayer = LayerMask.NameToLayer("InspectLayer");
         if (inspectLayer >= 0) SetLayerRecursively(_inspectPivot, inspectLayer);
