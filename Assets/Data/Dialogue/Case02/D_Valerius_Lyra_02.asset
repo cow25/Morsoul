@@ -70,7 +70,7 @@ MonoBehaviour:
     speakerPortrait: {fileID: 0}
     text: '"Thank you, Mother Lyra. We''ll find out what really poisoned the air."'
     registersClue: {fileID: 0}
-    setsFlag: 
+    setsFlag: C2_BelfryKeyGranted
     requiresFlag: 
     options: []
     nextNodeId: 

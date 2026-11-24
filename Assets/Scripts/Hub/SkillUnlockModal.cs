@@ -43,13 +43,15 @@ namespace Morsoul.Hub
             UnityEngine.Cursor.visible = true;
 
             VisualElement panelRoot = null;
-            pr.RegisterUIReloadCallback((_, uiRoot, __) => panelRoot = uiRoot);
+            void OnReload(PanelRenderer _, VisualElement uiRoot, int __) => panelRoot = uiRoot;
+            pr.RegisterUIReloadCallback(OnReload);
             float wait = 0f;
             while (panelRoot == null && wait < 1f)
             {
                 wait += Time.unscaledDeltaTime;
                 yield return null;
             }
+            pr.UnregisterUIReloadCallback(OnReload);
             if (panelRoot == null)
             {
                 context?.RemoveUiBlocker(blocker);
@@ -68,18 +70,25 @@ namespace Morsoul.Hub
             root.style.alignItems = Align.Center;
             root.style.justifyContent = Justify.Center;
 
-            var bodyFont = Resources.Load<Font>("EBGaramond"); // optional fallback; USS/Assets loaded below
+            var cfg = Resources.Load<PauseMenuAssets>("PauseMenuConfig");
+            AudioCoordinator.PlayBankSfx(b => b.sfxSkillUnlock, 0.8f);
+            var bodyFont = cfg != null && cfg.bodyFont != null ? cfg.bodyFont : Resources.Load<Font>("EBGaramond");
+            var titleFont = cfg != null ? cfg.titleFont : null;
+            var iconTex = cfg != null
+                ? (tool == Tool.AetherSight ? cfg.abilityAetherSightIcon : cfg.abilityEmotionEchoIcon)
+                : null;
 #if UNITY_EDITOR
             if (bodyFont == null)
                 bodyFont = UnityEditor.AssetDatabase.LoadAssetAtPath<Font>("Assets/Fonts/EBGaramond.ttf");
-            var titleFont = UnityEditor.AssetDatabase.LoadAssetAtPath<Font>("Assets/Fonts/Middleearth.ttf");
-            string iconPath = tool == Tool.AetherSight
-                ? "Assets/Art/UI/Ability_AetherSight.png"
-                : "Assets/Art/UI/Ability_EmotionEcho.png";
-            var iconTex = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>(iconPath);
-#else
-            Font titleFont = null;
-            Texture2D iconTex = null;
+            if (titleFont == null)
+                titleFont = UnityEditor.AssetDatabase.LoadAssetAtPath<Font>("Assets/Fonts/Middleearth.ttf");
+            if (iconTex == null)
+            {
+                string iconPath = tool == Tool.AetherSight
+                    ? "Assets/Art/UI/Ability_AetherSight.png"
+                    : "Assets/Art/UI/Ability_EmotionEcho.png";
+                iconTex = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>(iconPath);
+            }
 #endif
             if (bodyFont != null) root.style.unityFont = bodyFont;
 

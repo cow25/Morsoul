@@ -16,6 +16,9 @@ namespace Morsoul.Interaction
         public string solvedObjective = "Board solved! Ascend the stairwell to return to the hub.";
 
         string _lastText;
+        int _lastFound = -1;
+        int _lastTotal = -1;
+        bool _lastSolved;
 
         void Awake()
         {
@@ -51,6 +54,12 @@ namespace Morsoul.Interaction
                            (session != null && session.HasClue(id));
                 if (has) found++;
             }
+
+            if (found == _lastFound && total == _lastTotal && solved == _lastSolved && _lastText != null)
+                return;
+            _lastFound = found;
+            _lastTotal = total;
+            _lastSolved = solved;
 
             string next = solved
                 ? solvedObjective

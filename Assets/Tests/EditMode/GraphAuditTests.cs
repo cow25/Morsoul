@@ -35,9 +35,9 @@ namespace Morsoul.Tests
             var report = GraphAudit.Analyze(_graph);
             var complete = Audit(report, "h_complete");
 
-            // {b->c} reaches high support, but S* ⊆ L_valid is required too.
-            // S* plus the optional off-solution d->e link are the two unlocking boards.
-            Assert.AreEqual(2, complete.UnlockingSubsetCount);
+            // {b->c} reaches high support, but S* ⊆ L_valid and zero off-path leak are required too.
+            // Only S* unlocks h_complete because d->e introduces off-path leak on 'e'.
+            Assert.AreEqual(1, complete.UnlockingSubsetCount);
             Assert.AreEqual(1, complete.MinimalUnlockingSets.Count);
             CollectionAssert.AreEquivalent(
                 new[] { new DirectedEdge("a", "b"), new DirectedEdge("b", "c") },

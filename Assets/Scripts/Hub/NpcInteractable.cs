@@ -33,6 +33,17 @@ namespace Morsoul.Hub
             }
         }
 
+        public override void SetPromptVisible(bool visible)
+        {
+            if (visible && interrogationCaseId >= 1 && interrogationCaseId <= 4)
+            {
+                var core = CoreRuntime.Instance;
+                if (core != null && core.Session.CanStartInterrogation(interrogationCaseId))
+                    promptText = "[E] Confront";
+            }
+            base.SetPromptVisible(visible);
+        }
+
         public override void Interact(HubContext ctx)
         {
             base.Interact(ctx);
@@ -82,39 +93,81 @@ namespace Morsoul.Hub
 
         static void StartOvanCase5Prompt(HubContext ctx, CoreRuntime core, SpeakerPortraitData[] portraits)
         {
+            const string briefedFlag = "Guild.Case5Briefed";
             const string confirmFlag = "Guild.Case5Confirmed";
             core.Session.SetFlag(confirmFlag, false);
 
             var data = ScriptableObject.CreateInstance<DialogueData>();
             data.hideFlags = HideFlags.DontSave;
+            data.portraits = portraits;
+
+            if (!core.Session.HasFlag(briefedFlag))
+            {
+                core.Session.SetFlag(briefedFlag, true);
+                data.id = "OvanCase5Briefing";
+                data.startNodeId = "b1";
+                data.nodes = new[]
+                {
+                    new DialogueNodeData
+                    {
+                        id = "b1",
+                        speakerName = "Guildmaster Ovan",
+                        text = "Every case you closed—from the Lower Market solvent to Iron Hollow's breach—points to one coordinated operation beneath Asterveil.",
+                        nextNodeId = "b2"
+                    },
+                    new DialogueNodeData
+                    {
+                        id = "b2",
+                        speakerName = "Eliza",
+                        text = "He's right, {PlayerName}. None of those were isolated crimes. The Veiled Circle has been testing First-Age seal-breakers across the entire city.",
+                        nextNodeId = "b3"
+                    },
+                    new DialogueNodeData
+                    {
+                        id = "b3",
+                        speakerName = "Golem",
+                        text = "[THREAT ASSESSMENT: CRITICAL] If their siphon network converges on the Sanctum Core, Asterveil's containment will fail.",
+                        nextNodeId = "b4"
+                    },
+                    new DialogueNodeData
+                    {
+                        id = "b4",
+                        speakerName = "Guildmaster Ovan",
+                        text = "Before we draft our emergency report for the Empirical Guards, gather everything you still need—especially any First-Age Runic Logs your Aether Sight can uncover. Speak to me again when you're ready."
+                    }
+                };
+                ctx.PlayDialogue(data);
+                return;
+            }
+
+            int logs = core.Session.RunicLogCount;
             data.id = "OvanCase5Prompt";
             data.startNodeId = "n1";
-            data.portraits = portraits;
             data.nodes = new[]
             {
                 new DialogueNodeData
                 {
                     id = "n1",
                     speakerName = "Guildmaster Ovan",
-                    text = "The Sanctum Core beneath Drift 09 awaits. Once you descend, there's no turning back until it's finished. Are you ready to continue to Case 5, and have you nothing else left to take care of?",
+                    text = $"Our Guild scouts have compiled their own findings on the Veiled Circle (Runic Logs: {logs}/4). Are you ready to build a structured report alarming enough to mobilize the Empirical Guards?",
                     options = new[]
                     {
-                        new DialogueOptionData { label = "I'm ready — continue to Case 5.", nextNodeId = "proceed" },
-                        new DialogueOptionData { label = "Not yet — I still have things to take care of.", nextNodeId = "wait" }
+                        new DialogueOptionData { label = "I'm ready — let's draft the Guild report.", nextNodeId = "proceed" },
+                        new DialogueOptionData { label = "Not yet — I still have things to gather.", nextNodeId = "wait" }
                     }
                 },
                 new DialogueNodeData
                 {
                     id = "proceed",
                     speakerName = "Guildmaster Ovan",
-                    text = "Then go with everything you've got. May Asterveil endure.",
+                    text = "Good. Take the Guild's investigation dossier and lay out the proof—step by step—until the Guards have no choice but to act.",
                     setsFlag = confirmFlag
                 },
                 new DialogueNodeData
                 {
                     id = "wait",
                     speakerName = "Guildmaster Ovan",
-                    text = "Take whatever time you need. Talk to me again whenever you're ready for Case 5."
+                    text = "Take whatever time you need. Revisit the districts via the Carrier and talk to me again when you're ready."
                 }
             };
 

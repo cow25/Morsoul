@@ -169,7 +169,8 @@ namespace Morsoul.Interrogation
             if (match != null && match.breaksComposureSegment)
             {
                 if (match.isCoreContradiction && !IsCoreContradictUnlocked)
-                    return new MoveResult(MoveOutcome.Locked, match, match.responseDialogue,
+                    return new MoveResult(MoveOutcome.Locked, match,
+                        "Press the underlined claim first to expose the contradiction.",
                         phaseIndex, false, false, false, Status);
 
                 SegmentsRemaining--;
@@ -192,6 +193,22 @@ namespace Morsoul.Interrogation
             }
             return new MoveResult(MoveOutcome.Wrong, match, match?.responseDialogue,
                 phaseIndex, false, false, strikeCounted, Status);
+        }
+
+        public bool HasValidMoveWithDifferentVerb(EvidenceData evidence, Verb attemptedVerb, out Verb expectedVerb)
+        {
+            expectedVerb = attemptedVerb;
+            var phase = CurrentPhase;
+            if (phase == null || evidence == null) return false;
+            foreach (var m in phase.validMoves ?? Array.Empty<MoveData>())
+            {
+                if (m != null && m.breaksComposureSegment && m.evidence == evidence && m.verb != attemptedVerb)
+                {
+                    expectedVerb = m.verb;
+                    return true;
+                }
+            }
+            return false;
         }
 
         void EnsureInProgress()

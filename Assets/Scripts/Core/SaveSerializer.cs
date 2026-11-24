@@ -72,6 +72,8 @@ namespace Morsoul.Core
         public static string Serialize(SaveState state)
         {
             if (state == null) throw new ArgumentNullException(nameof(state));
+            if (string.IsNullOrEmpty(state.profileId))
+                state.profileId = Guid.NewGuid().ToString();
             if (state.saveVersion >= 4)
             {
                 state.hasPlayerPosition = state.playerPosition != null;
@@ -80,7 +82,7 @@ namespace Morsoul.Core
             }
             string payload = JsonUtility.ToJson(state);
             CanonicalState.HashAndSeal(SaveCanonicalMap.ToCanonical(state),
-                state.profileId ?? "local", state.saveVersion, SealKey,
+                state.profileId, state.saveVersion, SealKey,
                 out string hash, out string seal);
             return JsonUtility.ToJson(new CheckpointFile
             {

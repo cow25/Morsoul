@@ -150,7 +150,12 @@ namespace Morsoul.Hub
         void ExecuteTravel(string scene)
         {
             CheckpointRequested?.Invoke(checkpointReason);
-            CoreRuntime.Instance?.Session.SetFlag(ElizaHubPresenceController.RaceToCarrierFlag, false);
+            if (CoreRuntime.Instance != null)
+            {
+                CoreRuntime.Instance.Session.SetFlag(ElizaHubPresenceController.RaceToCarrierFlag, false);
+                if (offerTravelMenu)
+                    CoreRuntime.Instance.Session.PendingEntryPointId = "carrier";
+            }
             // Single load authority: the GSM guards missing scenes and stamps
             // the checkpoint; direct load only without Core.
             if (CoreRuntime.Instance != null)

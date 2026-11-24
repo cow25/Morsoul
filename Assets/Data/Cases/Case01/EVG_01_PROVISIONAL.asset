@@ -16,10 +16,10 @@ MonoBehaviour:
   provisional: 0
   designNote: Approved Case 1 weighted board. Complete fraud requires both registered-key access and fabricated stock loss; T2 and RH1 keep the dark-magic misdirection hot.
   tutorialRedHerringClueIds: []
-  tutorialRedHerringFeedback: ''
-  tutorialReversedLinkFeedback: ''
-  tutorialGenericLinkFeedback: ''
-  tutorialLockedConclusionFeedback: ''
+  tutorialRedHerringFeedback: 
+  tutorialReversedLinkFeedback: 
+  tutorialGenericLinkFeedback: 
+  tutorialLockedConclusionFeedback: 
   clueIds:
   - C1_01
   - C2_01
@@ -69,6 +69,7 @@ MonoBehaviour:
   - id: CASE1_DARK_MAGIC_BREAKIN
     text: A rogue outsider breached the vault using volatile dark magic.
     tier: 0
+    targetClueId: 
     submissionFeedback: The claim describes the scene Ignatius wants believed, not the scene the evidence records.
     supportingEdges:
     - clueId: T2_01
@@ -85,6 +86,7 @@ MonoBehaviour:
   - id: CASE1_AUTHORIZED_ACCESS
     text: The vault was opened with one of the two registered keys.
     tier: 1
+    targetClueId: 
     submissionFeedback: Access is narrowed to a registered key, but the motive and staged damage remain unproven.
     supportingEdges:
     - clueId: C1_01
@@ -97,6 +99,7 @@ MonoBehaviour:
   - id: CASE1_FABRICATED_STOCK_LOSS
     text: The alleged stock loss was fabricated with a mundane solvent.
     tier: 1
+    targetClueId: 
     submissionFeedback: The loss was staged, but the investigator still must identify who controlled access.
     supportingEdges:
     - clueId: C2_01
@@ -109,7 +112,8 @@ MonoBehaviour:
   - id: CASE1_STAGED_INTERNAL_FRAUD
     text: Ignatius staged the breach with his registered key and mundane solvent to claim insurance for inventory he never produced.
     tier: 2
-    submissionFeedback: ''
+    targetClueId: 
+    submissionFeedback: 
     supportingEdges:
     - clueId: T1_01
       weight: 0.9
@@ -128,7 +132,9 @@ MonoBehaviour:
     inventedLinkPenalty: 0.1
     lowThreshold: 0.35
     highThreshold: 0.75
-  cachedReferenceSupport: 0.363247
+    PrunedMode: 1
+    RivalClueId: 
+  cachedReferenceSupport: 0.08153508
   solutionTopologicalOrder:
   - C1_01
   - C2_01

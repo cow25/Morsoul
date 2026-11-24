@@ -19,7 +19,7 @@ MonoBehaviour:
   acquisition: 0
   requiredTool: 0
   requiredFlag: 
-  description: Shards of an acoustic focus crystal shattered directly beneath the Great Bell. Impact shear patterns indicate internal harmonic overload rather than physical blunt trauma.
+  description: Shards of an acoustic focus crystal shattered directly beneath the Great Bell. Impact shear patterns indicate <b>internal harmonic overload</b> rather than physical blunt trauma.
   dissonanceKeyword: 
   isBacktrackingOnly: 0
   hasWorldPosition: 1

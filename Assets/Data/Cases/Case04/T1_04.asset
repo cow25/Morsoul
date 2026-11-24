@@ -19,7 +19,7 @@ MonoBehaviour:
   acquisition: 2
   requiredTool: 0
   requiredFlag: 
-  description: 'Thrun: Chief Engineer Brokk is a master craftsman with thirty years in these shafts; he never skips valve depressurization before cycling the main lift.'
+  description: 'Thrun: Chief Engineer Brokk has thirty years in these shafts; he <b>never skips valve depressurization</b> before cycling the main lift.'
   dissonanceKeyword: reckless operator error
   isBacktrackingOnly: 0
   hasWorldPosition: 0

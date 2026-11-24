@@ -173,7 +173,7 @@ namespace Morsoul.Hub.Editor
             if (settings != null && hudUxml != null)
             {
                 var go = new GameObject("HubHudPanel");
-                var doc = go.AddComponent<UIDocument>();
+                var doc = go.AddComponent<PanelRenderer>();
                 doc.panelSettings = settings;
                 doc.visualTreeAsset = hudUxml;
                 doc.sortingOrder = 10;

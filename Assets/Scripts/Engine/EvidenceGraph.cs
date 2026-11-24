@@ -418,6 +418,13 @@ namespace Morsoul.Engine
                 !supplied.SequenceEqual(g.SolutionOrder, StringComparer.Ordinal))
                 errors.Add("solutionTopologicalOrder does not match the computed deterministic order; " +
                            "recache the asset.");
+
+            if (def.CachedReferenceSupport > 0f &&
+                Math.Abs(def.CachedReferenceSupport - g.ReferenceSupport) > 1e-4)
+            {
+                errors.Add($"cachedReferenceSupport ({def.CachedReferenceSupport:F6}) does not match " +
+                           $"computed reference support ({g.ReferenceSupport:F6}); recache the asset.");
+            }
         }
 
         internal static IReadOnlyDictionary<string, double> UniformSeeds(EvidenceGraph graph)

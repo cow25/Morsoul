@@ -1,0 +1,21 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/Panels/TutorialOverlay.uss"/>
+    <ui:VisualElement name="TutorialOverlay-Root" class="tut-root" picking-mode="Ignore" style="display: none;">
+        <ui:VisualElement name="TutorialBackdrop" class="tut-backdrop" style="display: none;"/>
+        <ui:VisualElement name="TutorialCard" class="tut-card">
+            <ui:VisualElement class="tut-header-row" picking-mode="Ignore">
+                <ui:Label name="TutorialCategoryLabel" text="MOVEMENT &amp; CONTROLS" class="tut-category" picking-mode="Ignore"/>
+                <ui:Label name="TutorialBadgeLabel" text="TIP" class="tut-badge" picking-mode="Ignore"/>
+            </ui:VisualElement>
+            <ui:Label name="TutorialTitleLabel" text="Tutorial Title" class="tut-title" picking-mode="Ignore"/>
+            <ui:Label name="TutorialKeysLabel" text="[WASD] Move" class="tut-keys" picking-mode="Ignore"/>
+            <ui:Label name="TutorialSummaryLabel" text="Summary" class="tut-summary" picking-mode="Ignore"/>
+            <ui:VisualElement name="TutorialStepsList" class="tut-steps-list" picking-mode="Ignore"/>
+            <ui:VisualElement class="tut-footer-row">
+                <ui:Button name="TutorialMuteButton" text="Disable Auto-Tips" class="tut-btn tut-btn--subtle"/>
+                <ui:Button name="TutorialDismissButton" text="Got it  [F1]" class="tut-btn tut-btn--primary"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
+

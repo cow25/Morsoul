@@ -62,6 +62,7 @@ public class DiaryManager : MonoBehaviour
                 }
             }
             Debug.Log($"Added to Diary: {clue.id}. Total clues: {collectedClues.Count}");
+            Morsoul.Core.AudioCoordinator.PlayBankSfx(b => b.sfxClueCollected, 0.3f);
         }
     }
 
@@ -69,6 +70,11 @@ public class DiaryManager : MonoBehaviour
     {
         if (string.IsNullOrEmpty(clueId)) return false;
         if (Morsoul.Core.CoreRuntime.Instance?.Session?.HasClue(clueId) == true) return true;
-        return collectedClues.Exists(c => c != null && c.id == clueId);
+        for (int i = 0; i < collectedClues.Count; i++)
+        {
+            var c = collectedClues[i];
+            if (c != null && c.id == clueId) return true;
+        }
+        return false;
     }
 }

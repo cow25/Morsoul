@@ -82,6 +82,8 @@ public class PrologueTutorialController : MonoBehaviour
 
     private VisualElement _boardStrip;
     private Label _boardStripLabel;
+    private System.Func<bool> _modalBlocker;
+    private bool _investigateTipShown;
 
     private void Start()
     {
@@ -129,16 +131,33 @@ public class PrologueTutorialController : MonoBehaviour
                 BuildOverlays(HUDManager.Instance.HudRoot);
         }
 
+        _modalBlocker = () => _phase == Phase.AwakeningDialogue ||
+                              _phase == Phase.ScanTutorialModal ||
+                              _phase == Phase.PowerDownBlackout;
+        PauseMenuController.RegisterExternalModal(_modalBlocker);
+
         EnterAwakeningDialogue();
     }
 
+    private static Material _robeMaterial;
+
     private void OnDestroy()
     {
+        if (_modalBlocker != null)
+        {
+            PauseMenuController.UnregisterExternalModal(_modalBlocker);
+            _modalBlocker = null;
+        }
         ResetAwakeningCameraOffset();
         if (HUDManager.Instance != null)
             HUDManager.Instance.HudLoaded -= OnHudLoaded;
         if (_boardController != null)
             _boardController.BoardLoaded -= OnBoardLoaded;
+        if (_robeMaterial != null)
+        {
+            Destroy(_robeMaterial);
+            _robeMaterial = null;
+        }
     }
 
     private void OnHudLoaded(VisualElement hudRoot)
@@ -357,6 +376,7 @@ public class PrologueTutorialController : MonoBehaviour
             _phase = Phase.FreeExploreBeforeScan;
             _exploreTimer = 0f;
             SetGameplayControl(true, unlockCursor: false);
+            TutorialOverlayController.TryShow("TUT_MOVE_3D");
         }
         RefreshOverlays();
     }
@@ -405,7 +425,7 @@ public class PrologueTutorialController : MonoBehaviour
     private void HandleScanModalInput()
     {
         var kb = Keyboard.current;
-        if (kb != null && (kb.spaceKey.wasPressedThisFrame || kb.enterKey.wasPressedThisFrame))
+        if (kb != null && (kb.spaceKey.wasPressedThisFrame || kb.enterKey.wasPressedThisFrame || kb.eKey.wasPressedThisFrame))
             AdvanceScanModal();
     }
 
@@ -418,7 +438,10 @@ public class PrologueTutorialController : MonoBehaviour
             _phase = Phase.Investigation;
             Time.timeScale = 1f;
             SetGameplayControl(true, unlockCursor: false);
+            PauseMenuController.NotifyExternalModalClosed();
             SetObjective("Hold [Tab] to scan and [L-Click] to inspect clues in the ruins.");
+            TutorialCatalog.MarkSeen(CoreRuntime.Instance?.Session, "TUT_EYE_SCAN");
+            TutorialOverlayController.TryShow("TUT_MOUSE_3D");
         }
         RefreshOverlays();
     }
@@ -455,6 +478,11 @@ public class PrologueTutorialController : MonoBehaviour
         else if (hasC1 || hasC2 || hasC3)
         {
             SetObjective("Search the ruins for more clues. (Press [G] anytime to check your Journal.)");
+            if (!_investigateTipShown)
+            {
+                _investigateTipShown = true;
+                TutorialOverlayController.TryShow("TUT_INVESTIGATE");
+            }
         }
 
         // Anti-hardstuck fallback: if Focus Energy hits 0, power down and reboot at last checkpoint.
@@ -498,7 +526,8 @@ public class PrologueTutorialController : MonoBehaviour
         else
         {
             _phase = Phase.Investigation;
-            SetGameplayControl(true, unlockCursor: false);
+            if (!PauseMenuController.AnyModalOrPauseOpen)
+                SetGameplayControl(true, unlockCursor: false);
             RefreshOverlays();
         }
     }
@@ -689,6 +718,7 @@ public class PrologueTutorialController : MonoBehaviour
                 var mat = new Material(shader);
                 mat.color = new Color(0.22f, 0.18f, 0.16f, 1f);
                 renderer.sharedMaterial = mat;
+                _robeMaterial = mat;
             }
         }
     }

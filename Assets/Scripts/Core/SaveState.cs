@@ -35,8 +35,8 @@ namespace Morsoul.Core
         public const int CurrentVersion = 4;
 
         public int saveVersion = CurrentVersion;
-        /// <summary>Identity bound into the seal message; "local" until profiles exist.</summary>
-        public string profileId = "local";
+        /// <summary>Per-save UUID identity bound into the seal message.</summary>
+        public string profileId = Guid.NewGuid().ToString();
 
         public string playerName = "";
         public int currentCase;

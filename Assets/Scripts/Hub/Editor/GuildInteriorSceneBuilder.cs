@@ -33,13 +33,9 @@ namespace Morsoul.Hub.Editor
         /// </summary>
         public static void BuildAll()
         {
-            HubContentSetup.Install();
-            DemoStandInFactory.PatchRouteWiring();
             Build();
-            MarketExpansionInstaller.Install();
             LowerMarketSceneBuilder.Rebuild();
-            Debug.Log("Guild expansion built: hub content restored, Hub_Guild " +
-                      "(Pixel Crawler), market door + arrival escort, Lower Market rebuilt.");
+            Debug.Log("Guild expansion built: Hub_Guild (Pixel Crawler) and Lower Market rebuilt.");
         }
 
         [MenuItem("Morsoul/Scenes/Guild Interior", priority = 14)]

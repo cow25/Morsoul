@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Morsoul.Core;
 using Morsoul.Data;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -80,6 +81,10 @@ namespace Morsoul.Interrogation
         Button _contradictButton;
         Button _presentButton;
         Button _retryButton;
+        Button _continueButton;
+        VisualElement _forfeitConfirmRow;
+        Button _forfeitConfirmButton;
+        Button _forfeitCancelButton;
         readonly VisualElement[] _segments = new VisualElement[3];
         readonly VisualElement[] _seals = new VisualElement[3];
 
@@ -95,6 +100,11 @@ namespace Morsoul.Interrogation
         bool _endShown;
         bool _endDismissed;
         string _endText;
+        bool _pendingPhaseAdvance;
+        bool _pendingConfessionEnd;
+        bool _forfeitConfirmOpen;
+        CursorLockMode _prevCursorLock = CursorLockMode.None;
+        bool _prevCursorVisible = true;
         int _uiVersion;
 
         public bool IsOpen => _isOpen;
@@ -133,10 +143,35 @@ namespace Morsoul.Interrogation
             if (keyboard == null || !_isOpen) return;
             if (InputBlocked != null && InputBlocked()) return;
 
+            if (AwaitingMistrialRetry)
+            {
+                if (keyboard.rKey.wasPressedThisFrame)
+                    RequestRetry();
+                return;
+            }
+
+            if (_forfeitConfirmOpen)
+            {
+                if (keyboard.escapeKey.wasPressedThisFrame)
+                    SetForfeitConfirm(false);
+                return;
+            }
+
+            if (_pendingPhaseAdvance || _pendingConfessionEnd)
+            {
+                if (keyboard.eKey.wasPressedThisFrame ||
+                    keyboard.spaceKey.wasPressedThisFrame ||
+                    keyboard.enterKey.wasPressedThisFrame)
+                    ContinueBeat();
+                return;
+            }
+
+            if (_engine != null && _engine.Status != InterrogationStatus.InProgress)
+                return;
+
             if (keyboard.escapeKey.wasPressedThisFrame)
             {
-                Forfeited?.Invoke();
-                Close();
+                SetForfeitConfirm(true);
             }
             else if (keyboard.digit1Key.wasPressedThisFrame)
             {
@@ -149,10 +184,6 @@ namespace Morsoul.Interrogation
             else if (keyboard.digit3Key.wasPressedThisFrame)
             {
                 SelectStance(Stance.PresentEvidence);
-            }
-            else if (keyboard.rKey.wasPressedThisFrame && AwaitingMistrialRetry)
-            {
-                RequestRetry();
             }
             else if (keyboard.eKey.wasPressedThisFrame)
             {
@@ -193,29 +224,43 @@ namespace Morsoul.Interrogation
             _isOpen = true;
             _endShown = _engine.Status != InterrogationStatus.InProgress;
             if (_engine.Status == InterrogationStatus.InProgress) _endText = null;
-            SelectStance(Stance.Press);
+            _stance = Stance.Press;
+            _trayOpen = false;
+            _pendingPhaseAdvance = false;
+            _pendingConfessionEnd = false;
+            _forfeitConfirmOpen = false;
             HideBanner();
             _responseText = null;
             ApplyResponse();
             RefreshAll();
+            ApplyGuidedHint();
+            if (_engine.EmotionEchoUnlocked)
+                ShowBanner(BannerInfoClass, "Emotion Echo Active — Press [1] on an underlined claim to read their emotional aura.");
             if (_root != null) _root.style.display = DisplayStyle.Flex;
             if (manageCursor)
             {
+                _prevCursorLock = UnityEngine.Cursor.lockState;
+                _prevCursorVisible = UnityEngine.Cursor.visible;
                 UnityEngine.Cursor.lockState = CursorLockMode.None;
                 UnityEngine.Cursor.visible = true;
             }
+            TutorialOverlayController.TryShow("TUT_INTERROGATION");
         }
 
         public void Close()
         {
             _isOpen = false;
+            _forfeitConfirmOpen = false;
+            _pendingPhaseAdvance = false;
+            _pendingConfessionEnd = false;
             LastEndFrame = Time.frameCount;
             if (_root != null) _root.style.display = DisplayStyle.None;
             if (manageCursor)
             {
-                UnityEngine.Cursor.lockState = CursorLockMode.Locked;
-                UnityEngine.Cursor.visible = false;
+                UnityEngine.Cursor.lockState = _prevCursorLock;
+                UnityEngine.Cursor.visible = _prevCursorVisible;
             }
+            PauseMenuController.NotifyExternalModalClosed();
         }
 
         /// <summary>
@@ -301,14 +346,35 @@ namespace Morsoul.Interrogation
 
         // --- Input -----------------------------------------------------------
 
+        void SetForfeitConfirm(bool open)
+        {
+            _forfeitConfirmOpen = open;
+            if (_forfeitConfirmRow != null)
+                _forfeitConfirmRow.style.display = open ? DisplayStyle.Flex : DisplayStyle.None;
+        }
+
+        void ConfirmForfeit()
+        {
+            SetForfeitConfirm(false);
+            Forfeited?.Invoke();
+            Close();
+        }
+
         void SelectStance(Stance stance)
         {
+            if (_pendingPhaseAdvance || _pendingConfessionEnd) return;
             _stance = stance;
             _trayOpen = stance != Stance.Press;
             ApplyStanceClasses();
             ApplyTrayState();
             if (stance == Stance.Press)
-                PressNextKeyword();
+            {
+                var keywords = _engine?.CurrentPhase?.keywords;
+                if (keywords != null && keywords.Any(k => !string.IsNullOrEmpty(k) && !_engine.IsKeywordPressed(k)))
+                    PressNextKeyword();
+                else
+                    ShowBanner(BannerInfoClass, "Press stance selected — choose [2] CONTRADICT or [3] PRESENT EVIDENCE when ready.");
+            }
         }
 
         void PressNextKeyword()
@@ -356,10 +422,14 @@ namespace Morsoul.Interrogation
                 return;
             }
 
-            SetResponse(result.Response);
+            string respText = !string.IsNullOrEmpty(result.Response)
+                ? result.Response
+                : "The suspect refuses to elaborate further.";
+            SetResponse($"<b>Suspect:</b> {respText}");
             RefreshKeywordStates();
             ApplyPortrait();
             ApplyGuidedHint();
+            AudioCoordinator.PlayBankSfx(b => b.sfxDialogueBlip, 0.35f);
             if (_engine.EmotionEchoUnlocked)
             {
                 var aura = _engine.InferEffectiveAura();
@@ -367,6 +437,12 @@ namespace Morsoul.Interrogation
                     ShowBanner(BannerInfoClass, "Emotion Echo [AMBER]: Mana tremors betray a lie — use [2] CONTRADICT.");
                 else if (aura == Aura.Violet)
                     ShowBanner(BannerInfoClass, "Emotion Echo [VIOLET]: Guarded distress — probe with [3] PRESENT EVIDENCE.");
+                else
+                    ShowBanner(BannerInfoClass, $"Pressed \"{keyword}\" — read their response above.");
+            }
+            else
+            {
+                ShowBanner(BannerInfoClass, $"Pressed \"{keyword}\" — read their response above.");
             }
             ResolveStatus(result.Status);
             StateChanged?.Invoke();
@@ -382,6 +458,7 @@ namespace Morsoul.Interrogation
             }
 
             MoveResult result;
+            var usedVerb = _stance == Stance.Contradict ? Verb.Contradict : Verb.PresentEvidence;
             try
             {
                 result = _stance == Stance.Contradict
@@ -394,32 +471,55 @@ namespace Morsoul.Interrogation
                 return;
             }
 
-            ApplyMoveResult(result);
+            ApplyMoveResult(result, evidence, usedVerb);
         }
 
         // --- Move results ------------------------------------------------------
 
-        void ApplyMoveResult(MoveResult result)
+        void ApplyMoveResult(MoveResult result, EvidenceData evidence, Verb usedVerb)
         {
             switch (result.Outcome)
             {
                 case MoveOutcome.Correct:
-                    SetResponse(result.Response);
+                    SetResponse($"<b>Golem:</b> {result.Response}");
+                    _trayOpen = false;
+                    ApplyTrayState();
                     if (result.ShieldShattered)
-                        ShowBanner(BannerInfoClass, "The falsehood shield shatters.");
+                        ShowBanner(BannerInfoClass, "The falsehood shield shatters! Press [E] or Continue.");
                     else
-                        HideBanner();
+                        ShowBanner(BannerInfoClass, "Contradiction landed! Press [E] or Continue.");
+
+                    if (Application.isPlaying)
+                    {
+                        _pendingPhaseAdvance = result.Status == InterrogationStatus.InProgress;
+                        _pendingConfessionEnd = result.Status == InterrogationStatus.Confessed;
+                        ApplyContinueButton();
+                        RefreshSegments();
+                        RefreshSeals();
+                        StateChanged?.Invoke();
+                        return;
+                    }
                     break;
                 case MoveOutcome.Wrong:
-                    SetResponse(!string.IsNullOrEmpty(result.Response)
+                    string wrongBody = !string.IsNullOrEmpty(result.Response)
                         ? result.Response
-                        : "The objection does not land.");
+                        : "The objection does not land.";
+                    SetResponse($"<b>Suspect:</b> {wrongBody}");
+                    if (_engine.HasValidMoveWithDifferentVerb(evidence, usedVerb, out var expectedVerb))
+                    {
+                        string expectedLabel = expectedVerb == Verb.Contradict ? "[2] CONTRADICT" : "[3] PRESENT EVIDENCE";
+                        ShowBanner(BannerErrorClass, $"Right evidence, wrong stance — switch to {expectedLabel}! (Strike {_engine.StrikesLost}/{InterrogationEngine.MaxStrikes})");
+                    }
+                    else
+                    {
+                        ShowBanner(BannerErrorClass, $"That evidence doesn't refute this claim. (Strike {_engine.StrikesLost}/{InterrogationEngine.MaxStrikes})");
+                    }
                     if (result.StrikeCounted)
                         StrikesChanged?.Invoke(_engine.StrikesLost);
                     break;
                 case MoveOutcome.Locked:
-                    SetResponse(result.Response);
-                    ShowBanner(BannerErrorClass, "Press the underlined keyword first.");
+                    SetResponse("");
+                    ShowBanner(BannerErrorClass, "Press the underlined claim first before contradicting!");
                     break;
             }
 
@@ -431,6 +531,44 @@ namespace Morsoul.Interrogation
             ApplyGuidedHint();
             ResolveStatus(result.Status);
             StateChanged?.Invoke();
+        }
+
+        void ContinueBeat()
+        {
+            if (_pendingConfessionEnd)
+            {
+                _pendingConfessionEnd = false;
+                ApplyContinueButton();
+                ResolveStatus(InterrogationStatus.Confessed);
+                return;
+            }
+            if (_pendingPhaseAdvance)
+            {
+                _pendingPhaseAdvance = false;
+                _responseText = null;
+                ApplyResponse();
+                HideBanner();
+                ApplyContinueButton();
+                RefreshSegments();
+                RefreshSeals();
+                RefreshClaim();
+                RebuildKeywords();
+                ApplyPortrait();
+                ApplyGuidedHint();
+                if (_engine != null && _engine.EmotionEchoUnlocked)
+                    ShowBanner(BannerInfoClass, "Emotion Echo Active — Press [1] on the underlined claim to read their aura.");
+            }
+        }
+
+        void ApplyContinueButton()
+        {
+            if (_continueButton == null) return;
+            bool show = _pendingPhaseAdvance || _pendingConfessionEnd;
+            _continueButton.style.display = show ? DisplayStyle.Flex : DisplayStyle.None;
+            if (_pendingConfessionEnd)
+                _continueButton.text = "[E] Complete Interrogation →";
+            else
+                _continueButton.text = "[E] Continue →";
         }
 
         void ResolveStatus(InterrogationStatus status)
@@ -458,7 +596,27 @@ namespace Morsoul.Interrogation
         {
             if (_claimLabel == null) return;
             var phase = _engine?.CurrentPhase;
-            _claimLabel.text = phase?.suspectClaim ?? "";
+            if (phase == null || string.IsNullOrEmpty(phase.suspectClaim))
+            {
+                _claimLabel.text = "";
+                return;
+            }
+            string claim = phase.suspectClaim;
+            if (phase.keywords != null)
+            {
+                foreach (var kw in phase.keywords)
+                {
+                    if (string.IsNullOrEmpty(kw)) continue;
+                    int idx = claim.IndexOf(kw, StringComparison.OrdinalIgnoreCase);
+                    if (idx >= 0)
+                    {
+                        string matched = claim.Substring(idx, kw.Length);
+                        claim = claim.Remove(idx, kw.Length)
+                            .Insert(idx, $"<u><color=#F4C46A>{matched}</color></u>");
+                    }
+                }
+            }
+            _claimLabel.text = $"\"{claim}\"";
         }
 
         void RebuildKeywords()
@@ -470,7 +628,7 @@ namespace Morsoul.Interrogation
             foreach (var keyword in keywords)
             {
                 if (string.IsNullOrEmpty(keyword)) continue;
-                var button = new Button { text = keyword };
+                var button = new Button { text = keyword, userData = keyword };
                 button.AddToClassList("keyword-button");
                 string captured = keyword;
                 button.RegisterCallback<ClickEvent>(_ => OnKeywordClicked(captured));
@@ -484,12 +642,13 @@ namespace Morsoul.Interrogation
             if (_keywordRow == null) return;
             foreach (var child in _keywordRow.Children())
                 if (child is Button button)
-                    ApplyKeywordState(button, button.text);
+                    ApplyKeywordState(button, button.userData as string ?? button.text);
         }
 
         void ApplyKeywordState(Button button, string keyword)
         {
             bool pressed = _engine != null && _engine.IsKeywordPressed(keyword);
+            button.text = pressed ? $"✓ {keyword}" : keyword;
             button.EnableInClassList(KeywordPressedClass, pressed);
             var aura = _engine == null ? Aura.None
                 : (pressed ? _engine.InferEffectiveAura() : _engine.GetKeywordAura(keyword));
@@ -529,13 +688,35 @@ namespace Morsoul.Interrogation
         void ApplyPortrait()
         {
             if (_portrait == null) return;
-            _portrait.style.backgroundImage = suspectPortrait != null
-                ? new StyleBackground(suspectPortrait)
-                : new StyleBackground(StyleKeyword.Null);
+            if (suspectPortrait != null)
+            {
+                _portrait.style.backgroundImage = new StyleBackground(suspectPortrait);
+            }
+            else
+            {
+                var tex = LoadSuspectPortrait(_engine?.Data?.suspectName);
+                _portrait.style.backgroundImage = tex != null
+                    ? new StyleBackground(tex)
+                    : new StyleBackground(StyleKeyword.Null);
+            }
             var aura = _engine != null ? _engine.PortraitAura : Aura.None;
             _portrait.EnableInClassList("portrait--amber", aura == Aura.Amber);
             _portrait.EnableInClassList("portrait--violet", aura == Aura.Violet);
             _portrait.EnableInClassList("portrait--crimson", aura == Aura.Crimson);
+        }
+
+        static Texture2D LoadSuspectPortrait(string suspectName)
+        {
+            if (string.IsNullOrEmpty(suspectName)) return null;
+            string key = null;
+            if (suspectName.IndexOf("Ignatius", StringComparison.OrdinalIgnoreCase) >= 0) key = "ArtIgnatius";
+            else if (suspectName.IndexOf("Accord", StringComparison.OrdinalIgnoreCase) >= 0) key = "ArtAccord";
+            else if (suspectName.IndexOf("Vane", StringComparison.OrdinalIgnoreCase) >= 0) key = "ArtVane";
+            else if (suspectName.IndexOf("Harlan", StringComparison.OrdinalIgnoreCase) >= 0) key = "ArtHarlan";
+            else if (suspectName.IndexOf("Overseer", StringComparison.OrdinalIgnoreCase) >= 0) key = "ArtGrandOverseer";
+            else if (suspectName.IndexOf("Eliza", StringComparison.OrdinalIgnoreCase) >= 0) key = "ArtEliza";
+            else if (suspectName.IndexOf("Ovan", StringComparison.OrdinalIgnoreCase) >= 0) key = "ArtOvan";
+            return key != null ? Resources.Load<Texture2D>($"Portraits/{key}") : null;
         }
 
         void ApplyStanceClasses()
@@ -571,6 +752,23 @@ namespace Morsoul.Interrogation
                 typeLabel.AddToClassList("evidence-card-type");
                 card.Add(typeLabel);
 
+                if (evidence is ClueData clue && !string.IsNullOrEmpty(clue.description))
+                {
+                    string playerName = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session.PlayerName : "";
+                    string formatted = ClueHighlightFormatter.FormatDescription(clue, playerName, darkBackground: true);
+                    card.tooltip = formatted;
+                    var descLabel = new Label(formatted);
+                    descLabel.style.fontSize = 11;
+                    descLabel.style.color = new Color(0.84f, 0.80f, 0.74f, 1f);
+                    descLabel.style.whiteSpace = WhiteSpace.Normal;
+                    descLabel.style.marginTop = 3;
+                    card.Add(descLabel);
+                }
+                else if (evidence is PremiseData premise && !string.IsNullOrEmpty(premise.proposition))
+                {
+                    card.tooltip = premise.proposition;
+                }
+
                 var captured = evidence;
                 card.RegisterCallback<ClickEvent>(_ => OnEvidenceCardClicked(captured));
                 _evidenceGrid.Add(card);
@@ -601,7 +799,7 @@ namespace Morsoul.Interrogation
 
         static string EvidenceTypeName(EvidenceData evidence)
         {
-            if (evidence is ClueData clue) return clue.type.ToString();
+            if (evidence is ClueData clue) return ClueHighlightFormatter.FriendlyCategory(clue);
             if (evidence is PremiseData) return "Premise";
             return evidence != null ? evidence.GetType().Name : "";
         }
@@ -652,9 +850,21 @@ namespace Morsoul.Interrogation
             if (_guidedHint == null) return;
             bool show = _engine != null
                         && _engine.GuidedFirstPhase
-                        && _engine.Status == InterrogationStatus.InProgress
-                        && _engine.PhaseIndex == 0;
+                        && _engine.Status == InterrogationStatus.InProgress;
             _guidedHint.style.display = show ? DisplayStyle.Flex : DisplayStyle.None;
+            if (!show) return;
+
+            if (_engine.PhaseIndex == 0)
+            {
+                bool anyPressed = _engine.CurrentPhase?.keywords?.Any(k => _engine.IsKeywordPressed(k)) == true;
+                _guidedHint.text = anyPressed
+                    ? "TUTORIAL (2/2): Select [2] CONTRADICT or [3] PRESENT EVIDENCE, then pick matching evidence below. (Wrong picks cost a Seal.)"
+                    : "TUTORIAL (1/2): Click an underlined keyword (or press [1] PRESS) to probe the suspect's claim for weak spots.";
+            }
+            else
+            {
+                _guidedHint.text = "TUTORIAL: Probe keywords with [1] PRESS, then break claims with [2] CONTRADICT or [3] PRESENT EVIDENCE. [E] clears response, [G] opens Journal.";
+            }
         }
 
         void SetEndOverlay(string text)
@@ -745,6 +955,19 @@ namespace Morsoul.Interrogation
             _retryButton = root.Q<Button>("RetryButton");
             if (_retryButton != null)
                 _retryButton.RegisterCallback<ClickEvent>(_ => RequestRetry());
+            _continueButton = root.Q<Button>("ContinueButton");
+            if (_continueButton != null)
+                _continueButton.RegisterCallback<ClickEvent>(_ => ContinueBeat());
+            _forfeitConfirmRow = root.Q<VisualElement>("ForfeitConfirmRow");
+            _forfeitConfirmButton = root.Q<Button>("ForfeitConfirmButton");
+            if (_forfeitConfirmButton != null)
+                _forfeitConfirmButton.RegisterCallback<ClickEvent>(_ => ConfirmForfeit());
+            _forfeitCancelButton = root.Q<Button>("ForfeitCancelButton");
+            if (_forfeitCancelButton != null)
+                _forfeitCancelButton.RegisterCallback<ClickEvent>(_ => SetForfeitConfirm(false));
+
+            ApplyContinueButton();
+            SetForfeitConfirm(false);
 
             // Restore UI from cached engine/display state.
             if (_root != null)

@@ -441,5 +441,49 @@ namespace Morsoul.Tests
             _service.DeleteSave();
             Assert.IsFalse(_service.HasSave);
         }
+
+        [Test]
+        public void NewSaveState_GeneratesGuidProfileId_InsteadOfLocal()
+        {
+            var state = new SaveState();
+            Assert.AreNotEqual("local", state.profileId);
+            Assert.IsTrue(System.Guid.TryParse(state.profileId, out _));
+
+            state.profileId = "";
+            string json = SaveSerializer.Serialize(state);
+            Assert.IsTrue(System.Guid.TryParse(state.profileId, out _));
+            Assert.IsTrue(SaveSerializer.TryDeserialize(json, out var loaded, out _));
+            Assert.AreEqual(state.profileId, loaded.profileId);
+        }
+
+        [Test]
+        public void GameLock_ResolveDatabasePath_AcceptsUserAndDbArguments()
+        {
+            string baseDir = Path.Combine(_dir, "morsoul_db_test");
+            Directory.CreateDirectory(baseDir);
+
+            Assert.AreEqual(
+                Path.Combine(baseDir, "game.db"),
+                GameLock.ResolveDatabasePath(new[] { "Morsoul.exe" }, baseDir));
+
+            Assert.AreEqual(
+                Path.Combine(baseDir, "game_alice.db"),
+                GameLock.ResolveDatabasePath(new[] { "Morsoul.exe", "--user", "alice" }, baseDir));
+
+            Assert.AreEqual(
+                Path.Combine(baseDir, "bob.db"),
+                GameLock.ResolveDatabasePath(new[] { "Morsoul.exe", "--user=bob.db" }, baseDir));
+
+            string directUserDb = Path.Combine(baseDir, "charlie.db");
+            File.WriteAllText(directUserDb, "");
+            Assert.AreEqual(
+                directUserDb,
+                GameLock.ResolveDatabasePath(new[] { "Morsoul.exe", "--user", "charlie" }, baseDir));
+
+            string explicitDb = Path.Combine(baseDir, "custom.db");
+            Assert.AreEqual(
+                explicitDb,
+                GameLock.ResolveDatabasePath(new[] { "Morsoul.exe", "--db", explicitDb }, baseDir));
+        }
     }
 }

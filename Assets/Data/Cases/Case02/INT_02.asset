@@ -27,7 +27,7 @@ MonoBehaviour:
       strikeCost: 0
       isCoreContradiction: 0
       responseDialogue: Their kind can't control pure light! The second that heathen looked up, the air felt suffocating and the Lady lost her voice!
-      emotionAura: 0
+      emotionAura: 1
     - verb: 1
       evidence: {fileID: 11400000, guid: cba3b5e8fca3ec9469406dca130f49b5, type: 2}
       breaksComposureSegment: 1
@@ -46,7 +46,7 @@ MonoBehaviour:
       strikeCost: 0
       isCoreContradiction: 0
       responseDialogue: I was busy oiling the rope pulleys! A cunning sorcerer could whisper upward through the floor flues without making a sound!
-      emotionAura: 0
+      emotionAura: 2
     - verb: 2
       evidence: {fileID: 11400000, guid: 017b3743fbb65574c980ad380c2c8601, type: 2}
       breaksComposureSegment: 1
@@ -72,7 +72,7 @@ MonoBehaviour:
       strikeCost: 0
       isCoreContradiction: 0
       responseDialogue: I love this parish more than my own life! I would sever my own fingers before I willingly silenced the Lady! You cannot invent a reason for me to commit blasphemy!
-      emotionAura: 0
+      emotionAura: 1
     - verb: 1
       evidence: {fileID: 11400000, guid: 9ff42a2b82e508549af87c936ebd1855, type: 2}
       breaksComposureSegment: 1

@@ -37,7 +37,7 @@ namespace Morsoul.Tests
         public void ValidDef_Builds_ComputesReferenceSupportAndSolutionOrder()
         {
             var g = ValidGraph();
-            Assert.That(g.ReferenceSupport, Is.EqualTo(0.875).Within(1e-6));
+            Assert.That(g.ReferenceSupport, Is.EqualTo(0.1875).Within(1e-6));
             Assert.That(g.SolutionOrder, Is.EqualTo(new[] { "a", "b", "c" }));
             Assert.That(g.FinalSolutionClue, Is.EqualTo("c"));
         }
@@ -172,7 +172,7 @@ namespace Morsoul.Tests
             Assert.That(EvidenceGraph.Build(order, out _).Any(e => e.Contains("solutionTopologicalOrder")), Is.True);
 
             var fresh = ValidDef();
-            fresh.CachedReferenceSupport = 0.875f;
+            fresh.CachedReferenceSupport = 0.1875f;
             fresh.SolutionTopologicalOrder = new[] { "a", "b", "c" };
             Assert.That(EvidenceGraph.Build(fresh, out var g), Is.Empty);
             Assert.That(g, Is.Not.Null);
@@ -186,8 +186,8 @@ namespace Morsoul.Tests
             def.Conclusions[2].contradictingEdges = new[] { R("a") };
 
             Assert.That(EvidenceGraph.Build(def, out var g), Is.Empty);
-            // rho_ref = 0.875 - 0.5 * 0.5 = 0.625.
-            Assert.That(g.ReferenceSupport, Is.EqualTo(0.625).Within(1e-6));
+            // Root clue 'a' has baseline-subtracted evidence 0.0 under PrunedMode, so rho_ref = 0.1875.
+            Assert.That(g.ReferenceSupport, Is.EqualTo(0.1875).Within(1e-6));
 
             var cert = DeductionEngine.Solve(g,
                 Input(g, new[] { L("a", "b"), L("b", "c") }, "h_complete"));
@@ -209,9 +209,9 @@ namespace Morsoul.Tests
             Assert.That(cert.SelectedSupport, Is.EqualTo(1.0).Within(1e-6));
             Assert.That(cert.Band, Is.EqualTo(SupportBand.Hot));
             Assert.That(cert.InventedLinkCount, Is.EqualTo(0));
-            Assert.That(cert.PropagatedClueValues["a"], Is.EqualTo(0.5).Within(1e-6));
-            Assert.That(cert.PropagatedClueValues["b"], Is.EqualTo(0.75).Within(1e-6));
-            Assert.That(cert.PropagatedClueValues["c"], Is.EqualTo(0.875).Within(1e-6));
+            Assert.That(cert.PropagatedClueValues["a"], Is.EqualTo(0.25).Within(1e-6));
+            Assert.That(cert.PropagatedClueValues["b"], Is.EqualTo(0.375).Within(1e-6));
+            Assert.That(cert.PropagatedClueValues["c"], Is.EqualTo(0.4375).Within(1e-6));
             Assert.That(cert.RuntimeMs, Is.GreaterThanOrEqualTo(0));
         }
 
@@ -221,10 +221,11 @@ namespace Morsoul.Tests
             var g = ValidGraph();
             var cert = DeductionEngine.Solve(g,
                 Input(g, new[] { L("a", "b"), L("b", "c"), L("d", "e") }, "h_complete"));
-            Assert.That(cert.Status, Is.EqualTo(DeductionStatus.Ok));
+            // Off-solution authored link d->e triggers off-path leak gating on h_complete.
+            Assert.That(cert.Status, Is.EqualTo(DeductionStatus.ConclusionLocked));
             Assert.That(cert.InventedLinkCount, Is.EqualTo(0)); // authored but off S* is still a valid link
             Assert.That(cert.SelectedSupport, Is.EqualTo(1.0).Within(1e-6));
-            Assert.That(cert.SupportByConclusion["h_partial"], Is.EqualTo(0.375 / 0.875).Within(1e-6));
+            Assert.That(cert.SupportByConclusion["h_partial"], Is.EqualTo(1.0 / 3.0).Within(1e-6));
         }
 
         [Test]
@@ -234,7 +235,7 @@ namespace Morsoul.Tests
             var links = new[] { L("b", "c") };
             var cert = DeductionEngine.Solve(g, Input(g, links, "h_complete"));
 
-            Assert.That(cert.SelectedSupport, Is.GreaterThanOrEqualTo(g.Parameters.highThreshold));
+            Assert.That(cert.SelectedSupport, Is.EqualTo(2.0 / 3.0).Within(1e-6));
             Assert.That(cert.Status, Is.EqualTo(DeductionStatus.ConclusionLocked));
             Assert.That(cert.IsSolved, Is.False);
             Assert.That(DeductionEngine.IsConclusionUnlocked(g,
@@ -255,7 +256,7 @@ namespace Morsoul.Tests
             var partial = DeductionEngine.Solve(g, Input(g, links, "h_partial"));
             Assert.That(partial.Status, Is.EqualTo(DeductionStatus.Ok));
             Assert.That(partial.Verdict, Is.EqualTo(ConclusionTier.Partial));
-            Assert.That(partial.SelectedSupport, Is.EqualTo(0.375 / 0.875).Within(1e-6));
+            Assert.That(partial.SelectedSupport, Is.EqualTo(1.0 / 3.0).Within(1e-6));
             Assert.That(partial.Band, Is.EqualTo(SupportBand.Warm));
         }
 
@@ -352,8 +353,8 @@ namespace Morsoul.Tests
 
             var cert = DeductionEngine.Solve(g,
                 Input(g, new[] { L("a", "b"), L("b", "c") }, "h_complete"));
-            // rho(h_con) = sup 0.875 - 0.5 * (1.0 * x_a 0.5) = 0.625; phi = 0.625/0.875
-            Assert.That(cert.SupportByConclusion["h_con"], Is.EqualTo(0.625 / 0.875).Within(1e-6));
+            // Root clue 'a' has baseline-subtracted evidence 0.0 under PrunedMode, leaving h_con unpenalized (1.0).
+            Assert.That(cert.SupportByConclusion["h_con"], Is.EqualTo(1.0).Within(1e-6));
         }
 
         [Test]
@@ -402,7 +403,7 @@ namespace Morsoul.Tests
                 Assert.That(data.Validate(), Is.Empty);
                 var graph = data.BuildGraph();
                 Assert.That(graph, Is.Not.Null);
-                Assert.That(graph.ReferenceSupport, Is.EqualTo(0.875).Within(1e-6));
+                Assert.That(graph.ReferenceSupport, Is.EqualTo(0.1875).Within(1e-6));
             }
             finally
             {

@@ -525,6 +525,7 @@ namespace Morsoul.Hub.Editor
             intro.nextSceneName = "Hub_LowerMarket";
             intro.nextCaseId = 1;
             intro.autoLoadNextScene = true;
+            intro.tenseMusic = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Dynamic Music/Audio Files/Tension/Parts/Tension Part 2 Loop.wav");
         }
 
         static void EnsureEyeScanSpriteAssets()

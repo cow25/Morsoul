@@ -126,7 +126,10 @@ namespace Morsoul.Hub
             ctx?.AddUiBlocker(blocker);
             PauseMenuController.RegisterExternalModal(blocker);
 
-            var stage = BuildStage(out var propsToScroll);
+            var createdAssets = new List<UnityEngine.Object>();
+            var stage = BuildStage(out var propsToScroll, createdAssets);
+            var carriageClip = AudioCoordinator.SfxBank?.sfxCarriageLoop;
+            if (carriageClip != null) CoreRuntime.Instance?.Audio?.PlayAmbience(carriageClip, true);
 
             var dialogue = ctx != null && ctx.dialogue != null
                 ? ctx.dialogue
@@ -165,11 +168,14 @@ namespace Morsoul.Hub
             PauseMenuController.NotifyExternalModalClosed();
 
             if (stage != null) Destroy(stage);
+            for (int i = 0; i < createdAssets.Count; i++)
+                if (createdAssets[i] != null) Destroy(createdAssets[i]);
+            if (script != null) Destroy(script);
             proceed?.Invoke();
             Destroy(gameObject);
         }
 
-        static GameObject BuildStage(out List<Transform> scrollItems)
+        static GameObject BuildStage(out List<Transform> scrollItems, List<UnityEngine.Object> createdAssets)
         {
             scrollItems = new List<Transform>();
             var stage = new GameObject("CarriageCutsceneStage");
@@ -188,12 +194,12 @@ namespace Morsoul.Hub
             // Road strip
             var road = CreateSolidQuad("RoadStrip", stage.transform,
                 new Vector3(0f, -0.8f, 0f), new Vector3(24f, 2.6f, 1f),
-                new Color(0.18f, 0.15f, 0.13f, 1f), 1);
+                new Color(0.18f, 0.15f, 0.13f, 1f), 1, createdAssets);
 
             // Grass / verge
             CreateSolidQuad("VergeStrip", stage.transform,
                 new Vector3(0f, 0.8f, 0f), new Vector3(24f, 1.0f, 1f),
-                new Color(0.10f, 0.16f, 0.12f, 1f), 0);
+                new Color(0.10f, 0.16f, 0.12f, 1f), 0, createdAssets);
 
             // Scrolling roadside milestones & silhouette trees
             for (int i = 0; i < 8; i++)
@@ -201,7 +207,7 @@ namespace Morsoul.Hub
                 float x = -10f + i * 3.0f;
                 var post = CreateSolidQuad($"Post_{i}", stage.transform,
                     new Vector3(x, 0.55f, 0f), new Vector3(0.22f, 1.1f, 1f),
-                    new Color(0.14f, 0.12f, 0.10f, 1f), 2);
+                    new Color(0.14f, 0.12f, 0.10f, 1f), 2, createdAssets);
                 scrollItems.Add(post.transform);
             }
 
@@ -231,7 +237,7 @@ namespace Morsoul.Hub
         }
 
         static GameObject CreateSolidQuad(string name, Transform parent, Vector3 localPos,
-            Vector3 scale, Color color, int sortingOrder)
+            Vector3 scale, Color color, int sortingOrder, List<UnityEngine.Object> createdAssets)
         {
             var go = new GameObject(name);
             go.transform.SetParent(parent, false);
@@ -242,6 +248,8 @@ namespace Morsoul.Hub
             tex.SetPixels(new[] { color, color, color, color });
             tex.Apply();
             sr.sprite = Sprite.Create(tex, new Rect(0, 0, 2, 2), new Vector2(0.5f, 0.5f), 2f);
+            createdAssets?.Add(tex);
+            createdAssets?.Add(sr.sprite);
             sr.sortingOrder = sortingOrder;
             return go;
         }

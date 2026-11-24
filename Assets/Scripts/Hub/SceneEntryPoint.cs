@@ -62,6 +62,18 @@ namespace Morsoul.Hub
                         target.position, session.PlayerFacing2D);
                     return;
                 }
+                if (pending == "carrier")
+                {
+                    foreach (var carrier in FindObjectsByType<CarrierInteractable>(
+                        FindObjectsInactive.Include))
+                    {
+                        if (carrier == null || !carrier.offerTravelMenu) continue;
+                        target.position = carrier.transform.position + new Vector3(2.2f, 0f, 0f);
+                        session.SetPlayerContext(mode, sceneName,
+                            target.position, session.PlayerFacing2D);
+                        return;
+                    }
+                }
                 Debug.LogWarning($"SceneEntryPoint: no SceneSpawnMarker for " +
                                  $"entry '{pending}'; falling back.", this);
             }

@@ -49,8 +49,8 @@ namespace Morsoul.Flow
             bool alreadySolved = state.BoardSolved;
             if (!alreadySolved)
             {
-                if (state.LinkingLockedOut && focus.Percent < ProgressionConstants.ErrorFocusCost)
-                    return Fail(result, "The existing board is locked; recover Focus normally before simulation.");
+                if (state.LinkingLockedOut && focus.Percent < ProgressionConstants.LinkingUnlockFocus)
+                    return Fail(result, "The existing board is locked; recover Focus before simulation.");
                 var board = new WeightedBoardSession(graph, state);
                 board.SyncFocus(focus.Percent, focus.Maximum);
                 foreach (var clue in data.clues ?? new ClueData[0])
@@ -162,6 +162,7 @@ namespace Morsoul.Flow
                         board.Solve();
                         board.SelectConclusion(graph.CompleteConclusionId);
                         board.Submit(out _);
+                        core.Focus.Sync(state.Focus, state.MaxFocus);
                         state.BoardSolved = true;
                         state.SubmittedConclusionId = graph.CompleteConclusionId;
 

@@ -19,7 +19,7 @@ MonoBehaviour:
   acquisition: 1
   requiredTool: 1
   requiredFlag: 
-  description: Torn modern-tongue notes scattered across a workstation, left by a human who studied these ruins long after the Cataclysm. Scanning with Golem Eye (Tab) initiates linguistic deciphering, teaching the Golem the modern tongue and identifying the site only as a sealed research installation.
+  description: Torn <b>modern-tongue notes</b> scattered across a workstation, left by a human who studied these ruins long after the Cataclysm. Scanning with <b>Golem Eye (Tab)</b> initiates linguistic deciphering, teaching the Golem the modern tongue and identifying the site only as a <b>sealed research installation</b>.
   dissonanceKeyword: 
   isBacktrackingOnly: 0
   hasWorldPosition: 0

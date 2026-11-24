@@ -45,6 +45,7 @@ namespace Morsoul.Hub
         VisualElement _golemEyeRow;
         VisualElement _aetherSightRow;
         VisualElement _emotionEchoRow;
+        VisualElement _bottomLeftPanel;
         Button _escButton;
         Button _deskButton;
         Button _boardButton;
@@ -285,26 +286,40 @@ namespace Morsoul.Hub
             }
         }
 
+        string _lastRawPlayerName;
+        string _lastDisplayPlayerName = "User";
+        int _lastToolMask = -1;
+
         void SyncSessionHud()
         {
             var session = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session : null;
             if (_userNameLabel != null)
             {
-                string display = session != null && !string.IsNullOrWhiteSpace(session.PlayerName)
-                    ? session.PlayerName.Trim() : "User";
-                if (_userNameLabel.text != display) _userNameLabel.text = display;
+                string raw = session != null ? session.PlayerName : null;
+                if (!string.Equals(raw, _lastRawPlayerName, System.StringComparison.Ordinal))
+                {
+                    _lastRawPlayerName = raw;
+                    _lastDisplayPlayerName = !string.IsNullOrWhiteSpace(raw) ? raw.Trim() : "User";
+                }
+                if (_userNameLabel.text != _lastDisplayPlayerName) _userNameLabel.text = _lastDisplayPlayerName;
             }
             if (session != null)
             {
-                if (_golemEyeRow != null)
-                    _golemEyeRow.style.display = session.Tools.Contains(Tool.GolemEye)
-                        ? DisplayStyle.Flex : DisplayStyle.None;
-                if (_aetherSightRow != null)
-                    _aetherSightRow.style.display = session.Tools.Contains(Tool.AetherSight)
-                        ? DisplayStyle.Flex : DisplayStyle.None;
-                if (_emotionEchoRow != null)
-                    _emotionEchoRow.style.display = session.Tools.Contains(Tool.EmotionEcho)
-                        ? DisplayStyle.Flex : DisplayStyle.None;
+                int mask = (session.Tools.Contains(Tool.GolemEye) ? 1 : 0)
+                         | (session.Tools.Contains(Tool.AetherSight) ? 2 : 0)
+                         | (session.Tools.Contains(Tool.EmotionEcho) ? 4 : 0);
+                if (mask != _lastToolMask)
+                {
+                    _lastToolMask = mask;
+                    if (_bottomLeftPanel != null)
+                        _bottomLeftPanel.style.display = mask != 0 ? DisplayStyle.Flex : DisplayStyle.None;
+                    if (_golemEyeRow != null)
+                        _golemEyeRow.style.display = (mask & 1) != 0 ? DisplayStyle.Flex : DisplayStyle.None;
+                    if (_aetherSightRow != null)
+                        _aetherSightRow.style.display = (mask & 2) != 0 ? DisplayStyle.Flex : DisplayStyle.None;
+                    if (_emotionEchoRow != null)
+                        _emotionEchoRow.style.display = (mask & 4) != 0 ? DisplayStyle.Flex : DisplayStyle.None;
+                }
             }
         }
 
@@ -381,6 +396,7 @@ namespace Morsoul.Hub
             _golemEyeRow = root.Q<VisualElement>("GolemEyeRow");
             _aetherSightRow = root.Q<VisualElement>("AetherSightRow");
             _emotionEchoRow = root.Q<VisualElement>("EmotionEchoRow");
+            _bottomLeftPanel = root.Q<VisualElement>("BottomLeftPanel");
             _escButton = root.Q<Button>("EscKeyButton");
             _deskButton = root.Q<Button>("DeskKeyButton");
             _boardButton = root.Q<Button>("BoardKeyButton");
@@ -391,48 +407,69 @@ namespace Morsoul.Hub
 
             AppliedCaseText = null;
             AppliedObjective = null;
+            _lastToolMask = -1;
             RefreshObjective();
             SyncSessionHud();
             if (_footerLabel != null) _footerLabel.text = footerText ?? "";
 
-            // Force a refresh on the next Update.
-            _lastFocus = -1f;
-            _lastFocusMax = -1f;
+            if (Application.isPlaying)
+            {
+                var session = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session : null;
+                if (session == null || string.IsNullOrEmpty(session.ActiveCutsceneId))
+                    TutorialOverlayController.TryShow("TUT_MOVE_2D");
+            }
         }
+
+        static MonoBehaviour _cachedJournalMb;
+        static MonoBehaviour _cachedBoardMb;
 
         static void TriggerJournalShortcut()
         {
-            foreach (var mb in FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include))
+            if (_cachedJournalMb == null)
             {
-                if (mb == null) continue;
-                var type = mb.GetType();
-                if (type.Name == "JournalController")
+                foreach (var mb in FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include))
                 {
-                    var isOpenProp = type.GetProperty("IsOpen");
-                    bool isOpen = isOpenProp != null && (bool)isOpenProp.GetValue(mb);
-                    type.GetMethod(isOpen ? "Close" : "Open")?.Invoke(mb, null);
-                    return;
+                    if (mb != null && mb.GetType().Name == "JournalController")
+                    {
+                        _cachedJournalMb = mb;
+                        break;
+                    }
                 }
             }
+            if (_cachedJournalMb == null) return;
+            var type = _cachedJournalMb.GetType();
+            var isOpenProp = type.GetProperty("IsOpen");
+            bool isOpen = isOpenProp != null && (bool)isOpenProp.GetValue(_cachedJournalMb);
+            if (!isOpen)
+            {
+                var openAllowed = type.GetMethod("OpenAllowed");
+                if (openAllowed != null && openAllowed.Invoke(_cachedJournalMb, null) is bool allowed && !allowed)
+                    return;
+            }
+            type.GetMethod(isOpen ? "Close" : "Open")?.Invoke(_cachedJournalMb, null);
         }
 
         static void TriggerBoardShortcut()
         {
-            foreach (var mb in FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include))
+            if (_cachedBoardMb == null)
             {
-                if (mb == null) continue;
-                var type = mb.GetType();
-                if (type.Name == "WeightedBoardController")
+                foreach (var mb in FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include))
                 {
-                    var canUseField = type.GetField("CanUse");
-                    if (canUseField != null && canUseField.GetValue(mb) is System.Func<bool> canUse && !canUse())
-                        continue;
-                    var isOpenProp = type.GetProperty("IsOpen");
-                    bool isOpen = isOpenProp != null && (bool)isOpenProp.GetValue(mb);
-                    type.GetMethod(isOpen ? "Close" : "Open")?.Invoke(mb, null);
-                    return;
+                    if (mb != null && mb.GetType().Name == "WeightedBoardController")
+                    {
+                        _cachedBoardMb = mb;
+                        break;
+                    }
                 }
             }
+            if (_cachedBoardMb == null) return;
+            var type = _cachedBoardMb.GetType();
+            var canUseField = type.GetField("CanUse");
+            if (canUseField != null && canUseField.GetValue(_cachedBoardMb) is System.Func<bool> canUse && !canUse())
+                return;
+            var isOpenProp = type.GetProperty("IsOpen");
+            bool isOpen = isOpenProp != null && (bool)isOpenProp.GetValue(_cachedBoardMb);
+            type.GetMethod(isOpen ? "Close" : "Open")?.Invoke(_cachedBoardMb, null);
         }
     }
 }

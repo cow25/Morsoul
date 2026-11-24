@@ -16,10 +16,10 @@ MonoBehaviour:
   provisional: 1
   designNote: Provisionally approved Case 4 weighted board. Complete sub-lab breach requires both coordinated sabotage and hidden facility objective branches.
   tutorialRedHerringClueIds: []
-  tutorialRedHerringFeedback: ''
-  tutorialReversedLinkFeedback: ''
-  tutorialGenericLinkFeedback: ''
-  tutorialLockedConclusionFeedback: ''
+  tutorialRedHerringFeedback: 
+  tutorialReversedLinkFeedback: 
+  tutorialGenericLinkFeedback: 
+  tutorialLockedConclusionFeedback: 
   clueIds:
   - C1_04
   - C2_04
@@ -65,6 +65,7 @@ MonoBehaviour:
   - id: CASE4_OPERATOR_ACCIDENT
     text: The explosion was caused by reckless worker error or ordinary mechanical wear.
     tier: 0
+    targetClueId: 
     submissionFeedback: Ordinary wear explains the broken drill, not wedge-pinned valves or chemically melted bypasses.
     supportingEdges:
     - clueId: T2_04
@@ -83,6 +84,7 @@ MonoBehaviour:
   - id: CASE4_COORDINATED_SABOTAGE
     text: The pipeline explosion was deliberately engineered through internal sabotage.
     tier: 1
+    targetClueId: 
     submissionFeedback: Sabotage is proven, but the infiltrator's larger objective remains unidentified.
     supportingEdges:
     - clueId: T1_04
@@ -95,6 +97,7 @@ MonoBehaviour:
   - id: CASE4_CIRCLE_INFILTRATION
     text: The solvent sabotage was staged to expose the hidden pre-cataclysm facility.
     tier: 1
+    targetClueId: 
     submissionFeedback: The hidden objective is established, but the deliberate mechanical trigger still needs proof.
     supportingEdges:
     - clueId: C2_04
@@ -107,7 +110,8 @@ MonoBehaviour:
   - id: CASE4_DELIBERATE_SUBLAB_BREACH
     text: Harlan is a Veiled Circle infiltrator who engineered the mine blowout to breach the ancient sub-lab.
     tier: 2
-    submissionFeedback: ''
+    targetClueId: 
+    submissionFeedback: 
     supportingEdges:
     - clueId: C1_04
       weight: 0.9
@@ -126,7 +130,9 @@ MonoBehaviour:
     inventedLinkPenalty: 0.1
     lowThreshold: 0.35
     highThreshold: 0.75
-  cachedReferenceSupport: 0.325996
+    PrunedMode: 1
+    RivalClueId: 
+  cachedReferenceSupport: 0.06931848
   solutionTopologicalOrder:
   - C2_04
   - C3_04

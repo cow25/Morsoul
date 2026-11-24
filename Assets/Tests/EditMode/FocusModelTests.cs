@@ -21,7 +21,7 @@ namespace Morsoul.Tests
         public void Scan_DrainsPerTick()
         {
             _focus.TickScan(0.3f); // three 0.1s ticks
-            Assert.AreEqual(97f, _focus.Percent, 0.001f);
+            Assert.AreEqual(100f - 3f * FocusTuning.FocusDrainPerTick, _focus.Percent, 0.001f);
         }
 
         [Test]
@@ -29,7 +29,7 @@ namespace Morsoul.Tests
         {
             _focus.TickScan(0.05f);
             _focus.TickScan(0.05f); // crosses one tick
-            Assert.AreEqual(99f, _focus.Percent, 0.001f);
+            Assert.AreEqual(100f - FocusTuning.FocusDrainPerTick, _focus.Percent, 0.001f);
         }
 
         [Test]
@@ -62,9 +62,9 @@ namespace Morsoul.Tests
             _focus.Restore(50f, false);
             _focus.TickRest(FocusTuning.FocusTickSeconds - 0.001f); // no tick yet
             Assert.AreEqual(50f, _focus.Percent, 0.001f);
-            _focus.TickRest(FocusTuning.FocusTickSeconds); // crosses one tick -> +1
-            Assert.AreEqual(51f, _focus.Percent, 0.001f);
-            _focus.TickRest(FocusTuning.FocusTickSeconds * 100f); // capped at max
+            _focus.TickRest(FocusTuning.FocusTickSeconds); // crosses one tick
+            Assert.AreEqual(50f + Morsoul.Engine.ProgressionConstants.RestEnergyPerTick, _focus.Percent, 0.001f);
+            _focus.TickRest(FocusTuning.FocusTickSeconds * 200f); // capped at max
             Assert.AreEqual(100f, _focus.Percent);
         }
 
@@ -74,7 +74,7 @@ namespace Morsoul.Tests
             _focus.Restore(50f, false);
             _focus.TickRest(FocusTuning.FocusTickSeconds * 0.6f);
             _focus.TickRest(FocusTuning.FocusTickSeconds * 0.4f); // two halves -> one tick
-            Assert.AreEqual(51f, _focus.Percent, 0.001f);
+            Assert.AreEqual(50f + Morsoul.Engine.ProgressionConstants.RestEnergyPerTick, _focus.Percent, 0.001f);
             Assert.AreEqual(0f, _focus.RestRemainderSeconds, 0.001f);
         }
 

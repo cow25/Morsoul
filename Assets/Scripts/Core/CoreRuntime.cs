@@ -13,7 +13,7 @@ namespace Morsoul.Core
         static CoreRuntime _instance;
 
         /// <summary>The live CoreRuntime, or null if the game hasn't booted.</summary>
-        public static CoreRuntime Instance => _instance;
+        public static CoreRuntime Instance => _instance != null ? _instance : null;
 
         /// <summary>The shared event bus.</summary>
         public IEventBus Bus { get; } = new EventBus();
@@ -133,6 +133,16 @@ namespace Morsoul.Core
                 gameObject.AddComponent<GameStateManager>();
             if (GetComponent<AudioCoordinator>() == null)
                 gameObject.AddComponent<AudioCoordinator>();
+#if !UNITY_EDITOR
+            GameLock.Acquire();
+#endif
+        }
+
+        void OnApplicationQuit()
+        {
+#if !UNITY_EDITOR
+            GameLock.Release();
+#endif
         }
 
         void OnDestroy()

@@ -41,6 +41,10 @@ namespace Morsoul.Hub
             }
         }
 
+        string _cachedSceneName;
+        HubPlayerController _cachedPlayer;
+        HubArrivalTrigger[] _cachedArrivalTriggers;
+
         void Update()
         {
             var core = CoreRuntime.Instance;
@@ -51,7 +55,7 @@ namespace Morsoul.Hub
         void TryStageEliza(SessionState session)
         {
             if (session == null || context == null) return;
-            string sceneName = SceneManager.GetActiveScene().name;
+            string sceneName = _cachedSceneName ??= SceneManager.GetActiveScene().name;
             int caseId = session.CurrentCase;
 
             if (IsCutsceneOrIntroBusy(session, sceneName, caseId))
@@ -61,8 +65,8 @@ namespace Morsoul.Hub
             if (string.Equals(sceneName, "Hub_Guild", StringComparison.OrdinalIgnoreCase))
             {
                 if (!session.HasFlag(GuildIntroRules.IntroSeenFlag)) return;
-                var playerCtrl = FindAnyObjectByType<HubPlayerController>();
-                if (playerCtrl != null && playerCtrl.transform.position.y > 18f)
+                if (_cachedPlayer == null) _cachedPlayer = FindAnyObjectByType<HubPlayerController>();
+                if (_cachedPlayer != null && _cachedPlayer.transform.position.y > 18f)
                     return;
             }
             else if (!session.HasFlag(GuildIntroRules.IntroSeenFlag) && caseId <= 1)
@@ -159,6 +163,8 @@ namespace Morsoul.Hub
         static GameObject FindOrCreateEliza(HubContext ctx)
         {
             VisualProfile profile = ctx != null ? ctx.elizaProfile : null;
+            if (profile == null)
+                profile = Resources.Load<Morsoul.Core.PauseMenuAssets>("PauseMenuConfig")?.elizaProfile as VisualProfile;
 #if UNITY_EDITOR
             if (profile == null)
                 profile = UnityEditor.AssetDatabase.LoadAssetAtPath<VisualProfile>("Assets/Art/Profiles/Eliza.asset");
@@ -245,16 +251,18 @@ namespace Morsoul.Hub
 
         IEnumerator MonitorAsyncBeats(CoreRuntime core)
         {
+            _cachedSceneName ??= SceneManager.GetActiveScene().name;
+            _cachedArrivalTriggers ??= FindObjectsByType<HubArrivalTrigger>(FindObjectsInactive.Exclude);
             while (this != null && gameObject.activeInHierarchy)
             {
                 yield return null;
                 yield return null;
 
                 var session = core.Session;
-                string sceneName = SceneManager.GetActiveScene().name;
+                string sceneName = _cachedSceneName;
                 if (context == null || context.dialogue == null) continue;
                 if (context.UiBlocked || IsCutsceneOrIntroBusy(session, sceneName, session.CurrentCase)) continue;
-                if (HasPendingInterlude(session)) continue;
+                if (HasPendingInterlude(session, _cachedArrivalTriggers)) continue;
 
                 DialogueData pending = TryPickNextAsyncBeat(session, sceneName, out string flagToLatch);
                 if (pending == null) continue;
@@ -287,10 +295,9 @@ namespace Morsoul.Hub
             return false;
         }
 
-        static bool HasPendingInterlude(SessionState session)
+        static bool HasPendingInterlude(SessionState session, HubArrivalTrigger[] triggers)
         {
-            if (session == null) return false;
-            var triggers = FindObjectsByType<HubArrivalTrigger>(FindObjectsInactive.Exclude);
+            if (session == null || triggers == null) return false;
             for (int i = 0; i < triggers.Length; i++)
             {
                 var t = triggers[i];

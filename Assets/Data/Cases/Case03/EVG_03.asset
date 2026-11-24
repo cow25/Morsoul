@@ -16,10 +16,10 @@ MonoBehaviour:
   provisional: 1
   designNote: Provisionally approved Case 3 weighted board. Complete siphoning requires both industrial extraction and cult responsibility branches.
   tutorialRedHerringClueIds: []
-  tutorialRedHerringFeedback: ''
-  tutorialReversedLinkFeedback: ''
-  tutorialGenericLinkFeedback: ''
-  tutorialLockedConclusionFeedback: ''
+  tutorialRedHerringFeedback: 
+  tutorialReversedLinkFeedback: 
+  tutorialGenericLinkFeedback: 
+  tutorialLockedConclusionFeedback: 
   clueIds:
   - C1_03
   - C2_03
@@ -65,6 +65,7 @@ MonoBehaviour:
   - id: CASE3_NATURAL_FOREST_BLIGHT
     text: A natural blight or secondary infestation is killing the Elder Spirit Tree.
     tier: 0
+    targetClueId: 
     submissionFeedback: The blight story accounts for the symptoms but not the pressurized extraction apparatus.
     supportingEdges:
     - clueId: T2_03
@@ -83,6 +84,7 @@ MonoBehaviour:
   - id: CASE3_INDUSTRIAL_EXTRACTION
     text: The Elder Tree is being drained by mechanical mana extraction.
     tier: 1
+    targetClueId: 
     submissionFeedback: The extraction mechanism is proven, but its operator and organization remain unidentified.
     supportingEdges:
     - clueId: T1_03
@@ -95,6 +97,7 @@ MonoBehaviour:
   - id: CASE3_CULT_OPERATOR_LINK
     text: The ritual equipment and Vane's cloak connect the operation to the Veiled Circle.
     tier: 1
+    targetClueId: 
     submissionFeedback: The cult link is established, but the physical method of drainage still needs proof.
     supportingEdges:
     - clueId: C2_03
@@ -107,7 +110,8 @@ MonoBehaviour:
   - id: CASE3_ORGANIZED_ENVIRONMENTAL_SIPHONING
     text: Vane is a Veiled Circle operative draining the Elder Spirit Tree to power the Sanctum Core ritual.
     tier: 2
-    submissionFeedback: ''
+    targetClueId: 
+    submissionFeedback: 
     supportingEdges:
     - clueId: C1_03
       weight: 0.9
@@ -126,7 +130,9 @@ MonoBehaviour:
     inventedLinkPenalty: 0.1
     lowThreshold: 0.35
     highThreshold: 0.75
-  cachedReferenceSupport: 0.322486
+    PrunedMode: 1
+    RivalClueId: 
+  cachedReferenceSupport: 0.06865109
   solutionTopologicalOrder:
   - C2_03
   - C3_03

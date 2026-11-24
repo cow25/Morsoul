@@ -43,10 +43,14 @@ namespace Morsoul.Cutscene
 
         // Playback state.
         bool _isPlaying;
+        bool _ownsCutsceneMusic;
         int _shotIndex = -1;
         Coroutine _shotRoutine;
         float _skipHold;
         int _uiVersion;
+        Func<bool> _modalBlocker;
+        CursorLockMode _prevCursorLock = CursorLockMode.Locked;
+        bool _prevCursorVisible;
 
         public bool IsPlaying => _isPlaying;
         public int CurrentShotIndex => _shotIndex;
@@ -54,13 +58,20 @@ namespace Morsoul.Cutscene
         void OnEnable()
         {
             _panelRenderer = GetComponent<PanelRenderer>();
-            if (_panelRenderer != null) _panelRenderer.RegisterUIReloadCallback(OnUIReload);
+            if (_panelRenderer != null)
+            {
+                _panelRenderer.sortingOrder = 100;
+                _panelRenderer.RegisterUIReloadCallback(OnUIReload);
+            }
             _videoPlayer = GetComponent<VideoPlayer>();
+            _modalBlocker ??= () => _isPlaying;
+            PauseMenuController.RegisterExternalModal(_modalBlocker);
         }
 
         void OnDisable()
         {
             if (_panelRenderer != null) _panelRenderer.UnregisterUIReloadCallback(OnUIReload);
+            if (_modalBlocker != null) PauseMenuController.UnregisterExternalModal(_modalBlocker);
         }
 
         void OnDestroy()
@@ -92,7 +103,11 @@ namespace Morsoul.Cutscene
                 _skipHold = 0f;
             }
 
-            if (keyboard.eKey.wasPressedThisFrame) Advance();
+            if (keyboard.eKey.wasPressedThisFrame)
+            {
+                AudioCoordinator.PlayBankSfx(b => b.sfxUiClick, 0.5f);
+                Advance();
+            }
         }
 
         /// <summary>Plays the assigned <see cref="cutsceneData"/>.</summary>
@@ -113,10 +128,22 @@ namespace Morsoul.Cutscene
             }
             _isPlaying = true;
             _skipHold = 0f;
-            CoreRuntime.Instance?.Audio?.SetDucked(true);
+            var audio = CoreRuntime.Instance != null ? CoreRuntime.Instance.Audio : null;
+            if (data.music != null && audio != null)
+            {
+                audio.SetDucked(false);
+                audio.PlayMusic(data.music);
+                _ownsCutsceneMusic = true;
+            }
+            else
+            {
+                audio?.SetDucked(true);
+            }
             if (_root != null) _root.style.display = DisplayStyle.Flex;
             if (manageCursor)
             {
+                _prevCursorLock = UnityEngine.Cursor.lockState;
+                _prevCursorVisible = UnityEngine.Cursor.visible;
                 UnityEngine.Cursor.lockState = CursorLockMode.None;
                 UnityEngine.Cursor.visible = true;
             }
@@ -164,6 +191,13 @@ namespace Morsoul.Cutscene
             }
             var shot = cutsceneData.shots[index];
             RenderShot(shot);
+            if (shot != null)
+            {
+                if (shot.sfx != null)
+                    CoreRuntime.Instance?.Audio?.PlaySfx(shot.sfx, 0.8f);
+                else if (!string.IsNullOrEmpty(shot.caption))
+                    AudioCoordinator.PlayBankSfx(b => b.sfxDialogueBlip, 0.35f);
+            }
             if (!shot.waitForInput)
                 _shotRoutine = StartCoroutine(AutoAdvanceAfter(Mathf.Max(0f, shot.durationSeconds)));
         }
@@ -201,16 +235,26 @@ namespace Morsoul.Cutscene
             _isPlaying = false;
             _shotIndex = -1;
             _skipHold = 0f;
-            CoreRuntime.Instance?.Audio?.SetDucked(false);
+            var audio = CoreRuntime.Instance != null ? CoreRuntime.Instance.Audio : null;
+            if (_ownsCutsceneMusic)
+            {
+                _ownsCutsceneMusic = false;
+                audio?.StopMusic();
+            }
+            else
+            {
+                audio?.SetDucked(false);
+            }
             StopShotRoutine();
             StopVideo();
             HideCaption();
             if (_root != null) _root.style.display = DisplayStyle.None;
             if (manageCursor)
             {
-                UnityEngine.Cursor.lockState = CursorLockMode.Locked;
-                UnityEngine.Cursor.visible = false;
+                UnityEngine.Cursor.lockState = _prevCursorLock;
+                UnityEngine.Cursor.visible = _prevCursorVisible;
             }
+            PauseMenuController.NotifyExternalModalClosed();
         }
 
         void StopShotRoutine()

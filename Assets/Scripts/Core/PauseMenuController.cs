@@ -117,6 +117,7 @@ namespace Morsoul.Core
         VisualElement _root;
         VisualElement _actionsPage;
         VisualElement _settingsPage;
+        VisualElement _tutorialsPage;
         VisualElement _quitConfirmRow;
 
         // Dossier labels
@@ -134,11 +135,23 @@ namespace Morsoul.Core
         // Actions buttons
         Button _saveButton;
         Button _settingsButton;
+        Button _tutorialLogsButton;
         Button _quitButton;
         Button _resumeButton;
         Button _returnTitleButton;
         Button _exitAppButton;
         Button _quitCancelButton;
+
+        // Tutorials subpage
+        VisualElement _tutFilterRow;
+        ScrollView _tutListScroll;
+        Label _tutDetailTitle;
+        Label _tutDetailKeys;
+        Label _tutDetailBody;
+        Button _autoTutorialsToggle;
+        Button _tutorialsBackButton;
+        TutorialCategory? _selectedTutCategory;
+        string _selectedTutId;
 
         // Settings elements
         VisualElement _masterFill;
@@ -192,10 +205,18 @@ namespace Morsoul.Core
             if (_isOpen) Close();
         }
 
+        string _cachedSceneName;
+        bool _isTitleScene;
+
         void LateUpdate()
         {
-            var sceneName = SceneManager.GetActiveScene().name;
-            if (string.Equals(sceneName, TitleSceneName, StringComparison.OrdinalIgnoreCase))
+            var activeName = SceneManager.GetActiveScene().name;
+            if (_cachedSceneName != activeName)
+            {
+                _cachedSceneName = activeName;
+                _isTitleScene = string.Equals(activeName, TitleSceneName, StringComparison.OrdinalIgnoreCase);
+            }
+            if (_isTitleScene)
             {
                 if (_isOpen) Close();
                 _wasExternalModalOpenPrevFrame = false;
@@ -208,7 +229,8 @@ namespace Morsoul.Core
             {
                 if (_isOpen)
                 {
-                    if (_settingsPage != null && _settingsPage.style.display == DisplayStyle.Flex)
+                    if ((_settingsPage != null && _settingsPage.style.display == DisplayStyle.Flex) ||
+                        (_tutorialsPage != null && _tutorialsPage.style.display == DisplayStyle.Flex))
                         ShowActionsPage();
                     else
                         Close();
@@ -222,7 +244,15 @@ namespace Morsoul.Core
                 }
             }
             _wasExternalModalOpenPrevFrame = anyExternal;
+
+            if (_isOpen && Screen.fullScreen != _lastObservedFullscreen)
+            {
+                _lastObservedFullscreen = Screen.fullScreen;
+                UpdateFullscreenLabel(Screen.fullScreen);
+            }
         }
+
+        bool _lastObservedFullscreen;
 
         static bool IsCutsceneActive()
         {
@@ -278,14 +308,25 @@ namespace Morsoul.Core
         public void ShowSettingsPage()
         {
             if (_actionsPage != null) _actionsPage.style.display = DisplayStyle.None;
+            if (_tutorialsPage != null) _tutorialsPage.style.display = DisplayStyle.None;
             if (_settingsPage != null) _settingsPage.style.display = DisplayStyle.Flex;
             if (_quitConfirmRow != null) _quitConfirmRow.style.display = DisplayStyle.None;
             RefreshSettingsUi();
         }
 
+        public void ShowTutorialsPage()
+        {
+            if (_actionsPage != null) _actionsPage.style.display = DisplayStyle.None;
+            if (_settingsPage != null) _settingsPage.style.display = DisplayStyle.None;
+            if (_tutorialsPage != null) _tutorialsPage.style.display = DisplayStyle.Flex;
+            if (_quitConfirmRow != null) _quitConfirmRow.style.display = DisplayStyle.None;
+            RefreshTutorialsUi();
+        }
+
         public void ShowActionsPage()
         {
             if (_settingsPage != null) _settingsPage.style.display = DisplayStyle.None;
+            if (_tutorialsPage != null) _tutorialsPage.style.display = DisplayStyle.None;
             if (_actionsPage != null) _actionsPage.style.display = DisplayStyle.Flex;
             if (_quitConfirmRow != null) _quitConfirmRow.style.display = DisplayStyle.None;
         }
@@ -342,7 +383,7 @@ namespace Morsoul.Core
             {
                 var caseData = core.ResolveCase(session.CurrentCase);
                 activeCase = caseData != null && !string.IsNullOrEmpty(caseData.title)
-                    ? $"Case {session.CurrentCase}"
+                    ? $"Case {session.CurrentCase}: {caseData.title}"
                     : $"Case {session.CurrentCase}";
             }
 
@@ -379,8 +420,14 @@ namespace Morsoul.Core
             UpdateVolumeBar(_musicFill, _musicValueLabel, music);
             UpdateVolumeBar(_sfxFill, _sfxValueLabel, sfx);
 
+            _lastObservedFullscreen = Screen.fullScreen;
+            UpdateFullscreenLabel(Screen.fullScreen);
+        }
+
+        void UpdateFullscreenLabel(bool isFullscreen)
+        {
             if (_fullscreenButton != null)
-                _fullscreenButton.text = Screen.fullScreen ? "Fullscreen: ON" : "Fullscreen: OFF";
+                _fullscreenButton.text = isFullscreen ? "Fullscreen: ON" : "Fullscreen: OFF";
         }
 
         static void UpdateVolumeBar(VisualElement fill, Label label, float val)
@@ -404,9 +451,38 @@ namespace Morsoul.Core
 
         void ToggleFullscreen()
         {
-            Screen.fullScreen = !Screen.fullScreen;
-            if (_fullscreenButton != null)
-                _fullscreenButton.text = Screen.fullScreen ? "Fullscreen: ON" : "Fullscreen: OFF";
+            _lastObservedFullscreen = Screen.fullScreen;
+            bool next = ToggleDisplayFullscreen();
+            UpdateFullscreenLabel(next);
+        }
+
+        /// <summary>
+        /// Switches between FullScreenWindow (native) and Windowed (1280x720 scaled)
+        /// and returns the target fullscreen state immediately.
+        /// </summary>
+        public static bool ToggleDisplayFullscreen()
+        {
+            bool next = !Screen.fullScreen;
+            if (next)
+            {
+                int w = Display.main.systemWidth > 0 ? Display.main.systemWidth : Screen.currentResolution.width;
+                int h = Display.main.systemHeight > 0 ? Display.main.systemHeight : Screen.currentResolution.height;
+                Screen.SetResolution(w, h, FullScreenMode.FullScreenWindow);
+            }
+            else
+            {
+                int sysW = Display.main.systemWidth > 0 ? Display.main.systemWidth : 1920;
+                int sysH = Display.main.systemHeight > 0 ? Display.main.systemHeight : 1080;
+                int w = Mathf.Min(1280, Mathf.Max(640, sysW - 160));
+                int h = Mathf.RoundToInt(w * 9f / 16f);
+                if (h > sysH - 120)
+                {
+                    h = Mathf.Max(360, sysH - 120);
+                    w = Mathf.RoundToInt(h * 16f / 9f);
+                }
+                Screen.SetResolution(w, h, FullScreenMode.Windowed);
+            }
+            return next;
         }
 
         void SetStatus(string msg)
@@ -426,6 +502,7 @@ namespace Morsoul.Core
             _root = root.Q<VisualElement>("PauseMenu-Root");
             _actionsPage = root.Q<VisualElement>("ActionsPage");
             _settingsPage = root.Q<VisualElement>("SettingsPage");
+            _tutorialsPage = root.Q<VisualElement>("TutorialsPage");
             _quitConfirmRow = root.Q<VisualElement>("QuitConfirmRow");
 
             _nameLabel = root.Q<Label>("DossierName");
@@ -441,6 +518,7 @@ namespace Morsoul.Core
 
             _saveButton = root.Q<Button>("SaveStateButton");
             _settingsButton = root.Q<Button>("SettingsButton");
+            _tutorialLogsButton = root.Q<Button>("TutorialLogsButton");
             _quitButton = root.Q<Button>("QuitGameButton");
             _resumeButton = root.Q<Button>("ResumeButton");
             _returnTitleButton = root.Q<Button>("ReturnTitleButton");
@@ -456,8 +534,17 @@ namespace Morsoul.Core
             _fullscreenButton = root.Q<Button>("FullscreenToggleButton");
             _settingsBackButton = root.Q<Button>("SettingsBackButton");
 
+            _tutFilterRow = root.Q<VisualElement>("TutorialFilterRow");
+            _tutListScroll = root.Q<ScrollView>("TutorialListScroll");
+            _tutDetailTitle = root.Q<Label>("TutorialDetailTitle");
+            _tutDetailKeys = root.Q<Label>("TutorialDetailKeys");
+            _tutDetailBody = root.Q<Label>("TutorialDetailBody");
+            _autoTutorialsToggle = root.Q<Button>("AutoTutorialsToggleButton");
+            _tutorialsBackButton = root.Q<Button>("TutorialsBackButton");
+
             if (_saveButton != null) _saveButton.clicked += SaveManualCheckpoint;
             if (_settingsButton != null) _settingsButton.clicked += ShowSettingsPage;
+            if (_tutorialLogsButton != null) _tutorialLogsButton.clicked += ShowTutorialsPage;
             if (_resumeButton != null) _resumeButton.clicked += Close;
             if (_quitButton != null) _quitButton.clicked += () =>
             {
@@ -473,10 +560,13 @@ namespace Morsoul.Core
             };
             if (_fullscreenButton != null) _fullscreenButton.clicked += ToggleFullscreen;
             if (_settingsBackButton != null) _settingsBackButton.clicked += ShowActionsPage;
+            if (_autoTutorialsToggle != null) _autoTutorialsToggle.clicked += ToggleAutoTutorials;
+            if (_tutorialsBackButton != null) _tutorialsBackButton.clicked += ShowActionsPage;
 
             WireVolumeButtons(root, "Master", "master");
             WireVolumeButtons(root, "Music", "music");
             WireVolumeButtons(root, "Sfx", "sfx");
+            BuildTutorialFilters();
 
             if (_root != null)
                 _root.style.display = _isOpen ? DisplayStyle.Flex : DisplayStyle.None;
@@ -484,7 +574,123 @@ namespace Morsoul.Core
             {
                 RefreshDossier();
                 RefreshSettingsUi();
+                RefreshTutorialsUi();
             }
+        }
+
+        void BuildTutorialFilters()
+        {
+            if (_tutFilterRow == null) return;
+            _tutFilterRow.Clear();
+            AddTutFilter("All", null);
+            AddTutFilter("Controls", TutorialCategory.MovementAndControls);
+            AddTutFilter("Investigate", TutorialCategory.InvestigationAndJournal);
+            AddTutFilter("Board", TutorialCategory.DeductionBoard);
+            AddTutFilter("Focus/Rest", TutorialCategory.FocusAndRest);
+            AddTutFilter("Abilities", TutorialCategory.Abilities);
+        }
+
+        void AddTutFilter(string label, TutorialCategory? category)
+        {
+            var btn = new Button(() =>
+            {
+                _selectedTutCategory = category;
+                _selectedTutId = null;
+                RefreshTutorialsUi();
+            })
+            {
+                text = label
+            };
+            btn.AddToClassList("tut-log-filter-btn");
+            if (_selectedTutCategory == category)
+                btn.AddToClassList("tut-log-filter-btn--active");
+            _tutFilterRow.Add(btn);
+        }
+
+        void ToggleAutoTutorials()
+        {
+            TutorialCatalog.AutoTutorialsSuppressed = !TutorialCatalog.AutoTutorialsSuppressed;
+            RefreshTutorialsUi();
+        }
+
+        void RefreshTutorialsUi()
+        {
+            if (_autoTutorialsToggle != null)
+                _autoTutorialsToggle.text = TutorialCatalog.AutoTutorialsSuppressed
+                    ? "Auto-Tips: OFF"
+                    : "Auto-Tips: ON";
+
+            BuildTutorialFilters();
+            if (_tutListScroll == null) return;
+            _tutListScroll.Clear();
+
+            var session = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session : null;
+            TutorialEntry firstVisible = null;
+            TutorialEntry selected = null;
+
+            foreach (var entry in TutorialCatalog.All)
+            {
+                if (_selectedTutCategory.HasValue && entry.Category != _selectedTutCategory.Value)
+                    continue;
+                if (firstVisible == null) firstVisible = entry;
+
+                bool unlocked = TutorialCatalog.IsUnlockedInLogs(session, entry);
+                bool seen = TutorialCatalog.IsSeen(session, entry.Id);
+                string prefix = !unlocked ? "[Locked] " : (seen ? "✓ " : "• ");
+                string title = unlocked ? entry.Title : $"{entry.Title} (Discover in-game)";
+
+                var captured = entry;
+                var itemBtn = new Button(() =>
+                {
+                    _selectedTutId = captured.Id;
+                    RefreshTutorialsUi();
+                })
+                {
+                    text = prefix + title
+                };
+                itemBtn.AddToClassList("tut-log-item");
+                if (!unlocked) itemBtn.AddToClassList("tut-log-item--locked");
+                if (_selectedTutId == entry.Id)
+                {
+                    itemBtn.AddToClassList("tut-log-item--selected");
+                    selected = entry;
+                }
+                _tutListScroll.Add(itemBtn);
+            }
+
+            if (selected == null) selected = firstVisible;
+            if (selected != null) _selectedTutId = selected.Id;
+            RenderTutorialDetail(selected, session);
+        }
+
+        void RenderTutorialDetail(TutorialEntry entry, SessionState session)
+        {
+            if (_tutDetailTitle == null || _tutDetailKeys == null || _tutDetailBody == null) return;
+            if (entry == null)
+            {
+                _tutDetailTitle.text = "No tutorials in this category";
+                _tutDetailKeys.text = "";
+                _tutDetailBody.text = "";
+                return;
+            }
+
+            bool unlocked = TutorialCatalog.IsUnlockedInLogs(session, entry);
+            _tutDetailTitle.text = unlocked ? entry.Title : $"{entry.Title}  [Not Yet Encountered]";
+            _tutDetailKeys.text = unlocked ? entry.Keybinds : "Encounter this mechanic in gameplay to unlock full details.";
+            if (!unlocked)
+            {
+                _tutDetailBody.text = entry.Summary;
+                return;
+            }
+
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine(entry.Summary);
+            if (entry.Steps != null)
+            {
+                foreach (var s in entry.Steps)
+                    sb.AppendLine("• " + s);
+            }
+            _tutDetailBody.text = sb.ToString().TrimEnd();
         }
 
         void WireVolumeButtons(VisualElement root, string prefix, string channel)

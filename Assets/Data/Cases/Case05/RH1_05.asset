@@ -19,7 +19,7 @@ MonoBehaviour:
   acquisition: 7
   requiredTool: 0
   requiredFlag: 
-  description: An improvised copper grounding cable that can ground minor sparks, but cannot divert raw terawatt-scale planetary mana discharges.
+  description: An improvised copper grounding cable that can ground minor sparks, but <b>cannot divert raw terawatt-scale planetary mana discharges</b>.
   dissonanceKeyword: 
   isBacktrackingOnly: 0
   hasWorldPosition: 0
