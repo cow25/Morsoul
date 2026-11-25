@@ -19,8 +19,9 @@ MonoBehaviour:
   acquisition: 1
   requiredTool: 1
   requiredFlag: 
-  description: '<b>Black metallic soot</b> adhering to the <b>bell clapper''s strike face</b>. Golem Eye scan reveals an <b>unnatural frequency absorption field</b>: it converts kinetic strikes into an acoustic muting shockwave.'
+  description: <b>Black metallic damping soot</b> adhering to the bell clapper's strike face. Golem Eye scan reveals an <b>unnatural frequency absorption field</b> converting kinetic strikes into a <b>muting shockwave</b>.
   dissonanceKeyword: 
   isBacktrackingOnly: 0
   hasWorldPosition: 1
   worldPosition: {x: 4, y: 4}
+  inspectPrefab: {fileID: 0}

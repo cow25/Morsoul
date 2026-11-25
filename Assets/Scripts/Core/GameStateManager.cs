@@ -283,6 +283,8 @@ namespace Morsoul.Core
                 Debug.LogWarning($"GameStateManager: route '{key}' -> '{scene}' not loadable (missing or not in Build Profiles).", this);
                 return false;
             }
+            if (stateOnSuccess != GameFlowState.Investigation && _core != null)
+                _core.Session.InvestigationCaseId = -1;
             Advance(stateOnSuccess);
             return LoadSceneInternal(scene);
         }

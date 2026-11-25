@@ -19,8 +19,9 @@ MonoBehaviour:
   acquisition: 2
   requiredTool: 0
   requiredFlag: 
-  description: "<b>Only two physical keys exist</b> for that chamber \u2014 Ignatius carries one, and the Guild Archive holds the duplicate under wax seal. The door was <b>locked from the outside</b>."
+  description: "<b>Only two physical keys exist</b> for that chamber \u2014 <b>Ignatius carries one</b>, and the Guild Archive holds the duplicate under wax seal. The door was <b>locked from the outside</b>."
   dissonanceKeyword: locked from the outside
   isBacktrackingOnly: 0
   hasWorldPosition: 0
   worldPosition: {x: 0, y: 0}
+  inspectPrefab: {fileID: 0}

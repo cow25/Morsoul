@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e63a47279c096649aae2935032377f9, type: 3}
+  m_Name: C4_01
+  m_EditorClassIdentifier: Morsoul.Data::Morsoul.Data.ClueData
+  id: C4_01
+  displayName: Draft Treasury Indemnity Claim
+  type: 0
+  caseId: 1
+  acquisition: 0
+  requiredTool: 0
+  requiredFlag: 
+  description: Pre-signed <b>Guild compensation claim for Batch #408</b>, dated <b>two days before the vault incident</b>, naming Ignatius as sole beneficiary.
+  dissonanceKeyword: 
+  isBacktrackingOnly: 0
+  hasWorldPosition: 1
+  worldPosition: {x: -2, y: 6}
+  inspectPrefab: {fileID: 0}

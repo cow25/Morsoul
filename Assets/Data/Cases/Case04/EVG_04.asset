@@ -13,128 +13,136 @@ MonoBehaviour:
   m_Name: EVG_04
   m_EditorClassIdentifier: Morsoul.Data::Morsoul.Data.EvidenceGraphData
   caseId: 4
-  provisional: 1
-  designNote: Provisionally approved Case 4 weighted board. Complete sub-lab breach requires both coordinated sabotage and hidden facility objective branches.
+  provisional: 0
+  designNote: Canonical Case 4 graph. 5 S* links, 4-clue main chain (C4->C2->C3->C5) + valve-sabotage branch (T1->C1->C3).
   tutorialRedHerringClueIds: []
   tutorialRedHerringFeedback: 
   tutorialReversedLinkFeedback: 
   tutorialGenericLinkFeedback: 
   tutorialLockedConclusionFeedback: 
   clueIds:
+  - T1_04
   - C1_04
+  - C4_04
   - C2_04
   - C3_04
-  - T1_04
+  - C5_04
   - T2_04
   - RH1_04
   reliabilities:
+  - clueId: T1_04
+    value: 0.9
   - clueId: C1_04
+    value: 1
+  - clueId: C4_04
     value: 0.95
   - clueId: C2_04
-    value: 0.95
+    value: 1
   - clueId: C3_04
-    value: 0.9
-  - clueId: T1_04
-    value: 0.85
+    value: 1
+  - clueId: C5_04
+    value: 1
   - clueId: T2_04
-    value: 0.55
+    value: 0.5
   - clueId: RH1_04
-    value: 0.35
+    value: 0.4
   authoredClueEdges:
   - sourceId: T1_04
     targetId: C1_04
     weight: 0.9
+    rationale: "Brokk's thirty-year safety record rules out negligence \u2014 the iron-wedged valves prove deliberate backpressure sabotage."
+  - sourceId: C4_04
+    targetId: C2_04
+    weight: 0.9
+    rationale: Harlan's Drift 09 freight manifest accounts for the synthetic mana solvent that dissolved the bypass conduits.
+  - sourceId: C1_04
+    targetId: C3_04
+    weight: 0.9
+    rationale: The engineered backpressure blowout was aimed precisely at exposing the hidden pre-Cataclysm sub-lab blast door.
   - sourceId: C2_04
     targetId: C3_04
     weight: 0.85
-  - sourceId: C1_04
+    rationale: Dissolving the bypass conduits prevented emergency depressurization, clearing the rockface straight to the blast door.
+  - sourceId: C3_04
+    targetId: C5_04
+    weight: 0.9
+    rationale: Once the blast door was uncovered, Harlan bridged the external stasis override relay with Veiled Circle shunts to trap Brokk inside.
+  - sourceId: T2_04
     targetId: RH1_04
-    weight: 0.2
-  - sourceId: C2_04
-    targetId: T2_04
-    weight: 0.6
+    weight: 0.35
+    rationale: 
   solutionEdges:
   - sourceId: T1_04
     targetId: C1_04
+  - sourceId: C4_04
+    targetId: C2_04
+  - sourceId: C1_04
+    targetId: C3_04
   - sourceId: C2_04
     targetId: C3_04
-  unlockDependencies:
-  - sourceId: T1_04
-    targetId: C1_04
+  - sourceId: C3_04
+    targetId: C5_04
+  unlockDependencies: []
   conclusions:
-  - id: CASE4_OPERATOR_ACCIDENT
-    text: The explosion was caused by reckless worker error or ordinary mechanical wear.
+  - id: CASE4_OPERATOR_ERROR
+    text: Reckless Dwarven operator error blew the Drift 09 steam lines.
     tier: 0
     targetClueId: 
-    submissionFeedback: Ordinary wear explains the broken drill, not wedge-pinned valves or chemically melted bypasses.
+    submissionFeedback: "Iron wedges and synthetic mana solvent are not operator error \u2014 trace both sabotage paths to the sub-lab."
     supportingEdges:
     - clueId: T2_04
-      weight: 0.7
-    - clueId: RH1_04
       weight: 0.5
-    contradictingEdges:
-    - clueId: C1_04
-      weight: 0.8
-    - clueId: C2_04
-      weight: 0.8
-    - clueId: C3_04
-      weight: 0.6
-    - clueId: T1_04
-      weight: 0.7
-  - id: CASE4_COORDINATED_SABOTAGE
-    text: The pipeline explosion was deliberately engineered through internal sabotage.
-    tier: 1
-    targetClueId: 
-    submissionFeedback: Sabotage is proven, but the infiltrator's larger objective remains unidentified.
-    supportingEdges:
-    - clueId: T1_04
-      weight: 0.4
-    - clueId: C1_04
-      weight: 0.9
-    contradictingEdges:
     - clueId: RH1_04
       weight: 0.4
-  - id: CASE4_CIRCLE_INFILTRATION
-    text: The solvent sabotage was staged to expose the hidden pre-cataclysm facility.
+    contradictingEdges:
+    - clueId: C1_04
+      weight: 0.5
+  - id: CASE4_DELIBERATE_RUPTURE
+    text: "Deliberate Pipeline Sabotage: Brokk didn't make a mistake \u2014 the pressure relief valves were wedged shut."
     tier: 1
     targetClueId: 
-    submissionFeedback: The hidden objective is established, but the deliberate mechanical trigger still needs proof.
+    submissionFeedback: "You proved the blowout was deliberate \u2014 now connect Harlan's solvent conduits and the hidden sub-lab."
     supportingEdges:
-    - clueId: C2_04
-      weight: 0.4
+    - clueId: C1_04
+      weight: 1
+    contradictingEdges: []
+  - id: CASE4_COORDINATED_BREACH
+    text: 'Engineered Sub-Lab Breach: Jammed valves and Harlan''s dissolved conduits were timed to uncover the ancient blast door.'
+    tier: 1
+    targetClueId: 
+    submissionFeedback: "You uncovered the breach target \u2014 connect the blast door to the external stasis relay to prove the lockdown trap."
+    supportingEdges:
     - clueId: C3_04
-      weight: 0.9
-    contradictingEdges:
-    - clueId: T2_04
-      weight: 0.5
-  - id: CASE4_DELIBERATE_SUBLAB_BREACH
-    text: Harlan is a Veiled Circle infiltrator who engineered the mine blowout to breach the ancient sub-lab.
+      weight: 1
+    contradictingEdges: []
+  - id: CASE4_VEILED_CIRCLE_LOCKDOWN
+    text: 'Veiled Circle Sub-Lab Seizure: Harlan sabotaged Drift 09 to uncover the pre-Cataclysm facility and locked Brokk inside using external stasis shunts.'
     tier: 2
-    targetClueId: 
+    targetClueId: C5_04
     submissionFeedback: 
     supportingEdges:
-    - clueId: C1_04
-      weight: 0.9
-    - clueId: C3_04
-      weight: 0.9
+    - clueId: C5_04
+      weight: 1
     contradictingEdges:
     - clueId: T2_04
-      weight: 0.5
+      weight: 0.8
     - clueId: RH1_04
-      weight: 0.3
-  startingWrongConclusionId: CASE4_OPERATOR_ACCIDENT
-  completeConclusionId: CASE4_DELIBERATE_SUBLAB_BREACH
+      weight: 0.8
+  startingWrongConclusionId: CASE4_OPERATOR_ERROR
+  completeConclusionId: CASE4_VEILED_CIRCLE_LOCKDOWN
   parameters:
     alpha: 0.85
     contradictionWeight: 0.8
-    inventedLinkPenalty: 0.1
-    lowThreshold: 0.35
-    highThreshold: 0.75
+    inventedLinkPenalty: 0.15
+    lowThreshold: 0.2
+    highThreshold: 0.85
     PrunedMode: 1
     RivalClueId: 
-  cachedReferenceSupport: 0.06931848
+  cachedReferenceSupport: 0.19372945
   solutionTopologicalOrder:
+  - C4_04
   - C2_04
-  - C3_04
   - T1_04
   - C1_04
+  - C3_04
+  - C5_04

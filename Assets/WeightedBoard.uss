@@ -258,6 +258,34 @@
     border-width: 2px;
 }
 
+.wboard-conclusion--wrong {
+    border-left-width: 4px;
+    border-left-color: rgb(138, 118, 102);
+}
+
+.wboard-conclusion--partial {
+    border-left-width: 4px;
+    border-left-color: rgb(186, 128, 32);
+}
+
+.wboard-conclusion--complete {
+    border-left-width: 4px;
+    border-left-color: rgb(38, 126, 78);
+}
+
+.wboard-conclusion-badge {
+    font-size: 10px;
+    -unity-font-style: bold;
+    color: rgb(88, 64, 42);
+    margin-bottom: 2px;
+    letter-spacing: 0.5px;
+}
+
+.wboard-link-row--solution {
+    border-left-width: 3px;
+    border-left-color: rgb(46, 134, 84);
+}
+
 .wboard-conclusion-text {
     font-size: 13px;
     color: rgb(28, 20, 14);

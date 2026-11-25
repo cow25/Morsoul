@@ -161,8 +161,8 @@ namespace Morsoul.Data
                     var invalid = phase.invalidMoves ?? new MoveData[0];
 
                     var breaking = valid.Concat(invalid).Where(m => m != null && m.breaksComposureSegment).ToList();
-                    if (breaking.Count != 1)
-                        errors.Add($"Phase {i} must have exactly one composure-breaking move, found {breaking.Count}.");
+                    if (breaking.Count < 1)
+                        errors.Add($"Phase {i} must have at least one composure-breaking move, found 0.");
                     foreach (var move in breaking)
                     {
                         if (!valid.Contains(move))
@@ -219,8 +219,8 @@ namespace Morsoul.Data
                     }
                 }
 
-                if (coreContradictionCount != 1)
-                    errors.Add($"Interrogation must have exactly one core contradiction move, found {coreContradictionCount}.");
+                if (coreContradictionCount < 1)
+                    errors.Add($"Interrogation must have at least one core contradiction move, found {coreContradictionCount}.");
 
                 if (phases.Length > 0 && phases[0] != null)
                 {

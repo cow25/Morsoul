@@ -19,7 +19,7 @@ MonoBehaviour:
   acquisition: 0
   requiredTool: 0
   requiredFlag: 
-  description: An <b>emergency manual override key</b> discovered beneath a collapsed steel girder in the equipment wreckage. Its <b>magnetic frequency matches the unpowered manual bypass port</b> of the stone exit door.
+  description: An <b>emergency manual override key</b> discovered beneath a collapsed steel girder in the equipment wreckage. Its <b>magnetic frequency</b> matches the <b>unpowered manual bypass port</b> of the stone exit door.
   dissonanceKeyword: 
   isBacktrackingOnly: 0
   hasWorldPosition: 0

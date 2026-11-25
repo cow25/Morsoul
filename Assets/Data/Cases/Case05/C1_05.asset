@@ -19,8 +19,9 @@ MonoBehaviour:
   acquisition: 7
   requiredTool: 0
   requiredFlag: 
-  description: North and South industrial pylons <b>route stolen mana from Cases 1 through 4 into the fissure barrier</b>. Telemetry confirms <b>inverted polarity designed to force a tectonic fracture</b>.
+  description: North and South industrial pylons route <b>stolen mana from Cases 1 through 4</b> into the fissure barrier. Telemetry confirms <b>inverted polarity</b> designed to force a tectonic fracture.
   dissonanceKeyword: 
   isBacktrackingOnly: 0
   hasWorldPosition: 0
   worldPosition: {x: 0, y: 0}
+  inspectPrefab: {fileID: 0}

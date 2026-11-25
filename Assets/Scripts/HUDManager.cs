@@ -52,8 +52,22 @@ public class HUDManager : MonoBehaviour
     private int _cachedMaxFocus = 100;
     private float _cachedFocusCost = FocusTuning.FocusDrainPerTick / FocusTuning.FocusTickSeconds;
     private string _cachedObjective = "Examine the ancient ruins and locate clues.";
-    private string _cachedCaseTitle = "Prologue";
+    private string _cachedCaseTitle = "";
     private int _uiVersion = 0;
+
+    public static string FormatCaseTitle(int caseNum)
+    {
+        switch (caseNum)
+        {
+            case <= 0: return "Prologue";
+            case 1: return "Case 1: The Poisoned Vault";
+            case 2: return "Case 2: The Muted Belfry";
+            case 3: return "Case 3: The Dying Grove";
+            case 4: return "Case 4: The Shattered Seam";
+            case 5: return "Case 5: The Sanctum Core";
+            default: return $"Case {caseNum}";
+        }
+    }
 
     private void Awake() => Instance = this;
 
@@ -135,6 +149,7 @@ public class HUDManager : MonoBehaviour
         if (_aetherSightRow != null) _aetherSightRow.style.display = DisplayStyle.None;
         if (_interactionContainer != null) _interactionContainer.style.display = DisplayStyle.None;
         
+        _lastCaseNum = int.MinValue;
         ApplyFocusToUI();
         ApplyObjectiveToUI();
         SyncSessionState();
@@ -164,15 +179,16 @@ public class HUDManager : MonoBehaviour
         {
             if (session.Tools.Contains(Tool.AetherSight)) UnlockAetherHUD();
             int caseNum = session.InvestigationCaseId >= 0 ? session.InvestigationCaseId : session.CurrentCase;
-            if (caseNum != _lastCaseNum)
+            if (caseNum != _lastCaseNum || string.IsNullOrEmpty(_cachedCaseTitle))
             {
                 _lastCaseNum = caseNum;
-                string expectedCase = caseNum <= 0 ? "Prologue" : $"Case {caseNum}";
-                if (_caseLabel != null && _caseLabel.text != expectedCase)
-                {
-                    _cachedCaseTitle = expectedCase;
-                    _caseLabel.text = expectedCase;
-                }
+                _cachedCaseTitle = FormatCaseTitle(caseNum);
+            }
+            if (_caseLabel != null && _caseLabel.text != _cachedCaseTitle)
+            {
+                _caseLabel.text = _cachedCaseTitle;
+                _caseLabel.style.display = string.IsNullOrEmpty(_cachedCaseTitle)
+                    ? DisplayStyle.None : DisplayStyle.Flex;
             }
         }
         var focus = CoreRuntime.Instance?.Focus;

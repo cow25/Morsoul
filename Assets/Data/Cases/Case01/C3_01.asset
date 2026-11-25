@@ -19,8 +19,9 @@ MonoBehaviour:
   acquisition: 0
   requiredTool: 0
   requiredFlag: 
-  description: <b>Batch numbers for shipment #408</b> prove the <b>potions were never manufactured</b>.
+  description: "<b>Batch #408</b> entries were inked over blank manifests \u2014 proving the <b>ten-thousand-ducat potion stock was never manufactured</b>."
   dissonanceKeyword: 
   isBacktrackingOnly: 0
   hasWorldPosition: 1
   worldPosition: {x: -4, y: 4}
+  inspectPrefab: {fileID: 0}

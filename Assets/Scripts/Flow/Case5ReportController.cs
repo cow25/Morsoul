@@ -54,13 +54,18 @@ namespace Morsoul.Flow
         Label _errorCountLabel;
         Label _focusLabel;
         Label _feedbackLabel;
+        Label _selectedClueTitle;
+        Label _selectedClueMeta;
+        Label _selectedClueDesc;
         Button _submitButton;
 
         readonly Dictionary<string, VisualElement> _nodes = new Dictionary<string, VisualElement>();
         readonly Dictionary<string, VisualElement> _pins = new Dictionary<string, VisualElement>();
         readonly List<(string src, string dst)> _links = new List<(string, string)>();
         readonly Dictionary<string, NodeSpec> _specs = new Dictionary<string, NodeSpec>();
+        readonly Dictionary<(string src, string dst), string> _stageSolutionEdges = new Dictionary<(string, string), string>();
         readonly List<ConclusionSpec> _conclusions = new List<ConclusionSpec>();
+        string _inspectedNodeId;
 
         int _stage = 1;
         int _errors;
@@ -128,11 +133,11 @@ namespace Morsoul.Flow
 
         public string GetDevHintText() => _stage switch
         {
-            1 => "[DEV F2] Stage 1: Link all 4 Guild Audits (ignore Routine Freight Permit), then select 'Coordinated First-Age Strike'.",
-            2 => "[DEV F2] Stage 2: Link Seismic Log + Cult Doctrine + Siphon Readout (ignore Copper Grounding Rod), then select 'Sanctum Core Breach'.",
+            1 => "[DEV F2] Stage 1 (Cause → Effect): Cathedral Plate → Whisperwood Siphon → Iron Hollow Breach, plus Market Solvent → Iron Hollow Breach; then select 'Coordinated First-Age Strike'.",
+            2 => "[DEV F2] Stage 2 (Cause → Effect): Eliza's Siphon Readout → Inverted Siphon Pylons → Guard Seismic Log → Overseer's Cult Doctrine; then select 'Sanctum Core Breach'.",
             _ => _runicLogs >= EndingResolver.RequiredRunicLogs
-                ? "[DEV F2] Stage 3: Link Conclusion I + Conclusion II + Runic Logs (4/4), then select 'True Verdict'."
-                : "[DEV F2] Stage 3: Link Conclusion I + Conclusion II, then select 'Normal Verdict'."
+                ? "[DEV F2] Stage 3 (Cause → Effect): Conclusion I → Conclusion II → Runic Logs (4/4), then select 'True Verdict'."
+                : "[DEV F2] Stage 3 (Cause → Effect): Conclusion I → Conclusion II, then select 'Normal Verdict'."
         };
 
         void ShowDevHint()
@@ -200,9 +205,12 @@ namespace Morsoul.Flow
             var lampRow = root.Q<VisualElement>("LampRow");
             if (lampRow != null) lampRow.style.display = DisplayStyle.None;
             var drawer = root.Q<VisualElement>("ClueInspectorDrawer");
-            if (drawer != null) drawer.style.display = DisplayStyle.None;
+            if (drawer != null) drawer.style.display = DisplayStyle.Flex;
+            _selectedClueTitle = root.Q<Label>("SelectedClueTitle");
+            _selectedClueMeta = root.Q<Label>("SelectedClueMeta");
+            _selectedClueDesc = root.Q<Label>("SelectedClueDesc");
             var legend = root.Q<Label>("BoardControlsLegend");
-            if (legend != null) legend.text = "[Drag] Move  |  [Click → Click] or [Right-Drag] Connect  |  [R-Click Row] Sever  |  [Submit]";
+            if (legend != null) legend.text = "[Drag] Move  |  [Click → Click] or [Right-Drag] Connect (Cause → Effect)  |  [R-Click Row] Sever  |  [Submit]";
 
             if (_active && !_waitingDialogue)
             {
@@ -216,17 +224,31 @@ namespace Morsoul.Flow
             _stage = stage;
             _links.Clear();
             _pendingSource = null;
+            _inspectedNodeId = null;
             _selectedConclusionId = null;
             _specs.Clear();
+            _stageSolutionEdges.Clear();
             _conclusions.Clear();
 
             if (stage == 1)
             {
-                AddSpec("s1_market", "Guild Audit: Market Solvent", "First-Age volatile reagent supplied to Ignatius.", true);
-                AddSpec("s1_cathedral", "Guild Audit: Cathedral Plate", "Acoustic muting plate silenced Saint Althea.", true);
-                AddSpec("s1_whisper", "Guild Audit: Whisperwood Siphon", "Root-tapping siphon harvested forest mana.", true);
-                AddSpec("s1_iron", "Guild Audit: Iron Hollow Breach", "Sub-facility drill cracked pre-Cataclysm vaults.", true);
-                AddSpec("s1_rh", "Routine Freight Permit", "Standard timber shipment—unrelated to mana.", false);
+                AddSpec("s1_market", "Guild Audit: Market Solvent",
+                    "First-Age <b>volatile synthetic solvent</b> field-tested in Ignatius's vault—identical to the reagent that dissolved <b>Iron Hollow's Drift 09 conduits</b>.", true);
+                AddSpec("s1_cathedral", "Guild Audit: Cathedral Plate",
+                    "<b>Acoustic muting plate</b> installed in Saint Althea's belfry to silence Mother Lyra's tremor inquiry so the <b>Whisperwood siphon</b> could run unopposed.", true);
+                AddSpec("s1_whisper", "Guild Audit: Whisperwood Siphon",
+                    "Root-tapping <b>Elder Tree siphon</b> that harvested forest mana into leather bladders bound for <b>Iron Hollow Drift 09</b>.", true);
+                AddSpec("s1_iron", "Guild Audit: Iron Hollow Breach",
+                    "Sub-facility drill and stolen <b>Whisperwood bladders</b> plus <b>Market solvent</b> breached the sealed pre-Cataclysm Sanctum corridor.", true);
+                AddSpec("s1_rh", "Routine Freight Permit",
+                    "Standard timber shipment logged by the dockmaster—unrelated to Veiled Circle mana transfers.", false);
+
+                _stageSolutionEdges[("s1_cathedral", "s1_whisper")] =
+                    "Muting Saint Althea's bells silenced Mother Lyra's tremor inquiry so the Whisperwood siphon could run unopposed.";
+                _stageSolutionEdges[("s1_whisper", "s1_iron")] =
+                    "Harvested Whisperwood mana bladders were shipped directly into Iron Hollow's Drift 09 sub-facility.";
+                _stageSolutionEdges[("s1_market", "s1_iron")] =
+                    "The First-Age solvent field-tested in the Market Vault was the same reagent used to dissolve Drift 09's conduits.";
 
                 _conclusions.Add(new ConclusionSpec
                 {
@@ -243,10 +265,23 @@ namespace Morsoul.Flow
             }
             else if (stage == 2)
             {
-                AddSpec("s2_seismic", "Empirical Guard Seismic Log", "Massive mana-pressure spikes beneath Drift 09.", true);
-                AddSpec("s2_doctrine", "Overseer's Cult Doctrine", "Redacted First-Age papers dismissing planetary mana limits.", true);
-                AddSpec("s2_readout", "Eliza's Siphon Readout", "Harvested mana is back-feeding into the central fissure.", true);
-                AddSpec("s2_rh", "Copper Grounding Rod", "Minor spark diverter; cannot hold planetary surges.", false);
+                AddSpec("s2_readout", "Eliza's Siphon Readout",
+                    "Live telemetry proving the Sanctum's <b>siphon pylons</b> are locked in <b>inverted polarity</b>, back-feeding stolen mana downward.", true);
+                AddSpec("s2_pylons", "Inverted Siphon Pylons",
+                    "Four massive First-Age <b>siphon pylons</b> pulsing harvested district mana directly into the bedrock beneath <b>Drift 09</b>.", true);
+                AddSpec("s2_seismic", "Empirical Guard Seismic Log",
+                    "Deep-crust seismic logs beneath Drift 09 recording <b>synchronized pressure spikes</b> on every pylon pulse—confirming an engineered resonance assault.", true);
+                AddSpec("s2_doctrine", "Overseer's Cult Doctrine",
+                    "Redacted First-Age papers calling for a <b>forced cataclysmic purge</b>—exposing the Overseer's ideological hypocrisy.", true);
+                AddSpec("s2_rh", "Copper Grounding Rod",
+                    "Minor spark diverter rated for workshop static; cannot affect planetary mana surges.", false);
+
+                _stageSolutionEdges[("s2_readout", "s2_pylons")] =
+                    "Eliza's readout proves the Sanctum's siphon pylons are locked in inverted polarity, pumping harvested mana downward.";
+                _stageSolutionEdges[("s2_pylons", "s2_seismic")] =
+                    "Each inverted pylon pulse drives the synchronized deep-crust seismic spikes beneath Drift 09.";
+                _stageSolutionEdges[("s2_seismic", "s2_doctrine")] =
+                    "The engineered resonance assault fulfills the Overseer's Cult Doctrine—an intentional cataclysmic overload.";
 
                 _conclusions.Add(new ConclusionSpec
                 {
@@ -263,17 +298,27 @@ namespace Morsoul.Flow
             }
             else
             {
-                AddSpec("s3_c1", "Conclusion I: Coordinated Strike", "All four district crimes supplied First-Age seal-breakers.", true);
-                AddSpec("s3_c2", "Conclusion II: Sanctum Breach", "The Overseer is back-feeding harvested mana into the fissure.", true);
+                AddSpec("s3_c1", "Conclusion I: Coordinated Strike",
+                    "All four district crimes formed one Veiled Circle supply pipeline feeding the <b>Sanctum Core</b>.", true);
+                AddSpec("s3_c2", "Conclusion II: Sanctum Breach",
+                    "The Grand Overseer is back-feeding harvested district mana through inverted pylons into the <b>planetary fissure</b>.", true);
                 bool hasAllLogs = _runicLogs >= EndingResolver.RequiredRunicLogs;
                 AddSpec("s3_logs",
                     hasAllLogs
                         ? "First-Age Runic Logs (4/4)"
                         : $"Incomplete Runic Logs ({_runicLogs}/4)",
                     hasAllLogs
-                        ? "Decoded stabilizer formulas proving the central mana source is a planetary containment seal."
+                        ? "Decoded stabilizer formulas proving the central mana fissure is a <b>planetary containment seal</b> whose destruction obliterates magic and civilization."
                         : "Missing full First-Age translations—cannot prove the deeper cataclysmic intent.",
                     hasAllLogs);
+
+                _stageSolutionEdges[("s3_c1", "s3_c2")] =
+                    "The four-district supply pipeline directly feeds the Sanctum Core's inverted mana breach.";
+                if (hasAllLogs)
+                {
+                    _stageSolutionEdges[("s3_c2", "s3_logs")] =
+                        "The four First-Age Runic Logs prove the fissure is a planetary containment seal—shattering it obliterates magic and civilization.";
+                }
 
                 _conclusions.Add(new ConclusionSpec
                 {
@@ -300,7 +345,7 @@ namespace Morsoul.Flow
 
             ShowBoard();
             RefreshAll();
-            ShowBanner($"Stage {_stage}/3 — Connect the evidence and submit a conclusion for the Empirical Guards.");
+            ShowBanner($"Stage {_stage}/3 — Connect Cause → Effect links to build the Empirical Guard report.");
         }
 
         void AddSpec(string id, string title, string desc, bool valid)
@@ -331,6 +376,23 @@ namespace Morsoul.Flow
             RebuildNodes();
             RebuildLinkList();
             RebuildConclusions();
+            RefreshClueInspector();
+        }
+
+        void RefreshClueInspector()
+        {
+            if (_selectedClueTitle == null || _selectedClueDesc == null) return;
+            if (string.IsNullOrEmpty(_inspectedNodeId) || !_specs.TryGetValue(_inspectedNodeId, out var spec))
+            {
+                _selectedClueTitle.text = "Select a Dossier Card";
+                if (_selectedClueMeta != null) _selectedClueMeta.text = $"Stage {_stage} of 3";
+                _selectedClueDesc.text = "Click any card to read its full dossier notes, then click a target card (or Right-Drag) to connect Cause → Effect.";
+                return;
+            }
+            _selectedClueTitle.text = spec.Title;
+            if (_selectedClueMeta != null) _selectedClueMeta.text = $"Empirical Guard Dossier • Stage {_stage}";
+            string playerName = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session.PlayerName : "";
+            _selectedClueDesc.text = ClueHighlightFormatter.FormatRawText(spec.Desc, "", playerName, darkBackground: false);
         }
 
         void RebuildNodes()
@@ -471,6 +533,8 @@ namespace Morsoul.Flow
 
         void OnNodeClicked(string id)
         {
+            _inspectedNodeId = id;
+            RefreshClueInspector();
             if (_pendingSource == null)
             {
                 _pendingSource = id;
@@ -493,18 +557,25 @@ namespace Morsoul.Flow
         {
             if (a == b) return;
             foreach (var l in _links)
-                if ((l.src == a && l.dst == b) || (l.src == b && l.dst == a)) return;
+                if (l.src == a && l.dst == b) return;
 
-            if (!_specs[a].IsValid || !_specs[b].IsValid)
+            if (_stageSolutionEdges.TryGetValue((a, b), out string rationale))
             {
-                DrainFocusOnError("Irrelevant or unverified connection! Focus drained heavily.");
+                _links.Add((a, b));
+                AudioCoordinator.PlayBankSfx(bank => bank.sfxBoardLink, 0.65f);
+                RebuildLinkList();
+                _linkLayer?.MarkDirtyRepaint();
+                ShowBanner(rationale);
                 return;
             }
 
-            _links.Add((a, b));
-            AudioCoordinator.PlayBankSfx(bank => bank.sfxBoardLink, 0.65f);
-            RebuildLinkList();
-            _linkLayer?.MarkDirtyRepaint();
+            if (_stageSolutionEdges.ContainsKey((b, a)))
+            {
+                DrainFocusOnError("Causal direction reversed — link Cause → Effect!");
+                return;
+            }
+
+            DrainFocusOnError("Unsupported or irrelevant connection! Focus drained heavily.");
         }
 
         void DrainFocusOnError(string msg)
@@ -532,9 +603,12 @@ namespace Morsoul.Flow
             {
                 var row = new VisualElement();
                 row.AddToClassList("wboard-link-row");
-                var lbl = new Label($"{_specs[link.src].Title}  —  {_specs[link.dst].Title}");
+                row.AddToClassList("wboard-link-row--solution");
+                var lbl = new Label($"{_specs[link.src].Title}  →  {_specs[link.dst].Title}");
                 lbl.AddToClassList("wboard-link-text");
                 row.Add(lbl);
+                if (_stageSolutionEdges.TryGetValue((link.src, link.dst), out var rationale))
+                    row.tooltip = rationale;
                 var captured = link;
                 row.RegisterCallback<PointerDownEvent>(evt =>
                 {
@@ -588,9 +662,9 @@ namespace Morsoul.Flow
 
             if (_stage == 1)
             {
-                if (!AreAllValidConnected(new[] { "s1_market", "s1_cathedral", "s1_whisper", "s1_iron" }))
+                if (!HasAllDirectedLinks(("s1_cathedral", "s1_whisper"), ("s1_whisper", "s1_iron"), ("s1_market", "s1_iron")))
                 {
-                    ShowBanner("Connect all four Guild Audit clues before submitting Stage 1.");
+                    ShowBanner("Complete the directed causal chain across all four Guild Audits before submitting Stage 1.");
                     return;
                 }
                 AudioCoordinator.PlayBankSfx(bank => bank.sfxBoardSolved, 0.7f);
@@ -598,23 +672,23 @@ namespace Morsoul.Flow
                 PlayBrainstormDialogue(
                     "D_Case5_Stage1_Done",
                     () => OpenStage(2),
-                    ("Eliza", "That links every district together. Now let's cross-check the Empirical Guard seismic logs with the Overseer's doctrine."),
-                    ("Golem", "[UPDATING BOARD]: Adding Guard telemetry and Eliza's siphon readout to Stage 2."));
+                    ("Eliza", "That links every district together into one supply chain. Now let's cross-check the Empirical Guard seismic logs with the Sanctum pylons and Overseer's doctrine."),
+                    ("Golem", "[UPDATING BOARD]: Adding Inverted Siphon Pylons, Guard telemetry, and Eliza's readout to Stage 2."));
                 return;
             }
 
             if (_stage == 2)
             {
-                if (!AreAllValidConnected(new[] { "s2_seismic", "s2_doctrine", "s2_readout" }))
+                if (!HasAllDirectedLinks(("s2_readout", "s2_pylons"), ("s2_pylons", "s2_seismic"), ("s2_seismic", "s2_doctrine")))
                 {
-                    ShowBanner("Connect the Guard Seismic Log, Cult Doctrine, and Eliza's Readout first.");
+                    ShowBanner("Complete the 4-clue causal chain from Eliza's Readout through the Pylons and Seismic Log to the Cult Doctrine.");
                     return;
                 }
                 AudioCoordinator.PlayBankSfx(bank => bank.sfxBoardSolved, 0.7f);
                 HideBoard();
                 string logHint = _runicLogs >= EndingResolver.RequiredRunicLogs
-                    ? "You recovered all four First-Age Runic Logs—link them with our conclusions to uncover the Overseer's true endgame!"
-                    : $"We only have {_runicLogs}/4 Runic Logs. Link our two conclusions to warn the Guards of the Mana Gate breach.";
+                    ? "You recovered all four First-Age Runic Logs—link Conclusion I → Conclusion II → Runic Logs to uncover the Overseer's true endgame!"
+                    : $"We only have {_runicLogs}/4 Runic Logs. Link Conclusion I → Conclusion II to warn the Guards of the Mana Gate breach.";
                 PlayBrainstormDialogue(
                     "D_Case5_Stage2_Done",
                     () => OpenStage(3),
@@ -624,22 +698,34 @@ namespace Morsoul.Flow
             }
 
             // Stage 3: Final Verdict
-            if (!AreConnected("s3_c1", "s3_c2"))
+            if (!HasAllDirectedLinks(("s3_c1", "s3_c2")))
             {
-                ShowBanner("Connect Conclusion I and Conclusion II first.");
+                ShowBanner("Connect Conclusion I → Conclusion II first.");
                 return;
             }
             if (chosen.Kind == 3)
             {
-                if (_runicLogs < EndingResolver.RequiredRunicLogs || !AreAllValidConnected(new[] { "s3_c1", "s3_c2", "s3_logs" }))
+                if (_runicLogs < EndingResolver.RequiredRunicLogs || !HasAllDirectedLinks(("s3_c1", "s3_c2"), ("s3_c2", "s3_logs")))
                 {
-                    ShowBanner("Connect the First-Age Runic Logs (4/4) with both conclusions to prove the True Verdict.");
+                    ShowBanner("Connect Conclusion I → Conclusion II → First-Age Runic Logs (4/4) to prove the True Verdict.");
                     return;
                 }
                 TriggerEnding(3);
                 return;
             }
             TriggerEnding(2);
+        }
+
+        bool HasAllDirectedLinks(params (string src, string dst)[] required)
+        {
+            foreach (var edge in required)
+            {
+                bool found = false;
+                foreach (var l in _links)
+                    if (l.src == edge.src && l.dst == edge.dst) { found = true; break; }
+                if (!found) return false;
+            }
+            return true;
         }
 
         void TriggerEnding(int ending)
@@ -791,11 +877,21 @@ namespace Morsoul.Flow
 
         static void DrawLine(Painter2D painter, Vector2 from, Vector2 to, Color color)
         {
-            if ((to - from).sqrMagnitude < 4f) return;
+            Vector2 delta = to - from;
+            if (delta.sqrMagnitude < 4f) return;
             painter.strokeColor = color;
             painter.BeginPath();
             painter.MoveTo(from);
             painter.LineTo(to);
+
+            Vector2 dir = delta.normalized;
+            Vector2 perp = new Vector2(-dir.y, dir.x);
+            Vector2 tip = to - dir * 8f;
+            Vector2 wingA = tip - dir * 10f + perp * 6f;
+            Vector2 wingB = tip - dir * 10f - perp * 6f;
+            painter.MoveTo(wingA);
+            painter.LineTo(tip);
+            painter.LineTo(wingB);
             painter.Stroke();
         }
 

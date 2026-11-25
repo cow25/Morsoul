@@ -36,6 +36,7 @@ sysinfo.txt
 *.unitypackage
 *.app
 *Results.xml
+Morsoul.zip
 
 # Crashlytics
 crashlytics-build.properties

@@ -19,8 +19,9 @@ MonoBehaviour:
   acquisition: 0
   requiredTool: 0
   requiredFlag: 
-  description: A crumpled letter hidden behind the timber scaffolding addressed to <b>Accord</b>, sealed with the <b>Veiled Circle's veil sigil</b>. Demands the application of the <b>"damping powder" before the vesper chime</b>, threatening Accord's sister Marian.
+  description: Crumpled letter hidden behind the scaffolding addressed to <b>Accord</b>, sealed with the <b>Veiled Circle's veil sigil</b>. Demands applying the <b>"damping powder"</b> before vespers, threatening Accord's sister <b>Marian's medical debt and sanctuary asylum</b>.
   dissonanceKeyword: 
   isBacktrackingOnly: 0
   hasWorldPosition: 1
   worldPosition: {x: 0, y: 4}
+  inspectPrefab: {fileID: 0}
