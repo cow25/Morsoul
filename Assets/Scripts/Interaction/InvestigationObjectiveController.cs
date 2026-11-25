@@ -25,8 +25,7 @@ namespace Morsoul.Interaction
             var core = CoreRuntime.Ensure();
             if (core.ResolveCase(caseId) is { } caseData && caseData.toolUnlocked != Morsoul.Data.Tool.None)
                 core.Session.UnlockTool(caseData.toolUnlocked);
-            if (core.Session.InvestigationCaseId < 0)
-                core.Session.InvestigationCaseId = caseId;
+            core.Session.InvestigationCaseId = caseId;
             if (core.Session.CurrentCase < caseId)
                 core.Session.CurrentCase = caseId;
             core.Session.SetSceneContext(SceneMode.Mode3D,
@@ -68,7 +67,7 @@ namespace Morsoul.Interaction
             if (next != _lastText)
             {
                 _lastText = next;
-                hud.SetObjective(next);
+                hud.SetObjective(next, HUDManager.FormatCaseTitle(caseId));
             }
         }
     }

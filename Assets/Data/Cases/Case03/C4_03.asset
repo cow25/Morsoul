@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e63a47279c096649aae2935032377f9, type: 3}
+  m_Name: C4_03
+  m_EditorClassIdentifier: Morsoul.Data::Morsoul.Data.ClueData
+  id: C4_03
+  displayName: Sealed Mana-Resin Canister
+  type: 0
+  caseId: 3
+  acquisition: 0
+  requiredTool: 0
+  requiredFlag: 
+  description: "Pressurized brass canister filled with luminous sap, tagged with a <b>Veiled Circle shipping stencil</b> routed to <b>Iron Hollow Drift 09</b> \u2014 matching the <b>solvent-coated dagger's</b> stabilizing residue."
+  dissonanceKeyword: 
+  isBacktrackingOnly: 0
+  hasWorldPosition: 1
+  worldPosition: {x: 4, y: 2}
+  inspectPrefab: {fileID: 0}

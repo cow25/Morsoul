@@ -19,8 +19,9 @@ MonoBehaviour:
   acquisition: 3
   requiredTool: 0
   requiredFlag: 
-  description: An ornate platinum tuning fork belonging to Lyra, found vibrating faintly with holy mana. A <b>standard devotional instrument</b> used for pitch alignment, bearing <b>zero dark resonance traces</b>.
+  description: Ornate platinum tuning fork belonging to Lyra, vibrating faintly with holy mana. Standard devotional instrument bearing <b>zero dark resonance traces</b>.
   dissonanceKeyword: 
   isBacktrackingOnly: 0
   hasWorldPosition: 0
   worldPosition: {x: 0, y: 0}
+  inspectPrefab: {fileID: 0}

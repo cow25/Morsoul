@@ -322,10 +322,20 @@ namespace Morsoul.Board
                     new ProgressionEvent { Kind = ProgressionEventKind.InvalidInput },
                 };
             SyncFocusIn();
+            var prevUnlocked = SnapshotUnlockedConclusions();
             var link = new DirectedEdge(sourceId, targetId);
             var events = _session.DrawLink(link);
-            ApplyLinkEvents(events, link);
+            ApplyLinkEvents(events, link, prevUnlocked);
             return events;
+        }
+
+        HashSet<string> SnapshotUnlockedConclusions()
+        {
+            var set = new HashSet<string>(StringComparer.Ordinal);
+            if (_session == null) return set;
+            foreach (var c in _session.UnlockedConclusions())
+                set.Add(c.id);
+            return set;
         }
 
         /// <summary>Severs a drawn link; free and non-destructive.</summary>
@@ -426,9 +436,11 @@ namespace Morsoul.Board
                 : authored;
         }
 
-        void ApplyLinkEvents(IReadOnlyList<ProgressionEvent> events, DirectedEdge attemptedLink)
+        void ApplyLinkEvents(IReadOnlyList<ProgressionEvent> events, DirectedEdge attemptedLink, HashSet<string> prevUnlocked = null)
         {
             bool resolveEnding = false;
+            bool linkOk = false;
+            string okMessage = null;
             foreach (var e in events)
             {
                 switch (e.Kind)
@@ -448,11 +460,18 @@ namespace Morsoul.Board
                         ShowBanner(BannerInfoClass, "Link already on the board.");
                         break;
                     case ProgressionEventKind.LinkOk:
-                        ShowBanner(BannerInfoClass, "Connection recorded on the board.");
+                        linkOk = true;
+                        if (_hintTargetClue != null &&
+                            (attemptedLink.sourceId == _hintTargetClue || attemptedLink.targetId == _hintTargetClue))
+                            _hintTargetClue = null;
+                        okMessage = _graph != null && _graph.TryGetEdgeRationale(attemptedLink, out var rationale)
+                            ? rationale
+                            : "Connection confirmed on the board.";
+                        ShowBanner(BannerInfoClass, okMessage);
                         break;
                     case ProgressionEventKind.LinkWrong:
                         ShowBanner(BannerErrorClass,
-                            $"The connection doesn't hold. (-{ProgressionConstants.ErrorFocusCost:0} Focus)");
+                            $"The connection doesn't hold — right-click the red link to sever it. (-{ProgressionConstants.ErrorFocusCost:0} Focus)");
                         break;
                     case ProgressionEventKind.LinksCleared:
                         if (!TryTriggerBoardLockoutFallback())
@@ -468,6 +487,21 @@ namespace Morsoul.Board
                 }
             }
             if (_session != null) _session.Solve();
+            if (linkOk && prevUnlocked != null && _session != null)
+            {
+                bool unlockedComplete = false;
+                bool unlockedPartial = false;
+                foreach (var c in _session.UnlockedConclusions())
+                {
+                    if (prevUnlocked.Contains(c.id)) continue;
+                    if (c.tier == ConclusionTier.Complete) unlockedComplete = true;
+                    else if (c.tier == ConclusionTier.Partial) unlockedPartial = true;
+                }
+                if (unlockedComplete)
+                    ShowBanner(BannerInfoClass, okMessage, "Final Verdict unlocked — select it in Conclusions and Submit.");
+                else if (unlockedPartial)
+                    ShowBanner(BannerInfoClass, okMessage, "Intermediate Deduction unlocked — review Conclusions and keep connecting.");
+            }
             SyncFocusOut();
             RefreshAll();
             LinkResolved?.Invoke(events);
@@ -671,9 +705,10 @@ namespace Morsoul.Board
             var slots = new List<Vector2>();
             if (unpositioned.Count > 0)
             {
-                int slotCount = Mathf.Max(9, unpositioned.Count);
+                int slotCount = Mathf.Max(8, unpositioned.Count);
+                ComputeGridMetrics(slotCount, out int cols, out float stepX, out float stepY, out float padX, out float padY);
                 for (int s = 0; s < slotCount; s++)
-                    slots.Add(new Vector2(18 + (s % 3) * 185, 20 + (s / 3) * 92));
+                    slots.Add(new Vector2(padX + (s % cols) * stepX, padY + (s / cols) * stepY));
                 for (int s = slots.Count - 1; s > 0; s--)
                 {
                     int j = UnityEngine.Random.Range(0, s + 1);
@@ -885,8 +920,18 @@ namespace Morsoul.Board
             {
                 var row = new VisualElement();
                 row.AddToClassList("wboard-link-row");
-                if (_graph != null && !_graph.IsAuthoredLink(link))
+                bool isSolution = _graph != null && _graph.IsSolutionLink(link);
+                if (isSolution)
+                {
+                    row.AddToClassList("wboard-link-row--solution");
+                    if (_graph.TryGetEdgeRationale(link, out var rationale))
+                        row.tooltip = rationale;
+                }
+                else
+                {
                     row.AddToClassList("wboard-link-row--invented");
+                    row.tooltip = "Off-path link — right-click to sever";
+                }
 
                 var text = new Label($"{NameOf(link.sourceId)}  →  {NameOf(link.targetId)}");
                 text.AddToClassList("wboard-link-text");
@@ -979,7 +1024,11 @@ namespace Morsoul.Board
             {
                 if (!_nodes.TryGetValue(link.sourceId, out var srcNode) ||
                     !_nodes.TryGetValue(link.targetId, out var dstNode)) continue;
-                DrawLine(painter, NodePinPos(srcNode), NodePinPos(dstNode), new Color(1f, 1f, 1f, 0.92f));
+                bool isSolution = _graph == null || _graph.IsSolutionLink(link);
+                Color lineColor = isSolution
+                    ? new Color(0.95f, 0.98f, 0.92f, 0.94f)
+                    : new Color(0.88f, 0.34f, 0.34f, 0.90f);
+                DrawLine(painter, NodePinPos(srcNode), NodePinPos(dstNode), lineColor);
             }
             if (_dragLinkSource != null && _nodes.TryGetValue(_dragLinkSource, out var dragSrc))
                 DrawLine(painter, NodePinPos(dragSrc), _dragLinkPointer, new Color(1f, 1f, 1f, 0.65f));
@@ -1005,15 +1054,30 @@ namespace Morsoul.Board
             painter.Stroke();
         }
 
-        /// <summary>Arranges all board nodes into a clean grid and updates link lines.</summary>
+        void ComputeGridMetrics(int count, out int cols, out float stepX, out float stepY, out float padX, out float padY)
+        {
+            cols = count <= 4 ? 2 : (count <= 6 ? 3 : 4);
+            int rows = Mathf.Max(1, Mathf.CeilToInt(count / (float)cols));
+            float cw = _canvas != null && _canvas.layout.width > 120f ? _canvas.layout.width : 720f;
+            float ch = _canvas != null && _canvas.layout.height > 120f ? _canvas.layout.height : 380f;
+            padX = 18f;
+            padY = 20f;
+            const float cardW = 148f;
+            const float cardH = 56f;
+            stepX = cols > 1 ? Mathf.Clamp((cw - padX * 2f - cardW) / (cols - 1), 130f, 195f) : 165f;
+            stepY = rows > 1 ? Mathf.Clamp((ch - padY * 2f - cardH) / (rows - 1), 76f, 124f) : 96f;
+        }
+
+        /// <summary>Arranges all board nodes into a clean responsive grid and updates link lines.</summary>
         public void AutoAlignNodes()
         {
             if (_session == null) return;
+            ComputeGridMetrics(_nodes.Count, out int cols, out float stepX, out float stepY, out float padX, out float padY);
             int idx = 0;
             foreach (var pair in _nodes)
             {
-                float x = 24f + (idx % 3) * 200f;
-                float y = 24f + (idx / 3) * 116f;
+                float x = padX + (idx % cols) * stepX;
+                float y = padY + (idx / cols) * stepY;
                 pair.Value.style.left = x;
                 pair.Value.style.top = y;
                 _session.SetNodePosition(pair.Key, x, y);
@@ -1033,9 +1097,25 @@ namespace Morsoul.Board
             {
                 var card = new Button();
                 card.AddToClassList("wboard-conclusion");
+                string tierClass = conclusion.tier switch
+                {
+                    ConclusionTier.Complete => "wboard-conclusion--complete",
+                    ConclusionTier.Partial => "wboard-conclusion--partial",
+                    _ => "wboard-conclusion--wrong",
+                };
+                string tierBadgeText = conclusion.tier switch
+                {
+                    ConclusionTier.Complete => "FINAL VERDICT",
+                    ConclusionTier.Partial => "INTERMEDIATE DEDUCTION",
+                    _ => "INITIAL THEORY",
+                };
+                card.AddToClassList(tierClass);
                 if (conclusion.id == _session.SelectedConclusionId)
                     card.AddToClassList("wboard-conclusion--selected");
-                var text = new Label(conclusion.text);
+                var badge = new Label(tierBadgeText) { pickingMode = PickingMode.Ignore };
+                badge.AddToClassList("wboard-conclusion-badge");
+                card.Add(badge);
+                var text = new Label(conclusion.text) { pickingMode = PickingMode.Ignore };
                 text.AddToClassList("wboard-conclusion-text");
                 card.Add(text);
                 var captured = conclusion.id;

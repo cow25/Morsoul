@@ -201,7 +201,7 @@ namespace Morsoul.Tests
             var tier = events.FirstOrDefault(e => e.Kind == ProgressionEventKind.HintTierFired);
             Assert.That(tier, Is.Not.Null);
             Assert.That(tier.Tier, Is.EqualTo(2));
-            Assert.That(tier.HintClueId, Is.EqualTo("b")); // next(L): b->c still missing
+            Assert.That(tier.HintClueId, Is.EqualTo("c")); // next clue continuing a->b (b->c missing)
             Assert.That(tier.HintClueCollected, Is.True);
         }
 

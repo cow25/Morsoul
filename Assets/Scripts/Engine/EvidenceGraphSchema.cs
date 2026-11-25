@@ -46,6 +46,8 @@ namespace Morsoul.Engine
         public string sourceId;
         public string targetId;
         public float weight = 1f;
+        /// <summary>Optional authored explanation displayed after the player draws this link.</summary>
+        public string rationale;
     }
 
     /// <summary>Weighted clue-to-conclusion edge (E+ supporting / E- contradicting).</summary>

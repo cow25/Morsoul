@@ -22,12 +22,14 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 2c97f266bd69ef24591b69f8b8a984c2, type: 2}
   - {fileID: 11400000, guid: ea15b44cd77416a47b8f1f5ee72666b1, type: 2}
   - {fileID: 11400000, guid: 8fe96e21dca72614abfb619ab90c3d83, type: 2}
+  - {fileID: 11400000, guid: ca585c9acddb743498db644b05b8fc79, type: 2}
+  - {fileID: 11400000, guid: 45bed771ca3c28749b4cafbcc718963b, type: 2}
   - {fileID: 11400000, guid: 082755c29adc52b4e93d22db02cb3bb9, type: 2}
   - {fileID: 11400000, guid: f6cf69c5df6784446952989bd6f7d76e, type: 2}
   - {fileID: 11400000, guid: 71d856f53652f414285e69d4b96d414f, type: 2}
   - {fileID: 11400000, guid: 2f5a42463ed7adf42bd752e6dd4221f3, type: 2}
   latentLog: {fileID: 11400000, guid: 5705da5ac704c474d884e15a7df7482c, type: 2}
-  toolUnlocked: 0
+  toolUnlocked: 2
   uneaseFlagKey: Case3_UneaseActive
   hasInvestigationScene: 1
   hasInterrogation: 1

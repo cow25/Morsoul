@@ -19,8 +19,9 @@ MonoBehaviour:
   acquisition: 0
   requiredTool: 0
   requiredFlag: 
-  description: <b>Industrial pneumatic tap</b> driven deep into the primary heartwood taproot. Confirms <b>high-pressure, forced sap drainage</b> channeling raw environmental mana into pressurized canisters.
+  description: <b>Industrial pneumatic tap</b> driven deep into the primary heartwood taproot. High-pressure <b>forced sap drainage</b> channeling raw environmental mana into pressurized canisters.
   dissonanceKeyword: 
   isBacktrackingOnly: 0
   hasWorldPosition: 1
   worldPosition: {x: 0, y: 8}
+  inspectPrefab: {fileID: 0}

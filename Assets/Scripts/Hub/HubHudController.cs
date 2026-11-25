@@ -107,13 +107,16 @@ namespace Morsoul.Hub
             var session = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session : null;
             var sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
             int caseId = session != null ? session.CurrentCase : objectiveCaseId;
+            bool isPrologueScene = sceneName.Contains("Prologue");
+            if (!isPrologueScene && caseId == 0 && session != null && session.PrologueCompleted)
+                caseId = Mathf.Max(1, objectiveCaseId);
 
             bool sceneMatchesSessionCase = session == null || objectiveCaseId <= 0 || objectiveCaseId == caseId;
             string effectiveCaseText = sceneMatchesSessionCase ? (caseText ?? "") : "";
             string effectiveObjective = sceneMatchesSessionCase ? (objectiveText ?? "") : "";
 
             // A. Prologue progression (or dev-warped to a hub before Prologue finishes)
-            if (sceneName.Contains("Prologue") || (session != null && caseId == 0))
+            if (isPrologueScene || (session != null && caseId == 0))
             {
                 effectiveCaseText = "Prologue";
                 if (!sceneName.Contains("Prologue"))

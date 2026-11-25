@@ -7,6 +7,7 @@
                 <ui:Button name="AutoAlignButton" text="Auto-Align" class="wboard-back-button"/>
                 <ui:Label name="CaseTitleLabel" text="Deduction Board" class="wboard-title"/>
                 <ui:VisualElement name="StatusBadges" class="wboard-status-badges">
+                    <ui:Label name="LampLabel" text="Lamp: Cold" class="wboard-lamp wboard-lamp--cold"/>
                     <ui:Label name="ErrorCountLabel" text="Errors: 0" class="wboard-stat-pill"/>
                     <ui:Label name="FocusLabel" text="Focus 100/100" class="wboard-stat-pill"/>
                 </ui:VisualElement>
@@ -33,10 +34,6 @@
                     <ui:Label text="Conclusions" class="wboard-ledger-header"/>
                     <ui:ScrollView name="ConclusionList" class="wboard-conclusion-list"/>
 
-                    <ui:VisualElement name="LampRow" class="wboard-lamp-row">
-                        <ui:Label name="LampLabel" text="Lamp: Cold" class="wboard-lamp wboard-lamp--cold"/>
-                    </ui:VisualElement>
-
                     <ui:Button name="SubmitButton" text="Submit Conclusion" class="wboard-submit-button"/>
                 </ui:VisualElement>
             </ui:VisualElement>
@@ -45,7 +42,7 @@
                 <ui:Label name="FeedbackLabel" text="" class="wboard-feedback-text"/>
                 <ui:Label name="HintLabel" text="" class="wboard-banner-hint" style="display: none;"/>
             </ui:VisualElement>
-            <ui:Label name="BoardControlsLegend" text="[Drag] Move  |  [Click → Click] or [Right-Drag] Link (Cause → Effect)  |  [R-Click Row] Sever  |  [Space] Submit" class="wboard-controls-legend"/>
+            <ui:Label name="BoardControlsLegend" text="[Drag] Move  •  [Click→Click / R-Drag] Link (Cause→Effect)  •  [R-Click Link] Sever  •  [Space] Submit" class="wboard-controls-legend"/>
         </ui:VisualElement>
 
         <ui:VisualElement name="HintPopup" class="wboard-hint-popup" style="display: none;">

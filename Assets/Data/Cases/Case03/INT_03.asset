@@ -35,6 +35,13 @@ MonoBehaviour:
       isCoreContradiction: 1
       responseDialogue: Botanical scholars do not drive industrial pressurized pneumatic taps into ancient taproots. That apparatus is draining hundreds of liters of raw mana per hour.
       emotionAura: 0
+    - verb: 1
+      evidence: {fileID: 11400000, guid: 45bed771ca3c28749b4cafbcc718963b, type: 2}
+      breaksComposureSegment: 1
+      strikeCost: 0
+      isCoreContradiction: 1
+      responseDialogue: "Your own field notebook logs five consecutive nights of pressurized canister yields \u2014 matching the exact onset of the grove's collapse. That is an extraction schedule, not an ecological survey."
+      emotionAura: 0
     invalidMoves: []
   - suspectClaim: Fine, I tapped the tree for alchemical commerce! But a lone merchant selling sap on the black market hardly concerns your guild's grand conspiracy theories!
     keywords:
@@ -53,6 +60,13 @@ MonoBehaviour:
       strikeCost: 0
       isCoreContradiction: 0
       responseDialogue: This redirects your 'lone merchant' story. Black-market traders do not carry daggers bearing the eclipsed eye of the Veiled Circle, treated with the exact same chemical solvent used in Asterveil's vault. Who do you actually work for?
+      emotionAura: 0
+    - verb: 2
+      evidence: {fileID: 11400000, guid: ca585c9acddb743498db644b05b8fc79, type: 2}
+      breaksComposureSegment: 1
+      strikeCost: 0
+      isCoreContradiction: 0
+      responseDialogue: Lone black-market merchants do not stencil pressurized mana canisters for Veiled Circle delivery to Iron Hollow Drift 09. You are a supply operative.
       emotionAura: 0
     invalidMoves:
     - verb: 2

@@ -21,6 +21,7 @@ namespace Morsoul.Engine
         readonly HashSet<string> _clueIds;
         readonly Dictionary<string, double> _reliability;
         readonly Dictionary<DirectedEdge, double> _authoredEdges;
+        readonly Dictionary<DirectedEdge, string> _edgeRationales;
         readonly HashSet<DirectedEdge> _solutionEdges;
         readonly Dictionary<DirectedEdge, double> _unlockDependencies;
         readonly Dictionary<string, ConclusionDef> _conclusionsById;
@@ -33,6 +34,7 @@ namespace Morsoul.Engine
             _clueIds = new HashSet<string>(StringComparer.Ordinal);
             _reliability = new Dictionary<string, double>(StringComparer.Ordinal);
             _authoredEdges = new Dictionary<DirectedEdge, double>();
+            _edgeRationales = new Dictionary<DirectedEdge, string>();
             _solutionEdges = new HashSet<DirectedEdge>();
             _unlockDependencies = new Dictionary<DirectedEdge, double>();
             _conclusionsById = new Dictionary<string, ConclusionDef>(StringComparer.Ordinal);
@@ -55,6 +57,10 @@ namespace Morsoul.Engine
         public bool IsAuthoredLink(DirectedEdge edge) => _authoredEdges.ContainsKey(edge);
         public bool IsSolutionLink(DirectedEdge edge) => _solutionEdges.Contains(edge);
         public IReadOnlyCollection<DirectedEdge> SolutionEdges => _solutionEdges;
+
+        /// <summary>Returns the authored post-draw rationale for an edge, when present.</summary>
+        public bool TryGetEdgeRationale(DirectedEdge edge, out string rationale) =>
+            _edgeRationales.TryGetValue(edge, out rationale) && !string.IsNullOrWhiteSpace(rationale);
 
         /// <summary>True when every authored solution link is present in L.</summary>
         public bool HasAllSolutionLinks(IEnumerable<DirectedEdge> drawnLinks)
@@ -89,15 +95,58 @@ namespace Morsoul.Engine
                 : (IReadOnlyList<DirectedEdge>)Array.Empty<DirectedEdge>();
 
         /// <summary>
-        /// next(L): the first clue in pi that still has an S* link missing
-        /// from the board, or null when every S* link touching each pi clue
-        /// is drawn. Algorithm.md step 5; used by hint tier 2.
+        /// next(L): highlights the next unlinked clue continuing an existing
+        /// drawn S* connection when one exists (forward tip first, then branch
+        /// or upstream neighbor), falling back to the first clue in pi with an
+        /// undrawn incident S* edge. Returns null when all S* links are drawn.
         /// </summary>
         public string NextUnfinishedSolutionClue(IEnumerable<DirectedEdge> drawnLinks)
         {
             var drawn = drawnLinks == null
                 ? new HashSet<DirectedEdge>()
                 : new HashSet<DirectedEdge>(drawnLinks);
+
+            var drawnTargets = new HashSet<string>(StringComparer.Ordinal);
+            var drawnNodes = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var link in drawn)
+            {
+                if (!_solutionEdges.Contains(link)) continue;
+                drawnNodes.Add(link.sourceId);
+                drawnNodes.Add(link.targetId);
+                drawnTargets.Add(link.targetId);
+            }
+
+            if (drawnNodes.Count > 0)
+            {
+                // 1. Forward continuation from the tip of an existing S* connection.
+                foreach (string clue in SolutionOrder)
+                {
+                    if (!drawnTargets.Contains(clue)) continue;
+                    foreach (var edge in IncidentSolutionLinks(clue))
+                        if (edge.sourceId == clue && !drawn.Contains(edge))
+                            return edge.targetId;
+                }
+
+                // 2. Branching outgoing continuation from any connected S* clue.
+                foreach (string clue in SolutionOrder)
+                {
+                    if (!drawnNodes.Contains(clue)) continue;
+                    foreach (var edge in IncidentSolutionLinks(clue))
+                        if (edge.sourceId == clue && !drawn.Contains(edge))
+                            return edge.targetId;
+                }
+
+                // 3. Upstream continuation into a mid-chain drawn S* connection.
+                foreach (string clue in SolutionOrder)
+                {
+                    if (!drawnNodes.Contains(clue)) continue;
+                    foreach (var edge in IncidentSolutionLinks(clue))
+                        if (edge.targetId == clue && !drawn.Contains(edge))
+                            return edge.sourceId;
+                }
+            }
+
+            // Fallback: first clue in pi that still has an undrawn incident S* edge.
             foreach (string clue in SolutionOrder)
             {
                 foreach (var edge in IncidentSolutionLinks(clue))
@@ -355,6 +404,8 @@ namespace Morsoul.Engine
                     errors.Add($"Duplicate authored edge '{name}'.");
                 else
                 {
+                    if (!string.IsNullOrWhiteSpace(e.rationale))
+                        g._edgeRationales[new DirectedEdge(e.sourceId, e.targetId)] = e.rationale.Trim();
                     touched.Add(e.sourceId);
                     touched.Add(e.targetId);
                     outSum.TryGetValue(e.sourceId, out double sum);

@@ -13,130 +13,127 @@ MonoBehaviour:
   m_Name: EVG_02
   m_EditorClassIdentifier: Morsoul.Data::Morsoul.Data.EvidenceGraphData
   caseId: 2
-  provisional: 1
-  designNote: Provisionally approved Case 2 weighted board. Complete scapegoating requires both acoustic sabotage and coerced scapegoat branches.
+  provisional: 0
+  designNote: Canonical Case 2 graph. 5 S* links, 4-clue main chain (C2->C4->C1->C3) + alibi/debt branches (T1->C4, C5->C3).
   tutorialRedHerringClueIds: []
   tutorialRedHerringFeedback: 
   tutorialReversedLinkFeedback: 
   tutorialGenericLinkFeedback: 
   tutorialLockedConclusionFeedback: 
   clueIds:
-  - C1_02
   - C2_02
-  - C3_02
   - T1_02
+  - C4_02
+  - C1_02
+  - C5_02
+  - C3_02
   - T2_02
   - RH1_02
   reliabilities:
-  - clueId: C1_02
-    value: 0.9
   - clueId: C2_02
+    value: 1
+  - clueId: T1_02
+    value: 0.9
+  - clueId: C4_02
+    value: 0.95
+  - clueId: C1_02
+    value: 1
+  - clueId: C5_02
     value: 0.95
   - clueId: C3_02
-    value: 0.9
-  - clueId: T1_02
-    value: 0.85
+    value: 1
   - clueId: T2_02
-    value: 0.55
+    value: 0.5
   - clueId: RH1_02
-    value: 0.35
+    value: 0.4
   authoredClueEdges:
-  - sourceId: C1_02
-    targetId: C2_02
+  - sourceId: C2_02
+    targetId: C4_02
     weight: 0.9
-  - sourceId: C3_02
-    targetId: T1_02
+    rationale: The black metallic damping soot on the clapper matches the soot-stained polishing rag tucked inside Accord's belfry bench.
+  - sourceId: T1_02
+    targetId: C4_02
     weight: 0.85
-  - sourceId: C1_02
-    targetId: RH1_02
-    weight: 0.2
-  - sourceId: C3_02
-    targetId: T2_02
-    weight: 0.6
-  solutionEdges:
-  - sourceId: C1_02
-    targetId: C2_02
-  - sourceId: C3_02
-    targetId: T1_02
-  unlockDependencies:
-  - sourceId: T2_02
+    rationale: Brother Kenneth's courtyard alibi clears the acolyte, leaving someone with direct belfry access who used the soot-stained rag.
+  - sourceId: C4_02
     targetId: C1_02
+    weight: 0.9
+    rationale: Manual soot application inside the belfry caused the internal harmonic shockwave that shattered the Resonance Crystal.
+  - sourceId: C1_02
+    targetId: C3_02
+    weight: 0.9
+    rationale: An inside acoustic sabotage points straight to the veil-sealed coercion note hidden behind the belfry scaffolding.
+  - sourceId: C5_02
+    targetId: C3_02
+    weight: 0.9
+    rationale: The Nave debt notice proves the veil-sealed creditor actually bought out Marian's asylum, confirming the blackmail leverage.
   - sourceId: T2_02
-    targetId: C2_02
+    targetId: RH1_02
+    weight: 0.35
+    rationale: 
+  solutionEdges:
+  - sourceId: C2_02
+    targetId: C4_02
+  - sourceId: T1_02
+    targetId: C4_02
+  - sourceId: C4_02
+    targetId: C1_02
+  - sourceId: C1_02
+    targetId: C3_02
+  - sourceId: C5_02
+    targetId: C3_02
+  unlockDependencies: []
   conclusions:
-  - id: CASE2_SYLVAN_SPIRIT_CURSE
-    text: Sylvan's wild spirit magic cursed Lyra from the tower base.
+  - id: CASE2_ACOLYTE_SORCERY
+    text: The spirit-folk acolyte cursed the bell from the courtyard.
     tier: 0
     targetClueId: 
-    submissionFeedback: The accusation repeats institutional prejudice, not the acoustic evidence.
+    submissionFeedback: "The acolyte has an alibi and the crystal shattered from inside the belfry \u2014 look at who handled the damping soot."
     supportingEdges:
-    - clueId: T2_02
-      weight: 0.75
-    - clueId: RH1_02
-      weight: 0.3
-    contradictingEdges:
-    - clueId: C1_02
-      weight: 0.7
-    - clueId: C2_02
-      weight: 0.8
-    - clueId: C3_02
-      weight: 0.7
-    - clueId: T1_02
-      weight: 0.8
-  - id: CASE2_ACOUSTIC_SABOTAGE
-    text: The Great Bell was prepared to emit a muting shockwave.
-    tier: 1
-    targetClueId: 
-    submissionFeedback: The delivery mechanism is proven, but the operator and motive remain unresolved.
-    supportingEdges:
-    - clueId: C1_02
-      weight: 0.4
-    - clueId: C2_02
-      weight: 0.9
-    contradictingEdges:
-    - clueId: RH1_02
-      weight: 0.4
-  - id: CASE2_COERCED_SCAPEGOAT
-    text: Accord was coerced, and Sylvan's alibi clears the accused acolyte.
-    tier: 1
-    targetClueId: 
-    submissionFeedback: The coercion and scapegoating are established, but the physical delivery method is still missing.
-    supportingEdges:
-    - clueId: C3_02
-      weight: 0.9
-    - clueId: T1_02
-      weight: 0.9
-    contradictingEdges:
-    - clueId: T2_02
-      weight: 0.6
-  - id: CASE2_COERCED_INSTITUTIONAL_SCAPEGOATING
-    text: Accord applied dark resonance dust to the clapper under Veiled Circle blackmail and framed Sylvan to protect Marian.
-    tier: 2
-    targetClueId: 
-    submissionFeedback: 
-    supportingEdges:
-    - clueId: C2_02
-      weight: 0.9
-    - clueId: T1_02
-      weight: 0.9
-    contradictingEdges:
     - clueId: T2_02
       weight: 0.5
     - clueId: RH1_02
-      weight: 0.3
-  startingWrongConclusionId: CASE2_SYLVAN_SPIRIT_CURSE
-  completeConclusionId: CASE2_COERCED_INSTITUTIONAL_SCAPEGOATING
+      weight: 0.4
+    contradictingEdges:
+    - clueId: C2_02
+      weight: 0.5
+  - id: CASE2_INSIDE_ACOUSTIC_SABOTAGE
+    text: 'Inside Acoustic Sabotage: Damping soot was applied manually inside the belfry, clearing the acolyte.'
+    tier: 1
+    targetClueId: 
+    submissionFeedback: "You proved Accord's bench rag and the soot shattered the crystal \u2014 now connect the coercion note and debt notice for motive."
+    supportingEdges:
+    - clueId: C1_02
+      weight: 1
+    contradictingEdges: []
+  - id: CASE2_COERCED_BELL_RINGER
+    text: 'Coerced Belfry Sabotage: The Veiled Circle bought out Marian''s asylum debt to force Accord into muting Saint Althea''s bell.'
+    tier: 2
+    targetClueId: C3_02
+    submissionFeedback: 
+    supportingEdges:
+    - clueId: C3_02
+      weight: 1
+    contradictingEdges:
+    - clueId: T2_02
+      weight: 0.8
+    - clueId: RH1_02
+      weight: 0.8
+  startingWrongConclusionId: CASE2_ACOLYTE_SORCERY
+  completeConclusionId: CASE2_COERCED_BELL_RINGER
   parameters:
     alpha: 0.85
     contradictionWeight: 0.8
-    inventedLinkPenalty: 0.1
-    lowThreshold: 0.35
-    highThreshold: 0.75
+    inventedLinkPenalty: 0.15
+    lowThreshold: 0.25
+    highThreshold: 0.85
     PrunedMode: 1
     RivalClueId: 
-  cachedReferenceSupport: 0.06724325
+  cachedReferenceSupport: 0.20965101
   solutionTopologicalOrder:
-  - C1_02
   - C2_02
-  - C3_02
+  - C5_02
   - T1_02
+  - C4_02
+  - C1_02
+  - C3_02

@@ -271,10 +271,23 @@ namespace Morsoul.Engine
                 }
                 if (leak > 1e-12) return false;
 
-                // Inward check: no extra credit at target from non-solution links.
-                double eT = Evidence(x, targetId, seeds, p.alpha);
-                double eTs = Evidence(xSolution, targetId, seeds, p.alpha);
-                if (eT - eTs > 1e-12) return false;
+                // Inward check: no extra credit at target(s) from non-solution links.
+                if (!string.IsNullOrEmpty(conclusion.targetClueId))
+                {
+                    double eT = Evidence(x, conclusion.targetClueId, seeds, p.alpha);
+                    double eTs = Evidence(xSolution, conclusion.targetClueId, seeds, p.alpha);
+                    if (eT - eTs > 1e-12) return false;
+                }
+                else if (conclusion.supportingEdges != null)
+                {
+                    foreach (var sup in conclusion.supportingEdges)
+                    {
+                        if (sup == null || string.IsNullOrEmpty(sup.clueId)) continue;
+                        double eT = Evidence(x, sup.clueId, seeds, p.alpha);
+                        double eTs = Evidence(xSolution, sup.clueId, seeds, p.alpha);
+                        if (eT - eTs > 1e-12) return false;
+                    }
+                }
 
                 return true;
             }

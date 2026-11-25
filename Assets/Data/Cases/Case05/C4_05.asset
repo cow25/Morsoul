@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e63a47279c096649aae2935032377f9, type: 3}
+  m_Name: C4_05
+  m_EditorClassIdentifier: Morsoul.Data::Morsoul.Data.ClueData
+  id: C4_05
+  displayName: Four-District Material Audit
+  type: 0
+  caseId: 5
+  acquisition: 7
+  requiredTool: 0
+  requiredFlag: 
+  description: Guild cross-audit tying <b>Case 1's solvent</b>, <b>Case 2's acoustic dust</b>, <b>Case 3's Elder Tree siphon</b>, and <b>Case 4's Drift 09 shipments</b> into one <b>Veiled Circle supply pipeline</b> feeding the Sanctum Core.
+  dissonanceKeyword: 
+  isBacktrackingOnly: 0
+  hasWorldPosition: 0
+  worldPosition: {x: 0, y: 0}
+  inspectPrefab: {fileID: 0}

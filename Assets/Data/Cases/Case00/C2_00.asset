@@ -19,8 +19,9 @@ MonoBehaviour:
   acquisition: 0
   requiredTool: 0
   requiredFlag: 
-  description: Shattered glass vacuum tube surrounded by <b>crystallized mana slag</b>. Demonstrates that <b>power to the primary hydraulic security blast door was severed</b> during a forced emergency system overload.
+  description: Shattered glass vacuum tube surrounded by <b>crystallized mana slag</b>. Demonstrates that <b>power to the primary hydraulic blast door was severed</b> during a forced emergency system overload.
   dissonanceKeyword: 
   isBacktrackingOnly: 0
   hasWorldPosition: 0
   worldPosition: {x: 0, y: 0}
+  inspectPrefab: {fileID: 0}

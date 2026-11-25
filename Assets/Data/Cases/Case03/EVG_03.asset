@@ -13,128 +13,136 @@ MonoBehaviour:
   m_Name: EVG_03
   m_EditorClassIdentifier: Morsoul.Data::Morsoul.Data.EvidenceGraphData
   caseId: 3
-  provisional: 1
-  designNote: Provisionally approved Case 3 weighted board. Complete siphoning requires both industrial extraction and cult responsibility branches.
+  provisional: 0
+  designNote: Canonical Case 3 graph. 5 S* links, 5-clue main chain (T1->C5->C1->C4->C3) + dagger-stabilizer branch (C2->C4).
   tutorialRedHerringClueIds: []
   tutorialRedHerringFeedback: 
   tutorialReversedLinkFeedback: 
   tutorialGenericLinkFeedback: 
   tutorialLockedConclusionFeedback: 
   clueIds:
+  - T1_03
+  - C5_03
   - C1_03
   - C2_03
+  - C4_03
   - C3_03
-  - T1_03
   - T2_03
   - RH1_03
   reliabilities:
-  - clueId: C1_03
-    value: 0.95
-  - clueId: C2_03
-    value: 0.9
-  - clueId: C3_03
-    value: 0.9
   - clueId: T1_03
-    value: 0.85
+    value: 0.9
+  - clueId: C5_03
+    value: 0.95
+  - clueId: C1_03
+    value: 1
+  - clueId: C2_03
+    value: 0.95
+  - clueId: C4_03
+    value: 1
+  - clueId: C3_03
+    value: 1
   - clueId: T2_03
-    value: 0.55
+    value: 0.5
   - clueId: RH1_03
-    value: 0.35
+    value: 0.4
   authoredClueEdges:
   - sourceId: T1_03
+    targetId: C5_03
+    weight: 0.9
+    rationale: The ranger's five-night blight timeline matches Vane's five-night harvest tally to the exact evening.
+  - sourceId: C5_03
     targetId: C1_03
     weight: 0.9
-  - sourceId: C2_03
-    targetId: C3_03
-    weight: 0.85
+    rationale: Vane's nightly yield log directly tracks the industrial brass extraction siphon driven into the Elder Tree's taproot.
   - sourceId: C1_03
+    targetId: C4_03
+    weight: 0.9
+    rationale: Forced sap drainage from the taproot fills the pressurized mana-resin canisters stenciled for Iron Hollow Drift 09.
+  - sourceId: C2_03
+    targetId: C4_03
+    weight: 0.85
+    rationale: The Veiled Circle dagger's solvent stabilizer matches the chemical preservative sealing the Iron Hollow canisters.
+  - sourceId: C4_03
+    targetId: C3_03
+    weight: 0.9
+    rationale: Industrial Veiled Circle shipments paired with Vane's Emotion Echo cloak prove he is a fanatic fueling the Sanctum Core ritual.
+  - sourceId: T2_03
     targetId: RH1_03
-    weight: 0.2
-  - sourceId: C3_03
-    targetId: T2_03
-    weight: 0.6
+    weight: 0.35
+    rationale: 
   solutionEdges:
   - sourceId: T1_03
+    targetId: C5_03
+  - sourceId: C5_03
     targetId: C1_03
+  - sourceId: C1_03
+    targetId: C4_03
   - sourceId: C2_03
+    targetId: C4_03
+  - sourceId: C4_03
     targetId: C3_03
-  unlockDependencies:
-  - sourceId: T1_03
-    targetId: C1_03
+  unlockDependencies: []
   conclusions:
-  - id: CASE3_NATURAL_FOREST_BLIGHT
-    text: A natural blight or secondary infestation is killing the Elder Spirit Tree.
+  - id: CASE3_NATURAL_BLIGHT
+    text: Natural forest blight and beetles are killing the Elder Tree.
     tier: 0
     targetClueId: 
-    submissionFeedback: The blight story accounts for the symptoms but not the pressurized extraction apparatus.
+    submissionFeedback: "Wood beetles are a secondary symptom \u2014 connect the five-night timeline, harvest tally, and taproot siphon."
     supportingEdges:
     - clueId: T2_03
-      weight: 0.7
-    - clueId: RH1_03
       weight: 0.5
-    contradictingEdges:
-    - clueId: C1_03
-      weight: 0.8
-    - clueId: C2_03
-      weight: 0.6
-    - clueId: C3_03
-      weight: 0.7
-    - clueId: T1_03
-      weight: 0.7
-  - id: CASE3_INDUSTRIAL_EXTRACTION
-    text: The Elder Tree is being drained by mechanical mana extraction.
-    tier: 1
-    targetClueId: 
-    submissionFeedback: The extraction mechanism is proven, but its operator and organization remain unidentified.
-    supportingEdges:
-    - clueId: T1_03
-      weight: 0.4
-    - clueId: C1_03
-      weight: 0.9
-    contradictingEdges:
     - clueId: RH1_03
       weight: 0.4
-  - id: CASE3_CULT_OPERATOR_LINK
-    text: The ritual equipment and Vane's cloak connect the operation to the Veiled Circle.
+    contradictingEdges:
+    - clueId: C1_03
+      weight: 0.5
+  - id: CASE3_INDUSTRIAL_SIPHONING
+    text: 'Industrial Mana Siphoning: Vane has been mechanically draining the Elder Tree for five consecutive nights.'
     tier: 1
     targetClueId: 
-    submissionFeedback: The cult link is established, but the physical method of drainage still needs proof.
+    submissionFeedback: "You proved mechanical siphoning \u2014 now trace where the stabilized canisters are going and who Vane serves."
     supportingEdges:
-    - clueId: C2_03
-      weight: 0.4
-    - clueId: C3_03
-      weight: 0.9
-    contradictingEdges:
-    - clueId: T2_03
-      weight: 0.5
-  - id: CASE3_ORGANIZED_ENVIRONMENTAL_SIPHONING
-    text: Vane is a Veiled Circle operative draining the Elder Spirit Tree to power the Sanctum Core ritual.
+    - clueId: C1_03
+      weight: 1
+    contradictingEdges: []
+  - id: CASE3_VEILED_CIRCLE_SUPPLY
+    text: 'Veiled Circle Supply Line: Stabilized Elder Tree mana is being shipped to Iron Hollow Drift 09.'
+    tier: 1
+    targetClueId: 
+    submissionFeedback: "You traced the shipment pipeline \u2014 connect it to Vane's Emotion Echo cloak to prove his ritual motive."
+    supportingEdges:
+    - clueId: C4_03
+      weight: 1
+    contradictingEdges: []
+  - id: CASE3_CULT_RITUAL_HARVEST
+    text: 'Veiled Circle Ritual Harvest: Vane is a cult operative siphoning the Elder Tree to fuel the Sanctum Core.'
     tier: 2
-    targetClueId: 
+    targetClueId: C3_03
     submissionFeedback: 
     supportingEdges:
-    - clueId: C1_03
-      weight: 0.9
     - clueId: C3_03
-      weight: 0.9
+      weight: 1
     contradictingEdges:
     - clueId: T2_03
-      weight: 0.5
+      weight: 0.8
     - clueId: RH1_03
-      weight: 0.3
-  startingWrongConclusionId: CASE3_NATURAL_FOREST_BLIGHT
-  completeConclusionId: CASE3_ORGANIZED_ENVIRONMENTAL_SIPHONING
+      weight: 0.8
+  startingWrongConclusionId: CASE3_NATURAL_BLIGHT
+  completeConclusionId: CASE3_CULT_RITUAL_HARVEST
   parameters:
     alpha: 0.85
     contradictionWeight: 0.8
-    inventedLinkPenalty: 0.1
-    lowThreshold: 0.35
-    highThreshold: 0.75
+    inventedLinkPenalty: 0.15
+    lowThreshold: 0.25
+    highThreshold: 0.85
     PrunedMode: 1
     RivalClueId: 
-  cachedReferenceSupport: 0.06865109
+  cachedReferenceSupport: 0.18770419
   solutionTopologicalOrder:
   - C2_03
-  - C3_03
   - T1_03
+  - C5_03
   - C1_03
+  - C4_03
+  - C3_03
