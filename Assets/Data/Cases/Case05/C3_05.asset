@@ -19,8 +19,9 @@ MonoBehaviour:
   acquisition: 7
   requiredTool: 0
   requiredFlag: 
-  description: The Overseer's unredacted treatise cites ancient scientific papers but <b>strikes out findings that mana is natural planetary lifeblood</b>, exposing his distortion of First Age history.
+  description: The Overseer's unredacted treatise cites ancient scientific papers but <b>strikes out findings that mana is natural planetary lifeblood</b>, exposing his <b>hypocritical distortion of First Age history</b>.
   dissonanceKeyword: 
   isBacktrackingOnly: 0
   hasWorldPosition: 0
   worldPosition: {x: 0, y: 0}
+  inspectPrefab: {fileID: 0}

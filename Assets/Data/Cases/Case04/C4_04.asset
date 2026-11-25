@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e63a47279c096649aae2935032377f9, type: 3}
+  m_Name: C4_04
+  m_EditorClassIdentifier: Morsoul.Data::Morsoul.Data.ClueData
+  id: C4_04
+  displayName: Deep-Drift Freight Manifest
+  type: 0
+  caseId: 4
+  acquisition: 3
+  requiredTool: 0
+  requiredFlag: 
+  description: "Iron Hollow workbench manifest signed by <b>Harlan</b> logging off-hours deliveries of <b>Whisperwood mana bladders</b> and <b>solvent carboys</b> straight into <b>Drift 09</b> \u2014 disproving his upper-tier masonry alibi."
+  dissonanceKeyword: 
+  isBacktrackingOnly: 0
+  hasWorldPosition: 0
+  worldPosition: {x: 0, y: 0}
+  inspectPrefab: {fileID: 0}

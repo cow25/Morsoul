@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Morsoul.Data::Morsoul.Data.EvidenceGraphData
   caseId: 0
   provisional: 0
-  designNote: Approved Case 0 weighted board. Manual bypass reasoning requires the complete S* chain; tutorial misfires use authored diagnostics without Focus or progression penalties.
+  designNote: Approved Case 0 weighted board. 4 S* links forming a 4-clue chain (T1->C1->C2->C3 + T1->C3).
   tutorialRedHerringClueIds:
   - RH1_00
   tutorialRedHerringFeedback: The pipe is a lever, not a bypass. It cannot power or turn this lock.
@@ -42,18 +42,23 @@ MonoBehaviour:
   - sourceId: T1_00
     targetId: C1_00
     weight: 0.9
+    rationale: Optical Translation deciphers the human scholar's torn desk logs, identifying this sealed installation.
   - sourceId: C1_00
     targetId: C2_00
     weight: 0.9
+    rationale: 'The desk logs explain the shattered capacitor relay: a forced overload severed power to the blast door.'
   - sourceId: C2_00
     targetId: C3_00
     weight: 0.9
+    rationale: With primary hydraulics dead, the ancient chamber key's manual bypass frequency is the only way out.
   - sourceId: T1_00
     targetId: C3_00
     weight: 0.8
+    rationale: Diagnostic sensors calibrate the ancient key's magnetic frequency to the unpowered override port.
   - sourceId: T1_00
     targetId: RH1_00
     weight: 0.2
+    rationale: 
   solutionEdges:
   - sourceId: T1_00
     targetId: C1_00
@@ -96,7 +101,7 @@ MonoBehaviour:
   - id: CASE0_MANUAL_OVERRIDE
     text: The ancient key can power the manual override.
     tier: 2
-    targetClueId: 
+    targetClueId: C3_00
     submissionFeedback: 
     supportingEdges:
     - clueId: T1_00

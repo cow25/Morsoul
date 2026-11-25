@@ -19,8 +19,9 @@ MonoBehaviour:
   acquisition: 2
   requiredTool: 0
   requiredFlag: 
-  description: I was tending the <b>courtyard lanterns under Brother Kenneth's eye</b> until the bell tolled. My <b>spirits sing with nature</b>, not with cursed muting dust!
+  description: I was <b>tending the courtyard lanterns under Brother Kenneth's eye</b> until the bell tolled. My spirits sing with nature, not with cursed muting dust!
   dissonanceKeyword: spirits sing with nature
   isBacktrackingOnly: 0
   hasWorldPosition: 0
   worldPosition: {x: 0, y: 0}
+  inspectPrefab: {fileID: 0}

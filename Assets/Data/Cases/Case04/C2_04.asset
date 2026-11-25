@@ -19,8 +19,9 @@ MonoBehaviour:
   acquisition: 1
   requiredTool: 1
   requiredFlag: 
-  description: Heavy copper-insulated control wiring <b>corroded into slag</b>. Spectral inspection confirms the <b>same synthetic mana solvent</b> identified in Ignatius' vault and Whisperwood.
+  description: Heavy copper-insulated control wiring corroded into slag. Spectral inspection confirms the same <b>synthetic mana solvent</b> identified in <b>Ignatius' vault and Whisperwood</b>.
   dissonanceKeyword: 
   isBacktrackingOnly: 0
   hasWorldPosition: 0
   worldPosition: {x: 0, y: 0}
+  inspectPrefab: {fileID: 0}

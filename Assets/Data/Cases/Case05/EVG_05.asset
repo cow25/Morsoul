@@ -13,114 +13,120 @@ MonoBehaviour:
   m_Name: EVG_05
   m_EditorClassIdentifier: Morsoul.Data::Morsoul.Data.EvidenceGraphData
   caseId: 5
-  provisional: 1
-  designNote: Provisionally approved Case 5 weighted board. Complete extremism requires both forced cataclysmic overload and calculated ideological purge branches.
+  provisional: 0
+  designNote: Canonical Case 5 graph. 5 S* links, 5-clue main chain (C4->C1->C5->C2->C3) + Eliza readout branch (T1->C3).
   tutorialRedHerringClueIds: []
   tutorialRedHerringFeedback: 
   tutorialReversedLinkFeedback: 
   tutorialGenericLinkFeedback: 
   tutorialLockedConclusionFeedback: 
   clueIds:
+  - C4_05
   - C1_05
+  - C5_05
   - C2_05
   - C3_05
   - T1_05
   - RH1_05
   reliabilities:
+  - clueId: C4_05
+    value: 1
   - clueId: C1_05
-    value: 0.95
+    value: 1
+  - clueId: C5_05
+    value: 1
   - clueId: C2_05
-    value: 0.95
+    value: 1
   - clueId: C3_05
-    value: 0.9
+    value: 1
   - clueId: T1_05
-    value: 0.9
+    value: 0.95
   - clueId: RH1_05
-    value: 0.3
+    value: 0.35
   authoredClueEdges:
+  - sourceId: C4_05
+    targetId: C1_05
+    weight: 0.9
+    rationale: The four-district Guild audit traces every stolen reagent and mana harvest directly into the Sanctum's active siphon pylons.
   - sourceId: C1_05
+    targetId: C5_05
+    weight: 0.9
+    rationale: Inverted pylon pulses match the Empirical Guard's deep-crust seismic spikes beneath Drift 09.
+  - sourceId: C5_05
     targetId: C2_05
     weight: 0.9
+    rationale: Synchronized crust resonance is deliberately overloading the central planetary fissure's containment barrier.
+  - sourceId: C2_05
+    targetId: C3_05
+    weight: 0.9
+    rationale: Engineering a planetary fissure collapse exposes the Grand Overseer's redacted Cult Doctrine as an intentional cataclysmic purge.
   - sourceId: T1_05
     targetId: C3_05
     weight: 0.85
+    rationale: "Eliza's tactical readout confirms the pylons are breaking stabilizer locks \u2014 corroborating the Overseer's ideological hypocrisy."
   - sourceId: C2_05
     targetId: RH1_05
-    weight: 0.2
+    weight: 0.25
+    rationale: 
   solutionEdges:
+  - sourceId: C4_05
+    targetId: C1_05
   - sourceId: C1_05
+    targetId: C5_05
+  - sourceId: C5_05
     targetId: C2_05
+  - sourceId: C2_05
+    targetId: C3_05
   - sourceId: T1_05
     targetId: C3_05
   unlockDependencies: []
   conclusions:
-  - id: CASE5_PASSIVE_RITUAL_DIVERGENCE
-    text: A passive grounding rod can safely divert the ritual discharge.
+  - id: CASE5_CONTAINMENT_FAILURE
+    text: Natural geological instability is overloading the Sanctum fissure.
     tier: 0
     targetClueId: 
-    submissionFeedback: The rod addresses surface arcing, not a pressurized planetary siphon breach.
+    submissionFeedback: "The seismic spikes are synchronized with inverted siphon pylons \u2014 trace the four-district supply chain into the Core."
     supportingEdges:
-    - clueId: RH1_05
-      weight: 0.8
-    contradictingEdges:
-    - clueId: C1_05
-      weight: 0.7
-    - clueId: C2_05
-      weight: 0.9
-    - clueId: T1_05
-      weight: 0.6
-  - id: CASE5_FORCED_CATACLYSMIC_OVERLOAD
-    text: The pylons are forcing a containment overload at the central fissure.
-    tier: 1
-    targetClueId: 
-    submissionFeedback: The overload mechanism is proven, but the ideological responsibility remains unresolved.
-    supportingEdges:
-    - clueId: C1_05
-      weight: 0.4
-    - clueId: C2_05
-      weight: 0.9
-    contradictingEdges:
     - clueId: RH1_05
       weight: 0.5
-  - id: CASE5_IDEOLOGICAL_PURGE
-    text: The Overseer intentionally distorted ancient science to justify mass eradication.
+    contradictingEdges:
+    - clueId: C1_05
+      weight: 0.5
+  - id: CASE5_FORCED_CATACLYSMIC_OVERLOAD
+    text: 'Forced Cataclysmic Overload: Harvested district mana is being pulsed downward through inverted pylons to fracture the central fissure.'
     tier: 1
     targetClueId: 
-    submissionFeedback: The motive is established, but the physical overload path still needs proof.
+    submissionFeedback: "You proved the overload is engineered \u2014 now connect the fissure and Eliza's readout to the Overseer's Doctrine."
     supportingEdges:
-    - clueId: T1_05
-      weight: 0.4
-    - clueId: C3_05
-      weight: 0.9
-    contradictingEdges:
-    - clueId: RH1_05
-      weight: 0.3
+    - clueId: C2_05
+      weight: 1
+    contradictingEdges: []
   - id: CASE5_HYPOCRITICAL_IDEOLOGICAL_EXTREMISM
-    text: The Grand Overseer is using forbidden extraction to force an extinction-level purge while rewriting the cause of the first catastrophe.
+    text: 'Hypocritical Ideological Extremism: The Grand Overseer distorted First-Age history to justify shattering the planetary mana seal.'
     tier: 2
-    targetClueId: 
+    targetClueId: C3_05
     submissionFeedback: 
     supportingEdges:
-    - clueId: C2_05
-      weight: 0.9
     - clueId: C3_05
-      weight: 0.9
+      weight: 1
     contradictingEdges:
     - clueId: RH1_05
-      weight: 0.5
-  startingWrongConclusionId: CASE5_PASSIVE_RITUAL_DIVERGENCE
+      weight: 0.8
+  startingWrongConclusionId: CASE5_CONTAINMENT_FAILURE
   completeConclusionId: CASE5_HYPOCRITICAL_IDEOLOGICAL_EXTREMISM
   parameters:
     alpha: 0.85
     contradictionWeight: 0.8
-    inventedLinkPenalty: 0.1
-    lowThreshold: 0.35
-    highThreshold: 0.75
+    inventedLinkPenalty: 0.15
+    lowThreshold: 0.3
+    highThreshold: 0.85
     PrunedMode: 1
     RivalClueId: 
-  cachedReferenceSupport: 0.091404736
+  cachedReferenceSupport: 0.1689631
   solutionTopologicalOrder:
+  - C4_05
   - C1_05
+  - C5_05
   - C2_05
   - T1_05
   - C3_05

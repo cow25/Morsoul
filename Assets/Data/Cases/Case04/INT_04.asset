@@ -54,6 +54,13 @@ MonoBehaviour:
       isCoreContradiction: 0
       responseDialogue: The bypass cables were melted with the same synthetic mana solvent found in Ignatius' vault and Vane's camp. This is a wider operation. Who supplied you?
       emotionAura: 2
+    - verb: 2
+      evidence: {fileID: 11400000, guid: 7b08a4c0452ad11458ab2a877d65cdd4, type: 2}
+      breaksComposureSegment: 1
+      strikeCost: 0
+      isCoreContradiction: 0
+      responseDialogue: Your own signature is on the Drift 09 freight manifest logging off-hours deliveries of Whisperwood mana bladders and solvent carboys straight down to the sub-facility. You weren't working upper-tier masonry.
+      emotionAura: 2
     invalidMoves:
     - verb: 2
       evidence: {fileID: 11400000, guid: 33300352d0376ea418009a4251537502, type: 2}
@@ -79,5 +86,12 @@ MonoBehaviour:
       strikeCost: 0
       isCoreContradiction: 0
       responseDialogue: It wasn't a dead end. The rock concealed the blast doors of an ancient research facility. You caused the blowout to breach it for the Veiled Circle.
+      emotionAura: 0
+    - verb: 1
+      evidence: {fileID: 11400000, guid: 0d192faf3b0d71942a0193fef3a4164a, type: 2}
+      breaksComposureSegment: 1
+      strikeCost: 0
+      isCoreContradiction: 0
+      responseDialogue: "You didn't blow out useless granite \u2014 you bridged the external stasis override relay with Veiled Circle shunts to seal Chief Engineer Brokk inside while your order claimed the pre-Cataclysm lab."
       emotionAura: 0
     invalidMoves: []

@@ -54,6 +54,13 @@ MonoBehaviour:
       isCoreContradiction: 0
       responseDialogue: 'The acoustics substantiate a redirect: a spell from the base cannot coat a clapper suspended eighty feet in the rafters. The damping agent was applied manually by whoever climbed the belfry before vespers.'
       emotionAura: 0
+    - verb: 2
+      evidence: {fileID: 11400000, guid: f41d36c0b2d8b8048aec0626de27f08b, type: 2}
+      breaksComposureSegment: 1
+      strikeCost: 0
+      isCoreContradiction: 0
+      responseDialogue: "Your own polishing rag from the belfry bench is saturated with the exact same black metallic damping soot. Nobody chanted it onto the clapper from the courtyard \u2014 you wiped it on by hand."
+      emotionAura: 0
     invalidMoves:
     - verb: 2
       evidence: {fileID: 11400000, guid: 6497922a6710d1f4f9227c778a27b6d9, type: 2}
@@ -79,5 +86,12 @@ MonoBehaviour:
       strikeCost: 0
       isCoreContradiction: 0
       responseDialogue: You didn't want to harm her, Accord. You were cornered. The hooded stranger held your family's exile over your head.
+      emotionAura: 0
+    - verb: 1
+      evidence: {fileID: 11400000, guid: dc7ff005a4557354fb837c605651c610, type: 2}
+      breaksComposureSegment: 1
+      strikeCost: 0
+      isCoreContradiction: 0
+      responseDialogue: Your sister Marian's sanctuary debt was bought out by a veil-sealed creditor due at sunset. They used her asylum to force your hand, Accord.
       emotionAura: 0
     invalidMoves: []

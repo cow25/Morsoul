@@ -19,8 +19,9 @@ MonoBehaviour:
   acquisition: 3
   requiredTool: 0
   requiredFlag: 
-  description: Stripped bark infested with common wood-boring beetles. A <b>natural secondary infestation</b> attracted by the tree's dying state, <b>unrelated to deep mana drainage</b>.
+  description: Stripped bark infested with common wood-boring beetles. A <b>natural secondary infestation</b> attracted by the dying tree, unrelated to deep mana drainage.
   dissonanceKeyword: 
   isBacktrackingOnly: 0
   hasWorldPosition: 0
   worldPosition: {x: 0, y: 0}
+  inspectPrefab: {fileID: 0}

@@ -19,8 +19,9 @@ MonoBehaviour:
   acquisition: 2
   requiredTool: 0
   requiredFlag: 
-  description: I saw the spirit-folk <b>chanted from the tower base</b> right before the chime! Their foreign sorcery shattered the crystal and stole our Mother's voice!
+  description: I saw the spirit-folk <b>chanting near the tower base</b> right before the chime! Their foreign sorcery shattered the crystal and stole our Mother's voice!
   dissonanceKeyword: chanted from the tower base
   isBacktrackingOnly: 0
   hasWorldPosition: 0
   worldPosition: {x: 0, y: 0}
+  inspectPrefab: {fileID: 0}

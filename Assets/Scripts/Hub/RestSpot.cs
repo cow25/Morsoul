@@ -21,11 +21,16 @@ namespace Morsoul.Hub
         public AudioClip restCue;
 
         HubPlayerController _player;
+        HubCharacterAnimator _playerAnimator;
+        Collider2D[] _playerColliders;
+        Collider2D[] _spotColliders;
         HubContext _context;
         System.Func<bool> _restBlocker;
         float _sessionTargetFocus;
         string _statusMessage;
         bool _prompting;
+        bool _walkingToSeat;
+        Vector2 _seatTarget;
 
         void Reset()
         {
@@ -225,7 +230,21 @@ namespace Morsoul.Hub
             IsResting = true;
             if (restCue != null) core.Audio?.PlaySfx(restCue);
             if (_player == null) _player = FindAnyObjectByType<HubPlayerController>();
-            if (_player != null) _player.enabled = false;
+            if (_player != null)
+            {
+                _player.enabled = false;
+                var rb = _player.GetComponent<Rigidbody2D>();
+                if (rb != null) rb.linearVelocity = Vector2.zero;
+
+                var visualChild = transform.Find("Visual");
+                var sr = visualChild != null ? visualChild.GetComponent<SpriteRenderer>() : null;
+                _seatTarget = sr != null ? (Vector2)sr.bounds.center : (Vector2)transform.position;
+
+                SetIgnoreSpotCollisions(true);
+                _playerAnimator = _player.GetComponentInChildren<HubCharacterAnimator>();
+                if (_playerAnimator != null) _playerAnimator.externalDrive = true;
+                _walkingToSeat = true;
+            }
             if (restingIndicator != null) restingIndicator.SetActive(true);
             SetPromptVisible(true);
             TutorialOverlayController.TryShow("TUT_REST_SPOT");
@@ -236,9 +255,26 @@ namespace Morsoul.Hub
         {
             if (!IsResting) return;
             IsResting = false;
+            _walkingToSeat = false;
             _statusMessage = null;
-            if (_player != null) _player.enabled = true;
+            if (_playerAnimator != null) _playerAnimator.externalDrive = false;
+            SetIgnoreSpotCollisions(false);
+            if (_player != null)
+            {
+                _player.SetFacing(PlayerFacing2D.Down);
+                _player.enabled = true;
+            }
             if (restingIndicator != null) restingIndicator.SetActive(false);
+        }
+
+        void SetIgnoreSpotCollisions(bool ignore)
+        {
+            if (_player == null) return;
+            if (_playerColliders == null) _playerColliders = _player.GetComponentsInChildren<Collider2D>();
+            if (_spotColliders == null) _spotColliders = GetComponentsInChildren<Collider2D>();
+            foreach (var pc in _playerColliders)
+                foreach (var sc in _spotColliders)
+                    if (pc != null && sc != null) Physics2D.IgnoreCollision(pc, sc, ignore);
         }
 
         void Update()
@@ -246,6 +282,26 @@ namespace Morsoul.Hub
             if (!IsResting) return;
             var core = CoreRuntime.Instance;
             if (core == null) { StopResting(); return; }
+
+            if (_walkingToSeat && _player != null)
+            {
+                Vector2 pos = _player.transform.position;
+                Vector2 delta = _seatTarget - pos;
+                if (delta.sqrMagnitude > 0.0004f)
+                {
+                    float speed = _player.moveSpeed > 0f ? _player.moveSpeed : 3.5f;
+                    Vector2 next = Vector2.MoveTowards(pos, _seatTarget, speed * Time.deltaTime);
+                    _player.transform.position = new Vector3(next.x, next.y, _player.transform.position.z);
+                    if (_playerAnimator != null) _playerAnimator.Tick(delta.normalized);
+                    return;
+                }
+
+                _player.transform.position = new Vector3(_seatTarget.x, _seatTarget.y, _player.transform.position.z);
+                _walkingToSeat = false;
+                if (_playerAnimator != null) _playerAnimator.externalDrive = false;
+                _player.SetFacing(PlayerFacing2D.Down);
+            }
+
             core.Focus.TickRest(Time.deltaTime * 2f);
 
             if (core.Focus.Percent >= _sessionTargetFocus || core.Focus.Percent >= core.Focus.Maximum)

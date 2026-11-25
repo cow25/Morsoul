@@ -29,7 +29,7 @@
 
         <!-- Top-Right: Case -->
         <ui:VisualElement name="TopRightPanel" class="hud-top-right" picking-mode="Ignore">
-            <ui:Label name="CaseLabel" text="Prologue" class="hud-case-label" picking-mode="Ignore"/>
+            <ui:Label name="CaseLabel" text="" class="hud-case-label" picking-mode="Ignore"/>
         </ui:VisualElement>
 
         <!-- Bottom-Left: Abilities -->

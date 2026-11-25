@@ -376,7 +376,8 @@ namespace Morsoul.Tests
         {
             var g = ValidGraph();
             Assert.That(g.NextUnfinishedSolutionClue(new DirectedEdge[0]), Is.EqualTo("a"));
-            Assert.That(g.NextUnfinishedSolutionClue(new[] { L("a", "b") }), Is.EqualTo("b"));
+            Assert.That(g.NextUnfinishedSolutionClue(new[] { L("a", "b") }), Is.EqualTo("c"));
+            Assert.That(g.NextUnfinishedSolutionClue(new[] { L("b", "c") }), Is.EqualTo("a"));
             Assert.That(g.NextUnfinishedSolutionClue(new[] { L("a", "b"), L("b", "c") }), Is.Null);
             Assert.That(g.IncidentSolutionLinks("b"), Has.Count.EqualTo(2));
             Assert.That(g.FinalSolutionClue, Is.EqualTo("c"));

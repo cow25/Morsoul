@@ -19,8 +19,9 @@ MonoBehaviour:
   acquisition: 1
   requiredTool: 1
   requiredFlag: 
-  description: "<b>Rapid-sublimating synthetic solvent residue</b> releasing <b>harmless purple vapor</b> \u2014 <b>not dark magic</b>."
+  description: "<b>Rapid-sublimating synthetic solvent residue</b> releasing harmless <b>purple vapor</b> \u2014 theatrical irritant, <b>not dark magic</b>."
   dissonanceKeyword: 
   isBacktrackingOnly: 0
   hasWorldPosition: 1
   worldPosition: {x: 4, y: 4}
+  inspectPrefab: {fileID: 0}

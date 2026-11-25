@@ -731,7 +731,7 @@ namespace Morsoul.Tests
             Assert.IsTrue(hotkey.EnsureBoard());
             Assert.AreSame(case1, board.caseData);
             Assert.NotNull(board.Session);
-            Assert.AreEqual(6, board.Session.State.CollectedClueIds.Count);
+            Assert.AreEqual(8, board.Session.State.CollectedClueIds.Count);
             CollectionAssert.Contains(board.Session.State.CollectedClueIds, "C1_01");
             CollectionAssert.Contains(board.Session.State.CollectedClueIds, "T2_01");
             CollectionAssert.DoesNotContain(board.Session.State.CollectedClueIds, "L1_01");

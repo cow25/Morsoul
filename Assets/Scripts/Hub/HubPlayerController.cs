@@ -45,6 +45,21 @@ namespace Morsoul.Hub
         public Vector2 MoveInput { get; private set; }
         /// <summary>Last non-zero movement direction, persisted for save/restore.</summary>
         public PlayerFacing2D CurrentFacing => _facing;
+
+        /// <summary>Updates facing and syncs the child character animator.</summary>
+        public void SetFacing(PlayerFacing2D facing)
+        {
+            _facing = facing;
+            MoveInput = Vector2.zero;
+            Vector2 dir = facing switch
+            {
+                PlayerFacing2D.Up => Vector2.up,
+                PlayerFacing2D.Left => Vector2.left,
+                PlayerFacing2D.Right => Vector2.right,
+                _ => Vector2.down
+            };
+            GetComponentInChildren<HubCharacterAnimator>()?.SetFacing(dir);
+        }
         /// <summary>Nearest interactable currently in range, if any.</summary>
         public Interactable2D CurrentTarget { get; private set; }
 

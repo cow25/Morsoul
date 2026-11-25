@@ -49,7 +49,7 @@ namespace Morsoul.Tests
         {
             var f = TestCases.Build(1, true);
             f.interrogation.phases[1].invalidMoves[0].breaksComposureSegment = true;
-            AssertInvalid(f.caseData.Validate(), "exactly one composure-breaking");
+            AssertInvalid(f.caseData.Validate(), "must be in validMoves");
         }
 
         [Test]
@@ -57,7 +57,7 @@ namespace Morsoul.Tests
         {
             var f = TestCases.Build(1, true);
             f.interrogation.phases[1].validMoves[0].breaksComposureSegment = false;
-            AssertInvalid(f.caseData.Validate(), "exactly one composure-breaking");
+            AssertInvalid(f.caseData.Validate(), "at least one composure-breaking");
         }
 
         [Test]
@@ -176,7 +176,7 @@ namespace Morsoul.Tests
                 AssertValid(case0.Validate());
                 AssertValid(case1.Validate());
 
-                Assert.That(case1.clues.Length, Is.EqualTo(7));
+                Assert.That(case1.clues.Length, Is.EqualTo(9));
                 Assert.That(case1.interrogation.phases.Length, Is.EqualTo(3));
 
                 // Weighted canon: generated cases link the canonical evidence
@@ -206,7 +206,7 @@ namespace Morsoul.Tests
 
                 AssertValid(case2.Validate());
 
-                Assert.That(case2.clues.Length, Is.EqualTo(7));
+                Assert.That(case2.clues.Length, Is.EqualTo(9));
                 Assert.That(case2.clues.Any(c => c != null && c.type == ClueType.Latent), Is.True);
                 Assert.That(case2.latentLog, Is.Not.Null);
 
@@ -216,7 +216,7 @@ namespace Morsoul.Tests
                 Assert.That(phases.Length, Is.EqualTo(3));
                 foreach (var phase in phases)
                     Assert.That(phase.validMoves.Count(m => m != null && m.breaksComposureSegment),
-                        Is.EqualTo(1));
+                        Is.GreaterThanOrEqualTo(1));
             }
             finally
             {
@@ -237,7 +237,7 @@ namespace Morsoul.Tests
                 Assert.NotNull(case5);
                 AssertValid(case4.Validate());
                 AssertValid(case5.Validate());
-                Assert.That(case4.clues.Length, Is.EqualTo(7));
+                Assert.That(case4.clues.Length, Is.EqualTo(9));
                 Assert.That(case4.toolUnlocked, Is.EqualTo(Morsoul.Data.Tool.AetherSight));
                 Assert.That(case4.latentLog.id, Is.EqualTo(4));
                 Assert.That(case4.latentLog.availableAfterCase, Is.EqualTo(4));
@@ -247,14 +247,14 @@ namespace Morsoul.Tests
                 Assert.That(case4.hypothesis, Is.Null);
                 Assert.That(case4.interrogation.phases[0].validMoves.Single(m => m.verb == Verb.Press).emotionAura,
                     Is.EqualTo(Aura.Amber));
-                Assert.That(case4.interrogation.phases[1].validMoves.Single().emotionAura, Is.EqualTo(Aura.Violet));
+                Assert.That(case4.interrogation.phases[1].validMoves.All(m => m.emotionAura == Aura.Violet), Is.True);
                 Assert.That(case5.hasInvestigationScene, Is.False);
                 Assert.That(case5.hasInterrogation, Is.False);
                 Assert.That(case5.interrogation, Is.Null);
                 Assert.That(case5.hypothesis, Is.Null);
                 Assert.That(case5.evidenceGraph, Is.Not.Null);
                 Assert.That(case5.latentLog, Is.Null);
-                Assert.That(case5.clues.Length, Is.EqualTo(5));
+                Assert.That(case5.clues.Length, Is.EqualTo(7));
                 CollectionAssert.AreEquivalent(case5.clues, case5.preloadedClues);
                 Assert.That(case5.clues.All(c => c.requiredTool == Morsoul.Data.Tool.None), Is.True);
                 Assert.That(case5.clues.Any(c => c.type == ClueType.Latent), Is.False);
@@ -284,7 +284,7 @@ namespace Morsoul.Tests
 
                 AssertValid(case3.Validate());
 
-                Assert.That(case3.clues.Length, Is.EqualTo(7));
+                Assert.That(case3.clues.Length, Is.EqualTo(9));
                 Assert.That(case3.clues.Any(c => c != null && c.type == ClueType.Latent), Is.True);
                 Assert.That(case3.latentLog, Is.Not.Null);
                 Assert.That(case3.latentLog.id, Is.EqualTo(3));
@@ -296,7 +296,7 @@ namespace Morsoul.Tests
                 Assert.That(phases.Length, Is.EqualTo(3));
                 foreach (var phase in phases)
                     Assert.That(phase.validMoves.Count(m => m != null && m.breaksComposureSegment),
-                        Is.EqualTo(1));
+                        Is.GreaterThanOrEqualTo(1));
             }
             finally
             {

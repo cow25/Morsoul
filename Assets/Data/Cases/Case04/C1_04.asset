@@ -19,8 +19,9 @@ MonoBehaviour:
   acquisition: 0
   requiredTool: 0
   requiredFlag: 
-  description: <b>High-pressure pneumatic release valves manually wrenched</b> past safety tolerances and <b>jammed with iron wedge pins</b>. Backpressure was intentionally forced to trigger a pipeline rupture.
+  description: High-pressure pneumatic release valves manually wrenched past safety tolerances and <b>jammed with iron wedge pins</b>. Backpressure was <b>intentionally forced</b> to trigger a pipeline rupture.
   dissonanceKeyword: 
   isBacktrackingOnly: 0
   hasWorldPosition: 0
   worldPosition: {x: 0, y: 0}
+  inspectPrefab: {fileID: 0}

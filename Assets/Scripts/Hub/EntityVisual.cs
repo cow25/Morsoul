@@ -17,7 +17,7 @@ namespace Morsoul.Hub
 
         void Awake()
         {
-            Apply(profile);
+            Apply(profile, preserveExistingTransform: true);
         }
 
         public void Apply()
@@ -25,7 +25,7 @@ namespace Morsoul.Hub
             Apply(profile);
         }
 
-        public void Apply(VisualProfile visualProfile)
+        public void Apply(VisualProfile visualProfile, bool preserveExistingTransform = false)
         {
             profile = visualProfile;
             var rootRenderer = GetComponent<MeshRenderer>();
@@ -52,12 +52,15 @@ namespace Morsoul.Hub
                 childGo = child.gameObject;
             }
             childGo.SetActive(true);
-            childGo.transform.localPosition = profile.visualOffset;
-            childGo.transform.localRotation = Quaternion.identity;
-            var parentScale = transform.localScale;
-            float sx = parentScale.x != 0 ? profile.visualScale.x / parentScale.x : profile.visualScale.x;
-            float sy = parentScale.y != 0 ? profile.visualScale.y / parentScale.y : profile.visualScale.y;
-            childGo.transform.localScale = new Vector3(sx, sy, 1f);
+            if (!preserveExistingTransform || child == null)
+            {
+                childGo.transform.localPosition = profile.visualOffset;
+                childGo.transform.localRotation = Quaternion.identity;
+                var parentScale = transform.localScale;
+                float sx = parentScale.x != 0 ? profile.visualScale.x / parentScale.x : profile.visualScale.x;
+                float sy = parentScale.y != 0 ? profile.visualScale.y / parentScale.y : profile.visualScale.y;
+                childGo.transform.localScale = new Vector3(sx, sy, 1f);
+            }
 
             Renderer = childGo.GetComponent<SpriteRenderer>();
             if (Renderer == null) Renderer = childGo.AddComponent<SpriteRenderer>();

@@ -55,6 +55,14 @@ namespace Morsoul.Hub
                 Tick(_controller != null ? _controller.MoveInput : Vector2.zero);
         }
 
+        public void SetFacing(Vector2 facing)
+        {
+            _facing = facing.sqrMagnitude > 0.001f ? facing.normalized : Vector2.down;
+            if (flipByMoveX && _renderer != null)
+                _renderer.flipX = Mathf.Abs(_facing.x) > 0.01f && _facing.x < 0f;
+            Tick(Vector2.zero);
+        }
+
         public void Tick(Vector2 move)
         {
             if (_animator == null) return;

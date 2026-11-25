@@ -35,6 +35,13 @@ MonoBehaviour:
       isCoreContradiction: 1
       responseDialogue: Spectral analysis detected synthetic solvent sublimation, not necromancy or dark magic. The smoke was a theatrical irritant.
       emotionAura: 0
+    - verb: 1
+      evidence: {fileID: 11400000, guid: d2b6c136916cd1949b186fe75d9144f1, type: 2}
+      breaksComposureSegment: 1
+      strikeCost: 0
+      isCoreContradiction: 1
+      responseDialogue: "An unmarked crate stacked right outside your own workshop carries the exact same purple-film solvent. You didn't suffer a dark-magic ambush \u2014 you received a delivery."
+      emotionAura: 0
     invalidMoves: []
   - suspectClaim: Even if mundane solvent was used, some skilled cat burglar must have jimmied the locks from the back alley while Asterveil slept!
     keywords:
@@ -79,5 +86,12 @@ MonoBehaviour:
       strikeCost: 0
       isCoreContradiction: 0
       responseDialogue: You destroyed nothing of value. Batch records confirm shipment #408 was never bottled. You staged an attack to collect guild insurance on phantom goods.
+      emotionAura: 0
+    - verb: 1
+      evidence: {fileID: 11400000, guid: 6b5d70b95a5034b429c93992914bb255, type: 2}
+      breaksComposureSegment: 1
+      strikeCost: 0
+      isCoreContradiction: 0
+      responseDialogue: "You pre-signed a Treasury indemnity claim for Batch #408 two full days before the breach even occurred. You weren't ruined by an attack \u2014 you scheduled it."
       emotionAura: 0
     invalidMoves: []

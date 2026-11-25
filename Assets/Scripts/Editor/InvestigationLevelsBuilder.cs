@@ -175,6 +175,12 @@ namespace Morsoul.Editor
                 "Shipment #408 ledger: 200 crates of Greater Restoration Draughts logged, yet zero Moon-Lily extract was ever purchased.",
                 new Vector3(-4.4f, 1.0f, 1.7f), new Vector3(1.6f, 1.1f, 1.3f), clues, scroll, useGroundEmbers: true);
 
+            // C4_01: Draft Treasury Indemnity Claim (Room 2 inner vault crate/table)
+            var claimScroll = PlaceProp(Mfp + "Miscellaneous/scroll.prefab", clues, new Vector3(-2.4f, 0.86f, 8.8f), new Vector3(0f, 35f, 0f), new Vector3(1.3f, 1.3f, 1.3f));
+            CreateClueNode("C4_IndemnityClaim", "C4_01", ClueNode.Kind.Physical, ClueNode.Tool.None, ClueNode.State.Revealed,
+                "Pre-signed Treasury compensation claim for Batch #408, dated two days before the breach, naming Ignatius as sole beneficiary.",
+                new Vector3(-2.4f, 1.0f, 8.8f), new Vector3(1.4f, 1.1f, 1.4f), clues, claimScroll, useGroundEmbers: true);
+
             // L1_01: Sub-floor potion rack alcove in Room 2 (0, 12) — completely concealed until AetherSight is unlocked (yellow embers)
             CreateClueNode("L1_RunicLog1_Alcove", "L1_01", ClueNode.Kind.Physical, ClueNode.Tool.AetherSight, ClueNode.State.Hidden,
                 "Sub-floor alcove etching: pre-cataclysm equations for synthetic mana solvent volatility (Runic Log #1).",
@@ -191,7 +197,8 @@ namespace Morsoul.Editor
             SceneManager.MoveGameObjectToScene(ctrlGo, scene);
             var objCtrl = ctrlGo.AddComponent<InvestigationObjectiveController>();
             objCtrl.caseId = 1;
-            objCtrl.requiredClueIds = new[] { "C1_01", "C2_01", "C3_01" };
+            objCtrl.requiredClueIds = new[] { "C1_01", "C2_01", "C3_01", "C4_01" };
+            objCtrl.gatherObjectiveFormat = "Inspect vault lock, scan solvent residue [Tab], check cargo desk, and search the inner vault ({0}/{1}).";
 
             SaveScene(scene, Case1ScenePath);
         }
@@ -411,6 +418,12 @@ namespace Morsoul.Editor
                 "Crumpled letter addressed to Accord, sealed with the Veiled Circle's veil sigil. Threatens his sister Marian's asylum.",
                 new Vector3(-5.2f, 4.95f, 14.8f), new Vector3(1.4f, 1.2f, 1.4f), clues, note, useGroundEmbers: true);
 
+            // C4_02: Bell-Ringer's Soot-Stained Rag (upper East gallery workbench)
+            var sootRag = PlaceProp(Dfk + "Decoration/Textiles/dfk_carpet_black_small.prefab", clues, new Vector3(4.6f, 4.05f, 12.6f), new Vector3(0f, -20f, 0f), new Vector3(0.45f, 0.45f, 0.45f));
+            CreateClueNode("C4_SootStainedRag", "C4_02", ClueNode.Kind.Physical, ClueNode.Tool.None, ClueNode.State.Revealed,
+                "Oily polishing cloth tucked into Accord's belfry bench, coated in the same black metallic damping soot found on the clapper.",
+                new Vector3(4.6f, 4.35f, 12.6f), new Vector3(1.4f, 1.1f, 1.4f), clues, sootRag, useGroundEmbers: true);
+
             // L2_02: Rear foundation beam behind the bell housing (Y = 4.0 gallery, z = 17.3) — concealed until AetherSight
             CreateClueNode("L2_RunicLog2_Beam", "L2_02", ClueNode.Kind.Physical, ClueNode.Tool.AetherSight, ClueNode.State.Hidden,
                 "Ancient harmonic rune etched into the rear masonry beam: Acoustic Stabilization equations (Runic Log #2).",
@@ -427,7 +440,7 @@ namespace Morsoul.Editor
             SceneManager.MoveGameObjectToScene(ctrlGo, scene);
             var objCtrl = ctrlGo.AddComponent<InvestigationObjectiveController>();
             objCtrl.caseId = 2;
-            objCtrl.requiredClueIds = new[] { "C1_02", "C2_02", "C3_02" };
+            objCtrl.requiredClueIds = new[] { "C1_02", "C2_02", "C3_02", "C4_02" };
             objCtrl.gatherObjectiveFormat = "Inspect the shattered crystal, climb the stone stairs to the Great Bell [Tab], and search the upper gallery ({0}/{1}).";
             objCtrl.boardObjective = "Evidence gathered. Open the Deduction Board [H] or descend to the Cathedral.";
             objCtrl.solvedObjective = "Board solved! Descend the belfry stairs to confront Accord.";
@@ -694,6 +707,14 @@ namespace Morsoul.Editor
                 "Vane's discarded ritual cloak. Lingers with fanatical zeal and deceit tying him to the Sanctum Core ritual.",
                 new Vector3(-5.5f, 0.45f, 9.6f), new Vector3(1.6f, 1.0f, 1.6f), clues, cloak, useGroundEmbers: true);
 
+            // C4_03: Sealed Mana-Resin Canister (East clearing beside harvest barrels)
+            var canister = CreatePrimitiveMarker("ManaResinCanister", PrimitiveType.Cylinder, new Vector3(4.8f, 0.45f, 8.2f),
+                new Vector3(0.45f, 0.45f, 0.45f), new Color(0.76f, 0.56f, 0.22f), clues, false);
+            AddAmbientMist(canister.transform, new Color(0.32f, 0.86f, 0.65f, 0.35f));
+            CreateClueNode("C4_ManaResinCanister", "C4_03", ClueNode.Kind.Physical, ClueNode.Tool.None, ClueNode.State.Revealed,
+                "Pressurized brass canister filled with luminous sap, stenciled for Veiled Circle shipment to Iron Hollow Drift 09.",
+                new Vector3(4.8f, 0.55f, 8.2f), new Vector3(1.4f, 1.2f, 1.4f), clues, canister, useGroundEmbers: true);
+
             // L3_03: Central Altar Ground (center of spell circle) — concealed until AetherSight is unlocked (yellow embers)
             var log3Visual = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(Dfk + "Lightsources/dfk_crystal_01_blue.prefab");
             CreateClueNode("L3_RunicLog3_AltarGround", "L3_03", ClueNode.Kind.Physical, ClueNode.Tool.AetherSight, ClueNode.State.Hidden,
@@ -711,8 +732,8 @@ namespace Morsoul.Editor
             SceneManager.MoveGameObjectToScene(ctrlGo, scene);
             var objCtrl = ctrlGo.AddComponent<InvestigationObjectiveController>();
             objCtrl.caseId = 3;
-            objCtrl.requiredClueIds = new[] { "C1_03", "C2_03", "C3_03" };
-            objCtrl.gatherObjectiveFormat = "Inspect the Elder Tree siphon, ritual dagger, and Vane's cloak ({0}/{1}).";
+            objCtrl.requiredClueIds = new[] { "C1_03", "C2_03", "C3_03", "C4_03" };
+            objCtrl.gatherObjectiveFormat = "Inspect the Elder Tree siphon, ritual dagger, Vane's cloak, and mana canister ({0}/{1}).";
             objCtrl.boardObjective = "Evidence gathered. Open the Deduction Board [H] or return to Whisperwood Trail.";
             objCtrl.solvedObjective = "Board solved! Return to the Whisperwood Trail to confront Vane.";
 
@@ -935,6 +956,14 @@ namespace Morsoul.Editor
             UnityEventTools.AddBoolPersistentListener(sealLock.onInteractSuccess, sealGo.SetActive, false);
             UnityEventTools.AddBoolPersistentListener(sealLock.onInteractSuccess, blastDoor.SetActive, false);
 
+            // C5_04: External Stasis Override Relay (mounted right of the Blast Door outside the sub-lab)
+            var relayBox = CreatePrimitiveMarker("StasisOverrideRelay", PrimitiveType.Cube, new Vector3(2.3f, 1.2f, 11.4f),
+                new Vector3(0.45f, 0.65f, 0.35f), new Color(0.55f, 0.32f, 0.18f), clues, false);
+            AddPointLight(env, new Vector3(2.3f, 1.4f, 11.1f), new Color(0.95f, 0.45f, 0.22f), 1.6f, 4f);
+            CreateClueNode("C5_StasisOverrideRelay", "C5_04", ClueNode.Kind.Physical, ClueNode.Tool.None, ClueNode.State.Revealed,
+                "Auxiliary lockout relay mounted outside the blast door, bridged with Veiled Circle copper shunts to trap Brokk inside.",
+                new Vector3(2.3f, 1.2f, 11.4f), new Vector3(1.3f, 1.4f, 1.2f), clues, relayBox, useGroundEmbers: true);
+
             // L4_04: Ancient Primary Terminal inside sub-lab (z=18.5) — concealed until AetherSight+GolemEye (yellow embers)
             var terminal = PlaceProp(Dfk + "Furnitures/dfk_desk_02.prefab", clues, new Vector3(0f, 0f, 18.5f), Vector3.zero, Vector3.one);
             CreateClueNode("L4_RunicLog4_Terminal", "L4_04", ClueNode.Kind.Physical, ClueNode.Tool.Both, ClueNode.State.Hidden,
@@ -952,8 +981,8 @@ namespace Morsoul.Editor
             SceneManager.MoveGameObjectToScene(ctrlGo, scene);
             var objCtrl = ctrlGo.AddComponent<InvestigationObjectiveController>();
             objCtrl.caseId = 4;
-            objCtrl.requiredClueIds = new[] { "C1_04", "C2_04", "C3_04" };
-            objCtrl.gatherObjectiveFormat = "Inspect pneumatic valves, scan bypass conduits [Tab], and check the blast door ({0}/{1}).";
+            objCtrl.requiredClueIds = new[] { "C1_04", "C2_04", "C3_04", "C5_04" };
+            objCtrl.gatherObjectiveFormat = "Inspect pneumatic valves, scan bypass conduits [Tab], check the blast door, and examine the stasis relay ({0}/{1}).";
             objCtrl.boardObjective = "Evidence gathered. Open the Deduction Board [H] or ride the Shaft Elevator up.";
             objCtrl.solvedObjective = "Board solved! Ride the Shaft Elevator to the surface to confront Harlan.";
 
