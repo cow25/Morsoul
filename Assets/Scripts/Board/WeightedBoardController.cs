@@ -705,9 +705,10 @@ namespace Morsoul.Board
             var slots = new List<Vector2>();
             if (unpositioned.Count > 0)
             {
-                int slotCount = Mathf.Max(9, unpositioned.Count);
+                int slotCount = Mathf.Max(8, unpositioned.Count);
+                ComputeGridMetrics(slotCount, out int cols, out float stepX, out float stepY, out float padX, out float padY);
                 for (int s = 0; s < slotCount; s++)
-                    slots.Add(new Vector2(18 + (s % 3) * 185, 20 + (s / 3) * 92));
+                    slots.Add(new Vector2(padX + (s % cols) * stepX, padY + (s / cols) * stepY));
                 for (int s = slots.Count - 1; s > 0; s--)
                 {
                     int j = UnityEngine.Random.Range(0, s + 1);
@@ -1053,15 +1054,30 @@ namespace Morsoul.Board
             painter.Stroke();
         }
 
-        /// <summary>Arranges all board nodes into a clean grid and updates link lines.</summary>
+        void ComputeGridMetrics(int count, out int cols, out float stepX, out float stepY, out float padX, out float padY)
+        {
+            cols = count <= 4 ? 2 : (count <= 6 ? 3 : 4);
+            int rows = Mathf.Max(1, Mathf.CeilToInt(count / (float)cols));
+            float cw = _canvas != null && _canvas.layout.width > 120f ? _canvas.layout.width : 720f;
+            float ch = _canvas != null && _canvas.layout.height > 120f ? _canvas.layout.height : 380f;
+            padX = 18f;
+            padY = 20f;
+            const float cardW = 148f;
+            const float cardH = 56f;
+            stepX = cols > 1 ? Mathf.Clamp((cw - padX * 2f - cardW) / (cols - 1), 130f, 195f) : 165f;
+            stepY = rows > 1 ? Mathf.Clamp((ch - padY * 2f - cardH) / (rows - 1), 76f, 124f) : 96f;
+        }
+
+        /// <summary>Arranges all board nodes into a clean responsive grid and updates link lines.</summary>
         public void AutoAlignNodes()
         {
             if (_session == null) return;
+            ComputeGridMetrics(_nodes.Count, out int cols, out float stepX, out float stepY, out float padX, out float padY);
             int idx = 0;
             foreach (var pair in _nodes)
             {
-                float x = 24f + (idx % 3) * 200f;
-                float y = 24f + (idx / 3) * 116f;
+                float x = padX + (idx % cols) * stepX;
+                float y = padY + (idx / cols) * stepY;
                 pair.Value.style.left = x;
                 pair.Value.style.top = y;
                 _session.SetNodePosition(pair.Key, x, y);

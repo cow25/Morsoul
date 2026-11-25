@@ -204,6 +204,8 @@ namespace Morsoul.Flow
 
             var lampRow = root.Q<VisualElement>("LampRow");
             if (lampRow != null) lampRow.style.display = DisplayStyle.None;
+            var lampLabel = root.Q<Label>("LampLabel");
+            if (lampLabel != null) lampLabel.style.display = DisplayStyle.None;
             var drawer = root.Q<VisualElement>("ClueInspectorDrawer");
             if (drawer != null) drawer.style.display = DisplayStyle.Flex;
             _selectedClueTitle = root.Q<Label>("SelectedClueTitle");
@@ -801,11 +803,18 @@ namespace Morsoul.Flow
 
         void AutoAlign()
         {
+            int count = _nodes.Count;
+            int cols = count <= 4 ? 2 : (count <= 6 ? 3 : 4);
+            int rows = Mathf.Max(1, Mathf.CeilToInt(count / (float)cols));
+            float cw = _canvas != null && _canvas.layout.width > 120f ? _canvas.layout.width : 720f;
+            float ch = _canvas != null && _canvas.layout.height > 120f ? _canvas.layout.height : 380f;
+            float stepX = cols > 1 ? Mathf.Clamp((cw - 36f - 148f) / (cols - 1), 130f, 195f) : 165f;
+            float stepY = rows > 1 ? Mathf.Clamp((ch - 40f - 56f) / (rows - 1), 76f, 124f) : 96f;
             int idx = 0;
             foreach (var pair in _nodes)
             {
-                pair.Value.style.left = 28f + (idx % 3) * 200f;
-                pair.Value.style.top = 28f + (idx / 3) * 116f;
+                pair.Value.style.left = 18f + (idx % cols) * stepX;
+                pair.Value.style.top = 20f + (idx / cols) * stepY;
                 idx++;
             }
             SyncPinPositions();

@@ -64,20 +64,25 @@ namespace Morsoul.Hub
                 (pool[i], pool[j]) = (pool[j], pool[i]);
             }
 
+            var placed = new List<Vector3>(candidates.Count);
             for (int i = 0; i < candidates.Count; i++)
             {
                 Transform t = candidates[i];
-                Vector3 chosen = PickClearSpot(pool, i, t, structureTilemaps);
-                if (!IsSpotClear(chosen, t, structureTilemaps)) continue;
+                int chosenIdx = PickClearSpotIndex(pool, placed, t, structureTilemaps);
+                if (chosenIdx < 0) continue;
+
+                Vector3 chosen = pool[chosenIdx];
+                pool.RemoveAt(chosenIdx);
 
                 Vector3 jittered = chosen + new Vector3(
                     UnityEngine.Random.Range(-0.35f, 0.35f),
                     UnityEngine.Random.Range(-0.25f, 0.25f),
                     0f);
 
-                // Keep original spot if jitter overlaps a solid collider or structure tile.
-                Vector3 target = IsSpotClear(jittered, t, structureTilemaps) ? jittered : chosen;
+                // Keep original spot if jitter overlaps a solid collider, structure tile, or placed NPC.
+                Vector3 target = IsSpotClear(jittered, t, structureTilemaps, placed) ? jittered : chosen;
                 t.position = target;
+                placed.Add(target);
 
                 var stroller = t.GetComponent<AmbientStroller2D>();
                 if (stroller != null && stroller.waypoints != null && stroller.waypoints.Length > 1)
@@ -159,18 +164,17 @@ namespace Morsoul.Hub
             return list;
         }
 
-        static Vector3 PickClearSpot(List<Vector3> pool, int startIndex, Transform self, List<Tilemap> structureTilemaps)
+        static int PickClearSpotIndex(List<Vector3> pool, List<Vector3> placed, Transform self, List<Tilemap> structureTilemaps)
         {
-            for (int offset = 0; offset < pool.Count; offset++)
+            for (int i = 0; i < pool.Count; i++)
             {
-                var p = pool[(startIndex + offset) % pool.Count];
-                if (IsSpotClear(p, self, structureTilemaps))
-                    return p;
+                if (IsSpotClear(pool[i], self, structureTilemaps, placed))
+                    return i;
             }
-            return self.position;
+            return -1;
         }
 
-        static bool IsSpotClear(Vector3 pos, Transform self, List<Tilemap> structureTilemaps)
+        static bool IsSpotClear(Vector3 pos, Transform self, List<Tilemap> structureTilemaps, List<Vector3> placed = null)
         {
             var hits = Physics2D.OverlapCircleAll(pos, 0.45f);
             for (int i = 0; i < hits.Length; i++)
@@ -178,7 +182,18 @@ namespace Morsoul.Hub
                 var hit = hits[i];
                 if (hit == null || hit.isTrigger) continue;
                 if (self != null && (hit.transform == self || hit.transform.IsChildOf(self))) continue;
+                // Other ambient NPCs are also being shuffled; spacing is enforced via `placed`.
+                if (IsEligibleAmbientNpc(hit.gameObject)) continue;
                 return false;
+            }
+
+            if (placed != null)
+            {
+                for (int i = 0; i < placed.Count; i++)
+                {
+                    if (Vector2.Distance(pos, placed[i]) < 0.9f)
+                        return false;
+                }
             }
 
             if (structureTilemaps != null)

@@ -236,9 +236,12 @@ namespace Morsoul.Hub
                 var rb = _player.GetComponent<Rigidbody2D>();
                 if (rb != null) rb.linearVelocity = Vector2.zero;
 
+                var col = GetComponent<Collider2D>();
                 var visualChild = transform.Find("Visual");
                 var sr = visualChild != null ? visualChild.GetComponent<SpriteRenderer>() : null;
-                _seatTarget = sr != null ? (Vector2)sr.bounds.center : (Vector2)transform.position;
+                _seatTarget = col != null
+                    ? (Vector2)col.bounds.center
+                    : (sr != null ? new Vector2(sr.bounds.center.x, transform.position.y) : (Vector2)transform.position);
 
                 SetIgnoreSpotCollisions(true);
                 _playerAnimator = _player.GetComponentInChildren<HubCharacterAnimator>();
