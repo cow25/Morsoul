@@ -141,16 +141,16 @@ namespace Morsoul.Data.Editor
                 ClueIds = new[] { "T1_00", "C1_00", "C2_00", "C3_00", "RH1_00" },
                 Reliabilities = new[]
                 {
-                    R("T1_00", 0.9f), R("C1_00", 0.85f), R("C2_00", 0.95f),
-                    R("C3_00", 1f), R("RH1_00", 0.35f),
+                    R("T1_00", 0.5f), R("C1_00", 0.5f), R("C2_00", 0.5f),
+                    R("C3_00", 0.5f), R("RH1_00", 0.5f),
                 },
                 AuthoredClueEdges = new[]
                 {
-                    W("T1_00", "C1_00", 0.9f, "Optical Translation deciphers the human scholar's torn desk logs, identifying this sealed installation."),
-                    W("C1_00", "C2_00", 0.9f, "The desk logs explain the shattered capacitor relay: a forced overload severed power to the blast door."),
-                    W("C2_00", "C3_00", 0.9f, "With primary hydraulics dead, the ancient chamber key's manual bypass frequency is the only way out."),
-                    W("T1_00", "C3_00", 0.8f, "Diagnostic sensors calibrate the ancient key's magnetic frequency to the unpowered override port."),
-                    W("T1_00", "RH1_00", 0.2f),
+                    W("T1_00", "C1_00", 1f, "Optical Translation deciphers the human scholar's torn desk logs, identifying this sealed installation."),
+                    W("C1_00", "C2_00", 1f, "The desk logs explain the shattered capacitor relay: a forced overload severed power to the blast door."),
+                    W("C2_00", "C3_00", 1f, "With primary hydraulics dead, the ancient chamber key's manual bypass frequency is the only way out."),
+                    W("T1_00", "C3_00", 1f, "Diagnostic sensors calibrate the ancient key's magnetic frequency to the unpowered override port."),
+                    W("T1_00", "RH1_00", 1f),
                 },
                 SolutionEdges = solution,
                 UnlockDependencies = new[] { E("T1_00", "C1_00") },
@@ -170,6 +170,8 @@ namespace Morsoul.Data.Editor
                         id = "CASE0_UNPOWERED_LOCKDOWN",
                         tier = ConclusionTier.Partial,
                         text = "The door is unpowered, but nothing here opens it.",
+                        targetClueId = "C2_00",
+                        lowThreshold = 0.57f,
                         submissionFeedback = "The lock is unpowered, but that does not yet explain how the key releases it.",
                         supportingEdges = new[] { S("C1_00", 0.5f), S("C2_00", 0.6f) },
                         contradictingEdges = new[] { S("RH1_00", 0.4f) },
@@ -190,10 +192,11 @@ namespace Morsoul.Data.Editor
                 {
                     alpha = 0.85f,
                     contradictionWeight = 0.8f,
-                    inventedLinkPenalty = 0.1f,
-                    lowThreshold = 0.35f,
-                    highThreshold = 0.93f,
+                    inventedLinkPenalty = 0.15f,
+                    lowThreshold = 0.57f, // Merged n=4 solution links
+                    highThreshold = 1.0f,
                     PrunedMode = true,
+                    RivalClueId = "",
                 },
             };
         }
@@ -214,17 +217,18 @@ namespace Morsoul.Data.Editor
                 ClueIds = new[] { "C1_01", "T1_01", "C5_01", "C2_01", "C3_01", "C4_01", "T2_01", "RH1_01" },
                 Reliabilities = new[]
                 {
-                    R("C1_01", 1f), R("T1_01", 0.9f), R("C5_01", 0.95f), R("C2_01", 1f),
-                    R("C3_01", 1f), R("C4_01", 1f), R("T2_01", 0.5f), R("RH1_01", 0.4f),
+                    R("C1_01", 0.5f), R("T1_01", 0.5f), R("C5_01", 0.5f), R("C2_01", 0.5f),
+                    R("C3_01", 0.5f), R("C4_01", 0.5f), R("T2_01", 0.5f), R("RH1_01", 0.5f),
                 },
                 AuthoredClueEdges = new[]
                 {
-                    W("C1_01", "T1_01", 0.9f, "A pristine Dwarven lock with zero tool marks proves one of the two registered keys opened the vault."),
-                    W("C5_01", "C2_01", 0.9f, "The unmarked purple-film crate beside Ignatius's workshop matches the sublimating solvent vapor inside the vault."),
-                    W("C2_01", "C3_01", 0.9f, "Harmless theatrical solvent explains why no real stock burned — the altered ledger proves Batch #408 never existed."),
-                    W("C3_01", "C4_01", 0.9f, "Fabricating phantom Batch #408 stock sets up the pre-dated Treasury indemnity claim."),
-                    W("T1_01", "C4_01", 0.85f, "Only Ignatius held an unsealed key — tying inside vault access directly to the sole beneficiary on the pre-dated claim."),
-                    W("T2_01", "RH1_01", 0.35f),
+                    W("C1_01", "T1_01", 1f, "A pristine Dwarven lock with zero tool marks proves one of the two registered keys opened the vault."),
+                    W("C5_01", "C2_01", 1f, "The unmarked purple-film crate beside Ignatius's workshop matches the sublimating solvent vapor inside the vault."),
+                    W("C2_01", "C3_01", 1f, "Harmless theatrical solvent explains why no real stock burned — the altered ledger proves Batch #408 never existed."),
+                    W("C3_01", "C4_01", 1f, "Fabricating phantom Batch #408 stock sets up the pre-dated Treasury indemnity claim."),
+                    W("T1_01", "C4_01", 1f, "Only Ignatius held an unsealed key — tying inside vault access directly to the sole beneficiary on the pre-dated claim."),
+                    // NOTE(dev): T2_01->RH1_01 has no incoming edge into T2_01, so e_all[T2_01] stays 0 unless a decoy edge into T2_01 is authored later.
+                    W("T2_01", "RH1_01", 1f),
                 },
                 SolutionEdges = solution,
                 UnlockDependencies = new DirectedEdge[0],
@@ -244,6 +248,8 @@ namespace Morsoul.Data.Editor
                         id = "CASE1_INSIDE_KEY_ACCESS",
                         tier = ConclusionTier.Partial,
                         text = "Inside Key Access: No intruder forced the vault — one of the two registered keys opened it.",
+                        targetClueId = "T1_01",
+                        lowThreshold = 0.53f,
                         submissionFeedback = "You proved inside access, but not yet why the attack was staged or who benefits.",
                         supportingEdges = new[] { S("T1_01", 1f) },
                     },
@@ -252,6 +258,8 @@ namespace Morsoul.Data.Editor
                         id = "CASE1_STAGED_SOLVENT_FRAUD",
                         tier = ConclusionTier.Partial,
                         text = "Staged Solvent & Phantom Stock: Theatrical solvent masked a Batch #408 shipment that was never brewed.",
+                        targetClueId = "C3_01",
+                        lowThreshold = 0.53f,
                         submissionFeedback = "You uncovered the staged solvent and fake ledger — now connect inside access and the claim to prove motive.",
                         supportingEdges = new[] { S("C3_01", 1f) },
                     },
@@ -272,9 +280,10 @@ namespace Morsoul.Data.Editor
                     alpha = 0.85f,
                     contradictionWeight = 0.8f,
                     inventedLinkPenalty = 0.15f,
-                    lowThreshold = 0.20f,
-                    highThreshold = 0.85f,
+                    lowThreshold = 0.60f,
+                    highThreshold = 1.0f,
                     PrunedMode = true,
+                    RivalClueId = "T2_01",
                 },
             };
         }
@@ -295,17 +304,18 @@ namespace Morsoul.Data.Editor
                 ClueIds = new[] { "C2_02", "T1_02", "C4_02", "C1_02", "C5_02", "C3_02", "T2_02", "RH1_02" },
                 Reliabilities = new[]
                 {
-                    R("C2_02", 1f), R("T1_02", 0.9f), R("C4_02", 0.95f), R("C1_02", 1f),
-                    R("C5_02", 0.95f), R("C3_02", 1f), R("T2_02", 0.5f), R("RH1_02", 0.4f),
+                    R("C2_02", 0.5f), R("T1_02", 0.5f), R("C4_02", 0.5f), R("C1_02", 0.5f),
+                    R("C5_02", 0.5f), R("C3_02", 0.5f), R("T2_02", 0.5f), R("RH1_02", 0.5f),
                 },
                 AuthoredClueEdges = new[]
                 {
-                    W("C2_02", "C4_02", 0.9f, "The black metallic damping soot on the clapper matches the soot-stained polishing rag tucked inside Accord's belfry bench."),
-                    W("T1_02", "C4_02", 0.85f, "Brother Kenneth's courtyard alibi clears the acolyte, leaving someone with direct belfry access who used the soot-stained rag."),
-                    W("C4_02", "C1_02", 0.9f, "Manual soot application inside the belfry caused the internal harmonic shockwave that shattered the Resonance Crystal."),
-                    W("C1_02", "C3_02", 0.9f, "An inside acoustic sabotage points straight to the veil-sealed coercion note hidden behind the belfry scaffolding."),
-                    W("C5_02", "C3_02", 0.9f, "The Nave debt notice proves the veil-sealed creditor actually bought out Marian's asylum, confirming the blackmail leverage."),
-                    W("T2_02", "RH1_02", 0.35f),
+                    W("C2_02", "C4_02", 1f, "The black metallic damping soot on the clapper matches the soot-stained polishing rag tucked inside Accord's belfry bench."),
+                    W("T1_02", "C4_02", 1f, "Brother Kenneth's courtyard alibi clears the acolyte, leaving someone with direct belfry access who used the soot-stained rag."),
+                    W("C4_02", "C1_02", 1f, "Manual soot application inside the belfry caused the internal harmonic shockwave that shattered the Resonance Crystal."),
+                    W("C1_02", "C3_02", 1f, "An inside acoustic sabotage points straight to the veil-sealed coercion note hidden behind the belfry scaffolding."),
+                    W("C5_02", "C3_02", 1f, "The Nave debt notice proves the veil-sealed creditor actually bought out Marian's asylum, confirming the blackmail leverage."),
+                    // NOTE(dev): T2_02->RH1_02 has no incoming edge into T2_02, so e_all[T2_02] stays 0 unless a decoy edge into T2_02 is authored later.
+                    W("T2_02", "RH1_02", 1f),
                 },
                 SolutionEdges = solution,
                 UnlockDependencies = new DirectedEdge[0],
@@ -325,6 +335,8 @@ namespace Morsoul.Data.Editor
                         id = "CASE2_INSIDE_ACOUSTIC_SABOTAGE",
                         tier = ConclusionTier.Partial,
                         text = "Inside Acoustic Sabotage: Damping soot was applied manually inside the belfry, clearing the acolyte.",
+                        targetClueId = "C1_02",
+                        lowThreshold = 0.55f,
                         submissionFeedback = "You proved Accord's bench rag and the soot shattered the crystal — now connect the coercion note and debt notice for motive.",
                         supportingEdges = new[] { S("C1_02", 1f) },
                     },
@@ -345,9 +357,10 @@ namespace Morsoul.Data.Editor
                     alpha = 0.85f,
                     contradictionWeight = 0.8f,
                     inventedLinkPenalty = 0.15f,
-                    lowThreshold = 0.25f,
-                    highThreshold = 0.85f,
+                    lowThreshold = 0.60f,
+                    highThreshold = 1.0f,
                     PrunedMode = true,
+                    RivalClueId = "T2_02",
                 },
             };
         }
@@ -368,17 +381,18 @@ namespace Morsoul.Data.Editor
                 ClueIds = new[] { "T1_03", "C5_03", "C1_03", "C2_03", "C4_03", "C3_03", "T2_03", "RH1_03" },
                 Reliabilities = new[]
                 {
-                    R("T1_03", 0.9f), R("C5_03", 0.95f), R("C1_03", 1f), R("C2_03", 0.95f),
-                    R("C4_03", 1f), R("C3_03", 1f), R("T2_03", 0.5f), R("RH1_03", 0.4f),
+                    R("T1_03", 0.5f), R("C5_03", 0.5f), R("C1_03", 0.5f), R("C2_03", 0.5f),
+                    R("C4_03", 0.5f), R("C3_03", 0.5f), R("T2_03", 0.5f), R("RH1_03", 0.5f),
                 },
                 AuthoredClueEdges = new[]
                 {
-                    W("T1_03", "C5_03", 0.9f, "The ranger's five-night blight timeline matches Vane's five-night harvest tally to the exact evening."),
-                    W("C5_03", "C1_03", 0.9f, "Vane's nightly yield log directly tracks the industrial brass extraction siphon driven into the Elder Tree's taproot."),
-                    W("C1_03", "C4_03", 0.9f, "Forced sap drainage from the taproot fills the pressurized mana-resin canisters stenciled for Iron Hollow Drift 09."),
-                    W("C2_03", "C4_03", 0.85f, "The Veiled Circle dagger's solvent stabilizer matches the chemical preservative sealing the Iron Hollow canisters."),
-                    W("C4_03", "C3_03", 0.9f, "Industrial Veiled Circle shipments paired with Vane's Emotion Echo cloak prove he is a fanatic fueling the Sanctum Core ritual."),
-                    W("T2_03", "RH1_03", 0.35f),
+                    W("T1_03", "C5_03", 1f, "The ranger's five-night blight timeline matches Vane's five-night harvest tally to the exact evening."),
+                    W("C5_03", "C1_03", 1f, "Vane's nightly yield log directly tracks the industrial brass extraction siphon driven into the Elder Tree's taproot."),
+                    W("C1_03", "C4_03", 1f, "Forced sap drainage from the taproot fills the pressurized mana-resin canisters stenciled for Iron Hollow Drift 09."),
+                    W("C2_03", "C4_03", 1f, "The Veiled Circle dagger's solvent stabilizer matches the chemical preservative sealing the Iron Hollow canisters."),
+                    W("C4_03", "C3_03", 1f, "Industrial Veiled Circle shipments paired with Vane's Emotion Echo cloak prove he is a fanatic fueling the Sanctum Core ritual."),
+                    // NOTE(dev): T2_03->RH1_03 has no incoming edge into T2_03, so e_all[T2_03] stays 0 unless a decoy edge into T2_03 is authored later.
+                    W("T2_03", "RH1_03", 1f),
                 },
                 SolutionEdges = solution,
                 UnlockDependencies = new DirectedEdge[0],
@@ -393,22 +407,7 @@ namespace Morsoul.Data.Editor
                         supportingEdges = new[] { S("T2_03", 0.5f), S("RH1_03", 0.4f) },
                         contradictingEdges = new[] { S("C1_03", 0.5f) },
                     },
-                    new ConclusionDef
-                    {
-                        id = "CASE3_INDUSTRIAL_SIPHONING",
-                        tier = ConclusionTier.Partial,
-                        text = "Industrial Mana Siphoning: Vane has been mechanically draining the Elder Tree for five consecutive nights.",
-                        submissionFeedback = "You proved mechanical siphoning — now trace where the stabilized canisters are going and who Vane serves.",
-                        supportingEdges = new[] { S("C1_03", 1f) },
-                    },
-                    new ConclusionDef
-                    {
-                        id = "CASE3_VEILED_CIRCLE_SUPPLY",
-                        tier = ConclusionTier.Partial,
-                        text = "Veiled Circle Supply Line: Stabilized Elder Tree mana is being shipped to Iron Hollow Drift 09.",
-                        submissionFeedback = "You traced the shipment pipeline — connect it to Vane's Emotion Echo cloak to prove his ritual motive.",
-                        supportingEdges = new[] { S("C4_03", 1f) },
-                    },
+                    // Partial conclusions (H) removed per design request (H = null for Case 3).
                     new ConclusionDef
                     {
                         id = "CASE3_CULT_RITUAL_HARVEST",
@@ -426,9 +425,10 @@ namespace Morsoul.Data.Editor
                     alpha = 0.85f,
                     contradictionWeight = 0.8f,
                     inventedLinkPenalty = 0.15f,
-                    lowThreshold = 0.25f,
-                    highThreshold = 0.85f,
+                    lowThreshold = 0.60f,
+                    highThreshold = 1.0f,
                     PrunedMode = true,
+                    RivalClueId = "T2_03",
                 },
             };
         }
@@ -449,17 +449,18 @@ namespace Morsoul.Data.Editor
                 ClueIds = new[] { "T1_04", "C1_04", "C4_04", "C2_04", "C3_04", "C5_04", "T2_04", "RH1_04" },
                 Reliabilities = new[]
                 {
-                    R("T1_04", 0.9f), R("C1_04", 1f), R("C4_04", 0.95f), R("C2_04", 1f),
-                    R("C3_04", 1f), R("C5_04", 1f), R("T2_04", 0.5f), R("RH1_04", 0.4f),
+                    R("T1_04", 0.5f), R("C1_04", 0.5f), R("C4_04", 0.5f), R("C2_04", 0.5f),
+                    R("C3_04", 0.5f), R("C5_04", 0.5f), R("T2_04", 0.5f), R("RH1_04", 0.5f),
                 },
                 AuthoredClueEdges = new[]
                 {
-                    W("T1_04", "C1_04", 0.9f, "Brokk's thirty-year safety record rules out negligence — the iron-wedged valves prove deliberate backpressure sabotage."),
-                    W("C4_04", "C2_04", 0.9f, "Harlan's Drift 09 freight manifest accounts for the synthetic mana solvent that dissolved the bypass conduits."),
-                    W("C1_04", "C3_04", 0.9f, "The engineered backpressure blowout was aimed precisely at exposing the hidden pre-Cataclysm sub-lab blast door."),
-                    W("C2_04", "C3_04", 0.85f, "Dissolving the bypass conduits prevented emergency depressurization, clearing the rockface straight to the blast door."),
-                    W("C3_04", "C5_04", 0.9f, "Once the blast door was uncovered, Harlan bridged the external stasis override relay with Veiled Circle shunts to trap Brokk inside."),
-                    W("T2_04", "RH1_04", 0.35f),
+                    W("T1_04", "C1_04", 1f, "Brokk's thirty-year safety record rules out negligence — the iron-wedged valves prove deliberate backpressure sabotage."),
+                    W("C4_04", "C2_04", 1f, "Harlan's Drift 09 freight manifest accounts for the synthetic mana solvent that dissolved the bypass conduits."),
+                    W("C1_04", "C3_04", 1f, "The engineered backpressure blowout was aimed precisely at exposing the hidden pre-Cataclysm sub-lab blast door."),
+                    W("C2_04", "C3_04", 1f, "Dissolving the bypass conduits prevented emergency depressurization, clearing the rockface straight to the blast door."),
+                    W("C3_04", "C5_04", 1f, "Once the blast door was uncovered, Harlan bridged the external stasis override relay with Veiled Circle shunts to trap Brokk inside."),
+                    // NOTE(dev): T2_04->RH1_04 has no incoming edge into T2_04, so e_all[T2_04] stays 0 unless a decoy edge into T2_04 is authored later.
+                    W("T2_04", "RH1_04", 1f),
                 },
                 SolutionEdges = solution,
                 UnlockDependencies = new DirectedEdge[0],
@@ -474,22 +475,7 @@ namespace Morsoul.Data.Editor
                         supportingEdges = new[] { S("T2_04", 0.5f), S("RH1_04", 0.4f) },
                         contradictingEdges = new[] { S("C1_04", 0.5f) },
                     },
-                    new ConclusionDef
-                    {
-                        id = "CASE4_DELIBERATE_RUPTURE",
-                        tier = ConclusionTier.Partial,
-                        text = "Deliberate Pipeline Sabotage: Brokk didn't make a mistake — the pressure relief valves were wedged shut.",
-                        submissionFeedback = "You proved the blowout was deliberate — now connect Harlan's solvent conduits and the hidden sub-lab.",
-                        supportingEdges = new[] { S("C1_04", 1f) },
-                    },
-                    new ConclusionDef
-                    {
-                        id = "CASE4_COORDINATED_BREACH",
-                        tier = ConclusionTier.Partial,
-                        text = "Engineered Sub-Lab Breach: Jammed valves and Harlan's dissolved conduits were timed to uncover the ancient blast door.",
-                        submissionFeedback = "You uncovered the breach target — connect the blast door to the external stasis relay to prove the lockdown trap.",
-                        supportingEdges = new[] { S("C3_04", 1f) },
-                    },
+                    // Partial conclusions (H) removed per design request (H = null for Case 4).
                     new ConclusionDef
                     {
                         id = "CASE4_VEILED_CIRCLE_LOCKDOWN",
@@ -507,9 +493,10 @@ namespace Morsoul.Data.Editor
                     alpha = 0.85f,
                     contradictionWeight = 0.8f,
                     inventedLinkPenalty = 0.15f,
-                    lowThreshold = 0.20f,
-                    highThreshold = 0.85f,
+                    lowThreshold = 0.60f,
+                    highThreshold = 1.0f,
                     PrunedMode = true,
+                    RivalClueId = "T2_04",
                 },
             };
         }
@@ -530,17 +517,17 @@ namespace Morsoul.Data.Editor
                 ClueIds = new[] { "C4_05", "C1_05", "C5_05", "C2_05", "C3_05", "T1_05", "RH1_05" },
                 Reliabilities = new[]
                 {
-                    R("C4_05", 1f), R("C1_05", 1f), R("C5_05", 1f), R("C2_05", 1f),
-                    R("C3_05", 1f), R("T1_05", 0.95f), R("RH1_05", 0.35f),
+                    R("C4_05", 0.5f), R("C1_05", 0.5f), R("C5_05", 0.5f), R("C2_05", 0.5f),
+                    R("C3_05", 0.5f), R("T1_05", 0.5f), R("RH1_05", 0.5f),
                 },
                 AuthoredClueEdges = new[]
                 {
-                    W("C4_05", "C1_05", 0.9f, "The four-district Guild audit traces every stolen reagent and mana harvest directly into the Sanctum's active siphon pylons."),
-                    W("C1_05", "C5_05", 0.9f, "Inverted pylon pulses match the Empirical Guard's deep-crust seismic spikes beneath Drift 09."),
-                    W("C5_05", "C2_05", 0.9f, "Synchronized crust resonance is deliberately overloading the central planetary fissure's containment barrier."),
-                    W("C2_05", "C3_05", 0.9f, "Engineering a planetary fissure collapse exposes the Grand Overseer's redacted Cult Doctrine as an intentional cataclysmic purge."),
-                    W("T1_05", "C3_05", 0.85f, "Eliza's tactical readout confirms the pylons are breaking stabilizer locks — corroborating the Overseer's ideological hypocrisy."),
-                    W("C2_05", "RH1_05", 0.25f),
+                    W("C4_05", "C1_05", 1f, "The four-district Guild audit traces every stolen reagent and mana harvest directly into the Sanctum's active siphon pylons."),
+                    W("C1_05", "C5_05", 1f, "Inverted pylon pulses match the Empirical Guard's deep-crust seismic spikes beneath Drift 09."),
+                    W("C5_05", "C2_05", 1f, "Synchronized crust resonance is deliberately overloading the central planetary fissure's containment barrier."),
+                    W("C2_05", "C3_05", 1f, "Engineering a planetary fissure collapse exposes the Grand Overseer's redacted Cult Doctrine as an intentional cataclysmic purge."),
+                    W("T1_05", "C3_05", 1f, "Eliza's tactical readout confirms the pylons are breaking stabilizer locks — corroborating the Overseer's ideological hypocrisy."),
+                    W("C2_05", "RH1_05", 1f),
                 },
                 SolutionEdges = solution,
                 UnlockDependencies = new DirectedEdge[0],
@@ -560,6 +547,8 @@ namespace Morsoul.Data.Editor
                         id = "CASE5_FORCED_CATACLYSMIC_OVERLOAD",
                         tier = ConclusionTier.Partial,
                         text = "Forced Cataclysmic Overload: Harvested district mana is being pulsed downward through inverted pylons to fracture the central fissure.",
+                        targetClueId = "C2_05",
+                        lowThreshold = 0.55f,
                         submissionFeedback = "You proved the overload is engineered — now connect the fissure and Eliza's readout to the Overseer's Doctrine.",
                         supportingEdges = new[] { S("C2_05", 1f) },
                     },
@@ -580,9 +569,11 @@ namespace Morsoul.Data.Editor
                     alpha = 0.85f,
                     contradictionWeight = 0.8f,
                     inventedLinkPenalty = 0.15f,
-                    lowThreshold = 0.30f,
-                    highThreshold = 0.85f,
+                    lowThreshold = 0.60f,
+                    highThreshold = 1.0f,
                     PrunedMode = true,
+                    // NOTE(dev): Case 5 has no T2_05 clue asset; RH1_05 is the contradicting clue so it is assigned as RivalClueId.
+                    RivalClueId = "RH1_05",
                 },
             };
         }

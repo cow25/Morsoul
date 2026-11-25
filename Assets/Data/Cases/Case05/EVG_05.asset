@@ -30,43 +30,43 @@ MonoBehaviour:
   - RH1_05
   reliabilities:
   - clueId: C4_05
-    value: 1
+    value: 0.5
   - clueId: C1_05
-    value: 1
+    value: 0.5
   - clueId: C5_05
-    value: 1
+    value: 0.5
   - clueId: C2_05
-    value: 1
+    value: 0.5
   - clueId: C3_05
-    value: 1
+    value: 0.5
   - clueId: T1_05
-    value: 0.95
+    value: 0.5
   - clueId: RH1_05
-    value: 0.35
+    value: 0.5
   authoredClueEdges:
   - sourceId: C4_05
     targetId: C1_05
-    weight: 0.9
+    weight: 1
     rationale: The four-district Guild audit traces every stolen reagent and mana harvest directly into the Sanctum's active siphon pylons.
   - sourceId: C1_05
     targetId: C5_05
-    weight: 0.9
+    weight: 1
     rationale: Inverted pylon pulses match the Empirical Guard's deep-crust seismic spikes beneath Drift 09.
   - sourceId: C5_05
     targetId: C2_05
-    weight: 0.9
+    weight: 1
     rationale: Synchronized crust resonance is deliberately overloading the central planetary fissure's containment barrier.
   - sourceId: C2_05
     targetId: C3_05
-    weight: 0.9
+    weight: 1
     rationale: Engineering a planetary fissure collapse exposes the Grand Overseer's redacted Cult Doctrine as an intentional cataclysmic purge.
   - sourceId: T1_05
     targetId: C3_05
-    weight: 0.85
+    weight: 1
     rationale: "Eliza's tactical readout confirms the pylons are breaking stabilizer locks \u2014 corroborating the Overseer's ideological hypocrisy."
   - sourceId: C2_05
     targetId: RH1_05
-    weight: 0.25
+    weight: 1
     rationale: 
   solutionEdges:
   - sourceId: C4_05
@@ -95,8 +95,9 @@ MonoBehaviour:
   - id: CASE5_FORCED_CATACLYSMIC_OVERLOAD
     text: 'Forced Cataclysmic Overload: Harvested district mana is being pulsed downward through inverted pylons to fracture the central fissure.'
     tier: 1
-    targetClueId: 
+    targetClueId: C2_05
     submissionFeedback: "You proved the overload is engineered \u2014 now connect the fissure and Eliza's readout to the Overseer's Doctrine."
+    lowThreshold: 0.55
     supportingEdges:
     - clueId: C2_05
       weight: 1
@@ -118,11 +119,11 @@ MonoBehaviour:
     alpha: 0.85
     contradictionWeight: 0.8
     inventedLinkPenalty: 0.15
-    lowThreshold: 0.3
-    highThreshold: 0.85
+    lowThreshold: 0.6
+    highThreshold: 1
     PrunedMode: 1
-    RivalClueId: 
-  cachedReferenceSupport: 0.1689631
+    RivalClueId: RH1_05
+  cachedReferenceSupport: 0.26689734
   solutionTopologicalOrder:
   - C4_05
   - C1_05

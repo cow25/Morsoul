@@ -31,45 +31,45 @@ MonoBehaviour:
   - RH1_02
   reliabilities:
   - clueId: C2_02
-    value: 1
+    value: 0.5
   - clueId: T1_02
-    value: 0.9
+    value: 0.5
   - clueId: C4_02
-    value: 0.95
+    value: 0.5
   - clueId: C1_02
-    value: 1
+    value: 0.5
   - clueId: C5_02
-    value: 0.95
+    value: 0.5
   - clueId: C3_02
-    value: 1
+    value: 0.5
   - clueId: T2_02
     value: 0.5
   - clueId: RH1_02
-    value: 0.4
+    value: 0.5
   authoredClueEdges:
   - sourceId: C2_02
     targetId: C4_02
-    weight: 0.9
+    weight: 1
     rationale: The black metallic damping soot on the clapper matches the soot-stained polishing rag tucked inside Accord's belfry bench.
   - sourceId: T1_02
     targetId: C4_02
-    weight: 0.85
+    weight: 1
     rationale: Brother Kenneth's courtyard alibi clears the acolyte, leaving someone with direct belfry access who used the soot-stained rag.
   - sourceId: C4_02
     targetId: C1_02
-    weight: 0.9
+    weight: 1
     rationale: Manual soot application inside the belfry caused the internal harmonic shockwave that shattered the Resonance Crystal.
   - sourceId: C1_02
     targetId: C3_02
-    weight: 0.9
+    weight: 1
     rationale: An inside acoustic sabotage points straight to the veil-sealed coercion note hidden behind the belfry scaffolding.
   - sourceId: C5_02
     targetId: C3_02
-    weight: 0.9
+    weight: 1
     rationale: The Nave debt notice proves the veil-sealed creditor actually bought out Marian's asylum, confirming the blackmail leverage.
   - sourceId: T2_02
     targetId: RH1_02
-    weight: 0.35
+    weight: 1
     rationale: 
   solutionEdges:
   - sourceId: C2_02
@@ -100,8 +100,9 @@ MonoBehaviour:
   - id: CASE2_INSIDE_ACOUSTIC_SABOTAGE
     text: 'Inside Acoustic Sabotage: Damping soot was applied manually inside the belfry, clearing the acolyte.'
     tier: 1
-    targetClueId: 
+    targetClueId: C1_02
     submissionFeedback: "You proved Accord's bench rag and the soot shattered the crystal \u2014 now connect the coercion note and debt notice for motive."
+    lowThreshold: 0.55
     supportingEdges:
     - clueId: C1_02
       weight: 1
@@ -125,11 +126,11 @@ MonoBehaviour:
     alpha: 0.85
     contradictionWeight: 0.8
     inventedLinkPenalty: 0.15
-    lowThreshold: 0.25
-    highThreshold: 0.85
+    lowThreshold: 0.6
+    highThreshold: 1
     PrunedMode: 1
-    RivalClueId: 
-  cachedReferenceSupport: 0.20965101
+    RivalClueId: T2_02
+  cachedReferenceSupport: 0.27380625
   solutionTopologicalOrder:
   - C2_02
   - C5_02

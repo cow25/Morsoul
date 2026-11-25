@@ -31,45 +31,45 @@ MonoBehaviour:
   - RH1_01
   reliabilities:
   - clueId: C1_01
-    value: 1
+    value: 0.5
   - clueId: T1_01
-    value: 0.9
+    value: 0.5
   - clueId: C5_01
-    value: 0.95
+    value: 0.5
   - clueId: C2_01
-    value: 1
+    value: 0.5
   - clueId: C3_01
-    value: 1
+    value: 0.5
   - clueId: C4_01
-    value: 1
+    value: 0.5
   - clueId: T2_01
     value: 0.5
   - clueId: RH1_01
-    value: 0.4
+    value: 0.5
   authoredClueEdges:
   - sourceId: C1_01
     targetId: T1_01
-    weight: 0.9
+    weight: 1
     rationale: A pristine Dwarven lock with zero tool marks proves one of the two registered keys opened the vault.
   - sourceId: C5_01
     targetId: C2_01
-    weight: 0.9
+    weight: 1
     rationale: The unmarked purple-film crate beside Ignatius's workshop matches the sublimating solvent vapor inside the vault.
   - sourceId: C2_01
     targetId: C3_01
-    weight: 0.9
+    weight: 1
     rationale: "Harmless theatrical solvent explains why no real stock burned \u2014 the altered ledger proves Batch #408 never existed."
   - sourceId: C3_01
     targetId: C4_01
-    weight: 0.9
+    weight: 1
     rationale: Fabricating phantom Batch #408 stock sets up the pre-dated Treasury indemnity claim.
   - sourceId: T1_01
     targetId: C4_01
-    weight: 0.85
+    weight: 1
     rationale: "Only Ignatius held an unsealed key \u2014 tying inside vault access directly to the sole beneficiary on the pre-dated claim."
   - sourceId: T2_01
     targetId: RH1_01
-    weight: 0.35
+    weight: 1
     rationale: 
   solutionEdges:
   - sourceId: C1_01
@@ -100,8 +100,9 @@ MonoBehaviour:
   - id: CASE1_INSIDE_KEY_ACCESS
     text: "Inside Key Access: No intruder forced the vault \u2014 one of the two registered keys opened it."
     tier: 1
-    targetClueId: 
+    targetClueId: T1_01
     submissionFeedback: You proved inside access, but not yet why the attack was staged or who benefits.
+    lowThreshold: 0.53
     supportingEdges:
     - clueId: T1_01
       weight: 1
@@ -109,8 +110,9 @@ MonoBehaviour:
   - id: CASE1_STAGED_SOLVENT_FRAUD
     text: 'Staged Solvent & Phantom Stock: Theatrical solvent masked a Batch #408 shipment that was never brewed.'
     tier: 1
-    targetClueId: 
+    targetClueId: C3_01
     submissionFeedback: "You uncovered the staged solvent and fake ledger \u2014 now connect inside access and the claim to prove motive."
+    lowThreshold: 0.53
     supportingEdges:
     - clueId: C3_01
       weight: 1
@@ -134,11 +136,11 @@ MonoBehaviour:
     alpha: 0.85
     contradictionWeight: 0.8
     inventedLinkPenalty: 0.15
-    lowThreshold: 0.2
-    highThreshold: 0.85
+    lowThreshold: 0.6
+    highThreshold: 1
     PrunedMode: 1
-    RivalClueId: 
-  cachedReferenceSupport: 0.21620506
+    RivalClueId: T2_01
+  cachedReferenceSupport: 0.28193438
   solutionTopologicalOrder:
   - C1_01
   - C5_01

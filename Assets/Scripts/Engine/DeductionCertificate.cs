@@ -50,13 +50,15 @@ namespace Morsoul.Engine
         public IReadOnlyList<string> UncollectedClueIds;            // U \ C
         public IReadOnlyList<string> UnlinkedClueIds;               // C \ K_act
         public double RuntimeMs;
+        public bool RivalLeads;
+        public bool IsCyclic;
         public IReadOnlyList<string> Errors = new List<string>(0);
 
         public bool IsSolved =>
             Status == DeductionStatus.Ok && Verdict == ConclusionTier.Complete;
 
         internal static DeductionCertificate Invalid(IReadOnlyList<string> errors,
-            double runtimeMs = 0) => new DeductionCertificate
+            double runtimeMs = 0, bool isCyclic = false) => new DeductionCertificate
         {
             Status = DeductionStatus.InvalidInput,
             Verdict = ConclusionTier.Wrong,
@@ -68,6 +70,7 @@ namespace Morsoul.Engine
             UncollectedClueIds = new List<string>(0),
             UnlinkedClueIds = new List<string>(0),
             RuntimeMs = runtimeMs,
+            IsCyclic = isCyclic,
             Errors = errors,
         };
     }

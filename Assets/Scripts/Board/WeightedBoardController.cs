@@ -381,7 +381,11 @@ namespace Morsoul.Board
                         ShowBanner(BannerInfoClass, "Conclusion already confirmed.");
                         break;
                     case ProgressionEventKind.ConclusionLocked:
-                        ShowBanner(BannerInfoClass, AuthoredLockedFeedback(e.ConclusionId));
+                        if (_session?.LastCertificate != null && _session.LastCertificate.RivalLeads)
+                            ShowBanner(BannerErrorClass,
+                                "A competing lead has at least as much evidence — sever off-path links or strengthen the solution chain.");
+                        else
+                            ShowBanner(BannerInfoClass, AuthoredLockedFeedback(e.ConclusionId));
                         break;
                     case ProgressionEventKind.WrongConclusionRejected:
                         ShowBanner(BannerInfoClass, AuthoredSubmissionFeedback(
@@ -394,7 +398,11 @@ namespace Morsoul.Board
                             "That explains part of the evidence, but not the whole case."));
                         break;
                     case ProgressionEventKind.InvalidInput:
-                        ShowBanner(BannerErrorClass, "That submission can't be evaluated.");
+                        if (_session?.LastCertificate != null && _session.LastCertificate.IsCyclic)
+                            ShowBanner(BannerErrorClass,
+                                "The links form a loop, so no clue can be settled before the others.");
+                        else
+                            ShowBanner(BannerErrorClass, "That submission can't be evaluated.");
                         break;
                 }
             }

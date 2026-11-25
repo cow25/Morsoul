@@ -85,6 +85,8 @@ namespace Morsoul.Engine
         public string targetClueId;
         /// <summary>Optional authored board banner for a submitted conclusion.</summary>
         public string submissionFeedback;
+        /// <summary>Optional per-conclusion theta_low override (0 = use SolverParameters.lowThreshold).</summary>
+        public float lowThreshold;
         public WeightedClueRef[] supportingEdges = new WeightedClueRef[0];
         public WeightedClueRef[] contradictingEdges = new WeightedClueRef[0];
     }
