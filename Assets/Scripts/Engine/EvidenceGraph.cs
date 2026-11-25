@@ -28,6 +28,7 @@ namespace Morsoul.Engine
         readonly Dictionary<string, List<DirectedEdge>> _incidentSolution;
         readonly List<string> _clueOrder;
         readonly List<ConclusionDef> _conclusionOrder;
+        readonly Dictionary<string, double> _referenceEvidence;
 
         EvidenceGraph()
         {
@@ -41,6 +42,7 @@ namespace Morsoul.Engine
             _incidentSolution = new Dictionary<string, List<DirectedEdge>>(StringComparer.Ordinal);
             _clueOrder = new List<string>();
             _conclusionOrder = new List<ConclusionDef>();
+            _referenceEvidence = new Dictionary<string, double>(StringComparer.Ordinal);
         }
 
         public int CaseId { get; private set; }
@@ -48,9 +50,16 @@ namespace Morsoul.Engine
         public string StartingConclusionId { get; private set; }
         public string CompleteConclusionId { get; private set; }
         public double ReferenceSupport { get; private set; }
+        public IReadOnlyDictionary<string, double> ReferenceEvidence => _referenceEvidence;
         public IReadOnlyList<string> ClueIds => _clueOrder;
         public IReadOnlyList<ConclusionDef> Conclusions => _conclusionOrder;
         public IReadOnlyList<string> SolutionOrder { get; private set; }
+
+        /// <summary>Per-conclusion theta_low (falls back to Parameters.lowThreshold when <= 0).</summary>
+        public double GetLowThreshold(ConclusionDef conclusion) =>
+            conclusion != null && conclusion.lowThreshold > 0f
+                ? conclusion.lowThreshold
+                : Parameters.lowThreshold;
 
         public bool ContainsClue(string id) => id != null && _clueIds.Contains(id);
         public bool ContainsConclusion(string id) => id != null && _conclusionsById.ContainsKey(id);
@@ -329,6 +338,10 @@ namespace Morsoul.Engine
                     g._conclusionOrder.Add(c);
                 if (string.IsNullOrEmpty(c.text))
                     errors.Add($"Conclusion '{name}' has empty text.");
+                if (!string.IsNullOrEmpty(c.targetClueId) && !g._clueIds.Contains(c.targetClueId))
+                    errors.Add($"Conclusion '{name}' targetClueId '{c.targetClueId}' is not in the case graph.");
+                if (c.lowThreshold < 0f || (c.lowThreshold > 0f && c.lowThreshold >= g.Parameters.highThreshold))
+                    errors.Add($"Conclusion '{name}' lowThreshold {c.lowThreshold} must be in (0, highThreshold).");
 
                 var support = c.supportingEdges ?? new WeightedClueRef[0];
                 var contradict = c.contradictingEdges ?? new WeightedClueRef[0];
@@ -485,15 +498,45 @@ namespace Morsoul.Engine
             return d;
         }
 
-        /// <summary>rho(h*) = Sup(h*) - lambda * Con(h*) on C = K, L = E_KK.</summary>
+        /// <summary>
+        /// In PrunedMode: computes per-clue reference evidence over S* only (PrunedSdp.ScoreMulti),
+        /// and returns refEv at the complete target clue. Otherwise uses legacy E_KK + supporting/contradicting edges.
+        /// </summary>
         static double ComputeReferenceSupport(EvidenceGraph g)
         {
             var p = g.Parameters;
             IReadOnlyDictionary<string, double> seeds = p.PrunedMode
                 ? UniformSeeds(g)
                 : g._reliability;
-            var x = DampedPropagation.Run(g._authoredEdges, seeds, p.alpha, out _);
+
+            // Always populate per-clue reference evidence over S* only (used by PrunedSdp.ScoreMulti).
+            var solEdges = new Dictionary<DirectedEdge, double>();
+            foreach (var e in g._solutionEdges)
+            {
+                if (g._authoredEdges.TryGetValue(e, out double w))
+                    solEdges[e] = w;
+            }
+            var xSol = DampedPropagation.Run(solEdges, seeds, p.alpha, out _);
+            g._referenceEvidence.Clear();
+            foreach (var cid in g._clueOrder)
+            {
+                double r = seeds.TryGetValue(cid, out double rv) ? rv : 0.5;
+                double v = xSol.TryGetValue(cid, out double xv) ? xv : (1.0 - p.alpha) * r;
+                g._referenceEvidence[cid] = Math.Max(0.0, v - (1.0 - p.alpha) * r);
+            }
+
             var complete = g._conclusionsById[g.CompleteConclusionId];
+            if (p.PrunedMode)
+            {
+                string targetId = !string.IsNullOrEmpty(complete.targetClueId)
+                    ? complete.targetClueId
+                    : complete.supportingEdges?.FirstOrDefault(s => s != null)?.clueId;
+                return !string.IsNullOrEmpty(targetId) && g._referenceEvidence.TryGetValue(targetId, out double refT)
+                    ? refT
+                    : 0.0;
+            }
+
+            var x = DampedPropagation.Run(g._authoredEdges, seeds, p.alpha, out _);
             double sup = ScoreEvidence(complete.supportingEdges, x, seeds, p.alpha);
             double con = ScoreEvidence(complete.contradictingEdges, x, seeds, p.alpha);
             return Math.Max(0.0, sup - p.contradictionWeight * con);

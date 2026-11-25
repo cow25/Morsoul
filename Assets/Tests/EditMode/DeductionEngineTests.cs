@@ -225,7 +225,7 @@ namespace Morsoul.Tests
             Assert.That(cert.Status, Is.EqualTo(DeductionStatus.ConclusionLocked));
             Assert.That(cert.InventedLinkCount, Is.EqualTo(0)); // authored but off S* is still a valid link
             Assert.That(cert.SelectedSupport, Is.EqualTo(1.0).Within(1e-6));
-            Assert.That(cert.SupportByConclusion["h_partial"], Is.EqualTo(1.0 / 3.0).Within(1e-6));
+            Assert.That(cert.SupportByConclusion["h_partial"], Is.EqualTo(1.0).Within(1e-6));
         }
 
         [Test]
@@ -256,8 +256,8 @@ namespace Morsoul.Tests
             var partial = DeductionEngine.Solve(g, Input(g, links, "h_partial"));
             Assert.That(partial.Status, Is.EqualTo(DeductionStatus.Ok));
             Assert.That(partial.Verdict, Is.EqualTo(ConclusionTier.Partial));
-            Assert.That(partial.SelectedSupport, Is.EqualTo(1.0 / 3.0).Within(1e-6));
-            Assert.That(partial.Band, Is.EqualTo(SupportBand.Warm));
+            Assert.That(partial.SelectedSupport, Is.EqualTo(1.0).Within(1e-6));
+            Assert.That(partial.Band, Is.EqualTo(SupportBand.Hot));
         }
 
         [Test]
@@ -466,6 +466,68 @@ namespace Morsoul.Tests
 
             var errors = f.caseData.Validate();
             Assert.That(errors.Any(e => e.Contains("does not match case")), Is.True);
+        }
+
+        [Test]
+        public void PrunedSdp_PerConclusionLowThreshold_GatesPartialByChainLength()
+        {
+            var def = ValidDef();
+            def.Parameters.lowThreshold = 0.60f;
+            def.Parameters.highThreshold = 1.0f;
+            def.Parameters.inventedLinkPenalty = 0.15f;
+            // b->c alone gives phi["c"] = 2/3 (0.6667); with 1 invented link (d->a), phi = 0.5167.
+            // With per-conclusion lowThreshold = 0.53 on a partial targeting "c", it locks; at 0.50 it unlocks.
+            def.Conclusions[1].targetClueId = "c";
+            def.Conclusions[1].lowThreshold = 0.53f;
+            var g = TestGraphs.BuildValid(def);
+
+            var locked = DeductionEngine.Solve(g,
+                Input(g, new[] { L("b", "c"), L("d", "a") }, "h_partial"));
+            Assert.That(locked.Status, Is.EqualTo(DeductionStatus.ConclusionLocked));
+            Assert.That(locked.SelectedSupport, Is.EqualTo(2.0 / 3.0 - 0.15).Within(1e-6));
+
+            def.Conclusions[1].lowThreshold = 0.50f;
+            g = TestGraphs.BuildValid(def);
+            var unlocked = DeductionEngine.Solve(g,
+                Input(g, new[] { L("b", "c"), L("d", "a") }, "h_partial"));
+            Assert.That(unlocked.Status, Is.EqualTo(DeductionStatus.Ok));
+        }
+
+        [Test]
+        public void PrunedSdp_RivalLeads_BlocksPartialAndSetsRivalLeadsFlag()
+        {
+            var def = ValidDef();
+            def.AuthoredClueEdges = new[]
+            {
+                E("a", "b"), E("b", "c"), E("d", "e"), E("a", "e"),
+            };
+            def.Parameters.RivalClueId = "e";
+            def.Conclusions[1].targetClueId = "b";
+            var g = TestGraphs.BuildValid(def);
+
+            // Both a->b and a->e give equal evidence to b and e; rival e >= b blocks h_partial.
+            var cert = DeductionEngine.Solve(g,
+                Input(g, new[] { L("a", "b"), L("a", "e") }, "h_partial"));
+            Assert.That(cert.Status, Is.EqualTo(DeductionStatus.ConclusionLocked));
+            Assert.That(cert.RivalLeads, Is.True);
+        }
+
+        [Test]
+        public void PrunedSdp_NoPartialConclusion_HNull_AllowsOnlyWrongOrComplete()
+        {
+            var def = ValidDef();
+            def.Conclusions = new[] { def.Conclusions[0], def.Conclusions[2] };
+            def.Conclusions[1].targetClueId = "c";
+            def.Parameters.highThreshold = 1.0f;
+            var g = TestGraphs.BuildValid(def);
+
+            var partialBoard = DeductionEngine.Solve(g, Input(g, new[] { L("a", "b") }, "h_complete"));
+            Assert.That(partialBoard.Status, Is.EqualTo(DeductionStatus.ConclusionLocked));
+            Assert.That(partialBoard.ResolvedTier, Is.EqualTo(ConclusionTier.Wrong));
+
+            var fullBoard = DeductionEngine.Solve(g, Input(g, new[] { L("a", "b"), L("b", "c") }, "h_complete"));
+            Assert.That(fullBoard.Status, Is.EqualTo(DeductionStatus.Ok));
+            Assert.That(fullBoard.ResolvedTier, Is.EqualTo(ConclusionTier.Complete));
         }
     }
 }

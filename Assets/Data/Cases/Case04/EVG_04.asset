@@ -31,45 +31,45 @@ MonoBehaviour:
   - RH1_04
   reliabilities:
   - clueId: T1_04
-    value: 0.9
+    value: 0.5
   - clueId: C1_04
-    value: 1
+    value: 0.5
   - clueId: C4_04
-    value: 0.95
+    value: 0.5
   - clueId: C2_04
-    value: 1
+    value: 0.5
   - clueId: C3_04
-    value: 1
+    value: 0.5
   - clueId: C5_04
-    value: 1
+    value: 0.5
   - clueId: T2_04
     value: 0.5
   - clueId: RH1_04
-    value: 0.4
+    value: 0.5
   authoredClueEdges:
   - sourceId: T1_04
     targetId: C1_04
-    weight: 0.9
+    weight: 1
     rationale: "Brokk's thirty-year safety record rules out negligence \u2014 the iron-wedged valves prove deliberate backpressure sabotage."
   - sourceId: C4_04
     targetId: C2_04
-    weight: 0.9
+    weight: 1
     rationale: Harlan's Drift 09 freight manifest accounts for the synthetic mana solvent that dissolved the bypass conduits.
   - sourceId: C1_04
     targetId: C3_04
-    weight: 0.9
+    weight: 1
     rationale: The engineered backpressure blowout was aimed precisely at exposing the hidden pre-Cataclysm sub-lab blast door.
   - sourceId: C2_04
     targetId: C3_04
-    weight: 0.85
+    weight: 1
     rationale: Dissolving the bypass conduits prevented emergency depressurization, clearing the rockface straight to the blast door.
   - sourceId: C3_04
     targetId: C5_04
-    weight: 0.9
+    weight: 1
     rationale: Once the blast door was uncovered, Harlan bridged the external stasis override relay with Veiled Circle shunts to trap Brokk inside.
   - sourceId: T2_04
     targetId: RH1_04
-    weight: 0.35
+    weight: 1
     rationale: 
   solutionEdges:
   - sourceId: T1_04
@@ -97,24 +97,6 @@ MonoBehaviour:
     contradictingEdges:
     - clueId: C1_04
       weight: 0.5
-  - id: CASE4_DELIBERATE_RUPTURE
-    text: "Deliberate Pipeline Sabotage: Brokk didn't make a mistake \u2014 the pressure relief valves were wedged shut."
-    tier: 1
-    targetClueId: 
-    submissionFeedback: "You proved the blowout was deliberate \u2014 now connect Harlan's solvent conduits and the hidden sub-lab."
-    supportingEdges:
-    - clueId: C1_04
-      weight: 1
-    contradictingEdges: []
-  - id: CASE4_COORDINATED_BREACH
-    text: 'Engineered Sub-Lab Breach: Jammed valves and Harlan''s dissolved conduits were timed to uncover the ancient blast door.'
-    tier: 1
-    targetClueId: 
-    submissionFeedback: "You uncovered the breach target \u2014 connect the blast door to the external stasis relay to prove the lockdown trap."
-    supportingEdges:
-    - clueId: C3_04
-      weight: 1
-    contradictingEdges: []
   - id: CASE4_VEILED_CIRCLE_LOCKDOWN
     text: 'Veiled Circle Sub-Lab Seizure: Harlan sabotaged Drift 09 to uncover the pre-Cataclysm facility and locked Brokk inside using external stasis shunts.'
     tier: 2
@@ -134,11 +116,11 @@ MonoBehaviour:
     alpha: 0.85
     contradictionWeight: 0.8
     inventedLinkPenalty: 0.15
-    lowThreshold: 0.2
-    highThreshold: 0.85
+    lowThreshold: 0.6
+    highThreshold: 1
     PrunedMode: 1
-    RivalClueId: 
-  cachedReferenceSupport: 0.19372945
+    RivalClueId: T2_04
+  cachedReferenceSupport: 0.26424375
   solutionTopologicalOrder:
   - C4_04
   - C2_04

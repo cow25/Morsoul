@@ -29,35 +29,35 @@ MonoBehaviour:
   - RH1_00
   reliabilities:
   - clueId: T1_00
-    value: 0.9
+    value: 0.5
   - clueId: C1_00
-    value: 0.85
+    value: 0.5
   - clueId: C2_00
-    value: 0.95
+    value: 0.5
   - clueId: C3_00
-    value: 1
+    value: 0.5
   - clueId: RH1_00
-    value: 0.35
+    value: 0.5
   authoredClueEdges:
   - sourceId: T1_00
     targetId: C1_00
-    weight: 0.9
+    weight: 1
     rationale: Optical Translation deciphers the human scholar's torn desk logs, identifying this sealed installation.
   - sourceId: C1_00
     targetId: C2_00
-    weight: 0.9
+    weight: 1
     rationale: 'The desk logs explain the shattered capacitor relay: a forced overload severed power to the blast door.'
   - sourceId: C2_00
     targetId: C3_00
-    weight: 0.9
+    weight: 1
     rationale: With primary hydraulics dead, the ancient chamber key's manual bypass frequency is the only way out.
   - sourceId: T1_00
     targetId: C3_00
-    weight: 0.8
+    weight: 1
     rationale: Diagnostic sensors calibrate the ancient key's magnetic frequency to the unpowered override port.
   - sourceId: T1_00
     targetId: RH1_00
-    weight: 0.2
+    weight: 1
     rationale: 
   solutionEdges:
   - sourceId: T1_00
@@ -88,8 +88,9 @@ MonoBehaviour:
   - id: CASE0_UNPOWERED_LOCKDOWN
     text: The door is unpowered, but nothing here opens it.
     tier: 1
-    targetClueId: 
+    targetClueId: C2_00
     submissionFeedback: The lock is unpowered, but that does not yet explain how the key releases it.
+    lowThreshold: 0.57
     supportingEdges:
     - clueId: C1_00
       weight: 0.5
@@ -116,12 +117,12 @@ MonoBehaviour:
   parameters:
     alpha: 0.85
     contradictionWeight: 0.8
-    inventedLinkPenalty: 0.1
-    lowThreshold: 0.35
-    highThreshold: 0.93
+    inventedLinkPenalty: 0.15
+    lowThreshold: 0.57
+    highThreshold: 1
     PrunedMode: 1
     RivalClueId: 
-  cachedReferenceSupport: 0.12851888
+  cachedReferenceSupport: 0.17284219
   solutionTopologicalOrder:
   - T1_00
   - C1_00

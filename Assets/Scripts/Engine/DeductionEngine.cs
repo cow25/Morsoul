@@ -65,22 +65,23 @@ namespace Morsoul.Engine
             {
                 watch.Stop();
                 return DeductionCertificate.Invalid(
-                    new List<string> { "Drawn valid links contain a cycle." },
-                    watch.Elapsed.TotalMilliseconds);
+                    new List<string> { "The links form a loop, so no clue can be settled before the others." },
+                    watch.Elapsed.TotalMilliseconds,
+                    isCyclic: true);
             }
 
-            // Propagate over solution edges only to feed the inward link check.
-            var solutionEdges = new Dictionary<DirectedEdge, double>();
-            foreach (var kvp in graph.AuthoredEdges)
+            // Propagate over the player's valid solution edges only (e_sol in PrunedSdp.ScoreMulti).
+            var validSolutionEdges = new Dictionary<DirectedEdge, double>();
+            foreach (var kvp in validEdges)
             {
-                if (graph.SolutionEdges.Contains(kvp.Key))
-                    solutionEdges[kvp.Key] = kvp.Value;
+                if (graph.IsSolutionLink(kvp.Key))
+                    validSolutionEdges[kvp.Key] = kvp.Value;
             }
 
             IReadOnlyDictionary<string, double> xSolution;
             try
             {
-                xSolution = DampedPropagation.Run(solutionEdges, seeds, p.alpha, out _);
+                xSolution = DampedPropagation.Run(validSolutionEdges, seeds, p.alpha, out _);
             }
             catch (Exception)
             {
@@ -91,13 +92,34 @@ namespace Morsoul.Engine
             var phi = new Dictionary<string, double>(StringComparer.Ordinal);
             foreach (var conclusion in graph.Conclusions)
             {
-                double sup = Score(conclusion.supportingEdges, x, seeds, p.alpha);
-                double con = Score(conclusion.contradictingEdges, x, seeds, p.alpha);
-                double rho = Math.Max(0.0, sup - p.contradictionWeight * con);
-                double normalised = graph.ReferenceSupport > 0
-                    ? Math.Min(1.0, rho / graph.ReferenceSupport)
-                    : 0.0;
-                phi[conclusion.id] = Math.Max(0.0, normalised - p.inventedLinkPenalty * spurCount);
+                if (p.PrunedMode)
+                {
+                    if (conclusion.tier == ConclusionTier.Wrong)
+                    {
+                        phi[conclusion.id] = 0.0;
+                        continue;
+                    }
+                    string targetId = TargetClueOf(conclusion);
+                    double eSolVal = !string.IsNullOrEmpty(targetId)
+                        ? Evidence(xSolution, targetId, seeds, p.alpha)
+                        : 0.0;
+                    double refVal = !string.IsNullOrEmpty(targetId) &&
+                                    graph.ReferenceEvidence.TryGetValue(targetId, out double rv)
+                        ? rv
+                        : 0.0;
+                    double cover = refVal > 1e-12 ? Math.Min(1.0, eSolVal / refVal) : 0.0;
+                    phi[conclusion.id] = Math.Max(0.0, cover - p.inventedLinkPenalty * spurCount);
+                }
+                else
+                {
+                    double sup = Score(conclusion.supportingEdges, x, seeds, p.alpha);
+                    double con = Score(conclusion.contradictingEdges, x, seeds, p.alpha);
+                    double rho = Math.Max(0.0, sup - p.contradictionWeight * con);
+                    double normalised = graph.ReferenceSupport > 0
+                        ? Math.Min(1.0, rho / graph.ReferenceSupport)
+                        : 0.0;
+                    phi[conclusion.id] = Math.Max(0.0, normalised - p.inventedLinkPenalty * spurCount);
+                }
             }
 
             // Evaluate the unlock gate for every conclusion to determine the highest unlocked tier.
@@ -110,6 +132,14 @@ namespace Morsoul.Engine
                     resolvedTier = c.tier;
                 }
             }
+
+            // RivalLeads: no partial/complete conclusion unlocked, but at least one partial would have passed if not blocked by RivalClueId.
+            bool rivalLeads = TierRank(resolvedTier) < TierRank(ConclusionTier.Partial)
+                              && !string.IsNullOrEmpty(p.RivalClueId)
+                              && graph.Conclusions.Any(c =>
+                                  c.tier == ConclusionTier.Partial
+                                  && phi[c.id] >= graph.GetLowThreshold(c) - 1e-9
+                                  && IsBlockedByRival(graph, c, x, seeds, p.alpha));
 
             var selected = graph.GetConclusion(input.SelectedConclusionId);
             double selectedSupport = phi[input.SelectedConclusionId];
@@ -124,7 +154,7 @@ namespace Morsoul.Engine
                 SelectedConclusionId = input.SelectedConclusionId,
                 Verdict = selected.tier,
                 SelectedSupport = selectedSupport,
-                Band = BandOf(p, selectedSupport),
+                Band = BandOf(graph, selected, selectedSupport),
                 SupportByConclusion = phi,
                 PropagatedClueValues = x,
                 InventedLinkCount = spurCount,
@@ -134,6 +164,7 @@ namespace Morsoul.Engine
 
                 ResolvedTier = resolvedTier,
                 SolutionPropagatedClueValues = xSolution,
+                RivalLeads = rivalLeads,
             };
         }
 
@@ -209,17 +240,17 @@ namespace Morsoul.Engine
             }
 
             var x = DampedPropagation.Run(validEdges, seeds, p.alpha, out _);
-            var solutionEdges = new Dictionary<DirectedEdge, double>();
-            foreach (var kvp in graph.AuthoredEdges)
+            var validSolutionEdges = new Dictionary<DirectedEdge, double>();
+            foreach (var kvp in validEdges)
             {
-                if (graph.SolutionEdges.Contains(kvp.Key))
-                    solutionEdges[kvp.Key] = kvp.Value;
+                if (graph.IsSolutionLink(kvp.Key))
+                    validSolutionEdges[kvp.Key] = kvp.Value;
             }
 
             IReadOnlyDictionary<string, double> xSolution;
             try
             {
-                xSolution = DampedPropagation.Run(solutionEdges, seeds, p.alpha, out _);
+                xSolution = DampedPropagation.Run(validSolutionEdges, seeds, p.alpha, out _);
             }
             catch (Exception)
             {
@@ -227,6 +258,22 @@ namespace Morsoul.Engine
             }
 
             return IsUnlocked(graph, conclusion, phi, validEdges.Keys, x, xSolution, seeds, spurCount);
+        }
+
+        static bool IsBlockedByRival(
+            EvidenceGraph graph,
+            ConclusionDef conclusion,
+            IReadOnlyDictionary<string, double> x,
+            IReadOnlyDictionary<string, double> seeds,
+            double alpha)
+        {
+            var rivalId = graph.Parameters.RivalClueId;
+            if (string.IsNullOrEmpty(rivalId)) return false;
+            var targetId = TargetClueOf(conclusion);
+            if (string.IsNullOrEmpty(targetId)) return false;
+            double eRival = Evidence(x, rivalId, seeds, alpha);
+            double eTarget = Evidence(x, targetId, seeds, alpha);
+            return eRival > 1e-12 && eRival >= eTarget - 1e-9;
         }
 
         static bool IsUnlocked(
@@ -245,7 +292,7 @@ namespace Morsoul.Engine
             var p = graph.Parameters;
             double threshold = conclusion.tier == ConclusionTier.Complete
                 ? p.highThreshold
-                : p.lowThreshold;
+                : graph.GetLowThreshold(conclusion);
 
             // Complete Tier Gate
             if (conclusion.tier == ConclusionTier.Complete)
@@ -292,17 +339,9 @@ namespace Morsoul.Engine
                 return true;
             }
 
-            // Partial Tier Gate: rival rule
-            if (!string.IsNullOrEmpty(p.RivalClueId))
-            {
-                var targetId = TargetClueOf(conclusion);
-                if (!string.IsNullOrEmpty(targetId))
-                {
-                    double eRival = Evidence(x, p.RivalClueId, seeds, p.alpha);
-                    double eTarget = Evidence(x, targetId, seeds, p.alpha);
-                    if (eRival >= eTarget - 1e-9) return false;
-                }
-            }
+            // Partial Tier Gate: rival rule (matches PrunedSdp.ScoreMulti: eRival > 0 && eRival >= eTarget)
+            if (IsBlockedByRival(graph, conclusion, x, seeds, p.alpha))
+                return false;
 
             return phi >= threshold - 1e-9;
         }
@@ -322,10 +361,10 @@ namespace Morsoul.Engine
 
         // --- Helpers ------------------------------------------------------------
 
-        static SupportBand BandOf(SolverParameters p, double phi)
+        static SupportBand BandOf(EvidenceGraph graph, ConclusionDef selected, double phi)
         {
-            if (phi < p.lowThreshold) return SupportBand.Cold;
-            if (phi < p.highThreshold) return SupportBand.Warm;
+            if (phi < graph.GetLowThreshold(selected)) return SupportBand.Cold;
+            if (phi < graph.Parameters.highThreshold) return SupportBand.Warm;
             return SupportBand.Hot;
         }
 

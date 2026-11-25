@@ -31,45 +31,45 @@ MonoBehaviour:
   - RH1_03
   reliabilities:
   - clueId: T1_03
-    value: 0.9
+    value: 0.5
   - clueId: C5_03
-    value: 0.95
+    value: 0.5
   - clueId: C1_03
-    value: 1
+    value: 0.5
   - clueId: C2_03
-    value: 0.95
+    value: 0.5
   - clueId: C4_03
-    value: 1
+    value: 0.5
   - clueId: C3_03
-    value: 1
+    value: 0.5
   - clueId: T2_03
     value: 0.5
   - clueId: RH1_03
-    value: 0.4
+    value: 0.5
   authoredClueEdges:
   - sourceId: T1_03
     targetId: C5_03
-    weight: 0.9
+    weight: 1
     rationale: The ranger's five-night blight timeline matches Vane's five-night harvest tally to the exact evening.
   - sourceId: C5_03
     targetId: C1_03
-    weight: 0.9
+    weight: 1
     rationale: Vane's nightly yield log directly tracks the industrial brass extraction siphon driven into the Elder Tree's taproot.
   - sourceId: C1_03
     targetId: C4_03
-    weight: 0.9
+    weight: 1
     rationale: Forced sap drainage from the taproot fills the pressurized mana-resin canisters stenciled for Iron Hollow Drift 09.
   - sourceId: C2_03
     targetId: C4_03
-    weight: 0.85
+    weight: 1
     rationale: The Veiled Circle dagger's solvent stabilizer matches the chemical preservative sealing the Iron Hollow canisters.
   - sourceId: C4_03
     targetId: C3_03
-    weight: 0.9
+    weight: 1
     rationale: Industrial Veiled Circle shipments paired with Vane's Emotion Echo cloak prove he is a fanatic fueling the Sanctum Core ritual.
   - sourceId: T2_03
     targetId: RH1_03
-    weight: 0.35
+    weight: 1
     rationale: 
   solutionEdges:
   - sourceId: T1_03
@@ -97,24 +97,6 @@ MonoBehaviour:
     contradictingEdges:
     - clueId: C1_03
       weight: 0.5
-  - id: CASE3_INDUSTRIAL_SIPHONING
-    text: 'Industrial Mana Siphoning: Vane has been mechanically draining the Elder Tree for five consecutive nights.'
-    tier: 1
-    targetClueId: 
-    submissionFeedback: "You proved mechanical siphoning \u2014 now trace where the stabilized canisters are going and who Vane serves."
-    supportingEdges:
-    - clueId: C1_03
-      weight: 1
-    contradictingEdges: []
-  - id: CASE3_VEILED_CIRCLE_SUPPLY
-    text: 'Veiled Circle Supply Line: Stabilized Elder Tree mana is being shipped to Iron Hollow Drift 09.'
-    tier: 1
-    targetClueId: 
-    submissionFeedback: "You traced the shipment pipeline \u2014 connect it to Vane's Emotion Echo cloak to prove his ritual motive."
-    supportingEdges:
-    - clueId: C4_03
-      weight: 1
-    contradictingEdges: []
   - id: CASE3_CULT_RITUAL_HARVEST
     text: 'Veiled Circle Ritual Harvest: Vane is a cult operative siphoning the Elder Tree to fuel the Sanctum Core.'
     tier: 2
@@ -134,11 +116,11 @@ MonoBehaviour:
     alpha: 0.85
     contradictionWeight: 0.8
     inventedLinkPenalty: 0.15
-    lowThreshold: 0.25
-    highThreshold: 0.85
+    lowThreshold: 0.6
+    highThreshold: 1
     PrunedMode: 1
-    RivalClueId: 
-  cachedReferenceSupport: 0.18770419
+    RivalClueId: T2_03
+  cachedReferenceSupport: 0.25733484
   solutionTopologicalOrder:
   - C2_03
   - T1_03
