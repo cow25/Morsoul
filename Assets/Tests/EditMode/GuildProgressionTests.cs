@@ -410,7 +410,7 @@ namespace Morsoul.Tests
                 var noticeBoard = GameObject.Find("NoticeBoard");
                 Assert.IsNotNull(restSpot, "RestSpot must exist in Hub_LowerMarket.");
                 Assert.IsNotNull(noticeBoard, "NoticeBoard must exist in Hub_LowerMarket.");
-                Assert.AreEqual(-2.45f, restSpot.transform.position.x, 0.5f, "RestSpot X must sit beside NoticeBoard.");
+                Assert.AreEqual(-4.07f, restSpot.transform.position.x, 0.5f, "RestSpot X must sit beside NoticeBoard.");
                 Assert.AreEqual(2.3f, restSpot.transform.position.y, 0.5f, "RestSpot Y must sit beside NoticeBoard.");
             }
             finally

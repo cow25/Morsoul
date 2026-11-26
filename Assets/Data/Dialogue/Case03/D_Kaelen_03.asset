@@ -75,7 +75,7 @@ MonoBehaviour:
     speakerPortrait: {fileID: 0}
     text: "\"Fellow named Vane. Showed up with stamped transit permits from the capital right as the tree started drooping. Claims he\u2019s studying the decay. He\u2019s set up right at the clearing entrance.\""
     registersClue: {fileID: 0}
-    setsFlag: C3_PerimeterSealGranted
+    setsFlag: 
     requiresFlag: 
     options: []
     nextNodeId: 

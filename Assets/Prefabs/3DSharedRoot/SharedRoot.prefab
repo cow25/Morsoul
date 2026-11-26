@@ -307,7 +307,6 @@ GameObject:
   - component: {fileID: 591303648037433996}
   - component: {fileID: 6895614894623276683}
   - component: {fileID: 6930094546511005534}
-  - component: {fileID: 1656219550991117146}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -395,26 +394,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: '::'
   WalkSpeed: 2
   BriskWalkSpeed: 4
-  CrouchSpeed: 1
   Gravity: 20
   LookSensitivity: 0.2
   LookAngleLimit: 80
-  StandingHeight: 2
-  CrouchHeight: 1
-  CameraStandingY: 1.8
-  CameraCrouchingY: 0.8
---- !u!114 &1656219550991117146
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2351446829225704120}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 406d6be9221e0614b8319c998e617685, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: '::'
 --- !u!1 &2635175461820684259
 GameObject:
   m_ObjectHideFlags: 0
@@ -1130,3 +1112,5 @@ MonoBehaviour:
   zoomSpeed: 2
   minZoom: -0.4
   maxZoom: -1
+  inspectFitExtent: 0.85
+  defaultInspectDistance: -1.6

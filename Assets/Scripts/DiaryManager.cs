@@ -15,7 +15,7 @@ public class DiaryManager : MonoBehaviour
             return;
         }
         Instance = this;
-        
+        transform.SetParent(null);
         DontDestroyOnLoad(gameObject); 
     }
 

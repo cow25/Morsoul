@@ -22,6 +22,7 @@ namespace Morsoul.Hub
 
         HubPlayerController _player;
         HubCharacterAnimator _playerAnimator;
+        Rigidbody2D _playerRb;
         Collider2D[] _playerColliders;
         Collider2D[] _spotColliders;
         HubContext _context;
@@ -30,6 +31,7 @@ namespace Morsoul.Hub
         string _statusMessage;
         bool _prompting;
         bool _walkingToSeat;
+        float _walkTimer;
         Vector2 _seatTarget;
 
         void Reset()
@@ -233,8 +235,12 @@ namespace Morsoul.Hub
             if (_player != null)
             {
                 _player.enabled = false;
-                var rb = _player.GetComponent<Rigidbody2D>();
-                if (rb != null) rb.linearVelocity = Vector2.zero;
+                _playerRb = _player.GetComponent<Rigidbody2D>();
+                if (_playerRb != null)
+                {
+                    _playerRb.linearVelocity = Vector2.zero;
+                    _playerRb.simulated = false;
+                }
 
                 var col = GetComponent<Collider2D>();
                 var visualChild = transform.Find("Visual");
@@ -247,6 +253,7 @@ namespace Morsoul.Hub
                 _playerAnimator = _player.GetComponentInChildren<HubCharacterAnimator>();
                 if (_playerAnimator != null) _playerAnimator.externalDrive = true;
                 _walkingToSeat = true;
+                _walkTimer = 0f;
             }
             if (restingIndicator != null) restingIndicator.SetActive(true);
             SetPromptVisible(true);
@@ -261,6 +268,7 @@ namespace Morsoul.Hub
             _walkingToSeat = false;
             _statusMessage = null;
             if (_playerAnimator != null) _playerAnimator.externalDrive = false;
+            if (_playerRb != null) _playerRb.simulated = true;
             SetIgnoreSpotCollisions(false);
             if (_player != null)
             {
@@ -288,9 +296,10 @@ namespace Morsoul.Hub
 
             if (_walkingToSeat && _player != null)
             {
+                _walkTimer += Time.deltaTime;
                 Vector2 pos = _player.transform.position;
                 Vector2 delta = _seatTarget - pos;
-                if (delta.sqrMagnitude > 0.0004f)
+                if (delta.sqrMagnitude > 0.0004f && _walkTimer < 2f)
                 {
                     float speed = _player.moveSpeed > 0f ? _player.moveSpeed : 3.5f;
                     Vector2 next = Vector2.MoveTowards(pos, _seatTarget, speed * Time.deltaTime);

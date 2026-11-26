@@ -75,7 +75,7 @@ MonoBehaviour:
     speakerPortrait: {fileID: 0}
     text: "(Hesitates, trembling, then fumbles a heavy iron key off his belt) \"Take it! But beware the rafters... the devil\u2019s soot is still thick up there.\""
     registersClue: {fileID: 0}
-    setsFlag: 
+    setsFlag: C2_BelfryKeyGranted
     requiresFlag: 
     options: []
     nextNodeId: 
