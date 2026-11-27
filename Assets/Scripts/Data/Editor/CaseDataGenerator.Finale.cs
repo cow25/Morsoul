@@ -39,19 +39,23 @@ namespace Morsoul.Data.Editor
             EnsureFolder(folder);
             var c1 = Clue(folder, "C1_04", "Tampered Pneumatic Valves", ClueType.Physical, 4,
                 AcquisitionMethod.Raycast3D, Tool.None,
-                "High-pressure pneumatic release valves manually wrenched past safety tolerances and <b>jammed with iron wedge pins</b>. Backpressure was <b>intentionally forced</b> to trigger a pipeline rupture.");
+                "High-pressure pneumatic release valves manually wrenched past safety tolerances and <b>jammed with iron wedge pins</b>. Backpressure was <b>intentionally forced</b> to trigger a pipeline rupture.",
+                inspectPrefabPath: Lpd + "07_Prison/SM_LPD_Prison_ManaclesWall_01.prefab");
             var c2 = Clue(folder, "C2_04", "Chemically Dissolved Bypass Conduits", ClueType.Physical, 4,
                 AcquisitionMethod.GolemEyeScan, Tool.GolemEye,
-                "Heavy copper-insulated control wiring corroded into slag. Spectral inspection confirms the same <b>synthetic mana solvent</b> identified in <b>Ignatius' vault and Whisperwood</b>.");
+                "Heavy copper-insulated control wiring corroded into slag. Spectral inspection confirms the same <b>synthetic mana solvent</b> identified in <b>Ignatius' vault and Whisperwood</b>.",
+                inspectPrefabPath: Lpd + "07_Prison/SM_LPD_Prison_ChainCoil_01.prefab");
             var c3 = Clue(folder, "C3_04", "Pre-Cataclysm Sub-Lab Blast Door", ClueType.Physical, 4,
                 AcquisitionMethod.Raycast3D, Tool.None,
-                "A reinforced <b>titanium-alloy blast door</b> hidden behind blown-out rock strata. Its emergency lock was <b>tampered with from outside</b> to force <b>stasis lockdown</b> over the engineering bay.");
+                "A reinforced <b>titanium-alloy blast door</b> hidden behind blown-out rock strata. Its emergency lock was <b>tampered with from outside</b> to force <b>stasis lockdown</b> over the engineering bay.",
+                inspectPrefabPath: Dfk + "Doors and Gates/dfk_door_01.prefab");
             var c4 = Clue(folder, "C4_04", "Deep-Drift Freight Manifest", ClueType.Physical, 4,
                 AcquisitionMethod.Inspection2D, Tool.None,
                 "Iron Hollow workbench manifest signed by <b>Harlan</b> logging off-hours deliveries of <b>Whisperwood mana bladders</b> and <b>solvent carboys</b> straight into <b>Drift 09</b> — disproving his upper-tier masonry alibi.");
             var c5 = Clue(folder, "C5_04", "External Stasis Override Relay", ClueType.Physical, 4,
                 AcquisitionMethod.Raycast3D, Tool.None,
-                "Auxiliary lockout relay mounted outside the blast door, <b>bridged with Veiled Circle copper shunts</b> to trap Brokk inside the sub-lab while keeping the breach sealed.");
+                "Auxiliary lockout relay mounted outside the blast door, <b>bridged with Veiled Circle copper shunts</b> to trap Brokk inside the sub-lab while keeping the breach sealed.",
+                inspectPrefabPath: Lpd + "04_Lighting/SM_LPD_Light_LanternHooded_01.prefab");
             var t1 = Clue(folder, "T1_04", "Mine Overseer's Work Log", ClueType.Testimony, 4,
                 AcquisitionMethod.Dialogue2D, Tool.None,
                 "Thrun: Chief Engineer Brokk is a master craftsman with thirty years in these shafts; he <b>never skips valve depressurization</b> before cycling the main lift.",
@@ -66,7 +70,8 @@ namespace Morsoul.Data.Editor
             var l4 = Clue(folder, "L4_04", "Runic Log #4: Planetary Stabilizer Console Blueprints", ClueType.Latent, 4,
                 AcquisitionMethod.AetherSightPlusGolemEye, Tool.AetherSight,
                 "After Brokk is freed, use Aether Sight and Golem Eye at the unsealed sub-lab terminal. The schematics contain operational formulas, fail-safe frequencies and manual core override commands for the ancient stabilizer.",
-                hasWorldPosition: true, worldPosition: new Vector2(0, 16));
+                hasWorldPosition: true, worldPosition: new Vector2(0, 16),
+                inspectPrefabPath: Dfk + "Furnitures/dfk_desk_02.prefab");
             l4.requiredFlag = "Case4_BrokkFreed";
             var press = Move(Verb.Press, null, false, 0, false,
                 "Brokk was rushing quota! He forgot the bypass sequence and the lines blew. Simple industrial accident!");

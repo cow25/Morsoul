@@ -98,26 +98,35 @@ namespace Morsoul.Data.Editor
             AssetDatabase.Refresh();
         }
 
+        const string Mfp = "Assets/Mega Fantasy Props Pack/Prefabs/";
+        const string Dfk = "Assets/RunemarkStudio/DarkFantasyKit [Free]/Prefabs/";
+        const string Lpd = "Assets/[Import] LowPolyDungeonFree/Prefabs/";
+        const string RustKeyPrefab = "Assets/Art/Environments/[Import] Rust Key/Prefabs/rust_key.prefab";
+
         static void GenerateCase0(string folder)
         {
             EnsureFolder(folder);
 
             var c1 = Clue(folder, "C1_00", "Torn Desk Logs", ClueType.Physical, 0,
                 AcquisitionMethod.GolemEyeScan, Tool.GolemEye,
-                "Torn modern-tongue notes scattered across a workstation, left by a human who studied these ruins long after the Cataclysm. Scanning with <b>Golem Eye (Tab)</b> initiates <b>linguistic deciphering</b>, teaching the Golem the modern tongue and identifying the site as a <b>sealed research installation</b>.");
+                "Torn modern-tongue notes scattered across a workstation, left by a human who studied these ruins long after the Cataclysm. Scanning with <b>Golem Eye (Tab)</b> initiates <b>linguistic deciphering</b>, teaching the Golem the modern tongue and identifying the site as a <b>sealed research installation</b>.",
+                inspectPrefabPath: Mfp + "Miscellaneous/scrolls.prefab");
             var c2 = Clue(folder, "C2_00", "Overloaded Capacitor Relay", ClueType.Physical, 0,
                 AcquisitionMethod.Raycast3D, Tool.None,
-                "Shattered glass vacuum tube surrounded by <b>crystallized mana slag</b>. Demonstrates that <b>power to the primary hydraulic blast door was severed</b> during a forced emergency system overload.");
+                "Shattered glass vacuum tube surrounded by <b>crystallized mana slag</b>. Demonstrates that <b>power to the primary hydraulic blast door was severed</b> during a forced emergency system overload.",
+                inspectPrefabPath: Lpd + "04_Lighting/SM_LPD_Light_LanternHooded_01.prefab");
             var c3 = Clue(folder, "C3_00", "Ancient Chamber Key", ClueType.Physical, 0,
                 AcquisitionMethod.Raycast3D, Tool.None,
-                "An <b>emergency manual override key</b> discovered beneath a collapsed steel girder in the equipment wreckage. Its <b>magnetic frequency</b> matches the <b>unpowered manual bypass port</b> of the stone exit door.");
+                "An <b>emergency manual override key</b> discovered beneath a collapsed steel girder in the equipment wreckage. Its <b>magnetic frequency</b> matches the <b>unpowered manual bypass port</b> of the stone exit door.",
+                inspectPrefabPath: RustKeyPrefab);
             var t1 = Clue(folder, "T1_00", "Internal Golem Diagnostic Log", ClueType.Testimony, 0,
                 AcquisitionMethod.Automatic, Tool.None,
                 "Chassis Integrity: 42%. Consciousness core reconstituted from temporal drift. Memory sectors 01\u201389: Unreadable/Wiped. <b>Optical Translation Protocol: Online</b> — ready to decode unfamiliar scripts and calibrate manual ports.",
                 dissonanceKeyword: "memory sectors wiped");
             var rh1 = Clue(folder, "RH1_00", "Rusted Pipe Segment", ClueType.RedHerring, 0,
                 AcquisitionMethod.Raycast3D, Tool.None,
-                "A sheared section of cast-iron steam conduit. <b>Heavily oxidized and structurally compromised</b>; cannot be used as a lever to pry open the reinforced stone door.");
+                "A sheared section of cast-iron steam conduit. <b>Heavily oxidized and structurally compromised</b>; cannot be used as a lever to pry open the reinforced stone door.",
+                inspectPrefabPath: Lpd + "04_Lighting/SM_LPD_Light_TorchHeld_01.prefab");
 
             var caseData = LoadOrCreate<CaseData>($"{folder}/Case_00.asset");
             caseData.caseId = 0;
@@ -143,19 +152,23 @@ namespace Morsoul.Data.Editor
             var c1 = Clue(folder, "C1_01", "Pristine Vault Lock", ClueType.Physical, 1,
                 AcquisitionMethod.Raycast3D, Tool.GolemEye,
                 "Heavy Dwarven multi-pin cylinder lock; <b>tumblers and pins pristine</b> with <b>zero tool marks, shearing, or acid burns</b>. Must have been opened with an <b>authentic key</b>.",
-                hasWorldPosition: true, worldPosition: new Vector2(0, 4));
+                hasWorldPosition: true, worldPosition: new Vector2(0, 4),
+                inspectPrefabPath: Dfk + "Doors and Gates/dfk_door_01.prefab");
             var c2 = Clue(folder, "C2_01", "Vaporized Solvent Residue", ClueType.Physical, 1,
                 AcquisitionMethod.GolemEyeScan, Tool.GolemEye,
                 "<b>Rapid-sublimating synthetic solvent residue</b> releasing harmless <b>purple vapor</b> \u2014 theatrical irritant, <b>not dark magic</b>.",
-                hasWorldPosition: true, worldPosition: new Vector2(4, 4));
+                hasWorldPosition: true, worldPosition: new Vector2(4, 4),
+                inspectPrefabPath: Lpd + "05_Containers/SM_LPD_Crate_PotClay_01.prefab");
             var c3 = Clue(folder, "C3_01", "Altered Cargo Ledger", ClueType.Physical, 1,
                 AcquisitionMethod.Raycast3D, Tool.None,
                 "<b>Batch #408</b> entries were inked over blank manifests — proving the <b>ten-thousand-ducat potion stock was never manufactured</b>.",
-                hasWorldPosition: true, worldPosition: new Vector2(-4, 4));
+                hasWorldPosition: true, worldPosition: new Vector2(-4, 4),
+                inspectPrefabPath: Mfp + "Miscellaneous/scrolls.prefab");
             var c4 = Clue(folder, "C4_01", "Draft Treasury Indemnity Claim", ClueType.Physical, 1,
                 AcquisitionMethod.Raycast3D, Tool.None,
                 "Pre-signed <b>Guild compensation claim for Batch #408</b>, dated <b>two days before the vault incident</b>, naming Ignatius as sole beneficiary.",
-                hasWorldPosition: true, worldPosition: new Vector2(-2, 6));
+                hasWorldPosition: true, worldPosition: new Vector2(-2, 6),
+                inspectPrefabPath: Mfp + "Miscellaneous/scroll.prefab");
             var c5 = Clue(folder, "C5_01", "Unmarked Solvent Crate", ClueType.Physical, 1,
                 AcquisitionMethod.Inspection2D, Tool.None,
                 "Stamped wooden crate stacked beside Ignatius's workshop smelling of <b>dried purple film</b>; wax-sealed with an <b>unlisted Veiled Circle supplier mark</b> matching the vault's <b>sublimating solvent</b>.");
@@ -173,7 +186,8 @@ namespace Morsoul.Data.Editor
             var l1 = Clue(folder, "L1_01", "Runic Log #1: Solvent Volatility", ClueType.Latent, 1,
                 AcquisitionMethod.AetherSight, Tool.AetherSight,
                 "Pre-cataclysm formula on synthetic mana solvent flash points and sublimation rates. Required for Ending 3.",
-                isBacktrackingOnly: true, hasWorldPosition: true, worldPosition: new Vector2(0, 8));
+                isBacktrackingOnly: true, hasWorldPosition: true, worldPosition: new Vector2(0, 8),
+                inspectPrefabPath: Dfk + "Lightsources/dfk_crystal_01_blue.prefab");
 
             var interrogation = LoadOrCreate<InterrogationData>($"{folder}/INT_01.asset");
             interrogation.id = "INT_01";
@@ -265,19 +279,23 @@ namespace Morsoul.Data.Editor
             var c1 = Clue(folder, "C1_02", "Fractured Resonance Crystal", ClueType.Physical, 2,
                 AcquisitionMethod.Raycast3D, Tool.None,
                 "Shards of an <b>acoustic focus crystal</b> shattered directly beneath the Great Bell. Shear patterns indicate <b>internal harmonic overload</b> rather than physical blunt trauma.",
-                hasWorldPosition: true, worldPosition: new Vector2(-4, 4));
+                hasWorldPosition: true, worldPosition: new Vector2(-4, 4),
+                inspectPrefabPath: Dfk + "Lightsources/dfk_crystal_01_blue.prefab");
             var c2 = Clue(folder, "C2_02", "Dark Mana Dust on Clapper", ClueType.Physical, 2,
                 AcquisitionMethod.GolemEyeScan, Tool.GolemEye,
                 "<b>Black metallic damping soot</b> adhering to the bell clapper's strike face. Golem Eye scan reveals an <b>unnatural frequency absorption field</b> converting kinetic strikes into a <b>muting shockwave</b>.",
-                hasWorldPosition: true, worldPosition: new Vector2(4, 4));
+                hasWorldPosition: true, worldPosition: new Vector2(4, 4),
+                inspectPrefabPath: Lpd + "05_Containers/SM_LPD_Crate_BucketIron_01.prefab");
             var c3 = Clue(folder, "C3_02", "Blackmailer's Coercion Note", ClueType.Physical, 2,
                 AcquisitionMethod.Raycast3D, Tool.None,
                 "Crumpled letter hidden behind the scaffolding addressed to <b>Accord</b>, sealed with the <b>Veiled Circle's veil sigil</b>. Demands applying the <b>\"damping powder\"</b> before vespers, threatening Accord's sister <b>Marian's medical debt and sanctuary asylum</b>.",
-                hasWorldPosition: true, worldPosition: new Vector2(0, 4));
+                hasWorldPosition: true, worldPosition: new Vector2(0, 4),
+                inspectPrefabPath: Mfp + "Miscellaneous/scroll.prefab");
             var c4 = Clue(folder, "C4_02", "Bell-Ringer's Soot-Stained Rag", ClueType.Physical, 2,
                 AcquisitionMethod.Raycast3D, Tool.None,
                 "Oily polishing cloth tucked into Accord's belfry bench, coated in the same <b>black metallic damping soot</b> found on the clapper — proving <b>manual application from inside the belfry</b>.",
-                hasWorldPosition: true, worldPosition: new Vector2(2, 2));
+                hasWorldPosition: true, worldPosition: new Vector2(2, 2),
+                inspectPrefabPath: Dfk + "Decoration/Textiles/dfk_carpet_black_small.prefab");
             var c5 = Clue(folder, "C5_02", "Marian's Sanctuary Debt Notice", ClueType.Physical, 2,
                 AcquisitionMethod.Inspection2D, Tool.None,
                 "Stamped hospital ledger notice tucked near the Nave vestry pew: <b>Marian's sanctuary asylum debt</b> was bought out by an <b>anonymous veil-sealed creditor</b>, due at sunset unless Accord complies.");
@@ -295,7 +313,8 @@ namespace Morsoul.Data.Editor
             var l2 = Clue(folder, "L2_02", "Runic Log #2: Acoustic Stabilization", ClueType.Latent, 2,
                 AcquisitionMethod.AetherSight, Tool.AetherSight,
                 "Pre-cataclysm architectural rune etched into the tower's rear load-bearing masonry beam. Documents harmonic acoustic dissipation used to stabilize runaway mana resonance. Required for Ending 3; unobtainable on initial run.",
-                isBacktrackingOnly: true, hasWorldPosition: true, worldPosition: new Vector2(0, 8));
+                isBacktrackingOnly: true, hasWorldPosition: true, worldPosition: new Vector2(0, 8),
+                inspectPrefabPath: Dfk + "Lightsources/dfk_crystal_01_blue.prefab");
 
             var c2Press0 = Move(Verb.Press, null, false, 0, false,
                 "Their kind can't control pure light! The second that heathen looked up, the air felt suffocating and the Lady lost her voice!");
@@ -394,19 +413,23 @@ namespace Morsoul.Data.Editor
             var c1 = Clue(folder, "C1_03", "Brass Extraction Siphon", ClueType.Physical, 3,
                 AcquisitionMethod.Raycast3D, Tool.None,
                 "<b>Industrial pneumatic tap</b> driven deep into the primary heartwood taproot. High-pressure <b>forced sap drainage</b> channeling raw environmental mana into pressurized canisters.",
-                hasWorldPosition: true, worldPosition: new Vector2(0, 8));
+                hasWorldPosition: true, worldPosition: new Vector2(0, 8),
+                inspectPrefabPath: Lpd + "04_Lighting/SM_LPD_Light_OilLampBrass_01.prefab");
             var c2 = Clue(folder, "C2_03", "Inscribed Silver Ritual Dagger", ClueType.Physical, 3,
                 AcquisitionMethod.Raycast3D, Tool.None,
                 "Ceremonial silver dagger bearing the <b>eclipsed eye insignia of the Veiled Circle</b>. The blade edge is coated with the same <b>solvent volatility stabilizer</b> identified in Case 1.",
-                hasWorldPosition: true, worldPosition: new Vector2(-4, 0));
+                hasWorldPosition: true, worldPosition: new Vector2(-4, 0),
+                inspectPrefabPath: Mfp + "Miscellaneous/rack_for_weapons_small.prefab");
             var c3 = Clue(folder, "C3_03", "Vane's Discarded Ritual Cloak", ClueType.Physical, 3,
                 AcquisitionMethod.EmotionEcho, Tool.EmotionEcho,
                 "Vane's discarded ritual cloak at the altar; read with <b>Emotion Echo</b>, revealing lingering residue of <b>fanatical zeal and deceit</b> tying him to the <b>Veiled Circle's Sanctum Core ritual</b>.",
-                hasWorldPosition: true, worldPosition: new Vector2(-4, 4));
+                hasWorldPosition: true, worldPosition: new Vector2(-4, 4),
+                inspectPrefabPath: Dfk + "Decoration/Textiles/dfk_carpet_black_small.prefab");
             var c4 = Clue(folder, "C4_03", "Sealed Mana-Resin Canister", ClueType.Physical, 3,
                 AcquisitionMethod.Raycast3D, Tool.None,
                 "Pressurized brass canister filled with luminous sap, tagged with a <b>Veiled Circle shipping stencil</b> routed to <b>Iron Hollow Drift 09</b> — matching the <b>solvent-coated dagger's</b> stabilizing residue.",
-                hasWorldPosition: true, worldPosition: new Vector2(4, 2));
+                hasWorldPosition: true, worldPosition: new Vector2(4, 2),
+                inspectPrefabPath: Lpd + "05_Containers/SM_LPD_Crate_UrnUrn_01.prefab");
             var c5 = Clue(folder, "C5_03", "Vane's Five-Night Harvest Tally", ClueType.Physical, 3,
                 AcquisitionMethod.Inspection2D, Tool.None,
                 "Waterproof field notebook left at Vane's boundary outpost logging <b>five consecutive nights of canister yields</b> matching the exact onset of the Elder Tree's collapse.");
@@ -424,7 +447,8 @@ namespace Morsoul.Data.Editor
             var l3 = Clue(folder, "L3_03", "Runic Log #3: Displacement Device Telemetry", ClueType.Latent, 3,
                 AcquisitionMethod.AetherSight, Tool.AetherSight,
                 "Available only after Case 4, when Aether Sight is unlocked. Decrypted pre-cataclysm technical readout recording the catastrophic mana displacement event. Contains Elise Cochran's final transmission before the world reshaped, revealing the first tangible proof of her sacrifice.",
-                isBacktrackingOnly: true, hasWorldPosition: true, worldPosition: new Vector2(0, 4));
+                isBacktrackingOnly: true, hasWorldPosition: true, worldPosition: new Vector2(0, 4),
+                inspectPrefabPath: Dfk + "Lightsources/dfk_crystal_01_blue.prefab");
 
             var pressMove = Move(Verb.Press, null, false, 0, false,
                 "The regional council granted me unrestricted access to sample fungal spread! My tools are delicate biological instruments, not weapons!");
@@ -539,7 +563,8 @@ namespace Morsoul.Data.Editor
         static ClueData Clue(string folder, string id, string displayName, ClueType type, int caseId,
             AcquisitionMethod acquisition, Tool requiredTool, string description,
             string dissonanceKeyword = "", bool isBacktrackingOnly = false,
-            bool hasWorldPosition = false, Vector2 worldPosition = default)
+            bool hasWorldPosition = false, Vector2 worldPosition = default,
+            string inspectPrefabPath = null)
         {
             var clue = LoadOrCreate<ClueData>($"{folder}/{id}.asset");
             clue.id = id;
@@ -553,6 +578,9 @@ namespace Morsoul.Data.Editor
             clue.isBacktrackingOnly = isBacktrackingOnly;
             clue.hasWorldPosition = hasWorldPosition;
             clue.worldPosition = worldPosition;
+            clue.inspectPrefab = !string.IsNullOrEmpty(inspectPrefabPath)
+                ? AssetDatabase.LoadAssetAtPath<GameObject>(inspectPrefabPath)
+                : null;
             EditorUtility.SetDirty(clue);
             return clue;
         }

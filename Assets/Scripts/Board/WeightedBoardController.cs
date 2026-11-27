@@ -422,6 +422,26 @@ namespace Morsoul.Board
             return string.IsNullOrEmpty(authored) ? fallback : authored;
         }
 
+        string BuildWrongLinkBanner(DirectedEdge attemptedLink)
+        {
+            float cost = ProgressionConstants.ErrorFocusCost;
+            if (_graph != null)
+            {
+                var kind = _graph.ClassifyWrongLink(attemptedLink, out string midId);
+                if (kind == EvidenceGraph.WrongLinkHintKind.Reversed)
+                    return $"Near miss — cause and effect are reversed. Right-click the red link to sever it, then link the other way. (-{cost:0} Focus)";
+                if (kind == EvidenceGraph.WrongLinkHintKind.MissingIntermediate)
+                {
+                    bool collected = _session?.State?.CollectedClueIds != null &&
+                                     _session.State.CollectedClueIds.Contains(midId);
+                    if (collected)
+                        return $"Almost — these connect through '{GetClueDisplayName(midId)}', not directly. Right-click to sever. (-{cost:0} Focus)";
+                    return $"Something in between is still missing — an uneasy gap remains. Right-click to sever. (-{cost:0} Focus)";
+                }
+            }
+            return $"These clues don't connect directly — check the cause-and-effect wording on each card. Right-click the red link to sever it. (-{cost:0} Focus)";
+        }
+
         string AuthoredLockedFeedback(string conclusionId)
         {
             var graphData = caseData != null ? caseData.evidenceGraph : null;
@@ -480,8 +500,7 @@ namespace Morsoul.Board
                         ShowBanner(BannerInfoClass, okMessage);
                         break;
                     case ProgressionEventKind.LinkWrong:
-                        ShowBanner(BannerErrorClass,
-                            $"The connection doesn't hold — right-click the red link to sever it. (-{ProgressionConstants.ErrorFocusCost:0} Focus)");
+                        ShowBanner(BannerErrorClass, BuildWrongLinkBanner(attemptedLink));
                         break;
                     case ProgressionEventKind.LinksCleared:
                         if (!TryTriggerBoardLockoutFallback())

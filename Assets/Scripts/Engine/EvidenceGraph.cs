@@ -169,6 +169,40 @@ namespace Morsoul.Engine
         public string FinalSolutionClue =>
             SolutionOrder != null && SolutionOrder.Count > 0 ? SolutionOrder[SolutionOrder.Count - 1] : null;
 
+        public enum WrongLinkHintKind
+        {
+            Unrelated,
+            Reversed,
+            MissingIntermediate,
+        }
+
+        /// <summary>
+        /// Classifies why an off-S* link failed so the board can give near-miss feedback
+        /// without spoiling exact answers.
+        /// </summary>
+        public WrongLinkHintKind ClassifyWrongLink(DirectedEdge attempted, out string intermediateClueId)
+        {
+            intermediateClueId = null;
+            if (string.IsNullOrEmpty(attempted.sourceId) || string.IsNullOrEmpty(attempted.targetId))
+                return WrongLinkHintKind.Unrelated;
+
+            if (_solutionEdges.Contains(new DirectedEdge(attempted.targetId, attempted.sourceId)))
+                return WrongLinkHintKind.Reversed;
+
+            foreach (var edge in IncidentSolutionLinks(attempted.sourceId))
+            {
+                if (edge.sourceId != attempted.sourceId) continue;
+                string mid = edge.targetId;
+                if (_solutionEdges.Contains(new DirectedEdge(mid, attempted.targetId)))
+                {
+                    intermediateClueId = mid;
+                    return WrongLinkHintKind.MissingIntermediate;
+                }
+            }
+
+            return WrongLinkHintKind.Unrelated;
+        }
+
         internal bool TryGetReliability(string id, out double value) =>
             _reliability.TryGetValue(id, out value);
 

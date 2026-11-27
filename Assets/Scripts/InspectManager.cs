@@ -41,6 +41,8 @@ public class InspectManager : MonoBehaviour
     private System.Func<bool> _modalBlocker;
     private bool _returnToJournal;
     private System.Action _onReinspectClosed;
+    private string _pendingDescription;
+    private bool _pendingHasVisual;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void RegisterJournalReinspectHook()
@@ -172,8 +174,20 @@ public class InspectManager : MonoBehaviour
         if (_closeButton != null)
             _closeButton.clicked += CloseInspect;
 
-        if (_inspectImage != null) _inspectImage.image = inspectRT;
-        if (_inspectRoot != null) _inspectRoot.style.display = DisplayStyle.None;
+        if (_inspectImage != null)
+        {
+            _inspectImage.image = inspectRT;
+            _inspectImage.style.display = (_isInspecting && _pendingHasVisual) ? DisplayStyle.Flex : DisplayStyle.None;
+        }
+        if (_inspectDescription != null && _isInspecting && !string.IsNullOrEmpty(_pendingDescription))
+            _inspectDescription.text = _pendingDescription;
+        if (_inspectRoot != null)
+            _inspectRoot.style.display = _isInspecting ? DisplayStyle.Flex : DisplayStyle.None;
+        if (_isInspecting && _pendingHasVisual)
+        {
+            if (inspectCamera != null && inspectCamera.enabled) inspectCamera.Render();
+            _inspectImage?.MarkDirtyRepaint();
+        }
     }
 
     public void OpenInspect(ClueNode clue)
@@ -253,6 +267,12 @@ public class InspectManager : MonoBehaviour
         }
         if (sourceVisual == null)
             sourceVisual = clueData.inspectPrefab;
+        if (sourceVisual == null)
+        {
+            _isInspecting = false;
+            onClosed?.Invoke();
+            return;
+        }
 
         ShowInspectOverlay(fullText, sourceVisual, returnToJournal: true, onClosed: onClosed);
     }
@@ -261,6 +281,8 @@ public class InspectManager : MonoBehaviour
     {
         _returnToJournal = returnToJournal;
         _onReinspectClosed = onClosed;
+        _pendingDescription = fullDescription;
+        _pendingHasVisual = sourceVisual != null;
 
         if (_inspectDescription != null)
             _inspectDescription.text = fullDescription;

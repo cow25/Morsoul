@@ -86,6 +86,7 @@ MonoBehaviour:
     tier: 0
     targetClueId: 
     submissionFeedback: "The seismic spikes are synchronized with inverted siphon pylons \u2014 trace the four-district supply chain into the Core."
+    lowThreshold: 0
     supportingEdges:
     - clueId: RH1_05
       weight: 0.5
@@ -107,6 +108,7 @@ MonoBehaviour:
     tier: 2
     targetClueId: C3_05
     submissionFeedback: 
+    lowThreshold: 0
     supportingEdges:
     - clueId: C3_05
       weight: 1
@@ -123,7 +125,7 @@ MonoBehaviour:
     highThreshold: 1
     PrunedMode: 1
     RivalClueId: RH1_05
-  cachedReferenceSupport: 0.26689734
+  cachedReferenceSupport: 0.26689732
   solutionTopologicalOrder:
   - C4_05
   - C1_05

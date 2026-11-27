@@ -93,6 +93,7 @@ MonoBehaviour:
     tier: 0
     targetClueId: 
     submissionFeedback: "The acolyte has an alibi and the crystal shattered from inside the belfry \u2014 look at who handled the damping soot."
+    lowThreshold: 0
     supportingEdges:
     - clueId: T2_02
       weight: 0.5
@@ -116,6 +117,7 @@ MonoBehaviour:
     tier: 2
     targetClueId: C3_02
     submissionFeedback: 
+    lowThreshold: 0
     supportingEdges:
     - clueId: C3_02
       weight: 1
@@ -134,7 +136,7 @@ MonoBehaviour:
     highThreshold: 1
     PrunedMode: 1
     RivalClueId: T2_02
-  cachedReferenceSupport: 0.27380625
+  cachedReferenceSupport: 0.2738062
   solutionTopologicalOrder:
   - C2_02
   - C5_02

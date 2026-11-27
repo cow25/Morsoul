@@ -16,6 +16,26 @@ namespace Morsoul.Hub
 
         bool _inspected;
 
+        void Start()
+        {
+            if (clue == null || !Application.isPlaying) return;
+            var core = Morsoul.Core.CoreRuntime.Instance;
+            if (core != null && core.Session != null && core.Session.HasClue(clue.id))
+            {
+                _inspected = true;
+                return;
+            }
+            InitClueGlint(0.3f);
+        }
+
+        void Update()
+        {
+            if (!Application.isPlaying || clue == null) return;
+            var session = Morsoul.Core.CoreRuntime.Instance?.Session;
+            bool show = !_inspected && (session == null || (!session.HasClue(clue.id) && clue.caseId == session.CurrentCase));
+            TickClueGlint(show);
+        }
+
         void Reset()
         {
             promptText = "[E] Inspect";

@@ -791,11 +791,24 @@ namespace Morsoul.Flow
                     return;
                 }
             }
-            Core.CoreRuntime.Instance?.Bus.Publish(new Core.CaseCompletedEvent
+            void PublishCompleted()
             {
-                CaseId = caseId,
-                Ending = _lastEnding
-            });
+                Core.CoreRuntime.Instance?.Bus.Publish(new Core.CaseCompletedEvent
+                {
+                    CaseId = caseId,
+                    Ending = _lastEnding
+                });
+            }
+            if (Application.isPlaying && caseId >= 0 && caseId <= 4)
+            {
+                var core = Core.CoreRuntime.Instance;
+                var grade = _session != null ? _session.ComputeGrade() : Grade.Ungraded;
+                bool unease = core != null && caseData != null && !string.IsNullOrEmpty(caseData.uneaseFlagKey)
+                              && core.Session.HasFlag(caseData.uneaseFlagKey);
+                CaseRecapOverlay.Show(caseId, grade.ToString(), unease, PublishCompleted);
+                return;
+            }
+            PublishCompleted();
         }
 
         // --- Dialogue handler ----------------------------------------------------
@@ -1018,6 +1031,7 @@ namespace Morsoul.Flow
         {
             _endingRequested = true;
             _lastEnding = ending;
+            Core.EndingGalleryStore.RecordUnlocked(ending);
             weightedBoard?.Close();
             board?.Close();
             interrogation?.Close();

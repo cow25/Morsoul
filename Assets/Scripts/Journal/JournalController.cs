@@ -188,10 +188,10 @@ namespace Morsoul.Journal
             else if (keyboard.dKey.wasPressedThisFrame || keyboard.rightArrowKey.wasPressedThisFrame) ChangeTocPage(1);
             else if (keyboard.enterKey.wasPressedThisFrame || keyboard.numpadEnterKey.wasPressedThisFrame)
             {
-                if (_detailClue != null) RequestReinspectSelected();
+                if (_detailClue != null && _detailClue.HasInspectModel) RequestReinspectSelected();
                 else ActivateSelected();
             }
-            else if (keyboard.rKey.wasPressedThisFrame && _detailClue != null)
+            else if (keyboard.rKey.wasPressedThisFrame && _detailClue != null && _detailClue.HasInspectModel)
             {
                 RequestReinspectSelected();
             }
@@ -345,14 +345,14 @@ namespace Morsoul.Journal
             card.RegisterCallback<ClickEvent>(evt =>
             {
                 SelectCard(idx);
-                if (evt.clickCount >= 2 && _detailClue != null)
+                if (evt.clickCount >= 2 && _detailClue != null && _detailClue.HasInspectModel)
                     RequestReinspectSelected();
             });
         }
 
         public void RequestReinspectSelected()
         {
-            if (!_isOpen || _reinspecting || _detailClue == null || ReinspectHandler == null) return;
+            if (!_isOpen || _reinspecting || _detailClue == null || !_detailClue.HasInspectModel || ReinspectHandler == null) return;
             _reinspecting = true;
             ReinspectHandler.Invoke(_detailClue, () =>
             {
@@ -455,13 +455,14 @@ namespace Morsoul.Journal
                 {
                     if (log == null) continue;
                     bool collected = JournalFilter.IsLogCollected(log, collectedLogs);
+                    if (!collected) continue;
                     string title = JournalFilter.LogTitle(log);
                     string location = string.IsNullOrEmpty(log.location) ? "Unknown site" : log.location;
-                    string body = collected ? log.contents : JournalFilter.Mask(log.contents);
+                    string body = log.contents;
                     var capturedTitle = title;
                     var capturedLocation = location;
                     var capturedBody = body;
-                    entries.Add((title, () => ShowTextDetail(capturedTitle, capturedLocation, capturedBody), !collected));
+                    entries.Add((title, () => ShowTextDetail(capturedTitle, capturedLocation, capturedBody), false));
                 }
             }
             RenderTocEntries(entries, "No runic logs recorded.");
@@ -555,7 +556,8 @@ namespace Morsoul.Journal
                 _detailDesc.text = ClueHighlightFormatter.FormatDescription(clue, playerName, darkBackground: false);
             }
             if (_reinspectButton != null)
-                _reinspectButton.style.display = ReinspectHandler != null ? DisplayStyle.Flex : DisplayStyle.None;
+                _reinspectButton.style.display = (ReinspectHandler != null && clue.HasInspectModel)
+                    ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
         void ShowTextDetail(string title, string subtitle, string body)

@@ -18,5 +18,8 @@ namespace Morsoul.Data
         public Vector2 worldPosition;
         [Tooltip("Optional 3D prefab/model used when reinspecting this clue from the Journal across scenes.")]
         public GameObject inspectPrefab;
+
+        /// <summary>True when this clue has a 3D model available for Journal inspection.</summary>
+        public bool HasInspectModel => inspectPrefab != null;
     }
 }

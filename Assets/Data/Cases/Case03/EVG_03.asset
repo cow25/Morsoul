@@ -93,6 +93,7 @@ MonoBehaviour:
     tier: 0
     targetClueId: 
     submissionFeedback: "Wood beetles are a secondary symptom \u2014 connect the five-night timeline, harvest tally, and taproot siphon."
+    lowThreshold: 0
     supportingEdges:
     - clueId: T2_03
       weight: 0.5
@@ -106,6 +107,7 @@ MonoBehaviour:
     tier: 2
     targetClueId: C3_03
     submissionFeedback: 
+    lowThreshold: 0
     supportingEdges:
     - clueId: C3_03
       weight: 1
@@ -124,7 +126,7 @@ MonoBehaviour:
     highThreshold: 1
     PrunedMode: 1
     RivalClueId: T2_03
-  cachedReferenceSupport: 0.25733484
+  cachedReferenceSupport: 0.25733483
   solutionTopologicalOrder:
   - C2_03
   - T1_03

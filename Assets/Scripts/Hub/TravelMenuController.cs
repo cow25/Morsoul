@@ -170,12 +170,17 @@ namespace Morsoul.Hub
             if (_list == null) return;
             _list.Clear();
             _buttons.Clear();
+            var session = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session : null;
             for (int i = 0; i < _destinations.Count; i++)
             {
                 int captured = i;
+                var dest = _destinations[i];
+                bool uneasy = session != null && dest.caseId >= 1 &&
+                              session.HasFlag($"Case{dest.caseId}_UneaseActive");
+                string label = uneasy ? $"{dest.label}  [Uneasy Feeling]" : dest.label;
                 var button = new Button(() => Confirm(captured))
                 {
-                    text = _destinations[i].label,
+                    text = label,
                 };
                 button.AddToClassList("travel-destination");
                 _list.Add(button);

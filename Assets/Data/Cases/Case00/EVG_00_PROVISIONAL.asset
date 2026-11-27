@@ -77,6 +77,7 @@ MonoBehaviour:
     tier: 0
     targetClueId: 
     submissionFeedback: The pipe is a lever, not a bypass. It cannot power or turn this lock.
+    lowThreshold: 0
     supportingEdges:
     - clueId: RH1_00
       weight: 0.5
@@ -104,6 +105,7 @@ MonoBehaviour:
     tier: 2
     targetClueId: C3_00
     submissionFeedback: 
+    lowThreshold: 0
     supportingEdges:
     - clueId: T1_00
       weight: 0.8
@@ -122,7 +124,7 @@ MonoBehaviour:
     highThreshold: 1
     PrunedMode: 1
     RivalClueId: 
-  cachedReferenceSupport: 0.17284219
+  cachedReferenceSupport: 0.17284217
   solutionTopologicalOrder:
   - T1_00
   - C1_00
