@@ -213,5 +213,29 @@ namespace Morsoul.Tests
             Assert.That(_session.HintTargetClue(3), Is.Not.Null);
             Assert.That(_session.HintTargetClue(1), Is.Null);
         }
+
+        [Test]
+        public void DrawLink_CyclicLink_FreeBlock_NoCharge()
+        {
+            CollectAll();
+            _session.DrawLink(new DirectedEdge("a", "b"));
+            _session.DrawLink(new DirectedEdge("b", "c"));
+
+            // 2-node loop: c -> b
+            var twoNode = _session.DrawLink(new DirectedEdge("c", "b"));
+            Assert.That(twoNode, Has.Count.EqualTo(1));
+            Assert.That(twoNode[0].Kind, Is.EqualTo(ProgressionEventKind.InvalidInput));
+            Assert.That(twoNode[0].IsCyclic, Is.True);
+
+            // 3-node loop: c -> a
+            var threeNode = _session.DrawLink(new DirectedEdge("c", "a"));
+            Assert.That(threeNode, Has.Count.EqualTo(1));
+            Assert.That(threeNode[0].Kind, Is.EqualTo(ProgressionEventKind.InvalidInput));
+            Assert.That(threeNode[0].IsCyclic, Is.True);
+
+            Assert.That(_state.Links, Has.Count.EqualTo(2));
+            Assert.That(_state.CaseErrorCount, Is.EqualTo(0));
+            Assert.That(_state.Focus, Is.EqualTo(100f));
+        }
     }
 }
