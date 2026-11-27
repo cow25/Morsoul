@@ -12,19 +12,26 @@ namespace Morsoul.Core
     {
         readonly string _filePath;
         readonly bool _isPersistent;
+        readonly int _slot;
 
-        public SaveService(string filePath) : this(filePath, false) { }
+        public SaveService(string filePath) : this(filePath, false, 0) { }
 
-        SaveService(string filePath, bool isPersistent)
+        SaveService(string filePath, bool isPersistent, int slot)
         {
             if (string.IsNullOrEmpty(filePath))
                 throw new ArgumentException("filePath required", nameof(filePath));
             _filePath = filePath;
             _isPersistent = isPersistent;
+            _slot = slot;
         }
 
-        const string LastSlotPrefKey = "Morsoul.LastSaveSlot";
+        const string LastSlotPrefKeyPrefix = "Morsoul.LastSaveSlot";
         static int _activeSlot = -1;
+
+        static string LastSlotPrefKey =>
+            !Application.isEditor && GameLock.HasExplicitAccountOrDb
+                ? $"{LastSlotPrefKeyPrefix}.{GameLock.AccountTag}"
+                : LastSlotPrefKeyPrefix;
 
         /// <summary>Active save slot (1..3). Persists across sessions via PlayerPrefs.</summary>
         public static int ActiveSlot
@@ -43,24 +50,27 @@ namespace Morsoul.Core
             }
         }
 
-        /// <summary>Service for a specific save slot (1..3). Slot 1 includes LauncherDb.</summary>
+        /// <summary>Service for a specific save slot (1..3). All slots sync with LauncherDb in builds.</summary>
         public static SaveService ForSlot(int slot)
         {
             int clamped = Mathf.Clamp(slot, 1, 3);
+            string accountTag = !Application.isEditor && GameLock.HasExplicitAccountOrDb
+                ? $"_{GameLock.AccountTag}"
+                : "";
             string suffix = clamped == 1 ? "" : $"_slot{clamped}";
             return new SaveService(Path.Combine(Application.persistentDataPath,
 #if UNITY_EDITOR
-                $"morsoul_checkpoint{suffix}_editor.json"
+                $"morsoul_checkpoint{accountTag}{suffix}_editor.json"
 #else
-                $"morsoul_checkpoint{suffix}.json"
+                $"morsoul_checkpoint{accountTag}{suffix}.json"
 #endif
-            ), isPersistent: clamped == 1);
+            ), isPersistent: true, slot: clamped);
         }
 
         /// <summary>Default service writing to persistentDataPath (isolated in Editor).</summary>
-        public static SaveService Persistent => ForSlot(_activeSlot);
+        public static SaveService Persistent => ForSlot(ActiveSlot);
 
-        public bool HasSave => File.Exists(_filePath) || (_isPersistent && LauncherDb.HasDatabaseSave());
+        public bool HasSave => File.Exists(_filePath) || (_isPersistent && LauncherDb.HasDatabaseSave(_slot));
 
         /// <summary>
         /// Writes the checkpoint via a temp file, then swaps it in. When a
@@ -97,7 +107,7 @@ namespace Morsoul.Core
             }
 
             if (_isPersistent)
-                LauncherDb.TrySave(state, json);
+                LauncherDb.TrySave(state, json, _slot);
         }
 
         /// <summary>
@@ -108,7 +118,7 @@ namespace Morsoul.Core
         {
             state = null;
             error = null;
-            if (_isPersistent && LauncherDb.TryLoad(out state))
+            if (_isPersistent && LauncherDb.TryLoad(_slot, out state))
                 return true;
             if (!File.Exists(_filePath))
             {
@@ -123,6 +133,7 @@ namespace Morsoul.Core
         public void DeleteSave()
         {
             if (File.Exists(_filePath)) File.Delete(_filePath);
+            if (_isPersistent) LauncherDb.TryDeleteSlot(_slot);
         }
     }
 }

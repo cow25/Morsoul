@@ -335,6 +335,7 @@ namespace Morsoul.Title
                 _uitOverwriteYesBtn.clicked += () =>
                 {
                     if (_uitOverwritePrompt != null) _uitOverwritePrompt.style.display = DisplayStyle.None;
+                    SaveService.ForSlot(_pendingOverwriteSlot).DeleteSave();
                     SaveService.ActiveSlot = _pendingOverwriteSlot;
                     CloseSaveSlotModal();
                     RequestNewGame();
@@ -474,6 +475,7 @@ namespace Morsoul.Title
                 overwriteYesButton.onClick.AddListener(() =>
                 {
                     if (overwritePrompt != null) overwritePrompt.SetActive(false);
+                    SaveService.ForSlot(_pendingOverwriteSlot).DeleteSave();
                     SaveService.ActiveSlot = _pendingOverwriteSlot;
                     CloseSaveSlotModal();
                     RequestNewGame();
