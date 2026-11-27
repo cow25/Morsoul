@@ -93,6 +93,7 @@ MonoBehaviour:
     tier: 0
     targetClueId: 
     submissionFeedback: "Iron wedges and synthetic mana solvent are not operator error \u2014 trace both sabotage paths to the sub-lab."
+    lowThreshold: 0
     supportingEdges:
     - clueId: T2_04
       weight: 0.5
@@ -106,6 +107,7 @@ MonoBehaviour:
     tier: 2
     targetClueId: C5_04
     submissionFeedback: 
+    lowThreshold: 0
     supportingEdges:
     - clueId: C5_04
       weight: 1
@@ -124,7 +126,7 @@ MonoBehaviour:
     highThreshold: 1
     PrunedMode: 1
     RivalClueId: T2_04
-  cachedReferenceSupport: 0.26424375
+  cachedReferenceSupport: 0.26424372
   solutionTopologicalOrder:
   - C4_04
   - C2_04

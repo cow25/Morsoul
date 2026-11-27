@@ -24,4 +24,4 @@ MonoBehaviour:
   isBacktrackingOnly: 0
   hasWorldPosition: 1
   worldPosition: {x: 0, y: 16}
-  inspectPrefab: {fileID: 0}
+  inspectPrefab: {fileID: 1460113053511152, guid: b9f4a9682ca0a4441a5cd19f4f2fa1bc, type: 3}

@@ -93,6 +93,7 @@ MonoBehaviour:
     tier: 0
     targetClueId: 
     submissionFeedback: "No forced entry or dark magic occurred \u2014 re-examine the lock, the solvent, and the ledger."
+    lowThreshold: 0
     supportingEdges:
     - clueId: T2_01
       weight: 0.5
@@ -126,6 +127,7 @@ MonoBehaviour:
     tier: 2
     targetClueId: C4_01
     submissionFeedback: 
+    lowThreshold: 0
     supportingEdges:
     - clueId: C4_01
       weight: 1
@@ -144,7 +146,7 @@ MonoBehaviour:
     highThreshold: 1
     PrunedMode: 1
     RivalClueId: T2_01
-  cachedReferenceSupport: 0.28193438
+  cachedReferenceSupport: 0.28193435
   solutionTopologicalOrder:
   - C1_01
   - C5_01

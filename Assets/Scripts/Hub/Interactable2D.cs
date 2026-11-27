@@ -84,5 +84,65 @@ namespace Morsoul.Hub
         {
             SetPromptVisible(false);
         }
+
+        GameObject _glintGo;
+        TextMesh _glintText;
+        Vector3 _glintBasePos;
+
+        /// <summary>Creates a pulsing gold ◆ marker above this 2D interactable.</summary>
+        protected void InitClueGlint(float extraY = 0.3f)
+        {
+            if (!Application.isPlaying || _glintGo != null) return;
+            var sr = GetComponentInChildren<SpriteRenderer>();
+            var col = GetComponentInChildren<Collider2D>();
+            Vector3 worldTarget = sr != null
+                ? new Vector3(sr.bounds.center.x, sr.bounds.max.y + extraY, transform.position.z - 0.05f)
+                : (col != null
+                    ? new Vector3(col.bounds.center.x, col.bounds.center.y + extraY, transform.position.z - 0.05f)
+                    : transform.position + new Vector3(0f, extraY + 0.2f, -0.05f));
+            _glintBasePos = transform.InverseTransformPoint(worldTarget);
+            _glintGo = new GameObject("ClueGlint2D");
+            _glintGo.transform.SetParent(transform, false);
+            _glintGo.transform.localPosition = _glintBasePos;
+            var ls = transform.lossyScale;
+            _glintGo.transform.localScale = new Vector3(
+                ls.x != 0f ? 1f / ls.x : 1f,
+                ls.y != 0f ? 1f / ls.y : 1f,
+                1f);
+            _glintText = _glintGo.AddComponent<TextMesh>();
+            _glintText.text = "◆";
+            _glintText.characterSize = 0.14f;
+            _glintText.fontSize = 48;
+            _glintText.fontStyle = FontStyle.Bold;
+            _glintText.anchor = TextAnchor.MiddleCenter;
+            _glintText.alignment = TextAlignment.Center;
+            var mr = _glintGo.GetComponent<MeshRenderer>();
+            if (mr != null)
+            {
+                if (sr != null)
+                {
+                    mr.sortingLayerID = sr.sortingLayerID;
+                    mr.sortingOrder = sr.sortingOrder + 10;
+                }
+                else
+                {
+                    mr.sortingOrder = 50;
+                }
+            }
+        }
+
+        /// <summary>Updates visibility and pulse of the 2D clue marker.</summary>
+        protected void TickClueGlint(bool show)
+        {
+            if (_glintGo == null) return;
+            if (_glintGo.activeSelf != show) _glintGo.SetActive(show);
+            if (!show) return;
+            if (_glintText != null)
+            {
+                float alpha = 0.55f + 0.45f * Mathf.Sin(Time.time * 3.5f);
+                _glintText.color = new Color(1f, 0.88f, 0.25f, alpha);
+            }
+            _glintGo.transform.localPosition = _glintBasePos + Vector3.up * (Mathf.Sin(Time.time * 2.5f) * 0.06f);
+        }
     }
 }

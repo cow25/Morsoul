@@ -17,8 +17,9 @@ namespace Morsoul.Editor
     /// </summary>
     public static class DeductionScenePatcher
     {
-        const string Mfp = "Assets/Medieval Furniture Pack/Prefabs/";
-        const string Dfk = "Assets/KUBIKOS - RPG & Fantasy/Dungeon Fantasy Kit/Prefabs/";
+        const string Mfp = "Assets/Mega Fantasy Props Pack/Prefabs/";
+        const string Dfk = "Assets/RunemarkStudio/DarkFantasyKit [Free]/Prefabs/";
+        const string Lpd = "Assets/[Import] LowPolyDungeonFree/Prefabs/";
 
         [MenuItem("Morsoul/Data/Patch 2D & 3D Scenes With New Clues")]
         public static void PatchAllScenes()
@@ -29,9 +30,10 @@ namespace Morsoul.Editor
                 "Assets/Scenes/3D/Case1UndegroundStorageVault.unity",
                 "C4_IndemnityClaim", "C4_01",
                 "Pre-signed Treasury compensation claim for Batch #408, dated two days before the breach, naming Ignatius as sole beneficiary.",
-                new Vector3(-2.4f, 0.86f, 8.8f), new Vector3(-2.4f, 1.0f, 8.8f), new Vector3(1.4f, 1.1f, 1.4f),
+                new Vector3(-2.4f, 0.72f, 8.8f), new Vector3(-2.4f, 0.9f, 8.8f), new Vector3(1.4f, 1.1f, 1.4f),
                 Mfp + "Miscellaneous/scroll.prefab", new Vector3(0f, 35f, 0f), new Vector3(1.3f, 1.3f, 1.3f),
-                PrimitiveType.Cube, Color.white,
+                Lpd + "05_Containers/SM_LPD_Crate_CrateSmall_01.prefab", new Vector3(-2.4f, 0f, 8.8f),
+                new Vector3(0.005f, 0.5f, 0.005f),
                 new[] { "C1_01", "C2_01", "C3_01", "C4_01" },
                 "Inspect vault lock, scan solvent residue [Tab], check cargo desk, and search the inner vault ({0}/{1}).");
 
@@ -41,7 +43,8 @@ namespace Morsoul.Editor
                 "Oily polishing cloth tucked into Accord's belfry bench, coated in the same black metallic damping soot found on the clapper.",
                 new Vector3(4.6f, 4.05f, 12.6f), new Vector3(4.6f, 4.35f, 12.6f), new Vector3(1.4f, 1.1f, 1.4f),
                 Dfk + "Decoration/Textiles/dfk_carpet_black_small.prefab", new Vector3(0f, -20f, 0f), new Vector3(0.45f, 0.45f, 0.45f),
-                PrimitiveType.Cube, new Color(0.18f, 0.16f, 0.20f),
+                null, Vector3.zero,
+                new Vector3(0.005f, 0.6f, 0.005f),
                 new[] { "C1_02", "C2_02", "C3_02", "C4_02" },
                 "Inspect the shattered crystal, climb to the Great Bell [Tab], and search both upper galleries ({0}/{1}).");
 
@@ -49,9 +52,10 @@ namespace Morsoul.Editor
                 "Assets/Scenes/3D/Case3WhisperwoodGrove.unity",
                 "C4_ManaResinCanister", "C4_03",
                 "Pressurized brass canister filled with luminous sap, stenciled for Veiled Circle shipment to Iron Hollow Drift 09.",
-                new Vector3(4.8f, 0.45f, 8.2f), new Vector3(4.8f, 0.55f, 8.2f), new Vector3(1.4f, 1.2f, 1.4f),
-                null, Vector3.zero, new Vector3(0.45f, 0.45f, 0.45f),
-                PrimitiveType.Cylinder, new Color(0.76f, 0.56f, 0.22f),
+                new Vector3(5.8f, 0.02f, 9.8f), new Vector3(5.8f, 0.55f, 9.8f), new Vector3(1.4f, 1.2f, 1.4f),
+                Lpd + "05_Containers/SM_LPD_Crate_UrnUrn_01.prefab", new Vector3(0f, 20f, 0f), new Vector3(1.25f, 1.25f, 1.25f),
+                null, Vector3.zero,
+                new Vector3(0.005f, 0.5f, 0.005f),
                 new[] { "C1_03", "C2_03", "C3_03", "C4_03" },
                 "Inspect the Elder Tree siphon, ritual dagger, Vane's cloak, and mana canister ({0}/{1}).");
 
@@ -59,9 +63,10 @@ namespace Morsoul.Editor
                 "Assets/Scenes/3D/Case4IronHollowSubFacility.unity",
                 "C5_StasisOverrideRelay", "C5_04",
                 "Auxiliary lockout relay mounted outside the blast door, bridged with Veiled Circle copper shunts to trap Brokk inside.",
-                new Vector3(2.3f, 1.2f, 11.4f), new Vector3(2.3f, 1.2f, 11.4f), new Vector3(1.3f, 1.4f, 1.2f),
-                null, Vector3.zero, new Vector3(0.45f, 0.65f, 0.35f),
-                PrimitiveType.Cube, new Color(0.55f, 0.32f, 0.18f),
+                new Vector3(2.3f, 0.72f, 11.4f), new Vector3(2.3f, 1.05f, 11.4f), new Vector3(1.3f, 1.4f, 1.2f),
+                Lpd + "04_Lighting/SM_LPD_Light_LanternHooded_01.prefab", new Vector3(0f, 180f, 0f), new Vector3(1.6f, 1.6f, 1.6f),
+                Lpd + "05_Containers/SM_LPD_Crate_CrateSmall_01.prefab", new Vector3(2.3f, 0f, 11.4f),
+                new Vector3(0.005f, 0.5f, 0.005f),
                 new[] { "C1_04", "C2_04", "C3_04", "C5_04" },
                 "Inspect pneumatic valves, scan bypass conduits [Tab], check the blast door, and examine the stasis relay ({0}/{1}).");
 
@@ -114,50 +119,79 @@ namespace Morsoul.Editor
             string prefabPath,
             Vector3 propEuler,
             Vector3 propScale,
-            PrimitiveType fallbackPrimitive,
-            Color fallbackColor,
+            string supportPrefabPath,
+            Vector3 supportPos,
+            Vector3 emberScale,
             string[] requiredClues,
             string gatherFormat)
         {
             var scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
             bool dirty = false;
 
+            var cluesRoot = GameObject.Find("Clues")?.transform;
+            var envRoot = GameObject.Find("Environment")?.transform;
             var existing = Object.FindObjectsByType<ClueNode>(FindObjectsInactive.Include)
                 .FirstOrDefault(n => n.id == clueId);
+
+            // Replace placeholder/primitive visuals on our 4 newly added clues with real prefab visuals.
+            bool needsVisualUpgrade = existing != null &&
+                (existing.inspectVisual == null || existing.inspectVisual.name.EndsWith("_Visual"));
+            if (needsVisualUpgrade)
+            {
+                if (existing.inspectVisual != null)
+                    Object.DestroyImmediate(existing.inspectVisual);
+                Object.DestroyImmediate(existing.gameObject);
+                existing = null;
+                dirty = true;
+            }
+            else if (existing != null)
+            {
+                // Sync position and Ground Embers scale on existing patched nodes so embers match scene scale.
+                if (Vector3.Distance(existing.transform.position, nodePos) > 0.05f)
+                {
+                    existing.transform.position = nodePos;
+                    if (existing.inspectVisual != null) existing.inspectVisual.transform.position = propPos;
+                    dirty = true;
+                }
+                if (existing.scanParticles != null && existing.scanParticles.transform.localScale != emberScale)
+                {
+                    existing.scanParticles.transform.localScale = emberScale;
+                    existing.scanParticles.transform.localPosition = Vector3.zero;
+                    EditorUtility.SetDirty(existing.scanParticles.transform);
+                    dirty = true;
+                }
+            }
+
             if (existing == null)
             {
-                var cluesRoot = GameObject.Find("Clues")?.transform;
-                GameObject visual = null;
-                if (!string.IsNullOrEmpty(prefabPath))
+                if (!string.IsNullOrEmpty(supportPrefabPath))
                 {
-                    var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
-                    if (prefab != null)
+                    string supportName = nodeName + "_Support";
+                    if (GameObject.Find(supportName) == null)
                     {
-                        visual = (GameObject)PrefabUtility.InstantiatePrefab(prefab, scene);
-                        if (cluesRoot != null) visual.transform.SetParent(cluesRoot, false);
-                        visual.transform.position = propPos;
-                        visual.transform.eulerAngles = propEuler;
-                        visual.transform.localScale = propScale;
+                        var supportPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(supportPrefabPath);
+                        if (supportPrefab != null)
+                        {
+                            var support = (GameObject)PrefabUtility.InstantiatePrefab(supportPrefab, scene);
+                            support.name = supportName;
+                            if (envRoot != null) support.transform.SetParent(envRoot, false);
+                            support.transform.position = supportPos;
+                        }
                     }
                 }
-                if (visual == null)
+
+                var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+                if (prefab == null)
                 {
-                    visual = GameObject.CreatePrimitive(fallbackPrimitive);
-                    visual.name = nodeName + "_Visual";
-                    if (cluesRoot != null) visual.transform.SetParent(cluesRoot, false);
-                    visual.transform.position = propPos;
-                    visual.transform.eulerAngles = propEuler;
-                    visual.transform.localScale = propScale;
-                    var col = visual.GetComponent<Collider>();
-                    if (col != null) Object.DestroyImmediate(col);
-                    var rend = visual.GetComponent<Renderer>();
-                    if (rend != null)
-                    {
-                        var mat = new Material(Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard"));
-                        mat.color = fallbackColor;
-                        rend.sharedMaterial = mat;
-                    }
+                    Debug.LogError($"DeductionScenePatcher: prefab not found at '{prefabPath}' for {clueId}!");
+                    return;
                 }
+                var visual = (GameObject)PrefabUtility.InstantiatePrefab(prefab, scene);
+                visual.name = nodeName + "_Prop";
+                if (cluesRoot != null) visual.transform.SetParent(cluesRoot, false);
+                visual.transform.position = propPos;
+                visual.transform.eulerAngles = propEuler;
+                visual.transform.localScale = propScale;
 
                 var go = new GameObject(nodeName);
                 int interactLayer = LayerMask.NameToLayer("Interactable");
@@ -184,7 +218,7 @@ namespace Morsoul.Editor
                     inst.name = "Ground Embers";
                     inst.transform.localPosition = Vector3.zero;
                     inst.transform.localRotation = Quaternion.identity;
-                    inst.transform.localScale = new Vector3(0.01f, 0.2f, 0.01f);
+                    inst.transform.localScale = emberScale;
                     var ps = inst.GetComponent<ParticleSystem>();
                     if (ps != null)
                     {

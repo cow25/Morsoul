@@ -60,8 +60,26 @@ public class ScanController : MonoBehaviour
         }
     }
 
-    private void OnDisable() => SetAetherSight(false);
+    private void OnEnable()
+    {
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    private void OnDisable()
+    {
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
+        SetAetherSight(false);
+    }
+
     private void OnDestroy() => SetAetherSight(false);
+
+    private void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
+    {
+        _cachedClues = null;
+        _cachedOutlineRenderers = null;
+        _cachedCam = null;
+        _visualsMayBeActive = false;
+    }
 
     private void SetAetherSight(bool active)
     {
@@ -90,20 +108,7 @@ public class ScanController : MonoBehaviour
             SetAetherSight(false);
         else if (hasAether && Keyboard.current != null && Keyboard.current.digit1Key.wasPressedThisFrame)
         {
-            if (!IsAetherSightActive && !zeroCost && core.Focus.IsDepleted)
-                SetAetherSight(false);
-            else
-                SetAetherSight(!IsAetherSightActive);
-        }
-
-        if (IsAetherSightActive && !zeroCost)
-        {
-            core.Focus.TickAetherSight(Time.deltaTime);
-            currentFocus = core.Focus.Percent;
-            maxFocus = core.Focus.Maximum;
-            HUDManager.Instance?.UpdateFocus(Mathf.RoundToInt(currentFocus), Mathf.RoundToInt(maxFocus));
-            if (core.Focus.IsDepleted)
-                SetAetherSight(false);
+            SetAetherSight(!IsAetherSightActive);
         }
 
         if (_forcedScanTimer > 0f)
@@ -168,7 +173,8 @@ public class ScanController : MonoBehaviour
 
     private void EnsureClueCache()
     {
-        if (_cachedClues != null) return;
+        if (_cachedClues != null && (_cachedClues.Length == 0 || _cachedClues[0] != null))
+            return;
         _cachedClues = FindObjectsByType<ClueNode>(FindObjectsInactive.Exclude);
         _cachedOutlineRenderers = new MeshRenderer[_cachedClues.Length];
         for (int i = 0; i < _cachedClues.Length; i++)
@@ -182,16 +188,19 @@ public class ScanController : MonoBehaviour
     private void UpdateClueParticles()
     {
         EnsureClueCache();
-        // If we are actively scanning, check what is on screen
-        if (_currentScanProgress > 0.1f && _isScanning)
+        var core = Morsoul.Core.CoreRuntime.Instance;
+        var session = core?.Session;
+        bool hasAether = session != null && session.Tools.Contains(Morsoul.Data.Tool.AetherSight);
+        bool aetherActive = hasAether && IsAetherSightActive;
+        bool scanActive = _currentScanProgress > 0.1f && _isScanning;
+
+        // If we are actively scanning or Aether Sight is active, check what is on screen
+        if (scanActive || aetherActive)
         {
             _visualsMayBeActive = true;
             if (_cachedCam == null) _cachedCam = Camera.main;
             Camera cam = _cachedCam;
             if (cam == null) return;
-            var core = Morsoul.Core.CoreRuntime.Instance;
-            var session = core?.Session;
-            bool hasAether = session != null && session.Tools.Contains(Morsoul.Data.Tool.AetherSight);
             bool hasGolemEye = session != null && session.Tools.Contains(Morsoul.Data.Tool.GolemEye);
 
             for (int i = 0; i < _cachedClues.Length; i++)
@@ -202,19 +211,10 @@ public class ScanController : MonoBehaviour
                 bool needsGolemEye = clue.requiredTool == ClueNode.Tool.GolemEye || clue.requiredTool == ClueNode.Tool.Both;
                 MeshRenderer outlineMr = _cachedOutlineRenderers[i];
 
-                bool blocked = (needsAether && !(hasAether && IsAetherSightActive)) || (needsGolemEye && !hasGolemEye);
-                if (!blocked && core != null && session != null && !string.IsNullOrEmpty(clue.id))
-                {
-                    var clueData = core.ResolveClue(clue.id);
-                    if (clueData != null)
-                    {
-                        Morsoul.Data.RunicLogData log = clueData.type == Morsoul.Data.ClueType.Latent
-                            ? core.ResolveCase(clueData.caseId)?.latentLog
-                            : null;
-                        if (!Morsoul.Core.ClueAcquisition.CanAcquire(clueData, session, log, out _))
-                            blocked = true;
-                    }
-                }
+                bool blocked = (needsAether && !aetherActive)
+                    || (needsGolemEye && !hasGolemEye)
+                    || (!needsAether && !scanActive)
+                    || (clue.requiredTool == ClueNode.Tool.Both && !scanActive);
 
                 if (blocked)
                 {

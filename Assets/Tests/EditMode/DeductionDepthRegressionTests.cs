@@ -161,5 +161,36 @@ namespace Morsoul.Tests
                 UnityEngine.Object.DestroyImmediate(core.gameObject);
             }
         }
+        [Test]
+        public void ClueInspectModels_Only3DCluesHaveValidPrefabs_AndNon3DCluesHaveNone()
+        {
+            foreach (int caseId in AllCaseIds)
+            {
+                var caseData = LoadCanonicalCase(caseId);
+                Assert.NotNull(caseData);
+                foreach (var clue in caseData.clues)
+                {
+                    Assert.NotNull(clue);
+                    bool is3D = clue.acquisition == AcquisitionMethod.Raycast3D
+                        || clue.acquisition == AcquisitionMethod.GolemEyeScan
+                        || clue.acquisition == AcquisitionMethod.EmotionEcho
+                        || clue.acquisition == AcquisitionMethod.AetherSight
+                        || clue.acquisition == AcquisitionMethod.AetherSightPlusGolemEye;
+
+                    if (is3D)
+                    {
+                        Assert.That(clue.HasInspectModel, Is.True,
+                            $"3D clue '{clue.id}' (Case {caseId}) is missing inspectPrefab for Journal preview.");
+                        Assert.That(clue.inspectPrefab.GetComponentInChildren<MeshRenderer>(true), Is.Not.Null,
+                            $"3D clue '{clue.id}' inspectPrefab '{clue.inspectPrefab.name}' has no MeshRenderer.");
+                    }
+                    else
+                    {
+                        Assert.That(clue.HasInspectModel, Is.False,
+                            $"Non-3D clue '{clue.id}' (Case {caseId}, {clue.acquisition}) should not have an inspectPrefab.");
+                    }
+                }
+            }
+        }
     }
 }

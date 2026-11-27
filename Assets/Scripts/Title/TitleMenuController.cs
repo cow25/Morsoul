@@ -364,6 +364,8 @@ namespace Morsoul.Title
             if (_uitFullscreenBtn != null) _uitFullscreenBtn.clicked += ToggleFullscreen;
             if (_uitSettingsBackBtn != null) _uitSettingsBackBtn.clicked += CloseSettingsModal;
 
+            EnsureEndingsGalleryUi(root);
+
             SetActiveMenuIndex(0);
             RefreshSaveState();
             RefreshSettingsLabels();
@@ -371,6 +373,124 @@ namespace Morsoul.Title
         }
 
         static void PlayUiClick() => AudioCoordinator.PlayBankSfx(b => b.sfxUiClick, 0.7f);
+
+        void EnsureEndingsGalleryUi(VisualElement root)
+        {
+            if (root == null) return;
+            var modal = root.Q<VisualElement>("EndingsGalleryModal");
+            if (modal == null)
+            {
+                modal = new VisualElement { name = "EndingsGalleryModal" };
+                modal.style.position = Position.Absolute;
+                modal.style.left = 0;
+                modal.style.top = 0;
+                modal.style.right = 0;
+                modal.style.bottom = 0;
+                modal.style.backgroundColor = new Color(0.04f, 0.03f, 0.06f, 0.88f);
+                modal.style.alignItems = Align.Center;
+                modal.style.justifyContent = Justify.Center;
+                modal.style.display = DisplayStyle.None;
+
+                var card = new VisualElement();
+                card.style.width = 560;
+                card.style.paddingTop = 22;
+                card.style.paddingBottom = 22;
+                card.style.paddingLeft = 26;
+                card.style.paddingRight = 26;
+                card.style.backgroundColor = new Color(0.14f, 0.11f, 0.09f, 0.98f);
+                card.style.borderTopLeftRadius = 8;
+                card.style.borderTopRightRadius = 8;
+                card.style.borderBottomLeftRadius = 8;
+                card.style.borderBottomRightRadius = 8;
+                card.style.borderTopWidth = 2;
+                card.style.borderBottomWidth = 2;
+                card.style.borderLeftWidth = 2;
+                card.style.borderRightWidth = 2;
+                var border = new Color(0.55f, 0.42f, 0.24f, 0.9f);
+                card.style.borderTopColor = border;
+                card.style.borderBottomColor = border;
+                card.style.borderLeftColor = border;
+                card.style.borderRightColor = border;
+
+                var header = new UitLabel("Ending Gallery");
+                header.style.fontSize = 22;
+                header.style.unityFontStyleAndWeight = FontStyle.Bold;
+                header.style.color = new Color(0.96f, 0.84f, 0.52f);
+                header.style.marginBottom = 12;
+                card.Add(header);
+
+                var list = new VisualElement { name = "EndingsGalleryList" };
+                card.Add(list);
+
+                var closeBtn = new UitButton(() => modal.style.display = DisplayStyle.None) { text = "Close" };
+                closeBtn.style.marginTop = 14;
+                closeBtn.style.height = 34;
+                closeBtn.style.fontSize = 14;
+                card.Add(closeBtn);
+                modal.Add(card);
+                root.Add(modal);
+            }
+
+            if (root.Q<UitButton>("EndingsGalleryButton") == null)
+            {
+                var btn = new UitButton(() =>
+                {
+                    RefreshEndingsGallery(modal);
+                    modal.style.display = DisplayStyle.Flex;
+                })
+                {
+                    name = "EndingsGalleryButton",
+                    text = $"Endings ({EndingGalleryStore.UnlockedCount}/{EndingGalleryStore.AllEndings.Length})",
+                };
+                btn.style.position = Position.Absolute;
+                btn.style.right = 24;
+                btn.style.bottom = 24;
+                btn.style.paddingLeft = 14;
+                btn.style.paddingRight = 14;
+                btn.style.height = 34;
+                btn.style.fontSize = 14;
+                btn.style.backgroundColor = new Color(0.18f, 0.14f, 0.11f, 0.92f);
+                btn.style.color = new Color(0.95f, 0.88f, 0.72f);
+                root.Add(btn);
+            }
+        }
+
+        static void RefreshEndingsGallery(VisualElement modal)
+        {
+            var list = modal?.Q<VisualElement>("EndingsGalleryList");
+            if (list == null) return;
+            list.Clear();
+            foreach (var info in EndingGalleryStore.AllEndings)
+            {
+                bool unlocked = EndingGalleryStore.IsUnlocked(info.Id);
+                var row = new VisualElement();
+                row.style.marginBottom = 10;
+                row.style.paddingTop = 8;
+                row.style.paddingBottom = 8;
+                row.style.paddingLeft = 10;
+                row.style.paddingRight = 10;
+                row.style.backgroundColor = unlocked
+                    ? new Color(0.22f, 0.18f, 0.14f, 0.95f)
+                    : new Color(0.10f, 0.09f, 0.11f, 0.85f);
+                row.style.borderTopLeftRadius = 5;
+                row.style.borderTopRightRadius = 5;
+                row.style.borderBottomLeftRadius = 5;
+                row.style.borderBottomRightRadius = 5;
+
+                var title = new UitLabel(unlocked ? info.Title : $"Ending {info.Id} — Locked");
+                title.style.fontSize = 15;
+                title.style.unityFontStyleAndWeight = FontStyle.Bold;
+                title.style.color = unlocked ? new Color(0.98f, 0.88f, 0.62f) : new Color(0.58f, 0.56f, 0.60f);
+                row.Add(title);
+
+                var desc = new UitLabel(unlocked ? info.Description : "Reach Case 5 and resolve the final investigation to unlock this ending.");
+                desc.style.fontSize = 13;
+                desc.style.whiteSpace = WhiteSpace.Normal;
+                desc.style.color = unlocked ? new Color(0.92f, 0.89f, 0.82f) : new Color(0.52f, 0.50f, 0.54f);
+                row.Add(desc);
+                list.Add(row);
+            }
+        }
 
         UitButton BindUitMenuRow(string rowName, string btnName, int index, Action onClick)
         {

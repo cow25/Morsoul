@@ -175,11 +175,12 @@ namespace Morsoul.Editor
                 "Shipment #408 ledger: 200 crates of Greater Restoration Draughts logged, yet zero Moon-Lily extract was ever purchased.",
                 new Vector3(-4.4f, 1.0f, 1.7f), new Vector3(1.6f, 1.1f, 1.3f), clues, scroll, useGroundEmbers: true);
 
-            // C4_01: Draft Treasury Indemnity Claim (Room 2 inner vault crate/table)
-            var claimScroll = PlaceProp(Mfp + "Miscellaneous/scroll.prefab", clues, new Vector3(-2.4f, 0.86f, 8.8f), new Vector3(0f, 35f, 0f), new Vector3(1.3f, 1.3f, 1.3f));
+            // C4_01: Draft Treasury Indemnity Claim (Room 2 inner vault crate + scroll)
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_CrateSmall_01.prefab", env, new Vector3(-2.4f, 0f, 8.8f), new Vector3(0f, 15f, 0f), Vector3.one);
+            var claimScroll = PlaceProp(Mfp + "Miscellaneous/scroll.prefab", clues, new Vector3(-2.4f, 0.72f, 8.8f), new Vector3(0f, 35f, 0f), new Vector3(1.3f, 1.3f, 1.3f));
             CreateClueNode("C4_IndemnityClaim", "C4_01", ClueNode.Kind.Physical, ClueNode.Tool.None, ClueNode.State.Revealed,
                 "Pre-signed Treasury compensation claim for Batch #408, dated two days before the breach, naming Ignatius as sole beneficiary.",
-                new Vector3(-2.4f, 1.0f, 8.8f), new Vector3(1.4f, 1.1f, 1.4f), clues, claimScroll, useGroundEmbers: true);
+                new Vector3(-2.4f, 0.9f, 8.8f), new Vector3(1.4f, 1.1f, 1.4f), clues, claimScroll, useGroundEmbers: true);
 
             // L1_01: Sub-floor potion rack alcove in Room 2 (0, 12) — completely concealed until AetherSight is unlocked (yellow embers)
             CreateClueNode("L1_RunicLog1_Alcove", "L1_01", ClueNode.Kind.Physical, ClueNode.Tool.AetherSight, ClueNode.State.Hidden,
@@ -707,13 +708,12 @@ namespace Morsoul.Editor
                 "Vane's discarded ritual cloak. Lingers with fanatical zeal and deceit tying him to the Sanctum Core ritual.",
                 new Vector3(-5.5f, 0.45f, 9.6f), new Vector3(1.6f, 1.0f, 1.6f), clues, cloak, useGroundEmbers: true);
 
-            // C4_03: Sealed Mana-Resin Canister (East clearing beside harvest barrels)
-            var canister = CreatePrimitiveMarker("ManaResinCanister", PrimitiveType.Cylinder, new Vector3(4.8f, 0.45f, 8.2f),
-                new Vector3(0.45f, 0.45f, 0.45f), new Color(0.76f, 0.56f, 0.22f), clues, false);
+            // C4_03: Sealed Mana-Resin Canister (East clearing clear of brazier)
+            var canister = PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_UrnUrn_01.prefab", clues, new Vector3(5.8f, 0.02f, 9.8f), new Vector3(0f, 20f, 0f), new Vector3(1.25f, 1.25f, 1.25f));
             AddAmbientMist(canister.transform, new Color(0.32f, 0.86f, 0.65f, 0.35f));
             CreateClueNode("C4_ManaResinCanister", "C4_03", ClueNode.Kind.Physical, ClueNode.Tool.None, ClueNode.State.Revealed,
                 "Pressurized brass canister filled with luminous sap, stenciled for Veiled Circle shipment to Iron Hollow Drift 09.",
-                new Vector3(4.8f, 0.55f, 8.2f), new Vector3(1.4f, 1.2f, 1.4f), clues, canister, useGroundEmbers: true);
+                new Vector3(5.8f, 0.55f, 9.8f), new Vector3(1.4f, 1.2f, 1.4f), clues, canister, useGroundEmbers: true);
 
             // L3_03: Central Altar Ground (center of spell circle) — concealed until AetherSight is unlocked (yellow embers)
             var log3Visual = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(Dfk + "Lightsources/dfk_crystal_01_blue.prefab");
@@ -956,13 +956,13 @@ namespace Morsoul.Editor
             UnityEventTools.AddBoolPersistentListener(sealLock.onInteractSuccess, sealGo.SetActive, false);
             UnityEventTools.AddBoolPersistentListener(sealLock.onInteractSuccess, blastDoor.SetActive, false);
 
-            // C5_04: External Stasis Override Relay (mounted right of the Blast Door outside the sub-lab)
-            var relayBox = CreatePrimitiveMarker("StasisOverrideRelay", PrimitiveType.Cube, new Vector3(2.3f, 1.2f, 11.4f),
-                new Vector3(0.45f, 0.65f, 0.35f), new Color(0.55f, 0.32f, 0.18f), clues, false);
-            AddPointLight(env, new Vector3(2.3f, 1.4f, 11.1f), new Color(0.95f, 0.45f, 0.22f), 1.6f, 4f);
+            // C5_04: External Stasis Override Relay (mounted on crate right of the Blast Door outside the sub-lab)
+            PlaceProp(Lpd + "05_Containers/SM_LPD_Crate_CrateSmall_01.prefab", env, new Vector3(2.3f, 0f, 11.4f), new Vector3(0f, -15f, 0f), Vector3.one);
+            var relayBox = PlaceProp(Lpd + "04_Lighting/SM_LPD_Light_LanternHooded_01.prefab", clues, new Vector3(2.3f, 0.72f, 11.4f), new Vector3(0f, 180f, 0f), new Vector3(1.6f, 1.6f, 1.6f));
+            AddPointLight(env, new Vector3(2.3f, 1.3f, 11.1f), new Color(0.95f, 0.45f, 0.22f), 1.6f, 4f);
             CreateClueNode("C5_StasisOverrideRelay", "C5_04", ClueNode.Kind.Physical, ClueNode.Tool.None, ClueNode.State.Revealed,
                 "Auxiliary lockout relay mounted outside the blast door, bridged with Veiled Circle copper shunts to trap Brokk inside.",
-                new Vector3(2.3f, 1.2f, 11.4f), new Vector3(1.3f, 1.4f, 1.2f), clues, relayBox, useGroundEmbers: true);
+                new Vector3(2.3f, 1.05f, 11.4f), new Vector3(1.3f, 1.4f, 1.2f), clues, relayBox, useGroundEmbers: true);
 
             // L4_04: Ancient Primary Terminal inside sub-lab (z=18.5) — concealed until AetherSight+GolemEye (yellow embers)
             var terminal = PlaceProp(Dfk + "Furnitures/dfk_desk_02.prefab", clues, new Vector3(0f, 0f, 18.5f), Vector3.zero, Vector3.one);
@@ -1180,7 +1180,7 @@ namespace Morsoul.Editor
                     inst.name = "Ground Embers";
                     inst.transform.localPosition = Vector3.zero;
                     inst.transform.localRotation = Quaternion.identity;
-                    inst.transform.localScale = new Vector3(0.01f, 0.2f, 0.01f);
+                    inst.transform.localScale = new Vector3(0.005f, 0.5f, 0.005f);
                     ps = inst.GetComponent<ParticleSystem>();
                 }
                 if (ps == null)

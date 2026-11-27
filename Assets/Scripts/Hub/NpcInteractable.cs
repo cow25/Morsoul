@@ -22,15 +22,37 @@ namespace Morsoul.Hub
 
         void Start()
         {
-            if (interrogationCaseId < 1 || interrogationCaseId > 4) return;
             var session = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session : null;
-            if (session != null &&
+            if (interrogationCaseId >= 1 && interrogationCaseId <= 4 && session != null &&
                 !session.HasFlag(PostInterrogationCutsceneController.PendingFlag(interrogationCaseId)) &&
                 (session.CurrentCase > interrogationCaseId ||
                  (session.Grades.TryGetValue(interrogationCaseId, out var g) && g != Grade.Ungraded)))
             {
                 gameObject.SetActive(false);
+                return;
             }
+            if (HasUncollectedCaseClue()) InitClueGlint(0.55f);
+        }
+
+        void Update()
+        {
+            if (!Application.isPlaying) return;
+            TickClueGlint(HasUncollectedCaseClue());
+        }
+
+        bool HasUncollectedCaseClue()
+        {
+            if (dialogue == null || dialogue.nodes == null) return false;
+            var session = CoreRuntime.Instance != null ? CoreRuntime.Instance.Session : null;
+            if (session == null) return false;
+            foreach (var node in dialogue.nodes)
+            {
+                if (node != null && node.registersClue != null &&
+                    node.registersClue.caseId == session.CurrentCase &&
+                    !session.HasClue(node.registersClue.id))
+                    return true;
+            }
+            return false;
         }
 
         public override void SetPromptVisible(bool visible)
