@@ -67,6 +67,10 @@ MonoBehaviour:
     targetId: C3_03
     weight: 1
     rationale: Industrial Veiled Circle shipments paired with Vane's Emotion Echo cloak prove he is a fanatic fueling the Sanctum Core ritual.
+  - sourceId: C4_03
+    targetId: T2_03
+    weight: 1
+    rationale: The sealed mana-resin canister can be misread as an ordinary botanical research sample.
   - sourceId: T2_03
     targetId: RH1_03
     weight: 1

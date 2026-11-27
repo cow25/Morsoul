@@ -107,6 +107,8 @@ namespace Morsoul.Engine
         public bool HintClueCollected;
         /// <summary>Submitted conclusion for conclusion-history events.</summary>
         public string ConclusionId;
+        /// <summary>True when InvalidInput was caused by a link that would create a cycle.</summary>
+        public bool IsCyclic;
     }
 
     /// <summary>
@@ -141,6 +143,16 @@ namespace Morsoul.Engine
             if (state.Links.Contains(link))
             {
                 events.Add(new ProgressionEvent { Kind = ProgressionEventKind.DuplicateLink });
+                return events;
+            }
+
+            if (WouldCreateCycle(state.Links, link))
+            {
+                events.Add(new ProgressionEvent
+                {
+                    Kind = ProgressionEventKind.InvalidInput,
+                    IsCyclic = true,
+                });
                 return events;
             }
 
@@ -203,6 +215,30 @@ namespace Morsoul.Engine
                 events.Add(tierEvent);
             }
             return events;
+        }
+
+        static bool WouldCreateCycle(IReadOnlyList<DirectedEdge> existingLinks, DirectedEdge candidate)
+        {
+            if (existingLinks == null || existingLinks.Count == 0) return false;
+            var visited = new HashSet<string>(StringComparer.Ordinal) { candidate.targetId };
+            var queue = new Queue<string>();
+            queue.Enqueue(candidate.targetId);
+            while (queue.Count > 0)
+            {
+                string current = queue.Dequeue();
+                if (string.Equals(current, candidate.sourceId, StringComparison.Ordinal))
+                    return true;
+                for (int i = 0; i < existingLinks.Count; i++)
+                {
+                    var edge = existingLinks[i];
+                    if (string.Equals(edge.sourceId, current, StringComparison.Ordinal) &&
+                        visited.Add(edge.targetId))
+                    {
+                        queue.Enqueue(edge.targetId);
+                    }
+                }
+            }
+            return false;
         }
 
         /// <summary>on_rest_tick: +1 per completed rest tick, capped at max.</summary>

@@ -67,6 +67,10 @@ MonoBehaviour:
     targetId: C3_02
     weight: 1
     rationale: The Nave debt notice proves the veil-sealed creditor actually bought out Marian's asylum, confirming the blackmail leverage.
+  - sourceId: C1_02
+    targetId: T2_02
+    weight: 1
+    rationale: The shattered Resonance Crystal is what Accord tries to blame on the acolyte's sorcery.
   - sourceId: T2_02
     targetId: RH1_02
     weight: 1
@@ -126,7 +130,7 @@ MonoBehaviour:
     alpha: 0.85
     contradictionWeight: 0.8
     inventedLinkPenalty: 0.15
-    lowThreshold: 0.6
+    lowThreshold: 0.63
     highThreshold: 1
     PrunedMode: 1
     RivalClueId: T2_02

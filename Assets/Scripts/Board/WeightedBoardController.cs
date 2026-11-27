@@ -454,7 +454,9 @@ namespace Morsoul.Board
                 switch (e.Kind)
                 {
                     case ProgressionEventKind.InvalidInput:
-                        ShowBanner(BannerErrorClass, "That link can't be drawn here.");
+                        ShowBanner(BannerErrorClass, e.IsCyclic
+                            ? "That link would form a loop — connections must flow in one direction."
+                            : "That link can't be drawn here.");
                         break;
                     case ProgressionEventKind.TutorialLinkRejected:
                         ShowBanner(BannerInfoClass, AuthoredTutorialLinkFeedback(attemptedLink));

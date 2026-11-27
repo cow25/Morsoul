@@ -227,7 +227,7 @@ namespace Morsoul.Data.Editor
                     W("C2_01", "C3_01", 1f, "Harmless theatrical solvent explains why no real stock burned — the altered ledger proves Batch #408 never existed."),
                     W("C3_01", "C4_01", 1f, "Fabricating phantom Batch #408 stock sets up the pre-dated Treasury indemnity claim."),
                     W("T1_01", "C4_01", 1f, "Only Ignatius held an unsealed key — tying inside vault access directly to the sole beneficiary on the pre-dated claim."),
-                    // NOTE(dev): T2_01->RH1_01 has no incoming edge into T2_01, so e_all[T2_01] stays 0 unless a decoy edge into T2_01 is authored later.
+                    W("C2_01", "T2_01", 1f, "Harmless purple theatrical vapor can be misread as volatile dark magic."),
                     W("T2_01", "RH1_01", 1f),
                 },
                 SolutionEdges = solution,
@@ -314,7 +314,7 @@ namespace Morsoul.Data.Editor
                     W("C4_02", "C1_02", 1f, "Manual soot application inside the belfry caused the internal harmonic shockwave that shattered the Resonance Crystal."),
                     W("C1_02", "C3_02", 1f, "An inside acoustic sabotage points straight to the veil-sealed coercion note hidden behind the belfry scaffolding."),
                     W("C5_02", "C3_02", 1f, "The Nave debt notice proves the veil-sealed creditor actually bought out Marian's asylum, confirming the blackmail leverage."),
-                    // NOTE(dev): T2_02->RH1_02 has no incoming edge into T2_02, so e_all[T2_02] stays 0 unless a decoy edge into T2_02 is authored later.
+                    W("C1_02", "T2_02", 1f, "The shattered Resonance Crystal is what Accord tries to blame on the acolyte's sorcery."),
                     W("T2_02", "RH1_02", 1f),
                 },
                 SolutionEdges = solution,
@@ -357,7 +357,7 @@ namespace Morsoul.Data.Editor
                     alpha = 0.85f,
                     contradictionWeight = 0.8f,
                     inventedLinkPenalty = 0.15f,
-                    lowThreshold = 0.60f,
+                    lowThreshold = 0.63f,
                     highThreshold = 1.0f,
                     PrunedMode = true,
                     RivalClueId = "T2_02",
@@ -391,7 +391,7 @@ namespace Morsoul.Data.Editor
                     W("C1_03", "C4_03", 1f, "Forced sap drainage from the taproot fills the pressurized mana-resin canisters stenciled for Iron Hollow Drift 09."),
                     W("C2_03", "C4_03", 1f, "The Veiled Circle dagger's solvent stabilizer matches the chemical preservative sealing the Iron Hollow canisters."),
                     W("C4_03", "C3_03", 1f, "Industrial Veiled Circle shipments paired with Vane's Emotion Echo cloak prove he is a fanatic fueling the Sanctum Core ritual."),
-                    // NOTE(dev): T2_03->RH1_03 has no incoming edge into T2_03, so e_all[T2_03] stays 0 unless a decoy edge into T2_03 is authored later.
+                    W("C4_03", "T2_03", 1f, "The sealed mana-resin canister can be misread as an ordinary botanical research sample."),
                     W("T2_03", "RH1_03", 1f),
                 },
                 SolutionEdges = solution,
@@ -459,7 +459,7 @@ namespace Morsoul.Data.Editor
                     W("C1_04", "C3_04", 1f, "The engineered backpressure blowout was aimed precisely at exposing the hidden pre-Cataclysm sub-lab blast door."),
                     W("C2_04", "C3_04", 1f, "Dissolving the bypass conduits prevented emergency depressurization, clearing the rockface straight to the blast door."),
                     W("C3_04", "C5_04", 1f, "Once the blast door was uncovered, Harlan bridged the external stasis override relay with Veiled Circle shunts to trap Brokk inside."),
-                    // NOTE(dev): T2_04->RH1_04 has no incoming edge into T2_04, so e_all[T2_04] stays 0 unless a decoy edge into T2_04 is authored later.
+                    W("C3_04", "T2_04", 1f, "The blown-out strata around the sub-lab blast door can be misread as structural bedrock reinforcement."),
                     W("T2_04", "RH1_04", 1f),
                 },
                 SolutionEdges = solution,

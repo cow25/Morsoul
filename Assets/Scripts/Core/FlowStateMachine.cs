@@ -30,7 +30,7 @@ namespace Morsoul.Core
         static readonly Dictionary<GameFlowState, GameFlowState[]> Legal =
             new Dictionary<GameFlowState, GameFlowState[]>
             {
-                { GameFlowState.Boot, new[] { GameFlowState.Title } },
+                { GameFlowState.Boot, new[] { GameFlowState.Title, GameFlowState.Opening, GameFlowState.Hub, GameFlowState.Investigation } },
                 { GameFlowState.Title, new[] { GameFlowState.Opening, GameFlowState.Hub } },
                 { GameFlowState.Opening, new[] { GameFlowState.Hub } },
                 { GameFlowState.Hub, new[] { GameFlowState.Investigation, GameFlowState.Board, GameFlowState.Title } },
