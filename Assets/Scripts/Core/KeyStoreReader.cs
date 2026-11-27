@@ -52,6 +52,9 @@ namespace Morsoul.Core
                         byte[] bytes = new byte[cred.CredentialBlobSize];
                         Marshal.Copy(cred.CredentialBlob, bytes, 0, cred.CredentialBlobSize);
                         string key = Encoding.Unicode.GetString(bytes).TrimEnd('\0');
+                        if (IsValidHex64(key)) return key;
+                        string utf8Key = Encoding.UTF8.GetString(bytes).TrimEnd('\0');
+                        if (IsValidHex64(utf8Key)) return utf8Key;
                         if (!string.IsNullOrEmpty(key)) return key;
                     }
                     finally
@@ -62,6 +65,18 @@ namespace Morsoul.Core
             }
 #endif
             return null;
+        }
+
+        static bool IsValidHex64(string s)
+        {
+            if (string.IsNullOrEmpty(s) || s.Length != 64) return false;
+            for (int i = 0; i < s.Length; i++)
+            {
+                char c = s[i];
+                bool isHex = (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+                if (!isHex) return false;
+            }
+            return true;
         }
     }
 }

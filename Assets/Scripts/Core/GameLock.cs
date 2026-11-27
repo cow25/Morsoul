@@ -21,14 +21,32 @@ namespace Morsoul.Core
         public static string DatabasePath =>
             _cachedDatabasePath ??= ResolveDatabasePath(Environment.GetCommandLineArgs());
 
+        public static bool HasExplicitAccountOrDb =>
+            HasExplicitAccountOrDbArgs(Environment.GetCommandLineArgs());
+
+        public static string AccountTag
+        {
+            get
+            {
+                string stem = Path.GetFileNameWithoutExtension(DatabasePath);
+                return string.IsNullOrEmpty(stem) ? "game" : SanitizeFileSegment(stem);
+            }
+        }
+
+        public static bool HasExplicitAccountOrDbArgs(string[] args)
+        {
+            return !string.IsNullOrWhiteSpace(ReadArg(args, "--db", "-db", "--db-path", "-db-path")) ||
+                   !string.IsNullOrWhiteSpace(ReadArg(args, "--user", "-user", "--user-id"));
+        }
+
         /// <summary>
         /// Resolves the SQLCipher database path from launcher CLI arguments
-        /// (--db, --user, --user-id, -user), falling back to game.db.
+        /// (--db, --db-path, --user, -user, --user-id), falling back to game.db.
         /// </summary>
         public static string ResolveDatabasePath(string[] args, string baseDir = null)
         {
             string dir = string.IsNullOrEmpty(baseDir) ? LocalDataDir : baseDir;
-            string dbArg = ReadArg(args, "--db", "-db");
+            string dbArg = ReadArg(args, "--db", "-db", "--db-path", "-db-path");
             if (!string.IsNullOrWhiteSpace(dbArg))
                 return Path.IsPathRooted(dbArg) ? dbArg : Path.Combine(dir, dbArg);
 
