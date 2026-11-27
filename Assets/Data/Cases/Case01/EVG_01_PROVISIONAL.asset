@@ -67,6 +67,10 @@ MonoBehaviour:
     targetId: C4_01
     weight: 1
     rationale: "Only Ignatius held an unsealed key \u2014 tying inside vault access directly to the sole beneficiary on the pre-dated claim."
+  - sourceId: C2_01
+    targetId: T2_01
+    weight: 1
+    rationale: Harmless purple theatrical vapor can be misread as volatile dark magic.
   - sourceId: T2_01
     targetId: RH1_01
     weight: 1

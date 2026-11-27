@@ -67,6 +67,10 @@ MonoBehaviour:
     targetId: C5_04
     weight: 1
     rationale: Once the blast door was uncovered, Harlan bridged the external stasis override relay with Veiled Circle shunts to trap Brokk inside.
+  - sourceId: C3_04
+    targetId: T2_04
+    weight: 1
+    rationale: The blown-out strata around the sub-lab blast door can be misread as structural bedrock reinforcement.
   - sourceId: T2_04
     targetId: RH1_04
     weight: 1
