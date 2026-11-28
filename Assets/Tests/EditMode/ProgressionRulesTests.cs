@@ -110,7 +110,7 @@ namespace Morsoul.Tests
             _state.Links.Add(new DirectedEdge("a", "b"));
 
             var authored = Draw(_state, g0, "d", "e");
-            var invented = Draw(_state, g0, "c", "a");
+            var invented = Draw(_state, g0, "a", "e");
             var duplicate = Draw(_state, g0, "a", "b");
             var solution = Draw(_state, g0, "b", "c");
 
@@ -179,7 +179,7 @@ namespace Morsoul.Tests
         public void Tier1_AtFiveErrors_GrantsTwentyFocus_Once()
         {
             // 5 errors at 15 each from F 100 -> qualitative nudge with +0 Focus tier reward.
-            string[] wrong = { "c", "a", "d", "c", "e", "b", "a", "e", "b", "d" };
+            string[] wrong = { "c", "a", "d", "c", "e", "b", "a", "e", "d", "e" };
             var fired = new List<ProgressionEvent>();
             for (int i = 0; i < 5; i++)
                 fired.AddRange(Draw(_state, _graph, wrong[i * 2], wrong[i * 2 + 1]));
