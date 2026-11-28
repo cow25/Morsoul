@@ -1,4 +1,4 @@
-using System;
+111using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -448,7 +448,6 @@ namespace Morsoul.Core
 
             return true;
         }
-#endif
 
         public static bool HasDatabaseSave() => HasDatabaseSave(1);
 
